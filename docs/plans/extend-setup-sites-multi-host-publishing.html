@@ -1,67 +1,180 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="todo" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="todo">
+<meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-22">
 <meta name="plan-repo" content="agentics">
 <meta name="plan-file" content="extend-setup-sites-multi-host-publishing.html">
 <meta name="plan-path" content="docs/plans/extend-setup-sites-multi-host-publishing.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/extend-setup-sites-multi-host-publishing.html — Extend setup-sites to publish to Netlify, Vercel, and Cloudflare via CLI. Start from the embedded digest: awk &#39;!f &amp;&amp; /&lt;script[^&gt;]*id=&quot;plan-digest&quot;/{f=1;next} f &amp;&amp; /&lt;\/script&gt;/{exit} f&#39; docs/plans/extend-setup-sites-multi-host-publishing.html">
-<meta name="plan-goal" content="Achieve this goal: Extend setup-sites to publish to Netlify, Vercel, and Cloudflare via CLI. The plan at docs/plans/extend-setup-sites-multi-host-publishing.html describes one approach — use it as reference, but optimize for the outcome. Start from the embedded digest: awk &#39;!f &amp;&amp; /&lt;script[^&gt;]*id=&quot;plan-digest&quot;/{f=1;next} f &amp;&amp; /&lt;\/script&gt;/{exit} f&#39; docs/plans/extend-setup-sites-multi-host-publishing.html">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/extend-setup-sites-multi-host-publishing.html — Extend setup-sites to publish to Netlify, Vercel, and Cloudflare via CLI. Brief subagents with the embedded digest: awk &#39;!f &amp;&amp; /&lt;script[^&gt;]*id=&quot;plan-digest&quot;/{f=1;next} f &amp;&amp; /&lt;\/script&gt;/{exit} f&#39; docs/plans/extend-setup-sites-multi-host-publishing.html">
+<meta name="plan-md" content="docs/plans/extend-setup-sites-multi-host-publishing.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/extend-setup-sites-multi-host-publishing.md — Extend setup-sites to publish to Netlify, Vercel, and Cloudflare. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/extend-setup-sites-multi-host-publishing.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Extend setup-sites to publish to Netlify, Vercel, and Cloudflare. The plan at docs/plans/extend-setup-sites-multi-host-publishing.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/extend-setup-sites-multi-host-publishing.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/extend-setup-sites-multi-host-publishing.md — Extend setup-sites to publish to Netlify, Vercel, and Cloudflare. Brief subagents with the plan file at docs/plans/extend-setup-sites-multi-host-publishing.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/extend-setup-sites-multi-host-publishing.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Extend setup-sites to publish to Netlify, Vercel, and Cloudflare</title>
 <style>
-  /* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --purple:     #a21caf;
-    --purple-bg:  #fdf4ff;
-    --purple-border:#f0abfc;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -91,7 +204,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -101,8 +214,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -117,9 +230,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -128,11 +242,14 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
   }
   .plan-header-actions {
     display: flex;
@@ -155,7 +272,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -166,13 +286,39 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
+
+  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
+  .effort-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+  }
+  .effort-badge::before { content: "Effort "; opacity: .7; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-status="in-progress"] .status-badge::before { animation: none; }
   }
 
   /* Save as PDF button */
@@ -181,9 +327,10 @@
     align-items: center;
     gap: .4rem;
     padding: .4rem 1rem;
-    font-size: .8rem;
+    font-size: .75rem;
     font-weight: 600;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--on-accent);
     background: var(--accent);
     border: 1px solid var(--accent);
     border-radius: 4px;
@@ -199,6 +346,31 @@
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   /* Meta row */
   .plan-meta {
     display: flex;
@@ -206,9 +378,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -220,14 +393,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -238,29 +414,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -275,85 +452,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
   }
-  .objective-card .section-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .objective-card .section-label,
+  .plan-glance-label {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
+  .plan-glance {
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
+  }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
+
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -361,18 +638,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: .9rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
+  .section-card .section-intro {
+    font-size: .85rem;
+    color: var(--ink-2);
+    margin: -1rem 0 1.25rem;
+  }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -381,65 +673,34 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-card.completed .step-number { color: var(--moss); }
   .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
@@ -448,58 +709,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .step-chip-text { flex: 1; }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -511,31 +770,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -549,14 +808,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -567,20 +826,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -589,25 +848,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -620,11 +879,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -634,10 +893,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -648,14 +907,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -669,20 +928,22 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
 
   /* Wish list variant */
   .wish-list-header {
@@ -693,7 +954,7 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
@@ -704,27 +965,27 @@
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -738,13 +999,48 @@
     user-select: none;
     min-height: 44px;
   }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
-  .optional-section[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-section > summary::before,
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
+  .optional-section[open] > summary::before,
+  .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
-  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before, .plan-more-ways > summary::before { transition: none; } }
+
+  /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
+  .plan-more-ways {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--panel);
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+    overflow: hidden;
+  }
+  .plan-more-ways > summary {
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
+  .plan-more-ways-body {
+    padding: .75rem 1rem 1rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  @media print { .plan-more-ways { display: none !important; } }
 
   /* ── Implement prompt ─────────────────────────────────────────── */
   .plan-implement {
@@ -753,8 +1049,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -763,14 +1059,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -781,9 +1077,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -792,23 +1088,21 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Plan source (file name + relative path) ──────────────────── */
+  /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
   .plan-source {
     display: flex;
     flex-direction: column;
     gap: .4rem;
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     padding: .55rem .75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     font-size: .8rem;
   }
   .plan-source-row { display: flex; align-items: center; gap: .6rem; }
@@ -817,14 +1111,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -835,9 +1129,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -846,40 +1140,37 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
 
-  /* ── Workflow prompt (conditional — remove element when empty) ── */
+  /* ── Workflow prompt row (conditional — remove row when empty; lives in the drawer) ── */
   .plan-workflow {
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     font-size: .8rem;
   }
-  .plan-workflow summary {
+  .plan-workflow-label {
     font-size: .7rem;
     font-weight: 600;
     color: var(--accent);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
+    padding: .1rem 0;
   }
-  .plan-workflow summary:hover { text-decoration: underline; }
   .plan-workflow-inner {
     display: flex;
     align-items: flex-start;
     gap: .6rem;
     margin-top: .4rem;
     padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
   }
   .plan-workflow code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -890,9 +1181,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -901,27 +1192,25 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
   @media print { .plan-workflow { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
 
-  /* ── Goal prompt (outcome-driven — always present) ────────────── */
+  /* ── Goal prompt row (outcome-driven — always present; lives in the drawer) ── */
   .plan-goal {
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     font-size: .8rem;
   }
-  .plan-goal summary {
+  .plan-goal-label {
     font-size: .7rem;
     font-weight: 600;
     color: var(--purple);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
+    padding: .1rem 0;
   }
-  .plan-goal summary:hover { text-decoration: underline; }
   .plan-goal-inner {
     display: flex;
     align-items: flex-start;
@@ -935,7 +1224,7 @@
   .plan-goal code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -946,9 +1235,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -957,10 +1246,11 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-goal-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
   @media print { .plan-goal { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
 
@@ -971,8 +1261,8 @@
     gap: .75rem;
   }
   .test-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow);
@@ -994,27 +1284,27 @@
     border-radius: 999px;
     flex-shrink: 0;
   }
-  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
   .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
-  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
   .test-card-title {
     font-weight: 600;
     font-size: .95rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
   }
-  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
   .test-card-body p { margin-bottom: .4rem; }
   .test-card-body p:last-child { margin-bottom: 0; }
   .test-card-body code { font-size: .85em; }
-  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
   .test-tier-label {
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
     display: flex;
     align-items: center;
@@ -1024,21 +1314,21 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--rule);
   }
   .objective-test-card {
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-left: 4px solid var(--green);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow);
   }
   .objective-test-card .test-card-header { margin-bottom: .6rem; }
-  .objective-test-card .test-card-title { color: #14532d; }
-  .objective-test-card .test-card-body { color: #166534; }
-  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -1046,10 +1336,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -1058,7 +1348,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -1067,60 +1357,77 @@
 
   /* ═════════════════════════════════════════════════════════════════
      OPT-IN VISUAL COMPONENTS
+     Pure-CSS / token-driven — no CDN, no external script. These rules
+     are always present (harmless when unused); the matching <body>
+     section blocks are kept only when a plan needs them and deleted
+     otherwise. See SKILL.md → "Visual Components".
      ═════════════════════════════════════════════════════════════════ */
 
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
+  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
 
   /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
   .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
   @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
   .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
 
   /* ── Bar chart (value via inline --val) ─────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
   .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
   @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
-  .bar-label { font-size: .82rem; color: var(--text); }
-  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
   .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
-  .bar-fill.full { background: var(--green); }
-  .bar-fill.zero { background: var(--subtle); }
-  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
 
   /* ── Data table ─────────────────────────────────────────────────── */
   .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
-  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
-  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
-  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
   .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
+
+  /* ── Resources (images, screenshots & reference links) ──────────── */
+  .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+  .resource-figure > a { display: block; line-height: 0; }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
+  .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
+  .resource-links li:last-child { border-bottom: none; }
+  .resource-links a { font-weight: 600; word-break: break-word; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
 
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
@@ -1128,7 +1435,7 @@
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
@@ -1148,95 +1455,6 @@ img, video { max-width: 100%; height: auto; }
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════════════
-     MACHINE-READABLE DIGEST — spec only. Extract with:
-       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
-     ══════════════════════════════════════════════════════════════════ -->
-<script type="text/markdown" id="plan-digest">
-# Plan: Extend setup-sites to publish to Netlify, Vercel, and Cloudflare
-
-> Authored spec only. Status and progress live in the head meta tags and the live DOM, never in this block.
-
-## Objective
-
-Make `setup-sites` a multi-host publisher — keep the proven GitHub Pages path and add runtime-selectable Netlify, Vercel, and Cloudflare Pages targets that deploy `docs/` via each host's CLI. The Vercel target also publishes a Next.js static export (`output: 'export'` → `next build` → upload `out/`) as the one build-requiring variant, still served as prebuilt static files with no host-side build.
-
-## Context
-
-The `setup-sites` skill currently scaffolds only GitHub Pages: an Actions workflow, a `.nojekyll` marker, the Settings → Pages → Source step, and project-site path-prefix URL math. Its name is already host-agnostic, and three of its four artifacts (the landing hub `docs/index.html`, the `scripts/serve-docs.sh` preview, and the `docs/` layout) work for any static host — only the workflow, `.nojekyll`, and the path-prefix URL are GitHub-specific. Extending to Netlify, Vercel, and Cloudflare Pages lets the same one-command setup publish wherever a project hosts its docs. Chosen design (from clarify + interview): progressive disclosure via per-host reference files; CLI-based deploys (`netlify`/`vercel`/`wrangler`); a runtime host picker defaulting to GitHub Pages; straight-to-production after one explicit confirmation; detect-guide-stop on a missing/unauthenticated CLI (never auto-install); project names default to the repo basename with override. Straight-to-prod was deliberate over preview-first; safeguards: show the exact command and resolved project name before confirming, document how to unpublish per reference, and note dashboard rollback.
-
-## Files
-
-- kit/plugins/plan-agent/skills/setup-sites/SKILL.md (modified) — host picker + common/host-specific split
-- kit/plugins/plan-agent/skills/setup-sites/references/netlify.md (new) — Netlify CLI deploy reference
-- kit/plugins/plan-agent/skills/setup-sites/references/vercel.md (new) — Vercel CLI deploy reference
-- kit/plugins/plan-agent/skills/setup-sites/references/cloudflare-pages.md (new) — Wrangler Pages deploy reference
-- .claude-plugin/marketplace.json (modified) — bump plan-agent to 2.9.0, description, tags
-- kit/plugins/plan-agent/.claude-plugin/plugin.json (modified) — description names new hosts
-- kit/plugins/plan-agent/README.md (modified) — table row, section, structure tree
-- kit/plugins/plan-agent/CHANGELOG.md (modified) — 2.9.0 entry
-- docs/guides/publish-docs-to-github-pages.md (modified) — "other hosts" cross-reference section
-- kit/plugins/plan-agent/templates/pages/serve-docs.sh (modified) — generalize the GitHub-Pages-only comment
-- tests/plugins/test-setup-sites.sh (modified) — multi-host smoke assertions
-
-## Steps
-
-1. Add a host-selection entry step and host-agnostic frontmatter to SKILL.md.
-   Why: A single entry point that routes by host turns a GitHub-only skill into a multi-host one; defaulting to GitHub Pages preserves current behavior for existing users.
-   Verify: SKILL.md frontmatter description names Netlify/Vercel/Cloudflare, stays under 200 chars, and keeps the three-part shape (>=2 sentences, <=80-char short label, a "Use when" trigger) so smoke-test check #3 passes; the new Step 1 lists four host options and sets $HOST; allowed-tools still includes Bash, Read, Write, AskUserQuestion, ToolSearch, ExitPlanMode.
-
-2. Restructure the SKILL.md body into a common flow plus per-host dispatch, keeping exactly 7 numbered steps.
-   Why: Progressive disclosure keeps the body under 500 lines and isolates the new hosts from the battle-tested GitHub path (low regression risk); holding at 7 step headings keeps the existing smoke test's structure assertion valid.
-   Verify: grep -cE of the step headings returns 7; the body is under 500 lines; Step 5 maps each host token to its reference file (netlify -> references/netlify.md, vercel -> references/vercel.md, cloudflare -> references/cloudflare-pages.md; note the -pages suffix) and keeps the GitHub workflow / .nojekyll / Pages-source logic inline (.nojekyll + workflow are GitHub-only; references resolve relative to the skill dir); the 7->7 mapping keeps the count fixed (new Step 1 Choose host; old "locate templates" merges into docs resolution; old "scaffold artifacts" splits into common hub+serve-docs vs GitHub-inline workflow/.nojekyll); an outward-facing confirmation precedes any CLI deploy.
-
-3. Write references/netlify.md for the Netlify CLI deploy path.
-   Why: Netlify deploys a static directory straight from the CLI with --dir, so the reference captures the exact auth-gated, confirm-first command sequence the skill follows.
-   Verify: references/netlify.md links/names the site to the repo basename first (`netlify link` or `netlify sites:create --name <repo>`), then runs `netlify deploy --dir=docs --prod --no-build` (--no-build forces a static upload, never a build); a `netlify status` auth check (no token echo); an `npm i -g netlify-cli` install hint printed not executed (detect-guide-stop); a confirmation gate that shows the exact command and resolved site name; and an unpublish note (`netlify sites:delete` / dashboard rollback).
-
-4. Write references/vercel.md for the Vercel CLI deploy path.
-   Why: Vercel is build-oriented, so the reference must pin the no-build / static-directory invocation and first-run project linking to avoid surprising framework detection.
-   Verify: references/vercel.md links/names the project to the repo basename before deploying (e.g. `vercel link --project <repo>`) so it is not named after the docs folder, then runs `cd docs && vercel deploy --prod` (deploys docs/ as site root so framework auto-detection never builds the repo root; framework=Other, no build); warns that a bare --yes infers the name from the docs folder; a `vercel whoami` auth check (no token echo); an `npm i -g vercel` install hint printed not executed; a confirmation gate showing the exact command and resolved project name (default repo basename); plus an unpublish note (`vercel project rm`). It also documents a Next.js static-export path: detect a `next.config.{js,mjs,ts}` with `output: 'export'`, run `next build` locally to produce `out/`, then `cd out && vercel link --project <repo> --yes && vercel deploy --prod` — the publish dir becomes `out/` instead of `docs/`, framework still Other (Vercel uploads the prebuilt static files, no host-side build), reusing the same auth check and confirmation gate (which shows the resolved publish dir). The `vercel link` inside `out/` is load-bearing: a freshly built `out/` carries no `.vercel/project.json`, so deploying without linking would create/prompt a separate `out` project instead of the confirmed repo-basename one; the link (or an equivalent `--project <repo>` / `VERCEL_PROJECT_ID`) carries the project identity into the prebuilt deploy.
-
-5. Write references/cloudflare-pages.md for the Wrangler Pages deploy path.
-   Why: Cloudflare Pages deploys via `wrangler pages deploy DIR` and needs a named project, so the reference captures the create-then-deploy sequence and the login / token auth options.
-   Verify: references/cloudflare-pages.md contains `wrangler pages deploy docs --project-name=<name>`, the first-run `wrangler pages project create` note, a `wrangler whoami` auth check (no token echo), an `npm i -g wrangler` install hint printed not executed, and a confirmation gate showing the exact command and resolved project name (default repo basename) plus an unpublish note (dashboard / wrangler).
-
-6. Wire the docs and plugin metadata for the new capability.
-   Why: The marketplace, README, and CHANGELOG are the discovery surface; bumping the version (MINOR for a new capability) and updating prose is required by the project's versioning rules and keeps the smoke test's description/version checks green.
-   Verify: marketplace.json parses; plan-agent is at 2.9.0 (> 2.8.1) with a description naming the new hosts that still contains setup-sites (trimmed within the 1024-char limit); plugin.json has no version key and names the hosts; README's setup-sites table row, section prose, and directory tree (gains references/ with three files) are updated; CHANGELOG has a Keep-a-Changelog 2.9.0 entry; the guide gains an "other hosts" section with a heading and a pointer to each of the three references.
-
-7. Extend tests/plugins/test-setup-sites.sh to cover multi-host.
-   Why: This committed smoke test is the objective-verification — it asserts the skill now offers all four hosts with working per-host references; extending the existing test rather than adding a new file keeps one source of truth.
-   Verify: bash tests/plugins/test-setup-sites.sh exits 0 with explicit grep targets: SKILL.md Step 1 names all four hosts and has a routing line mapping each host token to its file (netlify->references/netlify.md, vercel->references/vercel.md, cloudflare->references/cloudflare-pages.md); each reference greps for its deploy command, auth check (netlify status / vercel whoami / wrangler whoami), and a confirmation marker; references/vercel.md also greps for the Next.js static-export branch (`output: 'export'`, `next build`, and a `cd out && vercel deploy --prod` line); SKILL.md stays under 500 lines and at 7 steps; marketplace version >= 2.9.0 names the hosts. The structural grep test cannot exercise the runtime confirmation gate, so "no deploy without confirmation" is covered by the manual per-host trace in Verification.
-
-## Tests
-
-Tier 2 — Non-code plan (skill markdown, reference docs, JSON manifests, README/CHANGELOG, and a bash smoke test; no application source files).
-
-Objective-verification test:
-- File: tests/plugins/test-setup-sites.sh (extended)
-- Type: structural smoke test
-- Asserts (structural greps): SKILL.md Step 1 names all four hosts and routes each host token to its file (including cloudflare -> references/cloudflare-pages.md); the three references each contain their exact deploy command, auth check, and a confirmation marker; SKILL.md stays under 500 lines and at 7 numbered steps; marketplace.json bumps plan-agent to at least 2.9.0 with a description naming the new hosts. Out of scope: a grep-over-files test cannot prove the runtime confirmation gate pauses before deploying — covered by the manual per-host trace in Verification.
-- Run: bash tests/plugins/test-setup-sites.sh
-
-## Acceptance Criteria
-
-- Running the skill lets the user pick GitHub Pages (default), Netlify, Vercel, or Cloudflare Pages — via an optional argument or a runtime prompt.
-- Each non-GitHub host has a references/HOST.md documenting CLI detect/install, an auth check, an explicit outward-facing confirmation, the exact docs/ deploy command, and live-URL reporting.
-- The existing GitHub Pages flow is unchanged — it still scaffolds the workflow, .nojekyll, hub, and serve-docs.sh and guides the Pages source setting.
-- No CLI deploy runs without an auth check and an explicit user confirmation that shows the exact command and resolved project name; CLIs are never auto-installed (install commands printed, not run); each non-GitHub reference documents how to unpublish.
-- SKILL.md stays under 500 lines and at exactly 7 numbered steps.
-- marketplace.json is valid, plan-agent is bumped to at least 2.9.0, its description names the new hosts and still contains setup-sites; plugin.json carries no version key.
-- README, CHANGELOG, and the publishing guide reflect the new hosts.
-- bash tests/plugins/test-setup-sites.sh passes.
-- references/vercel.md documents a Next.js static-export path — detect output: 'export', run next build, then deploy the resulting out/ as prebuilt static files (framework Other, no host-side build) behind the same auth + confirmation gate.
-
-## Verification
-
-Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the skill once per host without deploying: github runs the inline workflow / .nojekyll / Pages path; netlify, vercel, and cloudflare each Read the matching references/HOST.md and stop at the confirmation gate before any deploy. Diff SKILL.md to confirm the GitHub-specific blocks are byte-for-byte unchanged where kept inline. Confirm marketplace.json parses and plan-agent's version is above the value on origin/main. Optionally run /validate-plugin plan-agent.
-</script>
-
-<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
@@ -1284,11 +1502,13 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
   <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
   </symbol>
+  <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
 </svg>
 
 <a href="#main" class="skip-link">Skip to content</a>
 
-<!-- ── Header — document cover ─────────────────────────────────── -->
 <header class="plan-header">
   <div class="plan-header-inner">
     <div class="plan-back-nav">
@@ -1303,29 +1523,23 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
+        <span class="effort-badge" aria-label="Effort level">High</span>
         <span class="status-badge">todo</span>
       </div>
     </div>
     <div class="plan-meta">
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-22
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        agentics
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        feature
-      </span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-06-22</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> feature</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> High effort</span>
     </div>
   </div>
 </header>
 
 <div class="layout">
 
-  <!-- ── Sidebar — table of contents ─────────────────────────── -->
   <nav class="plan-nav" aria-label="Plan sections">
     <div class="scroll-rail" aria-hidden="true"></div>
     <div class="nav-heading">On this page</div>
@@ -1333,74 +1547,92 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
-      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
-      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
-      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
-      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>7 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Add a host-selection entry step and host-agnostic frontmatter to SKILL.md .</span><span class="rail-state">step 1 of 7</span></a></li>
+        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Restructure the SKILL.md body into a common flow plus per-host dispatch, keeping exactly 7 numbered steps.</span><span class="rail-state">step 2 of 7</span></a></li>
+        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Write references/netlify.md for the Netlify CLI deploy path.</span><span class="rail-state">step 3 of 7</span></a></li>
+        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Write references/vercel.md for the Vercel CLI deploy path.</span><span class="rail-state">step 4 of 7</span></a></li>
+        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Write references/cloudflare-pages.md for the Wrangler Pages deploy path.</span><span class="rail-state">step 5 of 7</span></a></li>
+        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Wire the docs and plugin metadata for the new capability.</span><span class="rail-state">step 6 of 7</span></a></li>
+        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Extend tests/plugins/test-setup-sites.sh to cover multi-host.</span><span class="rail-state">step 7 of 7</span></a></li>
+      </ul>
+    </details>
   </nav>
 
-  <!-- ── Main content ─────────────────────────────────────────── -->
   <main id="main">
 
-    <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Make <code>setup-sites</code> a multi-host publisher — keep the proven GitHub Pages path and add runtime-selectable Netlify, Vercel, and Cloudflare Pages targets that deploy <code>docs/</code> via each host's CLI. The Vercel target also publishes a <strong>Next.js static export</strong> (<code>output: 'export'</code> → <code>next build</code> → upload <code>out/</code>) as the one build-requiring variant, still served as prebuilt static files with no host-side build.</p>
+      <p>Make setup-sites a multi-host publisher — keep the proven GitHub Pages path and add runtime-selectable Netlify, Vercel, and Cloudflare Pages targets that deploy docs/ via each host&#39;s CLI. The Vercel target also publishes a Next.js static export ( output: &#39;export&#39; → next build → upload out/ ) as the one build-requiring variant, still served as prebuilt static files with no host-side build.</p>
     </div>
 
-    <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/extend-setup-sites-multi-host-publishing.html — Extend setup-sites to publish to Netlify, Vercel, and Cloudflare via CLI. Start from the embedded digest: awk &#39;!f &amp;&amp; /&lt;script[^&gt;]*id=&quot;plan-digest&quot;/{f=1;next} f &amp;&amp; /&lt;\/script&gt;/{exit} f&#39; docs/plans/extend-setup-sites-multi-host-publishing.html</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/extend-setup-sites-multi-host-publishing.md — Extend setup-sites to publish to Netlify, Vercel, and Cloudflare. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/extend-setup-sites-multi-host-publishing.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Goal prompt (outcome-driven — always present) ─────────── -->
-    <details class="plan-goal">
-      <summary>Pursue as goal — optimize for the outcome</summary>
-      <div class="plan-goal-inner">
-        <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Extend setup-sites to publish to Netlify, Vercel, and Cloudflare via CLI. The plan at docs/plans/extend-setup-sites-multi-host-publishing.html describes one approach — use it as reference, but optimize for the outcome. Start from the embedded digest: awk &#39;!f &amp;&amp; /&lt;script[^&gt;]*id=&quot;plan-digest&quot;/{f=1;next} f &amp;&amp; /&lt;\/script&gt;/{exit} f&#39; docs/plans/extend-setup-sites-multi-host-publishing.html</code>
-        <button class="copy-goal-btn" type="button"
-                onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
+
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome, in parallel</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Extend setup-sites to publish to Netlify, Vercel, and Cloudflare. The plan at docs/plans/extend-setup-sites-multi-host-publishing.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/extend-setup-sites-multi-host-publishing.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-workflow">
+          <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
+          <div class="plan-workflow-inner">
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/extend-setup-sites-multi-host-publishing.md — Extend setup-sites to publish to Netlify, Vercel, and Cloudflare. Brief subagents with the plan file at docs/plans/extend-setup-sites-multi-host-publishing.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/extend-setup-sites-multi-host-publishing.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-workflow-btn" type="button"
+                    onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">extend-setup-sites-multi-host-publishing.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/extend-setup-sites-multi-host-publishing.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/extend-setup-sites-multi-host-publishing.md</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
+          </div>
+        </div>
+
       </div>
     </details>
 
-    <!-- ── Workflow prompt ──────────────────────────────────────── -->
-    <details class="plan-workflow">
-      <summary>Run as workflow — launch parallel subagents</summary>
-      <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/extend-setup-sites-multi-host-publishing.html — Extend setup-sites to publish to Netlify, Vercel, and Cloudflare via CLI. Brief subagents with the embedded digest: awk &#39;!f &amp;&amp; /&lt;script[^&gt;]*id=&quot;plan-digest&quot;/{f=1;next} f &amp;&amp; /&lt;\/script&gt;/{exit} f&#39; docs/plans/extend-setup-sites-multi-host-publishing.html</code>
-        <button class="copy-workflow-btn" type="button"
-                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
-      </div>
-    </details>
-
-    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
-    <div class="plan-source">
-      <div class="plan-source-row">
-        <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">extend-setup-sites-multi-host-publishing.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
-      </div>
-      <div class="plan-source-row">
-        <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/extend-setup-sites-multi-host-publishing.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
-      </div>
-    </div>
-
-    <!-- ── Progress ─────────────────────────────────────────────── -->
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
-        <span>Acceptance criteria</span>
+        <span>Definition of done</span>
         <span id="progress-label">0 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
@@ -1410,177 +1642,157 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
       </div>
     </div>
 
-    <!-- ── Context ──────────────────────────────────────────────── -->
     <section class="section-card card-context" id="context" aria-labelledby="h-context">
       <h2 id="h-context">
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>The <code>setup-sites</code> skill currently scaffolds <strong>only GitHub Pages</strong>: an Actions workflow, a <code>.nojekyll</code> marker, the one-time <code>Settings → Pages → Source</code> step, and project-site path-prefix URL math. Its name is already host-agnostic, and three of its four artifacts — the landing hub <code>docs/index.html</code>, the <code>scripts/serve-docs.sh</code> preview, and the <code>docs/</code> layout — work for any static host. Only the workflow, the <code>.nojekyll</code> marker, and the path-prefix URL are GitHub-specific.</p>
-      <p>Extending the skill to Netlify, Vercel, and Cloudflare Pages lets the same one-command setup publish wherever a project hosts its docs. The design was settled in the clarify + interview rounds: <strong>progressive disclosure</strong> via per-host reference files; <strong>CLI-based deploys</strong> (<code>netlify</code> / <code>vercel</code> / <code>wrangler</code>); a <strong>runtime host picker</strong> defaulting to GitHub Pages; <strong>straight-to-production</strong> after one explicit confirmation; <strong>detect-guide-stop</strong> on a missing or unauthenticated CLI (never auto-install); and project names that <strong>default to the repo basename</strong> with override. Straight-to-production was a deliberate choice over preview-first; the compensating safeguards are showing the exact command and resolved project name before the confirmation, documenting how to unpublish in each reference, and noting each host's dashboard rollback.</p>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
+      <p>The setup-sites skill currently scaffolds only GitHub Pages : an Actions workflow, a .nojekyll marker, the one-time Settings → Pages → Source step, and project-site path-prefix URL math. Its name is already host-agnostic, and three of its four artifacts — the landing hub docs/index.html , the scripts/serve-docs.sh preview, and the docs/ layout — work for any static host. Only the workflow, the .nojekyll marker, and the path-prefix URL are GitHub-specific.</p>
+      <p>Extending the skill to Netlify, Vercel, and Cloudflare Pages lets the same one-command setup publish wherever a project hosts its docs. The design was settled in the clarify + interview rounds: progressive disclosure via per-host reference files; CLI-based deploys ( netlify / vercel / wrangler ); a runtime host picker defaulting to GitHub Pages; straight-to-production after one explicit confirmation; detect-guide-stop on a missing or unauthenticated CLI (never auto-install); and project names that default to the repo basename with override. Straight-to-production was a deliberate choice over preview-first; the compensating safeguards are showing the exact command and resolved project name before the confirmation, documenting how to unpublish in each reference, and noting each host&#39;s dashboard rollback.</p>
     </section>
 
-    <!-- ── Files ────────────────────────────────────────────────── -->
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files to Modify
+        Files that change
       </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
           <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump plan-agent to 2.9.0, description, tags</span></li>
-          <li><code>docs/guides/publish-docs-to-github-pages.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add "other hosts" cross-reference</span></li>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/</li>
-          <ul class="file-list">
+          <li><code>docs/guides/publish-docs-to-github-pages.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add &quot;other hosts&quot; cross-reference</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/
+            <ul class="file-list">
             <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">2.9.0 entry</span></li>
             <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">table row, section, structure tree</span></li>
-          </ul>
+            </ul>
+          </li>
           <li><code>kit/plugins/plan-agent/.claude-plugin/plugin.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">description names new hosts</span></li>
           <li><code>kit/plugins/plan-agent/skills/setup-sites/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">host picker + common/host split</span></li>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/setup-sites/references/</li>
-          <ul class="file-list">
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/setup-sites/references/
+            <ul class="file-list">
             <li><code>cloudflare-pages.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Wrangler Pages deploy</span></li>
             <li><code>netlify.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Netlify CLI deploy</span></li>
             <li><code>vercel.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Vercel CLI deploy</span></li>
-          </ul>
+            </ul>
+          </li>
           <li><code>kit/plugins/plan-agent/templates/pages/serve-docs.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">generalize the GitHub-Pages-only comment</span></li>
           <li><code>tests/plugins/test-setup-sites.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">multi-host smoke assertions</span></li>
         </ul>
       </div>
     </section>
 
-    <!-- ── Diagram ──────────────────────────────────────────────── -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <div class="diagram-subheading">Host-dispatch flow</div>
-      <div class="pipeline">
-        <div class="pipeline-node"><div class="pipeline-label">Entry</div><code>/plan-agent:setup-sites [host]</code><div class="pipeline-sub">optional host argument</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Step 1</div><code>Choose host</code><div class="pipeline-sub">arg or prompt · default GitHub Pages</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Common</div><code>scaffold docs/ + hub + serve-docs.sh</code><div class="pipeline-sub">host-agnostic, all hosts</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Publish</div><code>GitHub inline · or references/&lt;host&gt;.md</code><div class="pipeline-sub">per-host dispatch</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Confirm + deploy</div><code>auth gate → --prod / Pages setting</code><div class="pipeline-sub">outward-facing confirmation</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Deliver</div><code>report live URL, then stop</code><div class="pipeline-sub">user commits when ready</div></div>
-      </div>
-
-      <div class="diagram-subheading">Per-host publish matrix</div>
-      <table class="plan-table">
-        <caption>How setup-sites publishes docs/ to each host after the runtime host pick.</caption>
-        <thead>
-          <tr><th scope="col">Host</th><th scope="col">Install</th><th scope="col">Auth check</th><th scope="col">Deploy command</th><th scope="col">Live URL</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>GitHub Pages <span class="file-badge file-badge-modified">inline</span></td><td>Actions (no CLI)</td><td><code>gh auth status</code></td><td>commit → push <code>main</code> (workflow)</td><td><code>&lt;owner&gt;.github.io/&lt;repo&gt;/</code></td></tr>
-          <tr><td>Netlify <span class="file-badge file-badge-new">new</span></td><td><code>npm i -g netlify-cli</code></td><td><code>netlify status</code></td><td><code>netlify deploy --dir=docs --prod --no-build</code> <span class="file-note">link/name site first</span></td><td><code>&lt;site&gt;.netlify.app</code></td></tr>
-          <tr><td>Vercel <span class="file-badge file-badge-new">new</span></td><td><code>npm i -g vercel</code></td><td><code>vercel whoami</code></td><td><code>vercel deploy --prod</code> <span class="file-note">docs/, framework Other — or <code>next build</code> then <code>cd out</code> for a Next.js static export</span></td><td><code>&lt;project&gt;.vercel.app</code></td></tr>
-          <tr><td>Cloudflare Pages <span class="file-badge file-badge-new">new</span></td><td><code>npm i -g wrangler</code></td><td><code>wrangler whoami</code></td><td><code>wrangler pages deploy docs --project-name=&lt;name&gt;</code></td><td><code>&lt;project&gt;.pages.dev</code></td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
       <h2 id="h-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
         Steps
       </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add a host-selection entry step and host-agnostic frontmatter to <code>SKILL.md</code>.</span>
+                <span class="step-chip-text">Add a host-selection entry step and host-agnostic frontmatter to SKILL.md .</span>
               </div>
-              <div class="step-why">A single entry point that routes by host is what turns a GitHub-only skill into a multi-host one; defaulting to GitHub Pages preserves current behavior for existing users.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Re-read SKILL.md — the frontmatter <code>description</code> names Netlify/Vercel/Cloudflare, stays ≤200 chars, and keeps the three-part shape (≥2 sentences, ≤80-char short label, a &quot;Use when&quot; trigger) so the existing smoke-test check #3 still passes — e.g. <code>Scaffolds GitHub Pages, Netlify, Vercel, or Cloudflare Pages publishing into any repo. Adds the deploy workflow, hub, and preview script. Use when asked to set up or publish a docs site.</code> (182 chars); the new Step 1 lists four host options and sets <code>$HOST</code>; <code>allowed-tools</code> still includes <code>Bash</code>, <code>Read</code>, <code>Write</code>, <code>AskUserQuestion</code>, <code>ToolSearch</code>, and <code>ExitPlanMode</code> (Bash is load-bearing for the CLI deploys).</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">A single entry point that routes by host is what turns a GitHub-only skill into a multi-host one; defaulting to GitHub Pages preserves current behavior for existing users.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Re-read SKILL.md — the frontmatter description names Netlify/Vercel/Cloudflare, stays ≤200 chars, and keeps the three-part shape (≥2 sentences, ≤80-char short label, a &quot;Use when&quot; trigger) so the existing smoke-test check #3 still passes — e.g. Scaffolds GitHub Pages, Netlify, Vercel, or Cloudflare Pages publishing into any repo. Adds the deploy workflow, hub, and preview script. Use when asked to set up or publish a docs site. (182 chars); the new Step 1 lists four host options and sets $HOST ; allowed-tools still includes Bash , Read , Write , AskUserQuestion , ToolSearch , and ExitPlanMode (Bash is load-bearing for the CLI deploys).</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Restructure the <code>SKILL.md</code> body into a common flow plus per-host dispatch, keeping exactly 7 numbered steps.</span>
+                <span class="step-chip-text">Restructure the SKILL.md body into a common flow plus per-host dispatch, keeping exactly 7 numbered steps.</span>
               </div>
-              <div class="step-why">Progressive disclosure keeps the body under 500 lines and isolates the new hosts from the battle-tested GitHub path (low regression risk); holding at 7 step headings keeps the existing smoke test's structure assertion valid. The 7→7 mapping (so the count never changes): ① <em>Choose host</em> (new) · ② <em>Preflight</em> git + host-aware URL · ③ <em>Resolve docs/ + plansDirectory</em>, absorbing the old &quot;locate templates&quot; step · ④ <em>Common scaffold</em> (hub + serve-docs.sh, all hosts) · ⑤ <em>Host publish</em> (GitHub workflow/.nojekyll/Pages-source inline; else read the host reference) · ⑥ <em>Verify</em> · ⑦ <em>Deliver</em>.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>grep -cE &#39;^## Step [1-7] —&#39; SKILL.md</code> returns 7; the body is under 500 lines; Step 5 dispatches each host token to its reference file — <code>netlify → references/netlify.md</code>, <code>vercel → references/vercel.md</code>, <code>cloudflare → references/cloudflare-pages.md</code> (note the <code>-pages</code> suffix: the token is <code>cloudflare</code> but the file is <code>cloudflare-pages.md</code>) — and keeps the GitHub workflow / <code>.nojekyll</code> / Pages-source logic inline; the <code>.nojekyll</code> marker and the Actions workflow are scaffolded <strong>only</strong> on the GitHub path (the other hosts do not run Jekyll); <code>references/&lt;host&gt;.md</code> are read relative to the skill's own directory; an outward-facing confirmation precedes any CLI deploy.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Progressive disclosure keeps the body under 500 lines and isolates the new hosts from the battle-tested GitHub path (low regression risk); holding at 7 step headings keeps the existing smoke test&#39;s structure assertion valid. The 7→7 mapping (so the count never changes): ① Choose host (new) · ② Preflight git + host-aware URL · ③ Resolve docs/ + plansDirectory , absorbing the old &quot;locate templates&quot; step · ④ Common scaffold (hub + serve-docs.sh, all hosts) · ⑤ Host publish (GitHub workflow/.nojekyll/Pages-source inline; else read the host reference) · ⑥ Verify · ⑦ Deliver .</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">grep -cE &#39;^## Step [1-7] —&#39; SKILL.md returns 7; the body is under 500 lines; Step 5 dispatches each host token to its reference file — netlify → references/netlify.md , vercel → references/vercel.md , cloudflare → references/cloudflare-pages.md (note the -pages suffix: the token is cloudflare but the file is cloudflare-pages.md ) — and keeps the GitHub workflow / .nojekyll / Pages-source logic inline; the .nojekyll marker and the Actions workflow are scaffolded only on the GitHub path (the other hosts do not run Jekyll); references/&lt;host&gt;.md are read relative to the skill&#39;s own directory; an outward-facing confirmation precedes any CLI deploy.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write <code>references/netlify.md</code> for the Netlify CLI deploy path.</span>
+                <span class="step-chip-text">Write references/netlify.md for the Netlify CLI deploy path.</span>
               </div>
-              <div class="step-why">Netlify deploys a static directory straight from the CLI with <code>--dir</code>, so the reference captures the exact auth-gated, confirm-first command sequence the skill follows.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>references/netlify.md</code> exists and makes the publish deterministic: link or name the site to the repo basename first (<code>netlify link</code>, or <code>netlify sites:create --name &lt;repo&gt;</code>), then <code>netlify deploy --dir=docs --prod --no-build</code> — <code>--no-build</code> forces a static upload so the CLI never runs a Netlify build. Includes a <code>netlify status</code> auth check (run without echoing any token value), an <code>npm i -g netlify-cli</code> install hint that is <strong>printed, never executed</strong> (detect-guide-stop), and a confirmation gate that shows the exact command and the resolved site name before deploy; plus an unpublish note (<code>netlify sites:delete</code> or the dashboard) and a mention of Netlify's instant dashboard rollback.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Netlify deploys a static directory straight from the CLI with --dir , so the reference captures the exact auth-gated, confirm-first command sequence the skill follows.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">references/netlify.md exists and makes the publish deterministic: link or name the site to the repo basename first ( netlify link , or netlify sites:create --name &lt;repo&gt; ), then netlify deploy --dir=docs --prod --no-build — --no-build forces a static upload so the CLI never runs a Netlify build. Includes a netlify status auth check (run without echoing any token value), an npm i -g netlify-cli install hint that is printed, never executed (detect-guide-stop), and a confirmation gate that shows the exact command and the resolved site name before deploy; plus an unpublish note ( netlify sites:delete or the dashboard) and a mention of Netlify&#39;s instant dashboard rollback.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write <code>references/vercel.md</code> for the Vercel CLI deploy path.</span>
+                <span class="step-chip-text">Write references/vercel.md for the Vercel CLI deploy path.</span>
               </div>
-              <div class="step-why">Vercel is build-oriented, so the reference must pin the no-build / static-directory invocation and first-run project linking to avoid surprising framework detection.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>references/vercel.md</code> exists and makes the publish deterministic: link/name the project to the repo basename <strong>before</strong> deploying (e.g. <code>vercel link --project &lt;repo&gt;</code>) so the project is not named after the <code>docs</code> folder, then run <code>cd docs &amp;&amp; vercel deploy --prod</code> (deploys <code>docs/</code> as the site root so framework auto-detection never builds the repo root; framework=Other, no build). It warns that a bare <code>--yes</code> infers the project name from the <code>docs</code> folder, so the link/name step must come first. Includes a <code>vercel whoami</code> auth check (no token echo), an <code>npm i -g vercel</code> install hint that is <strong>printed, never executed</strong>, and a confirmation gate that shows the exact command <strong>and the resolved project name</strong> (default: repo basename, overridable) before deploy; plus an unpublish note (<code>vercel project rm &lt;name&gt;</code>). It also documents a <strong>Next.js static-export path</strong>: detect a <code>next.config.{js,mjs,ts}</code> declaring <code>output: 'export'</code>, run <code>next build</code> locally (produces <code>out/</code>), then <code>cd out &amp;&amp; vercel link --project &lt;repo&gt; --yes &amp;&amp; vercel deploy --prod</code> — the publish dir is <code>out/</code> instead of <code>docs/</code>, framework still Other (Vercel uploads the prebuilt static files; no host-side build), reusing the same <code>vercel whoami</code> auth check and the confirmation gate (which shows the resolved publish dir). The <code>vercel link</code> inside <code>out/</code> is load-bearing: a freshly built <code>out/</code> carries no <code>.vercel/project.json</code>, so deploying without it would create/prompt a separate <code>out</code> project instead of the confirmed repo-basename one; the link (or an equivalent <code>--project &lt;repo&gt;</code> / <code>VERCEL_PROJECT_ID</code>) carries the project identity into the prebuilt deploy.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Vercel is build-oriented, so the reference must pin the no-build / static-directory invocation and first-run project linking to avoid surprising framework detection.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">references/vercel.md exists and makes the publish deterministic: link/name the project to the repo basename before deploying (e.g. vercel link --project &lt;repo&gt; ) so the project is not named after the docs folder, then run cd docs &amp;&amp; vercel deploy --prod (deploys docs/ as the site root so framework auto-detection never builds the repo root; framework=Other, no build). It warns that a bare --yes infers the project name from the docs folder, so the link/name step must come first. Includes a vercel whoami auth check (no token echo), an npm i -g vercel install hint that is printed, never executed , and a confirmation gate that shows the exact command and the resolved project name (default: repo basename, overridable) before deploy; plus an unpublish note ( vercel project rm &lt;name&gt; ). It also documents a Next.js static-export path : detect a next.config.{js,mjs,ts} declaring output: &#39;export&#39; , run next build locally (produces out/ ), then cd out &amp;&amp; vercel link --project &lt;repo&gt; --yes &amp;&amp; vercel deploy --prod — the publish dir is out/ instead of docs/ , framework still Other (Vercel uploads the prebuilt static files; no host-side build), reusing the same vercel whoami auth check and the confirmation gate (which shows the resolved publish dir). The vercel link inside out/ is load-bearing: a freshly built out/ carries no .vercel/project.json , so deploying without it would create/prompt a separate out project instead of the confirmed repo-basename one; the link (or an equivalent --project &lt;repo&gt; / VERCEL_PROJECT_ID ) carries the project identity into the prebuilt deploy.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write <code>references/cloudflare-pages.md</code> for the Wrangler Pages deploy path.</span>
+                <span class="step-chip-text">Write references/cloudflare-pages.md for the Wrangler Pages deploy path.</span>
               </div>
-              <div class="step-why">Cloudflare Pages deploys via <code>wrangler pages deploy &lt;dir&gt;</code> and needs a named project, so the reference captures the create-then-deploy sequence and the login / token auth options.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>references/cloudflare-pages.md</code> exists and contains <code>wrangler pages deploy docs --project-name=&lt;name&gt;</code>, the first-run <code>wrangler pages project create</code> note, a <code>wrangler whoami</code> auth check (no token echo), an <code>npm i -g wrangler</code> install hint that is <strong>printed, never executed</strong>, and a confirmation gate that shows the exact command <strong>and the resolved project name</strong> (default: repo basename, overridable) before deploy; plus an unpublish note (dashboard or <code>wrangler</code>).</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Cloudflare Pages deploys via wrangler pages deploy &lt;dir&gt; and needs a named project, so the reference captures the create-then-deploy sequence and the login / token auth options.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">references/cloudflare-pages.md exists and contains wrangler pages deploy docs --project-name=&lt;name&gt; , the first-run wrangler pages project create note, a wrangler whoami auth check (no token echo), an npm i -g wrangler install hint that is printed, never executed , and a confirmation gate that shows the exact command and the resolved project name (default: repo basename, overridable) before deploy; plus an unpublish note (dashboard or wrangler ).</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
@@ -1588,28 +1800,34 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Wire the docs and plugin metadata for the new capability.</span>
               </div>
-              <div class="step-why">The marketplace, README, and CHANGELOG are the discovery surface; bumping the version (MINOR for a new capability) and updating prose is required by the project's versioning rules and keeps the smoke test's description/version checks green.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>marketplace.json</code> parses; <code>plan-agent</code> is at <code>2.9.0</code> (&gt; 2.8.1) with a description naming the new hosts that still contains <code>setup-sites</code> (trim it to stay within the 1024-char limit); <code>plugin.json</code> has no <code>version</code> key and names the hosts; in README the <code>setup-sites</code> table row, the <code>setup-sites</code> section prose, and the directory tree (which gains <code>references/</code> with the three host files) are all updated; CHANGELOG has a Keep-a-Changelog <code>2.9.0</code> entry; the guide gains an &quot;other hosts&quot; section with a heading and a pointer/link to each of the three references. (The JSON auto-validation hook fires on the <code>marketplace.json</code> write.)</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">The marketplace, README, and CHANGELOG are the discovery surface; bumping the version (MINOR for a new capability) and updating prose is required by the project&#39;s versioning rules and keeps the smoke test&#39;s description/version checks green.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">marketplace.json parses; plan-agent is at 2.9.0 (&gt; 2.8.1) with a description naming the new hosts that still contains setup-sites (trim it to stay within the 1024-char limit); plugin.json has no version key and names the hosts; in README the setup-sites table row, the setup-sites section prose, and the directory tree (which gains references/ with the three host files) are all updated; CHANGELOG has a Keep-a-Changelog 2.9.0 entry; the guide gains an &quot;other hosts&quot; section with a heading and a pointer/link to each of the three references. (The JSON auto-validation hook fires on the marketplace.json write.)</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Extend <code>tests/plugins/test-setup-sites.sh</code> to cover multi-host.</span>
+                <span class="step-chip-text">Extend tests/plugins/test-setup-sites.sh to cover multi-host.</span>
               </div>
-              <div class="step-why">This committed smoke test is the objective-verification — it asserts the skill now offers all four hosts with working per-host references; extending the existing test rather than adding a new file keeps one source of truth.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>bash tests/plugins/test-setup-sites.sh</code> exits 0 with new checks using explicit grep targets: (a) SKILL.md Step 1 names all four hosts <em>and</em> contains a routing line mapping each host token to its reference file (<code>netlify→references/netlify.md</code>, <code>vercel→references/vercel.md</code>, <code>cloudflare→references/cloudflare-pages.md</code>); (b) each reference greps for its deploy command (<code>netlify deploy --dir=docs --prod</code>, <code>vercel deploy --prod</code>, <code>wrangler pages deploy docs --project-name</code>), its auth check (<code>netlify status</code> / <code>vercel whoami</code> / <code>wrangler whoami</code>), and a confirmation marker; <code>references/vercel.md</code> additionally greps for the Next.js static-export branch (<code>output: 'export'</code>, <code>next build</code>, and a <code>cd out &amp;&amp; vercel deploy --prod</code> line); (c) SKILL.md stays under 500 lines and at 7 steps; (d) the marketplace version is ≥ 2.9.0 and the description names the hosts. The test is structural (grep over files) — it cannot exercise the runtime confirmation gate, so &quot;no deploy without confirmation&quot; is covered by the manual per-host trace in the Verification section, noted explicitly in the test.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">This committed smoke test is the objective-verification — it asserts the skill now offers all four hosts with working per-host references; extending the existing test rather than adding a new file keeps one source of truth.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">bash tests/plugins/test-setup-sites.sh exits 0 with new checks using explicit grep targets: (a) SKILL.md Step 1 names all four hosts and contains a routing line mapping each host token to its reference file ( netlify→references/netlify.md , vercel→references/vercel.md , cloudflare→references/cloudflare-pages.md ); (b) each reference greps for its deploy command ( netlify deploy --dir=docs --prod , vercel deploy --prod , wrangler pages deploy docs --project-name ), its auth check ( netlify status / vercel whoami / wrangler whoami ), and a confirmation marker; references/vercel.md additionally greps for the Next.js static-export branch ( output: &#39;export&#39; , next build , and a cd out &amp;&amp; vercel deploy --prod line); (c) SKILL.md stays under 500 lines and at 7 steps; (d) the marketplace version is ≥ 2.9.0 and the description names the hosts. The test is structural (grep over files) — it cannot exercise the runtime confirmation gate, so &quot;no deploy without confirmation&quot; is covered by the manual per-host trace in the Verification section, noted explicitly in the test.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1617,36 +1835,22 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
       </div>
     </section>
 
-    <!-- ── Tests ────────────────────────────────────────────────── -->
     <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
       <h2 id="h-tests">
         <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
         Tests
       </h2>
+      <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 2 — Non-code plan</div>
-
-      <!-- Objective-verification test — mandatory, always first -->
-      <div class="objective-test-card">
-        <div class="test-card-header">
-          <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">setup-sites offers all four hosts with working per-host CLI references</span>
-        </div>
-        <div class="test-card-body">
-          <p><strong>File:</strong> <code>tests/plugins/test-setup-sites.sh</code> (extended)</p>
-          <p><strong>Type:</strong> structural smoke test</p>
-          <p><strong>Asserts (structural greps):</strong> SKILL.md Step 1 names all four hosts and routes each host token to its reference file (including <code>cloudflare → references/cloudflare-pages.md</code>); <code>references/netlify.md</code>, <code>references/vercel.md</code>, and <code>references/cloudflare-pages.md</code> each contain their exact deploy command, auth check, and a confirmation marker; <code>references/vercel.md</code> also contains the Next.js static-export branch (<code>output: 'export'</code>, <code>next build</code>, <code>cd out &amp;&amp; vercel deploy --prod</code>); <code>SKILL.md</code> stays under 500 lines and at 7 numbered steps; <code>marketplace.json</code> bumps <code>plan-agent</code> to ≥ 2.9.0 with a description naming the new hosts.</p>
-          <p><strong>Out of scope:</strong> a grep-over-files smoke test cannot prove the runtime confirmation gate actually pauses before deploying — that behavioral guarantee is covered by the manual per-host trace in the Verification section, not by this test.</p>
-          <p><strong>Run:</strong> <code>bash tests/plugins/test-setup-sites.sh</code></p>
-        </div>
-      </div>
+      <div class="objective-test-card">Objective setup-sites offers all four hosts with working per-host CLI references File: tests/plugins/test-setup-sites.sh (extended) Type: structural smoke test Asserts (structural greps): SKILL.md Step 1 names all four hosts and routes each host token to its reference file (including cloudflare → references/cloudflare-pages.md ); references/netlify.md , references/vercel.md , and references/cloudflare-pages.md each contain their exact deploy command, auth check, and a confirmation marker; references/vercel.md also contains the Next.js static-export branch ( output: &#39;export&#39; , next build , cd out &amp;&amp; vercel deploy --prod ); SKILL.md stays under 500 lines and at 7 numbered steps; marketplace.json bumps plan-agent to ≥ 2.9.0 with a description naming the new hosts. Out of scope: a grep-over-files smoke test cannot prove the runtime confirmation gate actually pauses before deploying — that behavioral guarantee is covered by the manual per-host trace in the Verification section, not by this test. Run: bash tests/plugins/test-setup-sites.sh</div>
     </section>
 
-    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria">
         <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
-        Acceptance Criteria
+        Definition of done
       </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
@@ -1654,11 +1858,11 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">Each non-GitHub host has a <code>references/&lt;host&gt;.md</code> documenting CLI detect/install, an auth check, an explicit outward-facing confirmation, the exact <code>docs/</code> deploy command, and live-URL reporting.</label>
+          <label for="ac2">Each non-GitHub host has a references/&lt;host&gt;.md documenting CLI detect/install, an auth check, an explicit outward-facing confirmation, the exact docs/ deploy command, and live-URL reporting.</label>
         </li>
         <li>
           <input type="checkbox" id="ac3">
-          <label for="ac3">The existing GitHub Pages flow is unchanged — it still scaffolds the workflow, <code>.nojekyll</code>, hub, and <code>serve-docs.sh</code> and guides the Pages source setting.</label>
+          <label for="ac3">The existing GitHub Pages flow is unchanged — it still scaffolds the workflow, .nojekyll , hub, and serve-docs.sh and guides the Pages source setting.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4">
@@ -1666,11 +1870,11 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5"><code>SKILL.md</code> stays under 500 lines and at exactly 7 numbered steps.</label>
+          <label for="ac5">SKILL.md stays under 500 lines and at exactly 7 numbered steps.</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6"><code>marketplace.json</code> is valid, <code>plan-agent</code> is bumped to ≥ 2.9.0, its description names the new hosts and still contains <code>setup-sites</code>; <code>plugin.json</code> carries no <code>version</code> key.</label>
+          <label for="ac6">marketplace.json is valid, plan-agent is bumped to ≥ 2.9.0, its description names the new hosts and still contains setup-sites ; plugin.json carries no version key.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
@@ -1678,32 +1882,32 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8"><code>bash tests/plugins/test-setup-sites.sh</code> passes.</label>
+          <label for="ac8">bash tests/plugins/test-setup-sites.sh passes.</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9"><code>references/vercel.md</code> documents a Next.js static-export path — detect <code>output: 'export'</code>, run <code>next build</code>, then deploy the resulting <code>out/</code> as prebuilt static files (framework Other, no host-side build) behind the same auth + confirmation gate.</label>
+          <label for="ac9">references/vercel.md documents a Next.js static-export path — detect output: &#39;export&#39; , run next build , then deploy the resulting out/ as prebuilt static files (framework Other, no host-side build) behind the same auth + confirmation gate.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
 
-    <!-- ── Verification ──────────────────────────────────────────── -->
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
       <h2 id="h-verification">
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
-        Verification
+        Final check
       </h2>
-      <p>Run <code>bash tests/plugins/test-setup-sites.sh</code> and confirm it exits 0. Then trace the skill once per host <em>without deploying</em>: <code>github</code> runs the inline workflow / <code>.nojekyll</code> / Pages path; <code>netlify</code>, <code>vercel</code>, and <code>cloudflare</code> each Read the matching <code>references/&lt;host&gt;.md</code> and stop at the confirmation gate before any deploy. Diff <code>SKILL.md</code> to confirm the GitHub-specific blocks are byte-for-byte unchanged where kept inline. Confirm <code>marketplace.json</code> parses and <code>plan-agent</code>'s version is above the value on <code>origin/main</code>. Optionally run <code>/validate-plugin plan-agent</code>.</p>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
+      <p>Run bash tests/plugins/test-setup-sites.sh and confirm it exits 0. Then trace the skill once per host without deploying : github runs the inline workflow / .nojekyll / Pages path; netlify , vercel , and cloudflare each Read the matching references/&lt;host&gt;.md and stop at the confirmation gate before any deploy. Diff SKILL.md to confirm the GitHub-specific blocks are byte-for-byte unchanged where kept inline. Confirm marketplace.json parses and plan-agent &#39;s version is above the value on origin/main . Optionally run /validate-plugin plan-agent .</p>
     </section>
 
-    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
       <h2 id="h-completion">
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
-        Completion Checklist
+        Wrapping up
       </h2>
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
       <div class="completion-checklist" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
@@ -1729,19 +1933,18 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
       </div>
     </section>
 
-    <!-- ── Next Steps ────────────────────────────────────────────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
-        Next Steps
+        Next steps
       </h2>
+      <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
       <div class="next-steps-list">
-
         <details class="next-step-item">
           <summary>Add committed host config files for Git-integration auto-deploy</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>In the agentics repo, extend kit/plugins/plan-agent/skills/setup-sites so each non-GitHub host can optionally scaffold a committed config file (netlify.toml with publish="docs"; vercel.json with outputDirectory="docs" and framework=null; wrangler.toml for Pages) that enables auto-deploy on git push via the host's Git integration. Put the config templates under kit/plugins/plan-agent/templates/hosts/&lt;host&gt;/, gate them behind an AskUserQuestion ("CLI deploy now" vs "commit config for Git-based deploys"), document them in the matching references/&lt;host&gt;.md, and update tests/plugins/test-setup-sites.sh. Bump plan-agent's minor version in .claude-plugin/marketplace.json and add a CHANGELOG entry.</pre>
+            <pre>In the agentics repo, extend kit/plugins/plan-agent/skills/setup-sites so each non-GitHub host can optionally scaffold a committed config file (netlify.toml with publish=&quot;docs&quot;; vercel.json with outputDirectory=&quot;docs&quot; and framework=null; wrangler.toml for Pages) that enables auto-deploy on git push via the host&#39;s Git integration. Put the config templates under kit/plugins/plan-agent/templates/hosts/&lt;host&gt;/, gate them behind an AskUserQuestion (&quot;CLI deploy now&quot; vs &quot;commit config for Git-based deploys&quot;), document them in the matching references/&lt;host&gt;.md, and update tests/plugins/test-setup-sites.sh. Bump plan-agent&#39;s minor version in .claude-plugin/marketplace.json and add a CHANGELOG entry.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1757,25 +1960,16 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
           </div>
         </details>
 
-        <!-- Wish List -->
-        <div class="wish-list-header">
-          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-          Wish List
-        </div>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            Auto-detect the target host from existing repo config
-            <span class="wish-badge">Wish List</span>
-          </summary>
+        <details class="next-step-item">
+          <summary>Auto-detect the target host from existing repo config Wish List</summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
             <pre>Add host auto-detection to kit/plugins/plan-agent/skills/setup-sites/SKILL.md: before prompting, sniff the repo for an existing host signal (netlify.toml, vercel.json, wrangler.toml or .wrangler/, .github/workflows/deploy-pages.yml, or a docs/CNAME) and pre-select that host as the AskUserQuestion default, falling back to GitHub Pages when no signal is found. Update tests/plugins/test-setup-sites.sh accordingly and bump the plan-agent version with a CHANGELOG entry.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
-
       </div>
     </section>
 
@@ -1784,71 +1978,35 @@ Run bash tests/plugins/test-setup-sites.sh and confirm exit 0. Then trace the sk
       Generated by plan-agent · 2026-06-22 · agentics
     </footer>
 
-    <details id="team-review-20260622170620" class="team-review" style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1rem;">
-      <summary style="cursor:pointer;font-weight:600;color:var(--accent);">Team Review (2026-06-22 17:06:20 UTC)</summary>
-      <div class="review-body" style="font-size:.9rem;line-height:1.6;">
-
-        <h3>Executive Summary</h3>
-        <p>Seven-reviewer team requested (5 core — architecture, completeness, testability, risk, conventions; UX/accessibility skipped: no genuine UI signals in the plan content). Verdict: <strong>sound with revisions</strong>. The progressive-disclosure split, MINOR 2.9.0 bump, and Tier-2 classification are all correct. The team caught two real defects (an auto-install self-contradiction and an underspecified Vercel command) plus several falsifiability gaps. All accepted edits were applied via the "Apply all" triage path; one risk recommendation (preview-first) was declined to respect the user's explicit straight-to-prod decision.</p>
-
-        <h3>Role-by-Role Findings</h3>
-        <h4>Architecture — sound</h4>
-        <ul>
-          <li>Common-flow + per-host-dispatch with references/&lt;host&gt;.md mirrors a dozen sibling skills. (low/medium)</li>
-          <li>Flagged that reference-file resolution path should be explicit (relative to the skill dir) and that the smoke test should assert SKILL.md actually references references/&lt;host&gt;, not just that files exist. Both applied.</li>
-          <li>Noted the 500-line GitHub-inline exception is load-bearing for one host; recorded as a known scalability boundary.</li>
-        </ul>
-        <h4>Completeness — one critical gap</h4>
-        <ul>
-          <li><strong>Critical:</strong> adding a host-picker step while requiring exactly 7 steps was ambiguous (skill already has 7). Fixed by spelling out the 7→7 mapping in Step 2.</li>
-          <li>High: Vercel subdirectory command underspecified — fixed (see Risk).</li>
-          <li>Medium: serve-docs.sh comment is GitHub-specific and was missing from Files — both added.</li>
-          <li>Low: README/guide verifies not falsifiable; .nojekyll-for-non-GitHub ambiguity; 3-sentence description constraint — all tightened.</li>
-        </ul>
-        <h4>Testability — Tier 2 correct, gates only grep-tested</h4>
-        <ul>
-          <li>High: the auth/confirm gate and "no deploy without confirmation" criterion are runtime behaviors a grep-over-files smoke test cannot prove. Added an explicit out-of-scope note + manual-trace coverage; pinned exact grep patterns; split the host-picker assertion into name-presence + routing-line checks.</li>
-        </ul>
-        <h4>Risk — high (outward-facing publish)</h4>
-        <ul>
-          <li><strong>High:</strong> <code>npm i -g</code> "install fallback" contradicted "never auto-install" — reconciled to a printed-not-executed hint.</li>
-          <li><strong>High:</strong> <code>vercel deploy --prod</code> deploys CWD and may build the repo root — pinned <code>cd docs &amp;&amp; vercel deploy --prod --yes</code>, framework Other, no build.</li>
-          <li>High/Medium: show resolved project name + exact command before confirming; document unpublish per host; do not echo tokens; keep Bash in allowed-tools — all applied.</li>
-          <li>High: confirmation gate is AskUserQuestion (bypassable in agent-to-agent flows). Mitigated by showing command/project pre-confirm + unpublish docs; literal-text gate considered but not adopted (matches the existing GitHub-path convention).</li>
-        </ul>
-        <h4>Conventions — strong fit</h4>
-        <ul>
-          <li>High: description would exceed the 200-char budget — baked in a 182-char three-part candidate.</li>
-          <li>Confirmed: 2.9.0 MINOR set only in marketplace.json; plugin.json carries no version key; references/ (plural) matches build-proposal/review-plan/refine-prompt; filename is verb-target compliant. Noted the marketplace.json 1024-char description limit — trim added to Step 6.</li>
-        </ul>
-
-        <h3>Agreements &amp; Conflicts</h3>
-        <ul>
-          <li><strong>Confirmed (multi-reviewer):</strong> Vercel command underspecification (Risk + Completeness); the 7-step/host-picker tension (Completeness + Architecture + Risk all touched the step structure); description budget (Conventions, with Completeness noting the 3-sentence check).</li>
-          <li><strong>Conflict:</strong> Risk recommended preview-first deploys; the user explicitly chose straight-to-prod + one confirm. Resolved in the user's favor; adopted the cheaper safeguards (show command/project before confirm, document unpublish, note dashboard rollback) instead.</li>
-        </ul>
-
-        <h3>Highest-Risk Issues (addressed)</h3>
-        <ol>
-          <li>Auto-install vs. detect-guide-stop contradiction → printed-not-executed hint.</li>
-          <li>Vercel deploying the wrong directory → pinned <code>cd docs &amp;&amp; vercel deploy --prod --yes</code> + framework Other.</li>
-          <li>7→7 step mapping ambiguity → explicit mapping in Step 2.</li>
-          <li>Description &gt; 200 chars → 182-char candidate baked in.</li>
-          <li>Confirmation gate untestable by smoke test → out-of-scope note + manual trace.</li>
-        </ol>
-
-        <h3>Triage Outcome — "Apply all"</h3>
-        <p><strong>Accepted (applied as-is):</strong> 7→7 step mapping; description candidate + 3-sentence/≤80-char constraints; Bash/Read/Write kept in allowed-tools; printed-not-executed install hints (all 3 references); pinned Vercel command + framework Other; show command + resolved project name before confirm; unpublish notes per reference; no-token-echo on auth checks; .nojekyll/workflow GitHub-only + reference resolution relative to skill dir; README/guide falsifiability + 1024-char trim; pinned smoke-test grep patterns + split host-picker assertion + runtime-out-of-scope note; serve-docs.sh added to Files; strengthened criterion ac4; context note recording the straight-to-prod decision. Digest refreshed to match.</p>
-        <p><strong>Rejected (recorded, not applied):</strong> preview-first deploy default (Risk) — conflicts with the user's explicit straight-to-prod + one-confirm choice; compensating safeguards adopted instead.</p>
-        <p><strong>Bypass:</strong> the Step 6b walkthrough was bypassed by the "Apply all" gate choice; the full curated edit set was applied.</p>
-
-      </div>
-    </details>
-
   </main>
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
 /* ── Save as PDF (native browser print dialog) ──────────────── */
 function savePDF() {
   window.print();
@@ -1871,7 +2029,8 @@ function buildImplementPrompt() {
 
   var planPathMeta = document.querySelector('meta[name="plan-path"]');
   var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
-  var digestCmd = "awk '!f && /<script[^>]*id=\"plan-digest\"/{f=1;next} f && /<\\/script>/{exit} f' " + planPath;
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\.html$/, '.md');
 
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
@@ -1879,27 +2038,35 @@ function buildImplementPrompt() {
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the spec from the embedded digest: ' + digestCmd + ' (fall back to reading the full HTML only if the digest block is missing).');
-  lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
-  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
-  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Run the objective test\'s Run command from the plan\'s Tests section, then walk the Verification section end-to-end and confirm the stated objective actually works — on failure, fix and re-verify before continuing; never mark the plan done on a failing check.');
+  lines.push('5. Set "status: completed" in the spec frontmatter only once every step is marked, every criterion is checked, and verification passes.');
+  lines.push('6. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
 
   return lines.join('\n');
 }
 
-/* ── Copy implement prompt ──────────────────────────────────── */
-function copyCmd(btn) {
-  var text = buildImplementPrompt();
-  function flash() {
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
     if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
     btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
       btn._copyTimer = null;
-    }, 2000);
+    }, delay);
   }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
   function fallback() {
     var ta = document.createElement('textarea');
     ta.value = text;
@@ -1909,7 +2076,7 @@ function copyCmd(btn) {
     var ok = false;
     try { ok = document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
-    if (ok) flash();
+    if (ok) flash(); else fail();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(flash).catch(fallback);
@@ -1918,103 +2085,30 @@ function copyCmd(btn) {
   }
 }
 
-/* ── Copy workflow prompt ──────────────────────────────────── */
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
 function copyWorkflow(btn) {
   var code = document.getElementById('workflow-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy goal prompt ──────────────────────────────────────── */
 function copyGoal(btn) {
   var code = document.getElementById('goal-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy plan file name / relative path ────────────────────── */
 function copyPath(btn, id) {
   var el = document.getElementById(id);
   if (!el) return;
-  var text = el.textContent.trim();
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
 }
 
 /* ── Copy prompt button (global — required by inline onclick) ── */
@@ -2024,47 +2118,18 @@ function copyPrompt(btn) {
     pre = btn.parentElement && btn.parentElement.querySelector('pre');
   }
   if (!pre) return;
-  var text = pre.textContent;
-
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy prompt';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
 }
 
 (function () {
   'use strict';
 
-  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* ── Progress bar — state from HTML attributes ──────────────── */
   /* State lives in the HTML itself: a criterion is done iff its       */
   /* <input> carries the `checked` attribute, which the browser        */
-  /* renders natively on load — no localStorage. Toggling a box syncs  */
-  /* the attribute so the live DOM (and any saved copy of this file)   */
-  /* stays the single source of truth.                                 */
+  /* renders natively on load. Toggling a box syncs the attribute so   */
+  /* the live DOM (and any saved copy of this file) stays the single   */
+  /* portable source of truth — no browser-only storage layer.         */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -2153,27 +2218,59 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
-    }, { threshold: 0.3 });
-    sections.forEach(function (el) { observer.observe(el); });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
 </script>

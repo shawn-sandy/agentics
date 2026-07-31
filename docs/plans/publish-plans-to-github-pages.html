@@ -1,65 +1,180 @@
 <!DOCTYPE html>
-<html lang="en" data-status="completed">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="completed">
+<meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-07">
 <meta name="plan-repo" content="agentics">
 <meta name="plan-file" content="publish-plans-to-github-pages.html">
 <meta name="plan-path" content="docs/plans/publish-plans-to-github-pages.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/publish-plans-to-github-pages.html — Publish all HTML plans to GitHub Pages for one-click browsing">
+<meta name="plan-md" content="docs/plans/publish-plans-to-github-pages.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/publish-plans-to-github-pages.md — Publish HTML plans to GitHub Pages. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-plans-to-github-pages.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Publish HTML plans to GitHub Pages. The plan at docs/plans/publish-plans-to-github-pages.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-plans-to-github-pages.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/publish-plans-to-github-pages.md — Publish HTML plans to GitHub Pages. Brief subagents with the plan file at docs/plans/publish-plans-to-github-pages.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-plans-to-github-pages.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Publish HTML plans to GitHub Pages</title>
 <style>
-  /* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --purple:     #a21caf;
-    --purple-bg:  #fdf4ff;
-    --purple-border:#f0abfc;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -89,7 +204,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -99,8 +214,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -115,9 +230,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -126,11 +242,21 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
+  }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
   }
 
   /* Status badge */
@@ -146,7 +272,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -157,14 +286,90 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
+
+  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
+  .effort-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+  }
+  .effort-badge::before { content: "Effort "; opacity: .7; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-status="in-progress"] .status-badge::before { animation: none; }
+  }
+
+  /* Save as PDF button */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .75rem;
+    font-weight: 600;
+    font-family: var(--mono);
+    color: var(--on-accent);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* Meta row */
   .plan-meta {
@@ -173,9 +378,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -187,14 +393,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -205,29 +414,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -242,85 +452,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
   }
-  .objective-card .section-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .objective-card .section-label,
+  .plan-glance-label {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
+  .plan-glance {
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
+  }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
+
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -328,18 +638,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: .9rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
+  .section-card .section-intro {
+    font-size: .85rem;
+    color: var(--ink-2);
+    margin: -1rem 0 1.25rem;
+  }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -348,66 +673,35 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
-  .step-body { min-width: 0; }
+  .step-card.completed .step-number { color: var(--moss); }
+  .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
     margin-bottom: .3rem;
@@ -415,58 +709,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
-  .step-chip-text { }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+  .step-chip-text { flex: 1; }
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -478,31 +770,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -516,14 +808,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -534,20 +826,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -556,25 +848,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -587,11 +879,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -601,10 +893,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -615,14 +907,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -636,20 +928,22 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
 
   /* Wish list variant */
   .wish-list-header {
@@ -660,37 +954,38 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
     content: "";
+    flex: 1;
     height: 1px;
     background: var(--wish-border);
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -704,13 +999,48 @@
     user-select: none;
     min-height: 44px;
   }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
-  .optional-section[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-section > summary::before,
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
+  .optional-section[open] > summary::before,
+  .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
-  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before, .plan-more-ways > summary::before { transition: none; } }
+
+  /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
+  .plan-more-ways {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--panel);
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+    overflow: hidden;
+  }
+  .plan-more-ways > summary {
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
+  .plan-more-ways-body {
+    padding: .75rem 1rem 1rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  @media print { .plan-more-ways { display: none !important; } }
 
   /* ── Implement prompt ─────────────────────────────────────────── */
   .plan-implement {
@@ -719,8 +1049,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -729,14 +1059,15 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
     word-break: break-all;
   }
   .copy-cmd-btn {
@@ -746,9 +1077,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -757,23 +1088,21 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Plan source (file name + relative path) ──────────────────── */
+  /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
   .plan-source {
     display: flex;
     flex-direction: column;
     gap: .4rem;
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     padding: .55rem .75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     font-size: .8rem;
   }
   .plan-source-row { display: flex; align-items: center; gap: .6rem; }
@@ -782,14 +1111,15 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
     word-break: break-all;
   }
   .copy-src-btn {
@@ -799,9 +1129,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -810,11 +1140,119 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+
+  /* ── Workflow prompt row (conditional — remove row when empty; lives in the drawer) ── */
+  .plan-workflow {
+    margin: 0;
+    font-size: .8rem;
+  }
+  .plan-workflow-label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding: .1rem 0;
+  }
+  .plan-workflow-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-radius: var(--radius);
+  }
+  .plan-workflow code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-workflow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
+  @media print { .plan-workflow { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
+
+  /* ── Goal prompt row (outcome-driven — always present; lives in the drawer) ── */
+  .plan-goal {
+    margin: 0;
+    font-size: .8rem;
+  }
+  .plan-goal-label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--purple);
+    padding: .1rem 0;
+  }
+  .plan-goal-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--purple-bg);
+    border: 1px solid var(--purple-border);
+    border-radius: var(--radius);
+  }
+  .plan-goal code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-goal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
+  @media print { .plan-goal { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
 
   /* ── Tests section ──────────────────────────────────────────────── */
   .test-list {
@@ -823,8 +1261,8 @@
     gap: .75rem;
   }
   .test-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow);
@@ -846,26 +1284,27 @@
     border-radius: 999px;
     flex-shrink: 0;
   }
-  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
   .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
-  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
   .test-card-title {
     font-weight: 600;
     font-size: .95rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
   }
-  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
   .test-card-body p { margin-bottom: .4rem; }
   .test-card-body p:last-child { margin-bottom: 0; }
   .test-card-body code { font-size: .85em; }
-  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
   .test-tier-label {
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
     display: flex;
     align-items: center;
@@ -873,22 +1312,23 @@
   }
   .test-tier-label::after {
     content: "";
+    flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--rule);
   }
   .objective-test-card {
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-left: 4px solid var(--green);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow);
   }
   .objective-test-card .test-card-header { margin-bottom: .6rem; }
-  .objective-test-card .test-card-title { color: #14532d; }
-  .objective-test-card .test-card-body { color: #166534; }
-  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -896,10 +1336,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -908,7 +1348,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -917,75 +1357,90 @@
 
   /* ═════════════════════════════════════════════════════════════════
      OPT-IN VISUAL COMPONENTS
+     Pure-CSS / token-driven — no CDN, no external script. These rules
+     are always present (harmless when unused); the matching <body>
+     section blocks are kept only when a plan needs them and deleted
+     otherwise. See SKILL.md → "Visual Components".
      ═════════════════════════════════════════════════════════════════ */
 
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
+  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
+
+  /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
+  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
+
+  /* ── Bar chart (value via inline --val) ─────────────────────────── */
+  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
+  .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
+  @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
+
+  /* ── Data table ─────────────────────────────────────────────────── */
+  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
+  .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
+
+  /* ── Resources (images, screenshots & reference links) ──────────── */
+  .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+  .resource-figure > a { display: block; line-height: 0; }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
+  .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
+  .resource-links li:last-child { border-bottom: none; }
+  .resource-links a { font-weight: 600; word-break: break-word; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
+
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
     display: inline-flex;
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
   .plan-back-link:hover { color: var(--accent); }
   .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
-
-  /* ── Save as PDF button (backfilled) ──────────────────────────── */
-  .save-pdf-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .4rem 1rem;
-    font-size: .8rem;
-    font-weight: 600;
-    color: #fff;
-    background: var(--accent, #2563eb);
-    border: 1px solid var(--accent, #2563eb);
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: inherit;
-    line-height: 1.4;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: filter .15s, box-shadow .15s;
-  }
-  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-  .save-pdf-btn:active { filter: brightness(.75); }
-  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent, #2563eb); outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
-  .plan-header-actions {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    flex-wrap: wrap;
-    margin-top: .75rem;
-  }
-  @media print { .save-pdf-btn { display: none !important; } }
 </style>
 <style id="plan-responsive-fix" data-version="1">
 /* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
@@ -1000,68 +1455,6 @@ img, video { max-width: 100%; height: auto; }
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════════════
-     MACHINE-READABLE DIGEST (backfilled)
-     First element child of <body>. type="text/markdown" never renders
-     or runs. Spec only — no status/checkbox/progress state. Literal
-     closing-script sequences in the content are guarded as <\/script.
-     Extract (first-match flag-and-exit):
-       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
-     ══════════════════════════════════════════════════════════════════ -->
-<script type="text/markdown" id="plan-digest">
-# Plan: Publish HTML plans to GitHub Pages
-
-> Authored spec only. Status and progress live in the <head> meta tags and
-> the live DOM, never in this block.
-
-## Objective
-Ship a GitHub Actions pipeline that publishes the entire docs/ tree to GitHub Pages, so every developer can browse all 32 HTML plans from one public URL — landing straight on the filterable plans gallery — instead of cloning the repo and opening files by hand.
-
-## Context
-The repo already generates rich, self-contained HTML plans into docs/plans/ (32 of them today), and a PostToolUse hook ( rebuild-plans-index.py ) keeps docs/plans/index.html — a filterable gallery — current after every plan write. The one missing piece is reach: those files only exist on disk, so a developer has to clone the repo and open them in a local browser to read them.
-
-GitHub Pages closes that gap. The repo ( shawn-sandy/agentics ) already runs GitHub Actions, so the cleanest fit is a dedicated Pages deploy workflow using the official actions/upload-pages-artifact + actions/deploy-pages pair, publishing the whole docs/ directory on every push to main . Two known footguns shape the approach: GitHub Pages runs Jekyll by default (which can mangle hand-built HTML and ignores _ -prefixed paths) — neutralised with a .nojekyll marker; and a project Pages site is served under a base path ( /agentics/ ), so the landing page must use a relative redirect. The gallery's own links are already relative, so they survive the base path unchanged.
-
-Per the decisions taken while drafting: deploy via a GitHub Actions workflow (not branch/folder), and make the existing plans gallery the site's landing page via a root redirect, keeping docs/plans/index.html as the single hook-maintained source of truth.
-
-## Files
-- .github/workflows/deploy-pages.yml (new) — Actions workflow that deploys docs/ to Pages
-- docs/.nojekyll (new) — disable Jekyll processing of hand-built HTML
-- docs/index.html (new) — root redirect to the plans gallery
-- docs/README.md (modified) — add a link/badge to the published site
-
-## Steps
-1. Add the docs/.nojekyll marker file Why: GitHub Pages runs the Jekyll static-site processor by default, which strips files and folders whose names start with an underscore and can rewrite hand-authored HTML. The plans are fully self-contained HTML — an empty .nojekyll file at the published root tells Pages to serve every byte verbatim. Verify: test -f docs/.nojekyll && echo present prints present . The file is empty (zero bytes is fine).
-2. Create docs/index.html as a relative redirect to the plans gallery Why: Publishing all of docs/ means the site root resolves to docs/index.html , which does not yet exist — visitors would hit a 404. A tiny redirect page forwards the root to plans/index.html so visitors land directly on the filterable gallery (the chosen landing page), while docs/plans/index.html stays the single hook-maintained source of truth. Use a relative target ( plans/index.html , not a leading slash) so it works under the /agentics/ Pages base path, plus a <meta http-equiv="refresh"> , a canonical <link> , and a visible fallback anchor for no-JS/no-refresh clients. Verify: Open docs/index.html in a browser from a local server — it immediately navigates to the plans gallery. grep -q 'plans/index.html' docs/index.html succeeds, and the href does not start with / (no absolute path that would break the base-path).
-3. Add the .github/workflows/deploy-pages.yml deploy workflow Why: This is the engine. The workflow triggers on push to main filtered to paths: ['docs/**', '.github/workflows/deploy-pages.yml'] (plus workflow_dispatch for manual re-runs), so changes to the workflow itself also trigger a redeploy. It declares the required permissions ( pages: write , id-token: write , contents: read ) and a concurrency group of pages with cancel-in-progress: false . A build job checks out, asserts docs/.nojekyll exists (fail fast if accidentally deleted), runs actions/configure-pages , and uploads docs via actions/upload-pages-artifact ; a deploy job with environment: github-pages runs actions/deploy-pages . Pin every action to a commit SHA with a version comment, matching the convention in auto-version-bump.yml . Look up current SHAs from each action's releases page or the existing pinned versions in auto-version-bump.yml . Verify: The file parses as YAML (e.g. python3 -c "import yaml,sys; yaml.safe_load(open('.github/workflows/deploy-pages.yml'))" ). It declares both pages: write and id-token: write , a build and a deploy job, uploads artifact path docs , every uses: is pinned to a 40-char SHA, the path filter includes both docs/** and .github/workflows/deploy-pages.yml , and the build job asserts docs/.nojekyll exists before uploading the artifact.
-4. Enable GitHub Pages with source set to "GitHub Actions" Why: A deploy workflow cannot publish until Pages is enabled on the repo with the build type set to workflow (Pages is currently disabled — the API returns 404). This is a one-time repo setting that must be completed before the PR is merged , since the workflow will fail on first trigger if Pages is not enabled. Enable it with gh api -X POST repos/shawn-sandy/agentics/pages -f build_type=workflow , or via Settings → Pages → "Build and deployment" → Source: GitHub Actions . Requires admin on the repo. If admin access is unavailable, coordinate with a repo admin to complete this step before merging. Verify: gh api repos/shawn-sandy/agentics/pages --jq .build_type returns workflow (no longer 404), and the response html_url shows https://shawn-sandy.github.io/agentics/ .
-5. Add a "Browse the plans" link to README.md Why: The published site is only useful if people can find it. Add a short link (or shields.io badge) near the top of README.md pointing at https://shawn-sandy.github.io/agentics/ so the gallery is discoverable from the repo's front door. Keep it one line — this is a pointer, not a section. Verify: grep -q 'shawn-sandy.github.io/agentics' README.md succeeds, and the link renders correctly in the GitHub README preview.
-6. Create test files in tests/pages/ Why: The Tests section specifies three test scripts ( test-pages-smoke.sh , test-root-redirect.sh , test-workflow-config.sh ) but no earlier step creates them. Create mkdir -p tests/pages and write all three scripts with the assertions described in the Tests section. The unit and integration tests should be runnable locally as pre-merge validation; the smoke test runs post-deploy against the live URL with a retry loop (up to 5 attempts, 15s apart) to handle Pages propagation delay. Verify: ls tests/pages/test-*.sh | wc -l returns 3 . Each script is executable ( chmod +x ) and exits 0 when run against the expected inputs (local files for unit/integration, live URL for smoke).
-7. Merge to main , then confirm the first deploy serves the live gallery Why: The pipeline only proves itself end-to-end once it has actually run. After the change merges to main , the docs/** path filter fires the workflow; watch the run complete, then load the public URL and confirm the gallery and a sample plan render. This is the real acceptance gate — a green Actions run plus a reachable site. Verify: gh run list --workflow=deploy-pages.yml --limit 1 shows a completed/success run. curl -sI https://shawn-sandy.github.io/agentics/ returns 200 , and curl -s https://shawn-sandy.github.io/agentics/plans/ contains the gallery title Plans Library . A sample plan such as .../plans/add-tests-section-to-plans.html also returns 200 .
-
-## Tests
-Tier 1 — Code-touching plan
-- Objective Published Pages site serves the plans gallery and every plan File: tests/pages/test-pages-smoke.sh Type: smoke test (run post-deploy, e.g. a final step of deploy-pages.yml or manually against the live URL) Asserts: the objective is actually met — GET https://shawn-sandy.github.io/agentics/ returns 200 and redirects to the gallery; /agentics/plans/ contains Plans Library ; and a loop over every docs/plans/*.html filename confirms each returns 200 at /agentics/plans/<name> (all plans browsable — count derived dynamically from find docs/plans -name '*.html' , not hardcoded). Includes a retry loop (up to 5 attempts, 15s apart) per URL to handle GitHub Pages propagation delay. Run: bash tests/pages/test-pages-smoke.sh https://shawn-sandy.github.io/agentics
-- Unit Root redirect points at the gallery with a base-path-safe relative href File: tests/pages/test-root-redirect.sh Targets: docs/index.html Key cases: file exists; contains a refresh/redirect to plans/index.html ; the redirect target is relative (does not begin with / or http ); a visible fallback anchor to the gallery is present for no-refresh clients.
-- Integration Deploy workflow is valid and correctly wired for Pages File: tests/pages/test-workflow-config.sh Targets: .github/workflows/deploy-pages.yml + docs/.nojekyll Key cases: YAML parses; triggers on push to main with paths: docs/** ; declares pages: write and id-token: write ; has a build job uploading artifact path docs and a deploy job using actions/deploy-pages with environment: github-pages ; all uses: pinned to SHAs; docs/.nojekyll exists so the artifact disables Jekyll.
-
-## Acceptance Criteria
-- A workflow at .github/workflows/deploy-pages.yml deploys docs/ to GitHub Pages on every push to main that touches docs/** or the workflow file itself, with SHA-pinned actions and a .nojekyll existence assertion in the build job.
-- docs/.nojekyll exists, so the published site serves hand-built HTML without Jekyll processing.
-- docs/index.html redirects the site root to the plans gallery using a relative, base-path-safe href.
-- GitHub Pages is enabled for the repo with source set to "GitHub Actions" ( build_type=workflow ).
-- Visiting https://shawn-sandy.github.io/agentics/ lands on the filterable plans gallery.
-- All plan files present in docs/plans/ at deploy time are reachable at https://shawn-sandy.github.io/agentics/plans/<name>.html and render correctly.
-- README.md links to the published Pages site.
-- Three test scripts exist in tests/pages/ ( test-pages-smoke.sh , test-root-redirect.sh , test-workflow-config.sh ) and the unit/integration tests pass locally before merge.
-
-## Verification
-End-to-end: after the change merges to main , confirm the deploy-pages.yml run completes successfully ( gh run list --workflow=deploy-pages.yml shows success ). Then load https://shawn-sandy.github.io/agentics/ in a browser — it should redirect to and display the plans gallery with all plan cards and working filter chips. Click into at least two plans (e.g. a normal plan and one ending in -review.html ) and confirm they render with full styling, working checkboxes, and the sidebar table of contents. Spot-check that deep links work directly (paste a .../plans/<name>.html URL fresh). Finally, run the smoke test ( bash tests/pages/test-pages-smoke.sh https://shawn-sandy.github.io/agentics ) and confirm it passes for the root, the gallery, and all plan files; and verify the README link resolves to the live site.
-
-Troubleshooting: If the first deploy fails, check: (1) GitHub Pages is enabled with build_type=workflow (Step 4), (2) the workflow has correct permissions ( pages: write , id-token: write ), (3) the artifact path is docs , not ./docs . If the site returns 404 after a green deploy, wait 60–90 seconds for Pages propagation. If the smoke test times out, verify the URL base path ( /agentics/ ) matches the repo name.
-</script>
-
-<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
@@ -1109,11 +1502,13 @@ Troubleshooting: If the first deploy fails, check: (1) GitHub Pages is enabled w
   <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
   </symbol>
+  <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
 </svg>
 
 <a href="#main" class="skip-link">Skip to content</a>
 
-<!-- ── Header — document cover ─────────────────────────────────── -->
 <header class="plan-header">
   <div class="plan-header-inner">
     <div class="plan-back-nav">
@@ -1127,30 +1522,24 @@ Troubleshooting: If the first deploy fails, check: (1) GitHub Pages is enabled w
       <h1 class="plan-title">Publish HTML plans to GitHub Pages</h1>
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
-              aria-label="Save this plan as PDF">Save as PDF</button>
+                aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
+        <span class="effort-badge" aria-label="Effort level">High</span>
         <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-07
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        agentics
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        feature
-      </span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-06-07</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> feature</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> High effort</span>
     </div>
   </div>
 </header>
 
 <div class="layout">
 
-  <!-- ── Sidebar — table of contents ─────────────────────────── -->
   <nav class="plan-nav" aria-label="Plan sections">
     <div class="scroll-rail" aria-hidden="true"></div>
     <div class="nav-heading">On this page</div>
@@ -1158,239 +1547,277 @@ Troubleshooting: If the first deploy fails, check: (1) GitHub Pages is enabled w
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
-      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
-      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
-      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
-      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>7 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Add the docs/.nojekyll marker file</span><span class="rail-state">step 1 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Create docs/index.html as a relative redirect to the plans gallery</span><span class="rail-state">step 2 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Add the .github/workflows/deploy-pages.yml deploy workflow</span><span class="rail-state">step 3 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Enable GitHub Pages with source set to &quot;GitHub Actions&quot;</span><span class="rail-state">step 4 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Add a &quot;Browse the plans&quot; link to README.md</span><span class="rail-state">step 5 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Create test files in tests/pages/</span><span class="rail-state">step 6 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Merge to main , then confirm the first deploy serves the live gallery</span><span class="rail-state">step 7 of 7, done</span></a></li>
+      </ul>
+    </details>
   </nav>
 
-  <!-- ── Main content ─────────────────────────────────────────── -->
   <main id="main">
 
-    <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Ship a GitHub Actions pipeline that publishes the entire <code>docs/</code> tree to GitHub Pages, so every developer can browse all 32 HTML plans from one public URL — landing straight on the filterable plans gallery — instead of cloning the repo and opening files by hand.</p>
+      <p>Ship a GitHub Actions pipeline that publishes the entire docs/ tree to GitHub Pages, so every developer can browse all 32 HTML plans from one public URL — landing straight on the filterable plans gallery — instead of cloning the repo and opening files by hand.</p>
     </div>
 
-    <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/publish-plans-to-github-pages.html — Publish all HTML plans to GitHub Pages for one-click browsing</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/publish-plans-to-github-pages.md — Publish HTML plans to GitHub Pages. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-plans-to-github-pages.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
-    <div class="plan-source">
-      <div class="plan-source-row">
-        <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">publish-plans-to-github-pages.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
-      </div>
-      <div class="plan-source-row">
-        <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/publish-plans-to-github-pages.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
-      </div>
-    </div>
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
 
-    <!-- ── Progress ─────────────────────────────────────────────── -->
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome, in parallel</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Publish HTML plans to GitHub Pages. The plan at docs/plans/publish-plans-to-github-pages.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-plans-to-github-pages.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-workflow">
+          <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
+          <div class="plan-workflow-inner">
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/publish-plans-to-github-pages.md — Publish HTML plans to GitHub Pages. Brief subagents with the plan file at docs/plans/publish-plans-to-github-pages.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/publish-plans-to-github-pages.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-workflow-btn" type="button"
+                    onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">publish-plans-to-github-pages.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/publish-plans-to-github-pages.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/publish-plans-to-github-pages.md</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
+          </div>
+        </div>
+
+      </div>
+    </details>
+
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
-        <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span>Definition of done</span>
+        <span id="progress-label">8 / 8 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
-    <!-- ── Context ──────────────────────────────────────────────── -->
     <section class="section-card card-context" id="context" aria-labelledby="h-context">
       <h2 id="h-context">
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>The repo already generates rich, self-contained HTML plans into <code>docs/plans/</code> (32 of them today), and a <code>PostToolUse</code> hook (<code>rebuild-plans-index.py</code>) keeps <code>docs/plans/index.html</code> — a filterable gallery — current after every plan write. The one missing piece is reach: those files only exist on disk, so a developer has to clone the repo and open them in a local browser to read them.</p>
-      <p>GitHub Pages closes that gap. The repo (<code>shawn-sandy/agentics</code>) already runs GitHub Actions, so the cleanest fit is a dedicated Pages deploy workflow using the official <code>actions/upload-pages-artifact</code> + <code>actions/deploy-pages</code> pair, publishing the whole <code>docs/</code> directory on every push to <code>main</code>. Two known footguns shape the approach: GitHub Pages runs Jekyll by default (which can mangle hand-built HTML and ignores <code>_</code>-prefixed paths) — neutralised with a <code>.nojekyll</code> marker; and a project Pages site is served under a base path (<code>/agentics/</code>), so the landing page must use a <em>relative</em> redirect. The gallery's own links are already relative, so they survive the base path unchanged.</p>
-      <p>Per the decisions taken while drafting: deploy via a <strong>GitHub Actions workflow</strong> (not branch/folder), and make the existing <strong>plans gallery the site's landing page</strong> via a root redirect, keeping <code>docs/plans/index.html</code> as the single hook-maintained source of truth.</p>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
+      <p>The repo already generates rich, self-contained HTML plans into docs/plans/ (32 of them today), and a PostToolUse hook ( rebuild-plans-index.py ) keeps docs/plans/index.html — a filterable gallery — current after every plan write. The one missing piece is reach: those files only exist on disk, so a developer has to clone the repo and open them in a local browser to read them.</p>
+      <p>GitHub Pages closes that gap. The repo ( shawn-sandy/agentics ) already runs GitHub Actions, so the cleanest fit is a dedicated Pages deploy workflow using the official actions/upload-pages-artifact + actions/deploy-pages pair, publishing the whole docs/ directory on every push to main . Two known footguns shape the approach: GitHub Pages runs Jekyll by default (which can mangle hand-built HTML and ignores _ -prefixed paths) — neutralised with a .nojekyll marker; and a project Pages site is served under a base path ( /agentics/ ), so the landing page must use a relative redirect. The gallery&#39;s own links are already relative, so they survive the base path unchanged.</p>
+      <p>Per the decisions taken while drafting: deploy via a GitHub Actions workflow (not branch/folder), and make the existing plans gallery the site&#39;s landing page via a root redirect, keeping docs/plans/index.html as the single hook-maintained source of truth.</p>
     </section>
 
-    <!-- ── Files to Modify (auto-generated) ─────────────────────── -->
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files to Modify
+        Files that change
       </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> .github/workflows/</li>
-          <ul class="file-list">
-            <li><code>deploy-pages.yml</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Actions workflow that deploys docs/ to Pages</span></li>
-          </ul>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> docs/</li>
-          <ul class="file-list">
+          <li><code>.github/workflows/deploy-pages.yml</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Actions workflow that deploys docs/ to Pages</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> docs/
+            <ul class="file-list">
             <li><code>.nojekyll</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">disable Jekyll processing of hand-built HTML</span></li>
             <li><code>index.html</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">root redirect to the plans gallery</span></li>
-          </ul>
-          <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add a link/badge to the published site</span></li>
+            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add a link/badge to the published site</span></li>
+            </ul>
+          </li>
         </ul>
       </div>
     </section>
 
-    <!-- ── Diagram: deploy pipeline ─────────────────────────────── -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <div class="diagram-subheading">Publish pipeline</div>
-      <div class="pipeline">
-        <div class="pipeline-node"><div class="pipeline-label">Trigger</div><code>push to main (docs/**)</code><div class="pipeline-sub">also workflow_dispatch for manual runs</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Build job</div><code>upload-pages-artifact (path: docs)</code><div class="pipeline-sub">packs docs/ into a Pages artifact; .nojekyll skips Jekyll</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Deploy job</div><code>deploy-pages</code><div class="pipeline-sub">environment: github-pages · permissions: pages write, id-token write</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Live site</div><code>shawn-sandy.github.io/agentics/</code><div class="pipeline-sub">root redirects to plans/index.html gallery</div></div>
-      </div>
-    </section>
-
-    <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
       <h2 id="h-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
         Steps
       </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Add the <code>docs/.nojekyll</code> marker file</span>
+                <span class="step-chip-text">Add the docs/.nojekyll marker file</span>
               </div>
-              <div class="step-why">GitHub Pages runs the Jekyll static-site processor by default, which strips files and folders whose names start with an underscore and can rewrite hand-authored HTML. The plans are fully self-contained HTML — an empty <code>.nojekyll</code> file at the published root tells Pages to serve every byte verbatim.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>test -f docs/.nojekyll &amp;&amp; echo present</code> prints <code>present</code>. The file is empty (zero bytes is fine).</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">GitHub Pages runs the Jekyll static-site processor by default, which strips files and folders whose names start with an underscore and can rewrite hand-authored HTML. The plans are fully self-contained HTML — an empty .nojekyll file at the published root tells Pages to serve every byte verbatim.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">test -f docs/.nojekyll &amp;&amp; echo present prints present . The file is empty (zero bytes is fine).</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Create <code>docs/index.html</code> as a relative redirect to the plans gallery</span>
+                <span class="step-chip-text">Create docs/index.html as a relative redirect to the plans gallery</span>
               </div>
-              <div class="step-why">Publishing all of <code>docs/</code> means the site root resolves to <code>docs/index.html</code>, which does not yet exist — visitors would hit a 404. A tiny redirect page forwards the root to <code>plans/index.html</code> so visitors land directly on the filterable gallery (the chosen landing page), while <code>docs/plans/index.html</code> stays the single hook-maintained source of truth. Use a <em>relative</em> target (<code>plans/index.html</code>, not a leading slash) so it works under the <code>/agentics/</code> Pages base path, plus a <code>&lt;meta http-equiv="refresh"&gt;</code>, a canonical <code>&lt;link&gt;</code>, and a visible fallback anchor for no-JS/no-refresh clients.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Open <code>docs/index.html</code> in a browser from a local server — it immediately navigates to the plans gallery. <code>grep -q 'plans/index.html' docs/index.html</code> succeeds, and the href does not start with <code>/</code> (no absolute path that would break the base-path).</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Publishing all of docs/ means the site root resolves to docs/index.html , which does not yet exist — visitors would hit a 404. A tiny redirect page forwards the root to plans/index.html so visitors land directly on the filterable gallery (the chosen landing page), while docs/plans/index.html stays the single hook-maintained source of truth. Use a relative target ( plans/index.html , not a leading slash) so it works under the /agentics/ Pages base path, plus a &lt;meta http-equiv=&quot;refresh&quot;&gt; , a canonical &lt;link&gt; , and a visible fallback anchor for no-JS/no-refresh clients.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Open docs/index.html in a browser from a local server — it immediately navigates to the plans gallery. grep -q &#39;plans/index.html&#39; docs/index.html succeeds, and the href does not start with / (no absolute path that would break the base-path).</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Add the <code>.github/workflows/deploy-pages.yml</code> deploy workflow</span>
+                <span class="step-chip-text">Add the .github/workflows/deploy-pages.yml deploy workflow</span>
               </div>
-              <div class="step-why">This is the engine. The workflow triggers on <code>push</code> to <code>main</code> filtered to <code>paths: ['docs/**', '.github/workflows/deploy-pages.yml']</code> (plus <code>workflow_dispatch</code> for manual re-runs), so changes to the workflow itself also trigger a redeploy. It declares the required permissions (<code>pages: write</code>, <code>id-token: write</code>, <code>contents: read</code>) and a <code>concurrency</code> group of <code>pages</code> with <code>cancel-in-progress: false</code>. A build job checks out, asserts <code>docs/.nojekyll</code> exists (fail fast if accidentally deleted), runs <code>actions/configure-pages</code>, and uploads <code>docs</code> via <code>actions/upload-pages-artifact</code>; a deploy job with <code>environment: github-pages</code> runs <code>actions/deploy-pages</code>. Pin every action to a commit SHA with a version comment, matching the convention in <code>auto-version-bump.yml</code>. Look up current SHAs from each action's releases page or the existing pinned versions in <code>auto-version-bump.yml</code>.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">The file parses as YAML (e.g. <code>python3 -c "import yaml,sys; yaml.safe_load(open('.github/workflows/deploy-pages.yml'))"</code>). It declares both <code>pages: write</code> and <code>id-token: write</code>, a <code>build</code> and a <code>deploy</code> job, uploads artifact path <code>docs</code>, every <code>uses:</code> is pinned to a 40-char SHA, the path filter includes both <code>docs/**</code> and <code>.github/workflows/deploy-pages.yml</code>, and the build job asserts <code>docs/.nojekyll</code> exists before uploading the artifact.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">This is the engine. The workflow triggers on push to main filtered to paths: [&#39;docs/**&#39;, &#39;.github/workflows/deploy-pages.yml&#39;] (plus workflow_dispatch for manual re-runs), so changes to the workflow itself also trigger a redeploy. It declares the required permissions ( pages: write , id-token: write , contents: read ) and a concurrency group of pages with cancel-in-progress: false . A build job checks out, asserts docs/.nojekyll exists (fail fast if accidentally deleted), runs actions/configure-pages , and uploads docs via actions/upload-pages-artifact ; a deploy job with environment: github-pages runs actions/deploy-pages . Pin every action to a commit SHA with a version comment, matching the convention in auto-version-bump.yml . Look up current SHAs from each action&#39;s releases page or the existing pinned versions in auto-version-bump.yml .</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">The file parses as YAML (e.g. python3 -c &quot;import yaml,sys; yaml.safe_load(open(&#39;.github/workflows/deploy-pages.yml&#39;))&quot; ). It declares both pages: write and id-token: write , a build and a deploy job, uploads artifact path docs , every uses: is pinned to a 40-char SHA, the path filter includes both docs/** and .github/workflows/deploy-pages.yml , and the build job asserts docs/.nojekyll exists before uploading the artifact.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Enable GitHub Pages with source set to "GitHub Actions"</span>
+                <span class="step-chip-text">Enable GitHub Pages with source set to &quot;GitHub Actions&quot;</span>
               </div>
-              <div class="step-why">A deploy workflow cannot publish until Pages is enabled on the repo with the build type set to <code>workflow</code> (Pages is currently disabled — the API returns 404). This is a one-time repo setting that <strong>must be completed before the PR is merged</strong>, since the workflow will fail on first trigger if Pages is not enabled. Enable it with <code>gh api -X POST repos/shawn-sandy/agentics/pages -f build_type=workflow</code>, or via Settings → Pages → "Build and deployment" → Source: <em>GitHub Actions</em>. Requires admin on the repo. If admin access is unavailable, coordinate with a repo admin to complete this step before merging.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>gh api repos/shawn-sandy/agentics/pages --jq .build_type</code> returns <code>workflow</code> (no longer 404), and the response <code>html_url</code> shows <code>https://shawn-sandy.github.io/agentics/</code>.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">A deploy workflow cannot publish until Pages is enabled on the repo with the build type set to workflow (Pages is currently disabled — the API returns 404). This is a one-time repo setting that must be completed before the PR is merged , since the workflow will fail on first trigger if Pages is not enabled. Enable it with gh api -X POST repos/shawn-sandy/agentics/pages -f build_type=workflow , or via Settings → Pages → &quot;Build and deployment&quot; → Source: GitHub Actions . Requires admin on the repo. If admin access is unavailable, coordinate with a repo admin to complete this step before merging.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">gh api repos/shawn-sandy/agentics/pages --jq .build_type returns workflow (no longer 404), and the response html_url shows https://shawn-sandy.github.io/agentics/ .</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Add a "Browse the plans" link to <code>README.md</code></span>
+                <span class="step-chip-text">Add a &quot;Browse the plans&quot; link to README.md</span>
               </div>
-              <div class="step-why">The published site is only useful if people can find it. Add a short link (or shields.io badge) near the top of <code>README.md</code> pointing at <code>https://shawn-sandy.github.io/agentics/</code> so the gallery is discoverable from the repo's front door. Keep it one line — this is a pointer, not a section.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>grep -q 'shawn-sandy.github.io/agentics' README.md</code> succeeds, and the link renders correctly in the GitHub README preview.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">The published site is only useful if people can find it. Add a short link (or shields.io badge) near the top of README.md pointing at https://shawn-sandy.github.io/agentics/ so the gallery is discoverable from the repo&#39;s front door. Keep it one line — this is a pointer, not a section.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">grep -q &#39;shawn-sandy.github.io/agentics&#39; README.md succeeds, and the link renders correctly in the GitHub README preview.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Create test files in <code>tests/pages/</code></span>
+                <span class="step-chip-text">Create test files in tests/pages/</span>
               </div>
-              <div class="step-why">The Tests section specifies three test scripts (<code>test-pages-smoke.sh</code>, <code>test-root-redirect.sh</code>, <code>test-workflow-config.sh</code>) but no earlier step creates them. Create <code>mkdir -p tests/pages</code> and write all three scripts with the assertions described in the Tests section. The unit and integration tests should be runnable locally as pre-merge validation; the smoke test runs post-deploy against the live URL with a retry loop (up to 5 attempts, 15s apart) to handle Pages propagation delay.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>ls tests/pages/test-*.sh | wc -l</code> returns <code>3</code>. Each script is executable (<code>chmod +x</code>) and exits <code>0</code> when run against the expected inputs (local files for unit/integration, live URL for smoke).</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">The Tests section specifies three test scripts ( test-pages-smoke.sh , test-root-redirect.sh , test-workflow-config.sh ) but no earlier step creates them. Create mkdir -p tests/pages and write all three scripts with the assertions described in the Tests section. The unit and integration tests should be runnable locally as pre-merge validation; the smoke test runs post-deploy against the live URL with a retry loop (up to 5 attempts, 15s apart) to handle Pages propagation delay.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">ls tests/pages/test-*.sh | wc -l returns 3 . Each script is executable ( chmod +x ) and exits 0 when run against the expected inputs (local files for unit/integration, live URL for smoke).</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Merge to <code>main</code>, then confirm the first deploy serves the live gallery</span>
+                <span class="step-chip-text">Merge to main , then confirm the first deploy serves the live gallery</span>
               </div>
-              <div class="step-why">The pipeline only proves itself end-to-end once it has actually run. After the change merges to <code>main</code>, the <code>docs/**</code> path filter fires the workflow; watch the run complete, then load the public URL and confirm the gallery and a sample plan render. This is the real acceptance gate — a green Actions run plus a reachable site.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>gh run list --workflow=deploy-pages.yml --limit 1</code> shows a <code>completed/success</code> run. <code>curl -sI https://shawn-sandy.github.io/agentics/</code> returns <code>200</code>, and <code>curl -s https://shawn-sandy.github.io/agentics/plans/</code> contains the gallery title <code>Plans Library</code>. A sample plan such as <code>.../plans/add-tests-section-to-plans.html</code> also returns <code>200</code>.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">The pipeline only proves itself end-to-end once it has actually run. After the change merges to main , the docs/** path filter fires the workflow; watch the run complete, then load the public URL and confirm the gallery and a sample plan render. This is the real acceptance gate — a green Actions run plus a reachable site.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">gh run list --workflow=deploy-pages.yml --limit 1 shows a completed/success run. curl -sI https://shawn-sandy.github.io/agentics/ returns 200 , and curl -s https://shawn-sandy.github.io/agentics/plans/ contains the gallery title Plans Library . A sample plan such as .../plans/add-tests-section-to-plans.html also returns 200 .</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1398,119 +1825,81 @@ Troubleshooting: If the first deploy fails, check: (1) GitHub Pages is enabled w
       </div>
     </section>
 
-    <!-- ── Tests ────────────────────────────────────────────────── -->
     <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
       <h2 id="h-tests">
         <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
         Tests
       </h2>
+      <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 1 — Code-touching plan</div>
-
-      <!-- Objective-verification test — mandatory, always first -->
-      <div class="objective-test-card">
-        <div class="test-card-header">
-          <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">Published Pages site serves the plans gallery and every plan</span>
-        </div>
-        <div class="test-card-body">
-          <p><strong>File:</strong> <code>tests/pages/test-pages-smoke.sh</code></p>
-          <p><strong>Type:</strong> smoke test (run post-deploy, e.g. a final step of <code>deploy-pages.yml</code> or manually against the live URL)</p>
-          <p><strong>Asserts:</strong> the objective is actually met — <code>GET https://shawn-sandy.github.io/agentics/</code> returns <code>200</code> and redirects to the gallery; <code>/agentics/plans/</code> contains <code>Plans Library</code>; and a loop over every <code>docs/plans/*.html</code> filename confirms each returns <code>200</code> at <code>/agentics/plans/&lt;name&gt;</code> (all plans browsable — count derived dynamically from <code>find docs/plans -name '*.html'</code>, not hardcoded). Includes a retry loop (up to 5 attempts, 15s apart) per URL to handle GitHub Pages propagation delay.</p>
-          <p><strong>Run:</strong> <code>bash tests/pages/test-pages-smoke.sh https://shawn-sandy.github.io/agentics</code></p>
-        </div>
-      </div>
-
-      <!-- Tier 1 test sub-sections -->
+      <div class="objective-test-card">Objective Published Pages site serves the plans gallery and every plan File: tests/pages/test-pages-smoke.sh Type: smoke test (run post-deploy, e.g. a final step of deploy-pages.yml or manually against the live URL) Asserts: the objective is actually met — GET https://shawn-sandy.github.io/agentics/ returns 200 and redirects to the gallery; /agentics/plans/ contains Plans Library ; and a loop over every docs/plans/*.html filename confirms each returns 200 at /agentics/plans/&lt;name&gt; (all plans browsable — count derived dynamically from find docs/plans -name &#39;*.html&#39; , not hardcoded). Includes a retry loop (up to 5 attempts, 15s apart) per URL to handle GitHub Pages propagation delay. Run: bash tests/pages/test-pages-smoke.sh https://shawn-sandy.github.io/agentics</div>
       <div class="test-list">
-
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-unit">Unit</span>
-            <span class="test-card-title">Root redirect points at the gallery with a base-path-safe relative href</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/pages/test-root-redirect.sh</code></p>
-            <p><strong>Targets:</strong> <code>docs/index.html</code></p>
-            <p><strong>Key cases:</strong> file exists; contains a refresh/redirect to <code>plans/index.html</code>; the redirect target is relative (does not begin with <code>/</code> or <code>http</code>); a visible fallback anchor to the gallery is present for no-refresh clients.</p>
-          </div>
-        </div>
-
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-integration">Integration</span>
-            <span class="test-card-title">Deploy workflow is valid and correctly wired for Pages</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>tests/pages/test-workflow-config.sh</code></p>
-            <p><strong>Targets:</strong> <code>.github/workflows/deploy-pages.yml</code> + <code>docs/.nojekyll</code></p>
-            <p><strong>Key cases:</strong> YAML parses; triggers on push to <code>main</code> with <code>paths: docs/**</code>; declares <code>pages: write</code> and <code>id-token: write</code>; has a build job uploading artifact path <code>docs</code> and a deploy job using <code>actions/deploy-pages</code> with <code>environment: github-pages</code>; all <code>uses:</code> pinned to SHAs; <code>docs/.nojekyll</code> exists so the artifact disables Jekyll.</p>
-          </div>
-        </div>
-
+        <div class="test-card">Unit Root redirect points at the gallery with a base-path-safe relative href File: tests/pages/test-root-redirect.sh Targets: docs/index.html Key cases: file exists; contains a refresh/redirect to plans/index.html ; the redirect target is relative (does not begin with / or http ); a visible fallback anchor to the gallery is present for no-refresh clients.</div>
+        <div class="test-card">Integration Deploy workflow is valid and correctly wired for Pages File: tests/pages/test-workflow-config.sh Targets: .github/workflows/deploy-pages.yml + docs/.nojekyll Key cases: YAML parses; triggers on push to main with paths: docs/** ; declares pages: write and id-token: write ; has a build job uploading artifact path docs and a deploy job using actions/deploy-pages with environment: github-pages ; all uses: pinned to SHAs; docs/.nojekyll exists so the artifact disables Jekyll.</div>
       </div>
     </section>
 
-    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria">
         <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
-        Acceptance Criteria
+        Definition of done
       </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1" checked>
-          <label for="ac1">A workflow at <code>.github/workflows/deploy-pages.yml</code> deploys <code>docs/</code> to GitHub Pages on every push to <code>main</code> that touches <code>docs/**</code> or the workflow file itself, with SHA-pinned actions and a <code>.nojekyll</code> existence assertion in the build job.</label>
+          <label for="ac1">A workflow at .github/workflows/deploy-pages.yml deploys docs/ to GitHub Pages on every push to main that touches docs/** or the workflow file itself, with SHA-pinned actions and a .nojekyll existence assertion in the build job.</label>
         </li>
         <li>
           <input type="checkbox" id="ac2" checked>
-          <label for="ac2"><code>docs/.nojekyll</code> exists, so the published site serves hand-built HTML without Jekyll processing.</label>
+          <label for="ac2">docs/.nojekyll exists, so the published site serves hand-built HTML without Jekyll processing.</label>
         </li>
         <li>
           <input type="checkbox" id="ac3" checked>
-          <label for="ac3"><code>docs/index.html</code> redirects the site root to the plans gallery using a relative, base-path-safe href.</label>
+          <label for="ac3">docs/index.html redirects the site root to the plans gallery using a relative, base-path-safe href.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4" checked>
-          <label for="ac4">GitHub Pages is enabled for the repo with source set to "GitHub Actions" (<code>build_type=workflow</code>).</label>
+          <label for="ac4">GitHub Pages is enabled for the repo with source set to &quot;GitHub Actions&quot; ( build_type=workflow ).</label>
         </li>
         <li>
           <input type="checkbox" id="ac5" checked>
-          <label for="ac5">Visiting <code>https://shawn-sandy.github.io/agentics/</code> lands on the filterable plans gallery.</label>
+          <label for="ac5">Visiting https://shawn-sandy.github.io/agentics/ lands on the filterable plans gallery.</label>
         </li>
         <li>
           <input type="checkbox" id="ac6" checked>
-          <label for="ac6">All plan files present in <code>docs/plans/</code> at deploy time are reachable at <code>https://shawn-sandy.github.io/agentics/plans/&lt;name&gt;.html</code> and render correctly.</label>
+          <label for="ac6">All plan files present in docs/plans/ at deploy time are reachable at https://shawn-sandy.github.io/agentics/plans/&lt;name&gt;.html and render correctly.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7" checked>
-          <label for="ac7"><code>README.md</code> links to the published Pages site.</label>
+          <label for="ac7">README.md links to the published Pages site.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8" checked>
-          <label for="ac8">Three test scripts exist in <code>tests/pages/</code> (<code>test-pages-smoke.sh</code>, <code>test-root-redirect.sh</code>, <code>test-workflow-config.sh</code>) and the unit/integration tests pass locally before merge.</label>
+          <label for="ac8">Three test scripts exist in tests/pages/ ( test-pages-smoke.sh , test-root-redirect.sh , test-workflow-config.sh ) and the unit/integration tests pass locally before merge.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
 
-    <!-- ── Verification ──────────────────────────────────────────── -->
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
       <h2 id="h-verification">
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
-        Verification
+        Final check
       </h2>
-      <p>End-to-end: after the change merges to <code>main</code>, confirm the <code>deploy-pages.yml</code> run completes successfully (<code>gh run list --workflow=deploy-pages.yml</code> shows <code>success</code>). Then load <code>https://shawn-sandy.github.io/agentics/</code> in a browser — it should redirect to and display the plans gallery with all plan cards and working filter chips. Click into at least two plans (e.g. a normal plan and one ending in <code>-review.html</code>) and confirm they render with full styling, working checkboxes, and the sidebar table of contents. Spot-check that deep links work directly (paste a <code>.../plans/&lt;name&gt;.html</code> URL fresh). Finally, run the smoke test (<code>bash tests/pages/test-pages-smoke.sh https://shawn-sandy.github.io/agentics</code>) and confirm it passes for the root, the gallery, and all plan files; and verify the README link resolves to the live site.</p>
-      <p><strong>Troubleshooting:</strong> If the first deploy fails, check: (1) GitHub Pages is enabled with <code>build_type=workflow</code> (Step 4), (2) the workflow has correct permissions (<code>pages: write</code>, <code>id-token: write</code>), (3) the artifact path is <code>docs</code>, not <code>./docs</code>. If the site returns 404 after a green deploy, wait 60–90 seconds for Pages propagation. If the smoke test times out, verify the URL base path (<code>/agentics/</code>) matches the repo name.</p>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
+      <p>End-to-end: after the change merges to main , confirm the deploy-pages.yml run completes successfully ( gh run list --workflow=deploy-pages.yml shows success ). Then load https://shawn-sandy.github.io/agentics/ in a browser — it should redirect to and display the plans gallery with all plan cards and working filter chips. Click into at least two plans (e.g. a normal plan and one ending in -review.html ) and confirm they render with full styling, working checkboxes, and the sidebar table of contents. Spot-check that deep links work directly (paste a .../plans/&lt;name&gt;.html URL fresh). Finally, run the smoke test ( bash tests/pages/test-pages-smoke.sh https://shawn-sandy.github.io/agentics ) and confirm it passes for the root, the gallery, and all plan files; and verify the README link resolves to the live site.</p>
+      <p>Troubleshooting: If the first deploy fails, check: (1) GitHub Pages is enabled with build_type=workflow (Step 4), (2) the workflow has correct permissions ( pages: write , id-token: write ), (3) the artifact path is docs , not ./docs . If the site returns 404 after a green deploy, wait 60–90 seconds for Pages propagation. If the smoke test times out, verify the URL base path ( /agentics/ ) matches the repo name.</p>
     </section>
 
-    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
       <h2 id="h-completion">
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
-        Completion Checklist
+        Wrapping up
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
@@ -1535,14 +1924,13 @@ Troubleshooting: If the first deploy fails, check: (1) GitHub Pages is enabled w
       </div>
     </section>
 
-    <!-- ── Next Steps ───────────────────────────────────────────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
-        Next Steps
+        Next steps
       </h2>
+      <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
       <div class="next-steps-list">
-
         <details class="next-step-item">
           <summary>Build a top-level docs hub linking plans, media, and guides</summary>
           <div class="next-step-prompt">
@@ -1557,130 +1945,24 @@ Troubleshooting: If the first deploy fails, check: (1) GitHub Pages is enabled w
           <summary>Render the markdown guides as HTML for the published site</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>The docs/guides/ directory contains 62 markdown files that will not render as formatted pages on GitHub Pages without Jekyll (which we disabled via .nojekyll). Add a build step to .github/workflows/deploy-pages.yml that converts docs/guides/*.md to self-contained HTML (reuse the plan-interview markdown-to-html skill's approach or a small pandoc/markdown step) and generates a guides index, all before the upload-pages-artifact step, so the guides are browsable on the published site. Keep the conversion output out of git (generated only in CI).</pre>
+            <pre>The docs/guides/ directory contains 62 markdown files that will not render as formatted pages on GitHub Pages without Jekyll (which we disabled via .nojekyll). Add a build step to .github/workflows/deploy-pages.yml that converts docs/guides/*.md to self-contained HTML (reuse the plan-interview markdown-to-html skill&#39;s approach or a small pandoc/markdown step) and generates a guides index, all before the upload-pages-artifact step, so the guides are browsable on the published site. Keep the conversion output out of git (generated only in CI).</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <!-- Wish List (blue-sky / visionary items) -->
-        <div class="wish-list-header">
-          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-          Wish List
-        </div>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            Serve the site from a custom domain with full-text plan search
-          </summary>
-          <span class="wish-badge">Wish List</span>
+        <details class="next-step-item">
+          <summary>Serve the site from a custom domain with full-text plan search</summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
             <pre>Explore upgrading the agentics GitHub Pages site into a polished plan-browsing portal: (1) configure a custom domain (CNAME) instead of the github.io base path, (2) add a client-side full-text search across all plan HTML (build a JSON index of plan titles, objectives, and statuses at deploy time and wire a search box into the gallery), and (3) add per-plan-type and per-status landing pages. Recommend an approach that keeps everything static (no server) and works within GitHub Pages constraints, and outline the tradeoffs of a custom domain vs the project base path for relative links.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
-
       </div>
     </section>
-
-    <details id="team-review-20260607-160900" class="team-review" style="margin-top:2.5rem;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface);">
-      <summary style="padding:.875rem 1.25rem;font-weight:600;font-size:.9rem;cursor:pointer;list-style:none;display:flex;align-items:center;gap:.6rem;user-select:none;min-height:44px;">
-        <span style="font-size:.55em;color:var(--subtle);transition:transform .2s;">&#9654;</span>
-        Team Review (2026-06-07 16:09:00 UTC) &mdash; 5 core reviewers
-      </summary>
-      <div class="review-body" style="padding:0 1.25rem 1.25rem;border-top:1px solid var(--border);padding-top:1rem;font-size:.9rem;line-height:1.7;">
-
-        <h3 style="font-size:.85rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 0 .75rem;">Executive Summary</h3>
-        <p>The plan is <strong>approved with revisions</strong>. All 5 reviewers found the design architecturally sound, well-aligned with project conventions, and appropriately scoped. Three cross-reviewer concerns dominate: (1) the test files described in the Tests section had no corresponding creation step, (2) the Pages enablement ordering was implicit rather than enforced, and (3) there was no pre-deploy CI validation. Additionally, the plan hardcoded &ldquo;32 plans&rdquo; in acceptance criteria and used underscore-separated test filenames against the project&rsquo;s kebab-case convention. All issues have been addressed with inline edits.</p>
-
-        <h3 style="font-size:.85rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:1.5rem 0 .75rem;">Role-by-Role Findings</h3>
-
-        <h4 style="font-size:.82rem;font-weight:600;color:var(--accent);margin:1rem 0 .4rem;">Architecture Review</h4>
-        <p><strong>Fit:</strong> Architecturally sound &mdash; a thin static-site deployment layer that correctly avoids touching the existing hook-driven content pipeline.</p>
-        <ul style="padding-left:1.4rem;margin:.4rem 0;">
-          <li><strong>Path filter gap</strong> (medium): workflow changes to <code>deploy-pages.yml</code> itself wouldn&rsquo;t trigger a redeploy. <em>Fixed: path filter now includes the workflow file.</em></li>
-          <li><strong>No .nojekyll guard</strong> (low): accidental deletion would silently re-enable Jekyll. <em>Fixed: build job now asserts .nojekyll exists.</em></li>
-          <li><strong>Post-deploy-only smoke test</strong> (low): no pre-upload local validation of artifact completeness. <em>Mitigated: new step 6 creates test files runnable pre-merge.</em></li>
-        </ul>
-
-        <h4 style="font-size:.82rem;font-weight:600;color:var(--accent);margin:1rem 0 .4rem;">Completeness Review</h4>
-        <p><strong>Completeness:</strong> Well-structured with good specificity, but had two notable gaps.</p>
-        <ul style="padding-left:1.4rem;margin:.4rem 0;">
-          <li><strong>Missing test file creation step</strong> (high): tests were specified but no step created them. <em>Fixed: new Step 6 added.</em></li>
-          <li><strong>Pages enablement ordering implicit</strong> (medium): no note that Step 4 must precede merge. <em>Fixed: Step 4 now states &ldquo;must be completed before the PR is merged.&rdquo;</em></li>
-          <li><strong>Hardcoded SHA lookups</strong> (medium): no guidance on where to find SHAs. <em>Fixed: Step 3 now references action release pages and existing workflow.</em></li>
-          <li><strong>Hardcoded &ldquo;32&rdquo; in AC6</strong> (low): stale if plans are added/removed. <em>Fixed: AC6 now says &ldquo;all plan files present at deploy time.&rdquo;</em></li>
-        </ul>
-
-        <h4 style="font-size:.82rem;font-weight:600;color:var(--accent);margin:1rem 0 .4rem;">Testability Review</h4>
-        <p><strong>Test coverage:</strong> Present but thin &mdash; tests existed on paper but not as executable files, and there was no pre-merge CI gate.</p>
-        <ul style="padding-left:1.4rem;margin:.4rem 0;">
-          <li><strong>No pre-deploy CI validation</strong> (high): only post-deploy smoke test. <em>Mitigated: Step 6 creates tests; step 3 adds .nojekyll assertion. Unit/integration tests runnable locally pre-merge.</em></li>
-          <li><strong>Hardcoded plan count in smoke test</strong> (low): <em>Fixed: now derived dynamically via find.</em></li>
-          <li><strong>No Jekyll-suppression test</strong> (medium): no test verifies .nojekyll is active. <em>Partially addressed: build job .nojekyll assertion catches the most common failure mode.</em></li>
-        </ul>
-
-        <h4 style="font-size:.82rem;font-weight:600;color:var(--accent);margin:1rem 0 .4rem;">Risk Review</h4>
-        <p><strong>Risk level:</strong> Medium overall.</p>
-        <ul style="padding-left:1.4rem;margin:.4rem 0;">
-          <li><strong>Pages enablement prerequisite</strong> (high): workflow fails silently if Pages not enabled. <em>Fixed: Step 4 strengthened with ordering requirement and admin access note.</em></li>
-          <li><strong>Stale gallery index</strong> (medium): hook-maintained index could be stale if plan committed without hook. <em>Noted: recommend CI-side index regeneration as a follow-up.</em></li>
-          <li><strong>Public content is irreversible once indexed</strong> (medium): plans become public immediately. <em>Noted: recommend a content audit before enabling Pages.</em></li>
-          <li><strong>Smoke test propagation delay</strong> (low): no retry. <em>Fixed: smoke test now specifies retry loop.</em></li>
-        </ul>
-
-        <h4 style="font-size:.82rem;font-weight:600;color:var(--accent);margin:1rem 0 .4rem;">Conventions Review</h4>
-        <p><strong>Fit:</strong> Good alignment with project patterns overall.</p>
-        <ul style="padding-left:1.4rem;margin:.4rem 0;">
-          <li><strong>Test file naming</strong> (medium): used underscores (<code>test_*</code>) instead of project-standard kebab-case. <em>Fixed: all test files renamed to <code>test-*</code>.</em></li>
-          <li><strong>Missing tests/pages/ directory creation</strong> (low): no step to mkdir. <em>Fixed: included in new Step 6.</em></li>
-        </ul>
-
-        <h3 style="font-size:.85rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:1.5rem 0 .75rem;">Agreements &amp; Conflicts</h3>
-        <p><strong>Confirmed concerns</strong> (flagged by 2+ reviewers):</p>
-        <ul style="padding-left:1.4rem;margin:.4rem 0;">
-          <li>Missing test file creation step (Completeness + Testability)</li>
-          <li>Pages enablement ordering (Completeness + Risk)</li>
-          <li>No pre-deploy CI validation (Architecture + Testability)</li>
-          <li>Hardcoded plan count (Completeness + Testability)</li>
-          <li>Workflow path filter gap (Architecture + Risk)</li>
-        </ul>
-        <p>No conflicts between reviewers.</p>
-
-        <h3 style="font-size:.85rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:1.5rem 0 .75rem;">Highest-Risk Issues (Priority Order)</h3>
-        <ol style="padding-left:1.4rem;margin:.4rem 0;">
-          <li><strong>Pages must be enabled before merge</strong> &mdash; Risk reviewer (high). Fixed in Step 4.</li>
-          <li><strong>Test files must be created, not just described</strong> &mdash; Completeness reviewer (high). Fixed with new Step 6.</li>
-          <li><strong>No pre-deploy CI gate</strong> &mdash; Testability reviewer (high). Mitigated with .nojekyll assertion and local-runnable tests.</li>
-          <li><strong>Public content exposure</strong> &mdash; Risk reviewer (medium). Recommend content audit before enabling.</li>
-          <li><strong>Gallery index staleness in CI</strong> &mdash; Risk reviewer (medium). Recommend CI-side regeneration as follow-up.</li>
-        </ol>
-
-        <h3 style="font-size:.85rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:1.5rem 0 .75rem;">Edits Applied</h3>
-        <table style="width:100%;border-collapse:collapse;font-size:.82rem;margin:.4rem 0;">
-          <thead><tr style="border-bottom:2px solid var(--border);text-align:left;">
-            <th style="padding:.4rem .6rem;">Target</th><th style="padding:.4rem .6rem;">Action</th><th style="padding:.4rem .6rem;">Change</th>
-          </tr></thead>
-          <tbody>
-            <tr style="border-bottom:1px solid var(--border);"><td style="padding:.4rem .6rem;">AC6 label</td><td style="padding:.4rem .6rem;">edit</td><td style="padding:.4rem .6rem;">Replaced &ldquo;All 32 plan files&rdquo; with &ldquo;All plan files present in docs/plans/ at deploy time&rdquo;</td></tr>
-            <tr style="border-bottom:1px solid var(--border);"><td style="padding:.4rem .6rem;">Step 3 why</td><td style="padding:.4rem .6rem;">edit</td><td style="padding:.4rem .6rem;">Added workflow self-trigger path, .nojekyll assertion, SHA lookup guidance</td></tr>
-            <tr style="border-bottom:1px solid var(--border);"><td style="padding:.4rem .6rem;">Step 3 verify</td><td style="padding:.4rem .6rem;">edit</td><td style="padding:.4rem .6rem;">Added path-filter and .nojekyll assertion checks</td></tr>
-            <tr style="border-bottom:1px solid var(--border);"><td style="padding:.4rem .6rem;">Step 4 why</td><td style="padding:.4rem .6rem;">edit</td><td style="padding:.4rem .6rem;">Added &ldquo;must be completed before PR is merged&rdquo; and admin access note</td></tr>
-            <tr style="border-bottom:1px solid var(--border);"><td style="padding:.4rem .6rem;">After Step 5</td><td style="padding:.4rem .6rem;">insert</td><td style="padding:.4rem .6rem;">New Step 6: Create test files in tests/pages/</td></tr>
-            <tr style="border-bottom:1px solid var(--border);"><td style="padding:.4rem .6rem;">Old Step 6</td><td style="padding:.4rem .6rem;">edit</td><td style="padding:.4rem .6rem;">Renumbered to Step 7</td></tr>
-            <tr style="border-bottom:1px solid var(--border);"><td style="padding:.4rem .6rem;">All test filenames</td><td style="padding:.4rem .6rem;">edit</td><td style="padding:.4rem .6rem;">Renamed from underscore to kebab-case (test_* &rarr; test-*)</td></tr>
-            <tr style="border-bottom:1px solid var(--border);"><td style="padding:.4rem .6rem;">Objective test</td><td style="padding:.4rem .6rem;">edit</td><td style="padding:.4rem .6rem;">Dynamic plan count + retry loop for propagation delay</td></tr>
-            <tr style="border-bottom:1px solid var(--border);"><td style="padding:.4rem .6rem;">Verification</td><td style="padding:.4rem .6rem;">edit</td><td style="padding:.4rem .6rem;">Removed hardcoded &ldquo;32&rdquo;; added troubleshooting paragraph</td></tr>
-            <tr style="border-bottom:1px solid var(--border);"><td style="padding:.4rem .6rem;">AC1 label</td><td style="padding:.4rem .6rem;">edit</td><td style="padding:.4rem .6rem;">Added workflow self-trigger and .nojekyll assertion mentions</td></tr>
-            <tr style="border-bottom:1px solid var(--border);"><td style="padding:.4rem .6rem;">Criteria list</td><td style="padding:.4rem .6rem;">append</td><td style="padding:.4rem .6rem;">New AC8: test scripts exist and pass locally</td></tr>
-            <tr><td style="padding:.4rem .6rem;">Progress label</td><td style="padding:.4rem .6rem;">edit</td><td style="padding:.4rem .6rem;">Updated from 0/7 to 0/8</td></tr>
-          </tbody>
-        </table>
-
-      </div>
-    </details>
 
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
@@ -1691,6 +1973,36 @@ Troubleshooting: If the first deploy fails, check: (1) GitHub Pages is enabled w
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
+/* ── Save as PDF (native browser print dialog) ──────────────── */
+function savePDF() {
+  window.print();
+}
+
 /* ── Build rich implementation prompt from DOM ──────────────── */
 function buildImplementPrompt() {
   var cmdEl = document.getElementById('implement-cmd');
@@ -1706,33 +2018,46 @@ function buildImplementPrompt() {
     return cb && cb.checked;
   }).length;
 
+  var planPathMeta = document.querySelector('meta[name="plan-path"]');
+  var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\.html$/, '.md');
+
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
   lines.push('');
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the plan file and implement every step marked todo.');
-  lines.push('2. After completing each step, mark it done in the plan.');
-  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
-  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Run the objective test\'s Run command from the plan\'s Tests section, then walk the Verification section end-to-end and confirm the stated objective actually works — on failure, fix and re-verify before continuing; never mark the plan done on a failing check.');
+  lines.push('5. Set "status: completed" in the spec frontmatter only once every step is marked, every criterion is checked, and verification passes.');
+  lines.push('6. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
 
   return lines.join('\n');
 }
 
-/* ── Copy implement prompt ──────────────────────────────────── */
-function copyCmd(btn) {
-  var text = buildImplementPrompt();
-  function flash() {
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
     if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
     btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
       btn._copyTimer = null;
-    }, 2000);
+    }, delay);
   }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
   function fallback() {
     var ta = document.createElement('textarea');
     ta.value = text;
@@ -1742,46 +2067,39 @@ function copyCmd(btn) {
     var ok = false;
     try { ok = document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
-    if (ok) flash();
+    if (ok) flash(); else fail();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(flash).catch(fallback);
   } else {
     fallback();
   }
+}
+
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
+function copyWorkflow(btn) {
+  var code = document.getElementById('workflow-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy goal prompt ──────────────────────────────────────── */
+function copyGoal(btn) {
+  var code = document.getElementById('goal-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy plan file name / relative path ────────────────────── */
 function copyPath(btn, id) {
   var el = document.getElementById(id);
   if (!el) return;
-  var text = el.textContent.trim();
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
 }
 
 /* ── Copy prompt button (global — required by inline onclick) ── */
@@ -1791,47 +2109,18 @@ function copyPrompt(btn) {
     pre = btn.parentElement && btn.parentElement.querySelector('pre');
   }
   if (!pre) return;
-  var text = pre.textContent;
-
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy prompt';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
 }
 
 (function () {
   'use strict';
 
-  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* ── Progress bar — state from HTML attributes ──────────────── */
   /* State lives in the HTML itself: a criterion is done iff its       */
   /* <input> carries the `checked` attribute, which the browser        */
-  /* renders natively on load — no localStorage. Toggling a box syncs  */
-  /* the attribute so the live DOM (and any saved copy of this file)   */
-  /* stays the single source of truth.                                 */
+  /* renders natively on load. Toggling a box syncs the attribute so   */
+  /* the live DOM (and any saved copy of this file) stays the single   */
+  /* portable source of truth — no browser-only storage layer.         */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -1920,35 +2209,61 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
-    }, { threshold: 0.3 });
-    sections.forEach(function (el) { observer.observe(el); });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
-</script>
-<script>
-/* Save as PDF (native browser print dialog) — backfilled */
-function savePDF() {
-  window.print();
-}
 </script>
 </body>
 </html>

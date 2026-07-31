@@ -8,493 +8,426 @@
     GALLERY_ENTRIES  — Repeated <a> blocks, one per item
     PLAN_COUNT       — Total number of items displayed
     GENERATED_AT     — Date and time of gallery generation
+
+  Two contracts constrain edits here:
+
+  1. scripts/merge-plans-index.mjs is the git merge driver for the generated
+     index. It splices the union of the gallery-card anchors over
+     the region between the FIRST and LAST card, so anything sitting *between*
+     cards in the generated markup is destroyed by a merge and stays destroyed
+     until the next regeneration. That is why the In-flight band and the month
+     headings below are built by script at load time from a `data-month`
+     attribute rather than baked into the markup the generator emits.
+  2. The driver also patches the two count strings, `<p>N items</p>` and
+     `<span>N items</span>`. Keep both shapes verbatim.
 -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Artifacts Library</title>
+    <script>
+      /* Before first paint — see the same note in the plan shell. */
+      try {
+        var t = localStorage.getItem('plan-theme');
+        if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+      } catch (e) { /* no storage — prefers-color-scheme decides */ }
+    </script>
     <style>
+      /* ── Design tokens — the same palette the generated plans use ──── */
       :root {
-        --bg: #ffffff;
-        --surface: #f9fafb;
-        --border: #e5e7eb;
-        --border-mid: #d1d5db;
-        --text: #111827;
-        --muted: #6b7280;
-        --subtle: #9ca3af;
-        --accent: #2563eb;
-        --accent-bg: #eff6ff;
+        --paper: #fcfcfa;
+        --panel: #ffffff;
+        --sunk: #f5f4f1;
+        --ink: #16151c;
+        --ink-2: #4b4858;
+        --ink-3: #6e6a80;
+        --rule: #e6e3ec;
+        --rule-soft: #f0eef4;
+        --accent: #4a2fe0;
+        --accent-soft: #efebfe;
+        --accent-line: #c9befb;
+        --on-accent: #ffffff;
+        --moss: #2f6b45;
+        --moss-soft: #edf5ef;
+        --moss-line: #c3ddcd;
+        --signal: #a8420c;
+        --signal-soft: #fbf0e9;
+        --signal-line: #e8c9b4;
         --radius: 4px;
-        --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+        --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+        --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        color-scheme: light;
+      }
+      /* Written twice: an explicit choice has to beat the OS preference, and
+         plain CSS cannot share a block between an attribute selector and a
+         media query. Keep the two lists in sync. */
+      :root[data-theme="dark"] {
+        --paper: #121118;
+        --panel: #1a1922;
+        --sunk: #201f29;
+        --ink: #edebf3;
+        --ink-2: #b3afc4;
+        --ink-3: #8b87a0;
+        --rule: #2c2a38;
+        --rule-soft: #24232e;
+        --accent: #a594ff;
+        --accent-soft: #221f36;
+        --accent-line: #4a4270;
+        --on-accent: #16151c;
+        --moss: #7bc098;
+        --moss-soft: #1b2a21;
+        --moss-line: #2f4a39;
+        --signal: #e8a278;
+        --signal-soft: #2b2019;
+        --signal-line: #4d3826;
+        color-scheme: dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --paper: #121118;
+          --panel: #1a1922;
+          --sunk: #201f29;
+          --ink: #edebf3;
+          --ink-2: #b3afc4;
+          --ink-3: #8b87a0;
+          --rule: #2c2a38;
+          --rule-soft: #24232e;
+          --accent: #a594ff;
+          --accent-soft: #221f36;
+          --accent-line: #4a4270;
+          --on-accent: #16151c;
+          --moss: #7bc098;
+          --moss-soft: #1b2a21;
+          --moss-line: #2f4a39;
+          --signal: #e8a278;
+          --signal-soft: #2b2019;
+          --signal-line: #4d3826;
+          color-scheme: dark;
+        }
       }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      html {
-        scroll-behavior: smooth;
-      }
-
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; }
       body {
-        background: var(--bg);
-        color: var(--text);
-        font-family:
-          system-ui,
-          -apple-system,
-          "Segoe UI",
-          Roboto,
-          sans-serif;
-        font-size: 15px;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--ui);
+        font-size: 16px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
         min-height: 100vh;
-        padding: 32px;
+        padding: 2rem 1.5rem 5rem;
+      }
+      .wrap { max-width: 1200px; margin: 0 auto; }
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+      /* Every structural label speaks in mono. */
+      .lbl {
+        font-family: var(--mono);
+        font-size: 0.625rem;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-3);
       }
 
       /* ── Header ──────────────────────────────────────────────────── */
       .gallery-header {
         max-width: 1200px;
-        margin: 0 auto 24px;
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 16px;
-      }
-      .gallery-header::before {
-        content: "";
-        display: block;
-        height: 3px;
-        background: var(--accent);
-        margin-bottom: 20px;
-        border-radius: 2px;
+        margin: 0 auto 1.5rem;
+        border-bottom: 1px solid var(--rule);
+        padding-bottom: 1rem;
+        display: flex;
+        align-items: flex-end;
+        gap: 1rem;
+        flex-wrap: wrap;
       }
       .gallery-header h1 {
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        margin-bottom: 4px;
+        font-family: var(--mono);
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        font-weight: 600;
+        letter-spacing: -0.035em;
+        line-height: 1.12;
       }
       .gallery-header p {
-        font-size: 13px;
-        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        color: var(--ink-3);
+        margin-bottom: 0.3rem;
       }
-
-      /* ── Toolbar ─────────────────────────────────────────────────── */
-      .toolbar {
-        max-width: 1200px;
-        margin: 0 auto 8px;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .search-box {
-        flex: 1;
-        min-width: 200px;
-        max-width: 320px;
-        padding: 7px 12px;
-        background: var(--bg);
-        border: 1px solid var(--border-mid);
-        border-radius: var(--radius);
-        color: var(--text);
-        font-size: 13px;
-        font-family: inherit;
-        outline: none;
-        transition: border-color 0.15s;
-      }
-      .search-box:focus {
-        border-color: var(--accent);
-      }
-      .search-box::placeholder {
-        color: var(--subtle);
-      }
-
-      .view-toggle {
+      .theme-toggle {
         margin-left: auto;
-        display: flex;
-        gap: 4px;
-      }
-      .view-btn {
-        padding: 6px 10px;
-        background: var(--bg);
-        border: 1px solid var(--border-mid);
-        color: var(--muted);
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.4rem 0.9rem;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-2);
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: var(--radius);
         cursor: pointer;
-        font-size: 14px;
-        transition: all 0.15s;
-        font-family: inherit;
       }
-      .view-btn:first-child {
-        border-radius: var(--radius) 0 0 var(--radius);
-      }
-      .view-btn:last-child {
-        border-radius: 0 var(--radius) var(--radius) 0;
-      }
-      .view-btn.active {
-        background: var(--accent-bg);
-        border-color: var(--accent);
-        color: var(--accent);
-      }
+      .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
 
-      /* ── Filter chip rows ────────────────────────────────────────── */
-      .filter-row {
+      /* ── Controls ────────────────────────────────────────────────── */
+      .controls {
         max-width: 1200px;
-        margin: 0 auto 6px;
+        margin: 0 auto 1.25rem;
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 6px;
+        gap: 0.6rem;
       }
-      .filter-row-label {
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--subtle);
-        min-width: 44px;
-        flex-shrink: 0;
+      .search-box {
+        flex: 1 1 16rem;
+        min-width: 12rem;
+        min-height: 44px;
+        padding: 0.5rem 0.75rem;
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: var(--radius);
+        color: var(--ink);
+        font-family: var(--ui);
+        font-size: 0.875rem;
       }
-      .filter-chips {
+      .search-box::placeholder { color: var(--ink-3); }
+      .search-box:focus { border-color: var(--accent); outline: none; }
+
+      /* Segmented status control — one row, counts inline. */
+      .seg {
         display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
+        border: 1px solid var(--rule);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--panel);
       }
-      .filter-chip {
-        padding: 3px 11px;
-        border-radius: 999px;
-        border: 1px solid var(--border-mid);
-        background: var(--bg);
-        color: var(--muted);
-        font-size: 11px;
+      .seg button {
+        min-height: 44px;
+        padding: 0.4rem 0.75rem;
+        border: 0;
+        border-left: 1px solid var(--rule);
+        background: transparent;
+        color: var(--ink-2);
+        font-family: var(--mono);
+        font-size: 0.68rem;
         font-weight: 600;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
         cursor: pointer;
-        font-family: inherit;
-        transition: all 0.15s;
         white-space: nowrap;
       }
-      .filter-chip:hover {
-        border-color: var(--accent);
-        color: var(--text);
+      .seg button:first-child { border-left: 0; }
+      .seg button .n { color: var(--ink-3); margin-left: 0.35rem; }
+      .seg button:hover { color: var(--ink); background: var(--sunk); }
+      .seg button[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
+      .seg button[aria-pressed="true"] .n { color: var(--accent); }
+
+      /* Type and effort live behind a disclosure — they are the rarely-used
+         half of the twenty filter targets that used to sit on screen. */
+      .more { position: relative; }
+      .more > summary {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 44px;
+        padding: 0.4rem 0.85rem;
+        border: 1px solid var(--rule);
+        border-radius: var(--radius);
+        background: var(--panel);
+        color: var(--ink-2);
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        list-style: none;
+        white-space: nowrap;
+      }
+      .more > summary::-webkit-details-marker { display: none; }
+      .more > summary::after { content: "▾"; color: var(--ink-3); }
+      .more[open] > summary { color: var(--accent); border-color: var(--accent-line); }
+      .more-body {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+        border: 1px solid var(--rule);
+        border-radius: var(--radius);
+        background: var(--panel);
+      }
+      @media (min-width: 700px) {
+        .more-body {
+          position: absolute;
+          z-index: 5;
+          right: 0;
+          width: 22rem;
+        }
+      }
+      .more-group { flex: 1 1 100%; }
+      .more-group + .more-group { margin-top: 0.5rem; }
+      .more-group .lbl { display: block; margin-bottom: 0.4rem; }
+      .more-group .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+      .chip {
+        min-height: 32px;
+        padding: 0.25rem 0.6rem;
+        border: 1px solid var(--rule);
+        border-radius: 999px;
+        background: var(--panel);
+        color: var(--ink-2);
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+      }
+      .chip:hover { color: var(--ink); border-color: var(--accent-line); }
+      .chip[aria-pressed="true"] {
+        color: var(--accent);
+        background: var(--accent-soft);
+        border-color: var(--accent-line);
       }
 
-      /* Status chip active states */
-      .filter-chip[data-status="all"].active,
-      .filter-chip[data-type="all"].active {
-        background: var(--text);
-        border-color: var(--text);
-        color: #fff;
+      .view-toggle { display: flex; }
+      .view-btn {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.4rem 0.7rem;
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        color: var(--ink-2);
+        cursor: pointer;
+        font-size: 0.9rem;
       }
-      .filter-chip[data-status="todo"].active {
-        background: #6b7280;
-        border-color: #6b7280;
-        color: #fff;
-      }
-      .filter-chip[data-status="in-progress"].active {
-        background: #d97706;
-        border-color: #d97706;
-        color: #fff;
-      }
-      .filter-chip[data-status="completed"].active {
-        background: #16a34a;
-        border-color: #16a34a;
-        color: #fff;
-      }
-      .filter-chip[data-type="feature"].active {
-        background: #2563eb;
-        border-color: #2563eb;
-        color: #fff;
-      }
-      .filter-chip[data-type="fix"].active {
-        background: #dc2626;
-        border-color: #dc2626;
-        color: #fff;
-      }
-      .filter-chip[data-type="refactor"].active {
-        background: #7c3aed;
-        border-color: #7c3aed;
-        color: #fff;
-      }
-      .filter-chip[data-type="docs"].active {
-        background: #ea580c;
-        border-color: #ea580c;
-        color: #fff;
-      }
-      .filter-chip[data-type="chore"].active {
-        background: #0d9488;
-        border-color: #0d9488;
-        color: #fff;
-      }
-      .filter-chip[data-type="artifact"].active {
-        background: #4f46e5;
-        border-color: #4f46e5;
-        color: #fff;
-      }
-      .filter-chip[data-effort="all"].active {
-        background: var(--text);
-        border-color: var(--text);
-        color: #fff;
-      }
-      .filter-chip[data-effort="low"].active {
-        background: #16a34a;
-        border-color: #16a34a;
-        color: #fff;
-      }
-      .filter-chip[data-effort="medium"].active {
-        background: #d97706;
-        border-color: #d97706;
-        color: #fff;
-      }
-      .filter-chip[data-effort="high"].active {
-        background: #dc2626;
-        border-color: #dc2626;
-        color: #fff;
-      }
+      .view-btn:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+      .view-btn:last-child { border-radius: 0 var(--radius) var(--radius) 0; border-left: 0; }
+      .view-btn.active { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
 
-      /* ── Visible count ───────────────────────────────────────────── */
       .visible-count {
-        font-size: 12px;
-        color: var(--muted);
         max-width: 1200px;
-        margin: 8px auto 14px;
-        min-height: 16px;
+        margin: 0 auto 0.75rem;
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        color: var(--ink-3);
+        min-height: 1rem;
       }
 
       /* ── Grid ────────────────────────────────────────────────────── */
       .gallery-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 16px;
         max-width: 1200px;
         margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+        gap: 0.75rem;
       }
+      .gallery-grid.list-view { grid-template-columns: 1fr; }
+
+      /* Separators are inserted by script and always span the full row. */
+      .gallery-sep {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 1.25rem 0 0.25rem;
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+      }
+      .gallery-sep:first-child { margin-top: 0; }
+      .gallery-sep .rule { flex: 1; height: 1px; background: var(--rule); }
+      .gallery-sep.flight { color: var(--signal); }
+      .gallery-sep.flight .rule { background: var(--signal-line); }
 
       .gallery-card {
-        background: var(--bg);
-        border: 1px solid var(--border);
+        display: block;
+        background: var(--panel);
+        border: 1px solid var(--rule);
         border-radius: var(--radius);
-        padding: 16px;
+        padding: 0.9rem 1rem;
         text-decoration: none;
         color: inherit;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        box-shadow: var(--shadow);
-        transition:
-          border-color 0.15s,
-          box-shadow 0.15s;
+        transition: border-color 0.15s, transform 0.15s;
       }
-      .gallery-card:hover {
-        border-color: var(--accent);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+      .gallery-card:hover { border-color: var(--accent-line); transform: translateY(-1px); }
+      @media (prefers-reduced-motion: reduce) {
+        .gallery-card { transition: none; }
+        .gallery-card:hover { transform: none; }
       }
-
-      .card-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-      }
-
+      .card-badges { display: flex; gap: 0.35rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
       .status-chip,
       .type-chip,
-      .effort-chip {
-        display: inline-block;
-        font-size: 10px;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 999px;
+      .effort-chip,
+      .proto-chip {
+        font-family: var(--mono);
+        font-size: 0.58rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        padding: 0.12rem 0.45rem;
+        border-radius: 3px;
+        border: 1px solid var(--rule);
+        background: var(--sunk);
+        color: var(--ink-3);
         white-space: nowrap;
       }
-
-      /* Status colours */
-      .status-todo {
-        background: #f3f4f6;
-        color: #6b7280;
-        border: 1px solid #d1d5db;
-      }
-      .status-in-progress {
-        background: #fffbeb;
-        color: #d97706;
-        border: 1px solid #fde68a;
-      }
-      .status-completed {
-        background: #f0fdf4;
-        color: #16a34a;
-        border: 1px solid #bbf7d0;
-      }
-
-      /* Type colours */
-      .type-feature {
-        background: #eff6ff;
-        color: #2563eb;
-        border: 1px solid #bfdbfe;
-      }
-      .type-fix {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fecaca;
-      }
-      .type-refactor {
-        background: #faf5ff;
-        color: #7c3aed;
-        border: 1px solid #ddd6fe;
-      }
-      .type-docs {
-        background: #fff7ed;
-        color: #ea580c;
-        border: 1px solid #fed7aa;
-      }
-      .type-chore {
-        background: #f0fdfa;
-        color: #0d9488;
-        border: 1px solid #99f6e4;
-      }
-      .type-untyped {
-        background: #f3f4f6;
-        color: #6b7280;
-        border: 1px solid #d1d5db;
-      }
-      .type-artifact {
-        background: #eef2ff;
-        color: #4f46e5;
-        border: 1px solid #c7d2fe;
-      }
-
-      /* Effort colours — mirror the plan template's effort badge */
-      .effort-low {
-        background: #f0fdf4;
-        color: #16a34a;
-        border: 1px solid #bbf7d0;
-      }
-      .effort-medium {
-        background: #fffbeb;
-        color: #d97706;
-        border: 1px solid #fde68a;
-      }
-      .effort-high {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fecaca;
-      }
-      .effort-chip::before {
-        content: "\2022\00a0";
-        opacity: 0.6;
-      }
-
+      /* Status is the only thing that gets a colour — everything else is
+         carried by form, so the cards stay scannable rather than becoming a
+         chart of eight competing hues. */
+      .status-in-progress { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+      .status-completed { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+      .proto-chip { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-line); }
       .card-title {
-        font-size: 14px;
         font-weight: 600;
-        color: var(--text);
-        line-height: 1.45;
+        font-size: 0.95rem;
+        line-height: 1.4;
+        margin-bottom: 0.4rem;
+        color: var(--ink);
       }
-
       .card-meta {
         display: flex;
-        flex-direction: column;
-        gap: 3px;
-        margin-top: auto;
-      }
-      .card-date {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .proto-chip {
-        align-self: flex-start;
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: .05em;
-        text-transform: uppercase;
-        padding: 1px 7px;
-        border-radius: 999px;
-        background: #eff6ff;
-        color: #2563eb;
-        border: 1px solid #bfdbfe;
-      }
-      .card-file {
-        font-size: 11px;
-        color: var(--subtle);
-        font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
-        word-break: break-all;
-      }
-
-      /* ── List view ───────────────────────────────────────────────── */
-      .gallery-grid.list-view {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-      .list-view .gallery-card {
-        flex-direction: row;
+        gap: 0.6rem;
+        flex-wrap: wrap;
         align-items: center;
-        padding: 12px 16px;
-        gap: 16px;
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        color: var(--ink-3);
       }
-      .list-view .card-badges {
-        flex-shrink: 0;
-      }
-      .list-view .card-title {
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .list-view .card-meta {
-        flex-direction: row;
-        align-items: center;
-        gap: 12px;
-        flex-shrink: 0;
-        margin-top: 0;
-      }
-      .list-view .card-file {
-        display: none;
-      }
+      .card-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 
-      /* ── No results ──────────────────────────────────────────────── */
       .no-results {
-        max-width: 1200px;
-        margin: 48px auto;
-        text-align: center;
-        color: var(--muted);
-        font-size: 14px;
         display: none;
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        text-align: center;
+        border: 1px dashed var(--rule);
+        border-radius: var(--radius);
+        color: var(--ink-3);
       }
 
-      /* ── Footer ──────────────────────────────────────────────────── */
       .gallery-footer {
         max-width: 1200px;
-        margin: 32px auto 0;
-        padding-top: 16px;
-        border-top: 1px solid var(--border);
+        margin: 3rem auto 0;
+        padding-top: 1rem;
+        border-top: 1px solid var(--rule);
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        font-size: 12px;
-        color: var(--muted);
-      }
-
-      @media (max-width: 640px) {
-        body {
-          padding: 16px;
-        }
-        .toolbar {
-          gap: 8px;
-        }
-        .search-box {
-          max-width: none;
-        }
-        .list-view .card-meta {
-          display: none;
-        }
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        color: var(--ink-3);
       }
 
       @media (prefers-reduced-motion: reduce) {
-        html {
-          scroll-behavior: auto;
-        }
         *,
         *::before,
         *::after {
@@ -508,18 +441,72 @@
   </head>
   <body>
     <div class="gallery-header">
-      <h1>Artifacts Library</h1>
-      <p>16 items &mdash; click any card to open it</p>
+      <div>
+        <h1>Artifacts Library</h1>
+        <p>16 items &mdash; click any card to open it</p>
+      </div>
+      <button
+        class="theme-toggle"
+        type="button"
+        id="themeToggle"
+        aria-pressed="false"
+        aria-label="Use dark theme"
+      >
+        Dark
+      </button>
     </div>
 
-    <div class="toolbar">
+    <div class="controls">
       <input
-        type="text"
+        type="search"
         class="search-box"
         id="searchBox"
         placeholder="Search by title..."
         aria-label="Search by title"
       />
+
+      <div class="seg" id="statusSeg" role="group" aria-label="Filter by status">
+        <button type="button" data-status="all" aria-pressed="true">
+          All<span class="n" data-count="all"></span>
+        </button>
+        <button type="button" data-status="in-progress" aria-pressed="false">
+          In flight<span class="n" data-count="in-progress"></span>
+        </button>
+        <button type="button" data-status="todo" aria-pressed="false">
+          Queued<span class="n" data-count="todo"></span>
+        </button>
+        <button type="button" data-status="completed" aria-pressed="false">
+          Shipped<span class="n" data-count="completed"></span>
+        </button>
+      </div>
+
+      <details class="more" id="moreFilters">
+        <summary>Type &amp; effort</summary>
+        <div class="more-body">
+          <div class="more-group">
+            <span class="lbl">Type</span>
+            <div class="chips" id="typeChips">
+              <button class="chip" type="button" data-type="all" aria-pressed="true">all</button>
+              <button class="chip" type="button" data-type="feature" aria-pressed="false">feature</button>
+              <button class="chip" type="button" data-type="fix" aria-pressed="false">fix</button>
+              <button class="chip" type="button" data-type="refactor" aria-pressed="false">refactor</button>
+              <button class="chip" type="button" data-type="docs" aria-pressed="false">docs</button>
+              <button class="chip" type="button" data-type="chore" aria-pressed="false">chore</button>
+              <button class="chip" type="button" data-type="artifact" aria-pressed="false">artifact</button>
+            </div>
+          </div>
+          <div class="more-group">
+            <span class="lbl">Effort</span>
+            <div class="chips" id="effortChips">
+              <button class="chip" type="button" data-effort="all" aria-pressed="true">all</button>
+              <button class="chip" type="button" data-effort="low" aria-pressed="false">low</button>
+              <button class="chip" type="button" data-effort="medium" aria-pressed="false">medium</button>
+              <button class="chip" type="button" data-effort="high" aria-pressed="false">high</button>
+            </div>
+          </div>
+        </div>
+      </details>
+
       <div class="view-toggle">
         <button
           class="view-btn active"
@@ -542,89 +529,10 @@
       </div>
     </div>
 
-    <div class="filter-row" id="statusRow">
-      <span class="filter-row-label">Status</span>
-      <div class="filter-chips" id="statusChips">
-        <button
-          class="filter-chip active"
-          data-status="all"
-          aria-pressed="true"
-        >
-          All
-        </button>
-        <button class="filter-chip" data-status="todo" aria-pressed="false">
-          Todo
-        </button>
-        <button
-          class="filter-chip"
-          data-status="in-progress"
-          aria-pressed="false"
-        >
-          In Progress
-        </button>
-        <button
-          class="filter-chip"
-          data-status="completed"
-          aria-pressed="false"
-        >
-          Completed
-        </button>
-      </div>
-    </div>
-
-    <div class="filter-row" id="typeRow">
-      <span class="filter-row-label">Type</span>
-      <div class="filter-chips" id="typeChips">
-        <button class="filter-chip active" data-type="all" aria-pressed="true">
-          All
-        </button>
-        <button class="filter-chip" data-type="feature" aria-pressed="false">
-          Feature
-        </button>
-        <button class="filter-chip" data-type="fix" aria-pressed="false">
-          Fix
-        </button>
-        <button class="filter-chip" data-type="refactor" aria-pressed="false">
-          Refactor
-        </button>
-        <button class="filter-chip" data-type="docs" aria-pressed="false">
-          Docs
-        </button>
-        <button class="filter-chip" data-type="chore" aria-pressed="false">
-          Chore
-        </button>
-        <button class="filter-chip" data-type="artifact" aria-pressed="false">
-          Artifact
-        </button>
-      </div>
-    </div>
-
-    <div class="filter-row" id="effortRow">
-      <span class="filter-row-label">Effort</span>
-      <div class="filter-chips" id="effortChips">
-        <button
-          class="filter-chip active"
-          data-effort="all"
-          aria-pressed="true"
-        >
-          All
-        </button>
-        <button class="filter-chip" data-effort="low" aria-pressed="false">
-          Low
-        </button>
-        <button class="filter-chip" data-effort="medium" aria-pressed="false">
-          Medium
-        </button>
-        <button class="filter-chip" data-effort="high" aria-pressed="false">
-          High
-        </button>
-      </div>
-    </div>
-
-    <div class="visible-count" id="visibleCount"></div>
+    <div class="visible-count" id="visibleCount" aria-live="polite"></div>
 
     <div class="gallery-grid" id="galleryGrid"><a class="gallery-card" href="team-recap-2026-07-31.html"
-   data-status="" data-type="artifact" data-effort="" data-title="plans and their tracking tickets, linked end to end">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="plans and their tracking tickets, linked end to end">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -635,7 +543,7 @@
   </div>
 </a>
 <a class="gallery-card" href="eng-recap-2026-07-30.html"
-   data-status="" data-type="artifact" data-effort="" data-title="six monolithic skill bodies split into cores plus references">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="six monolithic skill bodies split into cores plus references">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -646,7 +554,7 @@
   </div>
 </a>
 <a class="gallery-card" href="pr-470-recap-standalone-2026-07-27.html"
-   data-status="" data-type="artifact" data-effort="" data-title="build can now author the plan it implements — pr #470">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="build can now author the plan it implements — pr #470">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -657,7 +565,7 @@
   </div>
 </a>
 <a class="gallery-card" href="team-recap-2026-07-27-2.html"
-   data-status="" data-type="artifact" data-effort="" data-title="context engineering plans for the marketplace plugins">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="context engineering plans for the marketplace plugins">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -668,7 +576,7 @@
   </div>
 </a>
 <a class="gallery-card" href="team-recap-2026-07-27.html"
-   data-status="" data-type="artifact" data-effort="" data-title="chaining plan authoring into the build skill">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="chaining plan authoring into the build skill">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -679,7 +587,7 @@
   </div>
 </a>
 <a class="gallery-card" href="team-recap-2026-07-26.html"
-   data-status="" data-type="artifact" data-effort="" data-title="plan and prototype linking with drift detection">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="plan and prototype linking with drift detection">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -690,7 +598,7 @@
   </div>
 </a>
 <a class="gallery-card" href="lint-gate-team-recap-2026-07-24.html"
-   data-status="" data-type="artifact" data-effort="" data-title="git-agent&#x27;s pre-commit lint gate and where it is inert">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="git-agent&#x27;s pre-commit lint gate and where it is inert">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -701,7 +609,7 @@
   </div>
 </a>
 <a class="gallery-card" href="team-recap-2026-07-23.html"
-   data-status="" data-type="artifact" data-effort="" data-title="why ship-autonomous falls back to ci polling locally">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="why ship-autonomous falls back to ci polling locally">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -712,7 +620,7 @@
   </div>
 </a>
 <a class="gallery-card" href="team-recap-command-for-artifact-tools-2026-07-23.html"
-   data-status="" data-type="artifact" data-effort="" data-title="team recap command for artifact-tools">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="team recap command for artifact-tools">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -723,7 +631,7 @@
   </div>
 </a>
 <a class="gallery-card" href="doctor-session-2026-07-21.html"
-   data-status="" data-type="artifact" data-effort="" data-title="claude code health check — session dossier">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="claude code health check — session dossier">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -734,7 +642,7 @@
   </div>
 </a>
 <a class="gallery-card" href="ship-autonomous-4-1-0-2026-07-16.html"
-   data-status="" data-type="artifact" data-effort="" data-title="ship-autonomous 4.1.0 — what changed">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="ship-autonomous 4.1.0 — what changed">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -745,7 +653,7 @@
   </div>
 </a>
 <a class="gallery-card" href="session-model-pinning-report-2026-07-13.html"
-   data-status="" data-type="artifact" data-effort="" data-title="session report — per-skill model pinning">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="session report — per-skill model pinning">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -756,7 +664,7 @@
   </div>
 </a>
 <a class="gallery-card" href="team-defaults-session-review-2026-07-13.html"
-   data-status="" data-type="artifact" data-effort="" data-title="session review: team-defaults plugin">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="session review: team-defaults plugin">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -767,7 +675,7 @@
   </div>
 </a>
 <a class="gallery-card" href="ultra-review-guide-2026-07-10.html"
-   data-status="" data-type="artifact" data-effort="" data-title="ultra code review, explained — pr #382 as the worked example">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="ultra code review, explained — pr #382 as the worked example">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -778,7 +686,7 @@
   </div>
 </a>
 <a class="gallery-card" href="implementation-plan-reference-2026-07-07.html"
-   data-status="" data-type="artifact" data-effort="" data-title="implementation-plan — feature reference">
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="implementation-plan — feature reference">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -789,7 +697,7 @@
   </div>
 </a>
 <a class="gallery-card" href="session-recap-export-session-skill.html"
-   data-status="" data-type="artifact" data-effort="" data-title="session recap: export-session skill">
+   data-status="" data-type="artifact" data-effort="" data-month="" data-title="session recap: export-session skill">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>
@@ -804,7 +712,7 @@
 
     <div class="gallery-footer">
       <span>16 items</span>
-      <span>Generated 2026-07-31 13:11</span>
+      <span>Generated 2026-07-31 15:30</span>
     </div>
 
     <script>
@@ -813,12 +721,91 @@
       var activeEffort = "all";
       var searchText = "";
       var grid = document.getElementById("galleryGrid");
-      var cards = grid.querySelectorAll(".gallery-card");
+      var cards = [].slice.call(grid.querySelectorAll(".gallery-card"));
       var noResults = document.getElementById("noResults");
       var visibleCount = document.getElementById("visibleCount");
+      var statusSeg = document.getElementById("statusSeg");
+
+      var MONTHS = ["January","February","March","April","May","June",
+                    "July","August","September","October","November","December"];
+
+      function monthLabel(key) {
+        var parts = String(key).split("-");
+        var m = parseInt(parts[1], 10);
+        if (!parts[0] || isNaN(m) || m < 1 || m > 12) return "Undated";
+        return MONTHS[m - 1] + " " + parts[0];
+      }
+
+      /* Status counts drive the segmented control's labels. A gallery whose
+         cards carry no status at all (the artifacts library) hides the whole
+         control rather than showing four zeroes. */
+      function wireStatusCounts() {
+        var counts = { all: cards.length, "in-progress": 0, todo: 0, completed: 0 };
+        var anyStatus = false;
+        for (var i = 0; i < cards.length; i++) {
+          var st = cards[i].getAttribute("data-status") || "";
+          if (st) anyStatus = true;
+          if (counts[st] !== undefined && st !== "all") counts[st]++;
+        }
+        if (!anyStatus) {
+          statusSeg.style.display = "none";
+          return;
+        }
+        var spans = statusSeg.querySelectorAll("[data-count]");
+        for (var j = 0; j < spans.length; j++) {
+          var key = spans[j].getAttribute("data-count");
+          spans[j].textContent = counts[key] === undefined ? "0" : String(counts[key]);
+        }
+      }
+
+      /* Separators are built here, never emitted by the generator: the merge
+         driver splices over everything between the first and last card, so a
+         static heading would be destroyed by the first concurrent merge. */
+      function rebuildSeparators(visible) {
+        var old = grid.querySelectorAll(".gallery-sep");
+        for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+        if (visible.length === 0) return;
+
+        var sep = function (cls, label, count) {
+          var el = document.createElement("div");
+          el.className = "gallery-sep" + (cls ? " " + cls : "");
+          var a = document.createElement("span");
+          a.textContent = label;
+          var r = document.createElement("span");
+          r.className = "rule";
+          var b = document.createElement("span");
+          b.textContent = count + (count === 1 ? " item" : " items");
+          el.appendChild(a);
+          el.appendChild(r);
+          el.appendChild(b);
+          return el;
+        };
+
+        /* The generator sorts in-progress plans first, so the in-flight run is
+           a prefix of the visible list — no reordering needed here. */
+        var flight = 0;
+        while (flight < visible.length &&
+               visible[flight].getAttribute("data-status") === "in-progress") flight++;
+        if (flight > 0) {
+          grid.insertBefore(sep("flight", "In flight", flight), visible[0]);
+        }
+
+        var month = null;
+        for (var k = flight; k < visible.length; k++) {
+          var key = visible[k].getAttribute("data-month") || "";
+          if (key === month) continue;
+          month = key;
+          var n = 0;
+          for (var m = k; m < visible.length; m++) {
+            if ((visible[m].getAttribute("data-month") || "") !== month) break;
+            n++;
+          }
+          grid.insertBefore(sep("", monthLabel(month), n), visible[k]);
+        }
+      }
 
       function applyFilters() {
-        var shown = 0;
+        var visible = [];
         for (var i = 0; i < cards.length; i++) {
           var card = cards[i];
           var status = card.getAttribute("data-status") || "";
@@ -833,45 +820,35 @@
           var matchSearch = !searchText || title.indexOf(searchText) !== -1;
           if (matchStatus && matchType && matchEffort && matchSearch) {
             card.style.display = "";
-            shown++;
+            visible.push(card);
           } else {
             card.style.display = "none";
           }
         }
-        noResults.style.display = shown === 0 ? "block" : "none";
+        rebuildSeparators(visible);
+        noResults.style.display = visible.length === 0 ? "block" : "none";
         visibleCount.textContent =
-          shown === cards.length
+          visible.length === cards.length
             ? ""
-            : "Showing " + shown + " of " + cards.length + " items";
+            : "Showing " + visible.length + " of " + cards.length + " items";
       }
 
-      function wireChips(containerId, prop) {
-        var chips = document
-          .getElementById(containerId)
-          .querySelectorAll(".filter-chip");
-        for (var i = 0; i < chips.length; i++) {
-          chips[i].addEventListener("click", function () {
-            var siblings = document
-              .getElementById(this.parentElement.id)
-              .querySelectorAll(".filter-chip");
-            for (var j = 0; j < siblings.length; j++) {
-              siblings[j].classList.remove("active");
-              siblings[j].setAttribute("aria-pressed", "false");
+      function wireGroup(container, prop, set) {
+        var buttons = [].slice.call(container.querySelectorAll("button"));
+        for (var i = 0; i < buttons.length; i++) {
+          buttons[i].addEventListener("click", function () {
+            for (var j = 0; j < buttons.length; j++) {
+              buttons[j].setAttribute("aria-pressed", String(buttons[j] === this));
             }
-            this.classList.add("active");
-            this.setAttribute("aria-pressed", "true");
-            var val = this.getAttribute("data-" + prop);
-            if (prop === "status") activeStatus = val;
-            else if (prop === "type") activeType = val;
-            else activeEffort = val;
+            set(this.getAttribute("data-" + prop));
             applyFilters();
           });
         }
       }
 
-      wireChips("statusChips", "status");
-      wireChips("typeChips", "type");
-      wireChips("effortChips", "effort");
+      wireGroup(statusSeg, "status", function (v) { activeStatus = v; });
+      wireGroup(document.getElementById("typeChips"), "type", function (v) { activeType = v; });
+      wireGroup(document.getElementById("effortChips"), "effort", function (v) { activeEffort = v; });
 
       document
         .getElementById("searchBox")
@@ -896,6 +873,32 @@
         gridBtn.classList.remove("active");
         gridBtn.setAttribute("aria-pressed", "false");
       });
+
+      var themeBtn = document.getElementById("themeToggle");
+      function resolvedTheme() {
+        var set = document.documentElement.getAttribute("data-theme");
+        if (set === "dark" || set === "light") return set;
+        return window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      }
+      function syncThemeButton() {
+        var dark = resolvedTheme() === "dark";
+        themeBtn.setAttribute("aria-pressed", dark ? "true" : "false");
+        themeBtn.setAttribute("aria-label", dark ? "Use light theme" : "Use dark theme");
+        themeBtn.textContent = dark ? "Light" : "Dark";
+      }
+      themeBtn.addEventListener("click", function () {
+        var next = resolvedTheme() === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        try { localStorage.setItem("plan-theme", next); } catch (e) { /* not persisted */ }
+        syncThemeButton();
+      });
+      syncThemeButton();
+
+      wireStatusCounts();
+      applyFilters();
     </script>
   </body>
 </html>

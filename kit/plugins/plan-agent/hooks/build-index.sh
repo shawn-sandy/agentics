@@ -90,19 +90,26 @@ for dirpath, dirnames, filenames in os.walk(plans_dir):
         if name.endswith('.html') and name != 'index.html':
             plan_files.append(os.path.join(dirpath, name))
 def _plan_created_sort_key(path):
-    """Sort by plan-created desc; undated plans sort last by filename.
-    Artifacts live in their own gallery (docs/artifacts/), not here."""
+    """In-progress plans first, then plan-created desc; undated plans sort last
+    by filename. The gallery leads with the work actually in flight — 88 cards
+    in pure date order buries the four plans someone is mid-way through.
+    Artifacts live in their own gallery (docs/artifacts/), not here.
+    Reads 4000 chars: the <head> now carries a theme script ahead of the
+    plan-* meta tags."""
     base = os.path.basename(path)
     try:
         with open(path, encoding='utf-8', errors='replace') as fh:
-            head = fh.read(2000)
+            head = fh.read(4000)
+        st = re.search(r'<meta\s+name="plan-status"\s+content="([^"]*)"', head)
+        flight = 0 if (st and st.group(1).strip() == 'in-progress') else 1
         m = re.search(r'<meta\s+name="plan-created"\s+content="([^"]*)"', head)
         if m:
             parts = m.group(1).strip().split('-')
-            return (0, -int(parts[0]), -int(parts[1]), -int(parts[2]), base)
+            return (flight, 0, -int(parts[0]), -int(parts[1]), -int(parts[2]), base)
+        return (flight, 1, 0, 0, 0, base)
     except Exception:
         pass
-    return (1, 0, 0, 0, base)
+    return (1, 1, 0, 0, 0, base)
 
 plan_files.sort(key=_plan_created_sort_key)
 
@@ -141,6 +148,10 @@ for f in plan_files:
     title = get_title(content, f)
 
     prototype = get_meta(content, 'plan-prototype', '')
+    # YYYY-MM, or empty when the plan carries no created date. The gallery
+    # script turns it into a heading at load time; nothing between the cards
+    # would survive a merge-driver splice.
+    month = created[:7] if re.match(r'^\d{4}-\d{2}', created) else ''
 
     status_display = status.replace('-', ' ')
     date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
@@ -153,7 +164,7 @@ for f in plan_files:
     effort_badge = f'\n    <span class="effort-chip effort-{e(effort)}">{e(effort)}</span>' if effort else ''
 
     cards.append(f'''<a class="gallery-card" href="{e(rel_path)}"
-   data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-title="{e(title.lower())}">
+   data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-month="{e(month)}" data-title="{e(title.lower())}">
   <div class="card-badges">
     {status_badge}<span class="type-chip type-{e(ptype)}">{e(ptype)}</span>{effort_badge}
   </div>

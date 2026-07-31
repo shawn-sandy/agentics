@@ -108,7 +108,7 @@ for name in artifacts:
     created = _artifact_created(name)
     date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
     cards.append(f'''<a class="gallery-card" href="{e(name)}"
-   data-status="" data-type="artifact" data-effort="" data-title="{e(title.lower())}">
+   data-status="" data-type="artifact" data-effort="" data-month="{e(created[:7] if created else '')}" data-title="{e(title.lower())}">
   <div class="card-badges">
     <span class="type-chip type-artifact">artifact</span>
   </div>

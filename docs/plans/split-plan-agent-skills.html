@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="todo">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="refactor">
@@ -16,54 +27,154 @@
 <meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/split-plan-agent-skills.md — Stop paying 10,776 words for guidance nobody reads yet. Brief subagents with the plan file at docs/plans/split-plan-agent-skills.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/split-plan-agent-skills.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Stop paying 10,776 words for guidance nobody reads yet</title>
 <style>
-/* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --purple:     #a21caf;
-    --purple-bg:  #fdf4ff;
-    --purple-border:#f0abfc;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -93,7 +204,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -103,8 +214,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -119,9 +230,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -130,11 +242,14 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
   }
   .plan-header-actions {
     display: flex;
@@ -157,7 +272,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -168,9 +286,8 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
 
   /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
   .effort-badge {
@@ -185,12 +302,15 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .effort-badge::before { content: "Effort "; opacity: .7; }
-  [data-effort="low"]    .effort-badge { background: #16a34a; }
-  [data-effort="medium"] .effort-badge { background: #d97706; }
-  [data-effort="high"]   .effort-badge { background: #dc2626; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
@@ -207,9 +327,10 @@
     align-items: center;
     gap: .4rem;
     padding: .4rem 1rem;
-    font-size: .8rem;
+    font-size: .75rem;
     font-weight: 600;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--on-accent);
     background: var(--accent);
     border: 1px solid var(--accent);
     border-radius: 4px;
@@ -225,6 +346,31 @@
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   /* Meta row */
   .plan-meta {
     display: flex;
@@ -232,9 +378,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -246,14 +393,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -264,29 +414,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -301,98 +452,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
+  }
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
   }
   .objective-card .section-label,
   .plan-glance-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
-  /* ── At a glance — plain-language summary (sibling of #objective) ── */
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
   .plan-glance {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.5rem;
-    margin: -1.5rem 0 1.5rem;
-    line-height: 1.7;
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
   }
-  .plan-glance-label { color: var(--muted); }
-  .plan-glance p { margin: 0; color: var(--text); font-size: .95rem; }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
 
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -400,22 +638,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
     letter-spacing: -.01em;
-    color: var(--text);
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
   .section-card .section-intro {
-    font-size: .875rem;
-    color: var(--muted);
+    font-size: .85rem;
+    color: var(--ink-2);
     margin: -1rem 0 1.25rem;
   }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -424,65 +673,34 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-card.completed .step-number { color: var(--moss); }
   .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
@@ -491,58 +709,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .step-chip-text { flex: 1; }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why this matters: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -554,31 +770,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -592,14 +808,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -610,20 +826,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -632,25 +848,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -663,11 +879,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -677,10 +893,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -691,14 +907,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -712,17 +928,17 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
@@ -738,7 +954,7 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
@@ -749,27 +965,27 @@
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -784,10 +1000,10 @@
     min-height: 44px;
   }
   .optional-section > summary::before,
-  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .optional-section[open] > summary::before,
   .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
@@ -795,9 +1011,9 @@
 
   /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
   .plan-more-ways {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     margin: -.5rem 0 1.5rem;
     font-size: .8rem;
     overflow: hidden;
@@ -806,7 +1022,7 @@
     padding: .55rem 1rem;
     font-size: .78rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     cursor: pointer;
     list-style: none;
     display: flex;
@@ -816,10 +1032,10 @@
     min-height: 44px;
   }
   .plan-more-ways > summary:hover { color: var(--accent); }
-  .more-ways-hint { font-weight: 400; color: var(--muted); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
   .plan-more-ways-body {
     padding: .75rem 1rem 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     display: flex;
     flex-direction: column;
     gap: .75rem;
@@ -833,8 +1049,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -843,14 +1059,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -861,9 +1077,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -872,8 +1088,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
@@ -895,14 +1111,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -913,9 +1129,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -924,8 +1140,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
@@ -947,14 +1163,14 @@
     gap: .6rem;
     margin-top: .4rem;
     padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
   }
   .plan-workflow code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -965,9 +1181,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -976,8 +1192,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
   /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
@@ -1008,7 +1224,7 @@
   .plan-goal code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -1019,9 +1235,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -1030,8 +1246,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-goal-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-goal { display: none; }
   /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
@@ -1045,8 +1261,8 @@
     gap: .75rem;
   }
   .test-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow);
@@ -1068,27 +1284,27 @@
     border-radius: 999px;
     flex-shrink: 0;
   }
-  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
   .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
-  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
   .test-card-title {
     font-weight: 600;
     font-size: .95rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
   }
-  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
   .test-card-body p { margin-bottom: .4rem; }
   .test-card-body p:last-child { margin-bottom: 0; }
   .test-card-body code { font-size: .85em; }
-  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
   .test-tier-label {
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
     display: flex;
     align-items: center;
@@ -1098,21 +1314,21 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--rule);
   }
   .objective-test-card {
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-left: 4px solid var(--green);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow);
   }
   .objective-test-card .test-card-header { margin-bottom: .6rem; }
-  .objective-test-card .test-card-title { color: #14532d; }
-  .objective-test-card .test-card-body { color: #166534; }
-  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -1120,10 +1336,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -1132,7 +1348,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -1149,69 +1365,69 @@
 
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
   .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
 
   /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
   .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
   @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
   .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
 
   /* ── Bar chart (value via inline --val) ─────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
   .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
   @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
-  .bar-label { font-size: .82rem; color: var(--text); }
-  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
   .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
-  .bar-fill.full { background: var(--green); }
-  .bar-fill.zero { background: var(--subtle); }
-  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
 
   /* ── Data table ─────────────────────────────────────────────────── */
   .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
-  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
-  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
-  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
   .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
 
   /* ── Resources (images, screenshots & reference links) ──────────── */
   .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
-  .resource-figure { margin: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
   .resource-figure > a { display: block; line-height: 0; }
-  .resource-figure img { display: block; width: 100%; height: auto; background: var(--grey-bg); }
-  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--muted); padding: .5rem .75rem; border-top: 1px solid var(--border); }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
   .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
-  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--border); }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
   .resource-links li:last-child { border-bottom: none; }
   .resource-links a { font-weight: 600; word-break: break-word; }
-  .resource-note { font-size: .78rem; color: var(--subtle); font-style: italic; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
 
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
@@ -1219,7 +1435,7 @@
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
@@ -1307,6 +1523,8 @@ img, video { max-width: 100%; height: auto; }
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
         <span class="status-badge">todo</span>
       </div>
@@ -1337,19 +1555,33 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
       <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>9 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Write <code class="md">tests/plugins/test-progressive-disclosure.sh</code> covering the five skill directories, asserting each <code class="md">SKILL.md</code> is under 600 words via <code class="md">wc -w</code>, has at least one <code class="md">references/*.md</code>, links every reference file that exists on disk, and mentions no <code class="md">references/*.md</code> path that does not exist.</span><span class="rail-state">step 1 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Wire the new test into <code class="md">.github/workflows/check-plugin-versions.yml</code> as a step named &quot;Test skill progressive disclosure&quot;, placed after the existing <code class="md">test-build-skill.sh</code> step, with a comment explaining that a re-monolithized skill is invisible in review otherwise.</span><span class="rail-state">step 2 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Split <code class="md">kit/plugins/plan-agent/skills/build/SKILL.md</code> into a core plus <code class="md">references/invocation.md</code>, <code class="md">references/resolve-plan.md</code>, <code class="md">references/author-plan-chain.md</code>, and <code class="md">references/completion-gates.md</code>, moving section text verbatim, leaving the re-render subroutine in the core, and replacing each moved section with a named step line that links its reference file.</span><span class="rail-state">step 3 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Update <code class="md">tests/plugins/test-build-skill.sh</code> so its <code class="md">flatten</code>/<code class="md">sed</code> section extractors search <code class="md">SKILL.md</code> and every <code class="md">references/*.md</code> in the skill directory for the owning heading, keeping all 18 checks and their exact phrase assertions untouched.</span><span class="rail-state">step 4 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Split <code class="md">kit/plugins/plan-agent/skills/finalize-plan/SKILL.md</code> into a core plus <code class="md">references/resolve-and-modes.md</code>, <code class="md">references/sweep-mode.md</code>, <code class="md">references/evidence-analysis.md</code>, and <code class="md">references/write-completions.md</code>, then update <code class="md">tests/plugins/test-finalize-all-flag.sh</code> to resolve its assertions across the split.</span><span class="rail-state">step 5 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Split <code class="md">kit/plugins/plan-agent/skills/documenting-plans/SKILL.md</code> into a core plus <code class="md">references/resolve-and-preconditions.md</code>, <code class="md">references/gather-evidence.md</code>, and <code class="md">references/doc-template.md</code>, and delete the now-redundant <code class="md">## Table of Contents</code> section in favor of the linked step list.</span><span class="rail-state">step 6 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Split <code class="md">kit/plugins/plan-agent/skills/plan-status/SKILL.md</code> into a core plus <code class="md">references/single-file-flow.md</code>, <code class="md">references/bulk-mode.md</code>, and <code class="md">references/type-classification.md</code>, dropping its <code class="md">## Table of Contents</code> the same way.</span><span class="rail-state">step 7 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Split <code class="md">kit/plugins/plan-agent/skills/setup-sites/SKILL.md</code> into a core plus <code class="md">references/preflight.md</code>, <code class="md">references/scaffold.md</code>, and <code class="md">references/enable-and-verify.md</code>, moving all four embedded shell/python blocks with their steps, then update <code class="md">tests/plugins/test-setup-sites.sh</code> to resolve across the split.</span><span class="rail-state">step 8 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-9"><span class="rail-no">9</span><span class="rail-text">Bump <code class="md">plan-agent</code> from <code class="md">5.0.0</code> to <code class="md">5.1.0</code> in <code class="md">.claude-plugin/marketplace.json</code> (never adding a <code class="md">version</code> key to <code class="md">kit/plugins/plan-agent/.claude-plugin/plugin.json</code>) and add a <code class="md">## 5.1.0</code> entry to <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> naming the five split skills, the word counts before and after, and the new test.</span><span class="rail-state">step 9 of 9</span></a></li>
+      </ul>
+    </details>
   </nav>
 
   <main id="main">
 
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Split the five monolithic `plan-agent` skills — `build`, `finalize-plan`, `documenting-plans`, `plan-status`, `setup-sites` — into a SKILL.md core under 600 words holding trigger, arguments, and step names, with the mechanics moved to `references/&lt;topic&gt;.md` files loaded on demand.</p>
+      <p>Split the five monolithic <code class="md">plan-agent</code> skills — <code class="md">build</code>, <code class="md">finalize-plan</code>, <code class="md">documenting-plans</code>, <code class="md">plan-status</code>, <code class="md">setup-sites</code> — into a SKILL.md core under 600 words holding trigger, arguments, and step names, with the mechanics moved to <code class="md">references/&lt;topic&gt;.md</code> files loaded on demand.</p>
+      <section class="plan-glance" aria-labelledby="plan-glance-label">
+        <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
+        <p>Five plan-agent skills bill 10,776 words of context every time they fire, and an ordinary run reads maybe a quarter of it — Step 1b&#39;s 60-line no-plan contract is paid in full by every invocation that names a plan. The cost is invisible today because nothing measures it, so this ships the measurement alongside the fix and treats a behavioral regression as blocking even if every word count drops.</p>
+      </section>
     </div>
-
-    <section class="plan-glance" aria-labelledby="plan-glance-label">
-      <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
-      <p>Five plan-agent skills bill 10,776 words of context every time they fire, and an ordinary run reads maybe a quarter of it — Step 1b&#39;s 60-line no-plan contract is paid in full by every invocation that names a plan. The cost is invisible today because nothing measures it, so this ships the measurement alongside the fix and treats a behavioral regression as blocking even if every word count drops.</p>
-    </section>
 
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
@@ -1422,13 +1654,13 @@ img, video { max-width: 100%; height: auto; }
         Context
       </h2>
       <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
-      <p>Anthropic&#39;s &quot;The new rules of context engineering for Claude 5 generation models&quot; makes progressive disclosure (Rule 3) the load-bearing rule for skill authoring: move detailed guidance out of the always-loaded body into references the model pulls when it needs them, and split long skills into multiple files. A SKILL.md body is paid in **full** whenever the skill triggers — there is no partial load, no lazy paragraph. A measured audit of this repo found 17 SKILL.md files over 1,200 words shipping as a single file with zero sibling reference files. Five of them live in one plugin, `plan-agent`: `build` (2,907 words), `finalize-plan` (2,764), `documenting-plans` (1,897), `plan-status` (1,681), `setup-sites` (1,527) — 10,776 words in one plugin, and one plugin means one version bump.</p>
-      <p>`build` is the clearest case. Its `## Step 1b — Author a plan first (the no-plan chain)` runs from line 159 to line 219 — about 60 lines of delegation contract, proposal-versus-direct gating, and return-path rules — and it fires **only** when the skill is invoked with no plan named. Every ordinary `/plan-agent:build docs/plans/x.md` pays for all of it and reads none of it. The three mandatory gates (Steps 3, 4, 5, lines 227-303) are the same shape: ~80 lines of verification mechanics that matter at the end of a run, not at the trigger. `finalize-plan` carries an entire `## Sweep mode (--all)` section plus a duplicated legacy-HTML-surgery path; `plan-status` carries a full `## Bulk mode` branch; `setup-sites` carries four embedded shell blocks.</p>
-      <p>The pattern is already proven inside this very plugin. `kit/plugins/plan-agent/skills/implementation-plan/` ships `guidelines/planning-principles.md`, `guidelines/section-catalog.md`, `guidelines/right-sizing.md`, `guidelines/writing-style.md`, and `reference/SKELETON.md`, and its core says explicitly: &quot;read the full file when the step calls for it, not all up front&quot;. `code-testing-agent` and `wcag-compliance-reviewer` do the same with `references/` dirs. This plan copies that pattern, using `references/` (the plural, dominant spelling in the repo and the name `build-dist.mjs` already whitelists).</p>
-      <p>**Risk: silent behavior change.** Moving 60 lines of contract into another file can drop a rule. Mitigation: `tests/plugins/test-build-skill.sh` already pins 18 checks&#39; worth of `build`&#39;s exact contract phrases — the `Step 1b` delegation calls, the discovery cap, the misparse note, the AskUserQuestion-unavailable fallback. That test becomes the behavior-preservation harness: its section extractors are taught to resolve a heading from whichever file now carries it, and every assertion must still pass unchanged. `test-finalize-all-flag.sh` and `test-setup-sites.sh` get the same treatment.</p>
-      <p>**Risk: dangling or orphaned references.** A reference file nothing links to is dead weight; a link to a file that does not exist is a hole in the workflow. Progressive disclosure only works if the core names every file it expects the model to fetch. Mitigation: the objective test asserts both directions — every `references/*.md` on disk is linked from its SKILL.md, and every `references/&lt;name&gt;.md` mentioned in a SKILL.md resolves to a real file.</p>
-      <p>**Risk: description drift.** Splitting must not change any frontmatter `description` — those strings are what makes a skill trigger, and `tests/plugins/test-description-budget.sh` already enforces the 200-char budget. Mitigation: an explicit `git diff` check that the five `description:` lines are byte-identical to `main`.</p>
-      <p>Deliberate exception to the ceiling logic: `build`&#39;s re-render subroutine (a four-line bash block) stays in the core rather than moving to a reference, because every single step calls it. Pulling it out would trade one always-paid block for five on-demand fetches of the same four lines.</p>
+      <p>Anthropic&#39;s &quot;The new rules of context engineering for Claude 5 generation models&quot; makes progressive disclosure (Rule 3) the load-bearing rule for skill authoring: move detailed guidance out of the always-loaded body into references the model pulls when it needs them, and split long skills into multiple files. A SKILL.md body is paid in <strong class="md">full</strong> whenever the skill triggers — there is no partial load, no lazy paragraph. A measured audit of this repo found 17 SKILL.md files over 1,200 words shipping as a single file with zero sibling reference files. Five of them live in one plugin, <code class="md">plan-agent</code>: <code class="md">build</code> (2,907 words), <code class="md">finalize-plan</code> (2,764), <code class="md">documenting-plans</code> (1,897), <code class="md">plan-status</code> (1,681), <code class="md">setup-sites</code> (1,527) — 10,776 words in one plugin, and one plugin means one version bump.</p>
+      <p><code class="md">build</code> is the clearest case. Its <code class="md">## Step 1b — Author a plan first (the no-plan chain)</code> runs from line 159 to line 219 — about 60 lines of delegation contract, proposal-versus-direct gating, and return-path rules — and it fires <strong class="md">only</strong> when the skill is invoked with no plan named. Every ordinary <code class="md">/plan-agent:build docs/plans/x.md</code> pays for all of it and reads none of it. The three mandatory gates (Steps 3, 4, 5, lines 227-303) are the same shape: ~80 lines of verification mechanics that matter at the end of a run, not at the trigger. <code class="md">finalize-plan</code> carries an entire <code class="md">## Sweep mode (--all)</code> section plus a duplicated legacy-HTML-surgery path; <code class="md">plan-status</code> carries a full <code class="md">## Bulk mode</code> branch; <code class="md">setup-sites</code> carries four embedded shell blocks.</p>
+      <p>The pattern is already proven inside this very plugin. <code class="md">kit/plugins/plan-agent/skills/implementation-plan/</code> ships <code class="md">guidelines/planning-principles.md</code>, <code class="md">guidelines/section-catalog.md</code>, <code class="md">guidelines/right-sizing.md</code>, <code class="md">guidelines/writing-style.md</code>, and <code class="md">reference/SKELETON.md</code>, and its core says explicitly: &quot;read the full file when the step calls for it, not all up front&quot;. <code class="md">code-testing-agent</code> and <code class="md">wcag-compliance-reviewer</code> do the same with <code class="md">references/</code> dirs. This plan copies that pattern, using <code class="md">references/</code> (the plural, dominant spelling in the repo and the name <code class="md">build-dist.mjs</code> already whitelists).</p>
+      <p><strong class="md">Risk: silent behavior change.</strong> Moving 60 lines of contract into another file can drop a rule. Mitigation: <code class="md">tests/plugins/test-build-skill.sh</code> already pins 18 checks&#39; worth of <code class="md">build</code>&#39;s exact contract phrases — the <code class="md">Step 1b</code> delegation calls, the discovery cap, the misparse note, the AskUserQuestion-unavailable fallback. That test becomes the behavior-preservation harness: its section extractors are taught to resolve a heading from whichever file now carries it, and every assertion must still pass unchanged. <code class="md">test-finalize-all-flag.sh</code> and <code class="md">test-setup-sites.sh</code> get the same treatment.</p>
+      <p><strong class="md">Risk: dangling or orphaned references.</strong> A reference file nothing links to is dead weight; a link to a file that does not exist is a hole in the workflow. Progressive disclosure only works if the core names every file it expects the model to fetch. Mitigation: the objective test asserts both directions — every <code class="md">references/*.md</code> on disk is linked from its SKILL.md, and every <code class="md">references/&lt;name&gt;.md</code> mentioned in a SKILL.md resolves to a real file.</p>
+      <p><strong class="md">Risk: description drift.</strong> Splitting must not change any frontmatter <code class="md">description</code> — those strings are what makes a skill trigger, and <code class="md">tests/plugins/test-description-budget.sh</code> already enforces the 200-char budget. Mitigation: an explicit <code class="md">git diff</code> check that the five <code class="md">description:</code> lines are byte-identical to <code class="md">main</code>.</p>
+      <p>Deliberate exception to the ceiling logic: <code class="md">build</code>&#39;s re-render subroutine (a four-line bash block) stays in the core rather than moving to a reference, because every single step calls it. Pulling it out would trade one always-paid block for five on-demand fetches of the same four lines.</p>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
@@ -1453,7 +1685,7 @@ img, video { max-width: 100%; height: auto; }
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/finalize-plan/references/
             <ul class="file-list">
             <li><code>resolve-and-modes.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Step 1 argument parsing, plans-directory precedence, spec-versus-legacy edit mode</span></li>
-            <li><code>sweep-mode.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the `--all` flow, S1 through S5</span></li>
+            <li><code>sweep-mode.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the <code class="md">--all</code> flow, S1 through S5</span></li>
             <li><code>evidence-analysis.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Steps 2, 3a, 3b, 3c and the Step 4 findings table</span></li>
             <li><code>write-completions.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Step 5 spec mode and legacy mode, Step 6 delivery</span></li>
             </ul>
@@ -1470,14 +1702,14 @@ img, video { max-width: 100%; height: auto; }
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/plan-status/references/
             <ul class="file-list">
             <li><code>single-file-flow.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Steps 0-4 and Steps 6-7: resolution, git dates, frontmatter read, evidence scoring, confirmation, write rules</span></li>
-            <li><code>bulk-mode.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the directory / `--all` seven-stage flow with its triage table</span></li>
+            <li><code>bulk-mode.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">the directory / <code class="md">--all</code> seven-stage flow with its triage table</span></li>
             <li><code>type-classification.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Step 5&#39;s signal-to-type table and the keep-existing-type rule</span></li>
             </ul>
           </li>
           <li><code>kit/plugins/plan-agent/skills/setup-sites/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">core plus step names</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/skills/setup-sites/references/
             <ul class="file-list">
-            <li><code>preflight.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Steps 1-3: git/remote URL derivation, `plansDirectory` sanity check, template directory lookup</span></li>
+            <li><code>preflight.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Steps 1-3: git/remote URL derivation, <code class="md">plansDirectory</code> sanity check, template directory lookup</span></li>
             <li><code>scaffold.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Step 4&#39;s four idempotent artifacts and the hub placeholder/card-pruning rules</span></li>
             <li><code>enable-and-verify.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">Steps 5-7: Pages source enablement, verification block, delivery summary</span></li>
             </ul>
@@ -1486,12 +1718,12 @@ img, video { max-width: 100%; height: auto; }
             <ul class="file-list">
             <li><code>test-progressive-disclosure.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective test: word ceiling plus link integrity in both directions</span></li>
             <li><code>test-build-skill.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">section extractors resolve headings across SKILL.md and references/</span></li>
-            <li><code>test-finalize-all-flag.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same, for the `--all` sweep assertions</span></li>
+            <li><code>test-finalize-all-flag.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same, for the <code class="md">--all</code> sweep assertions</span></li>
             <li><code>test-setup-sites.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same, for the scaffold assertions</span></li>
             </ul>
           </li>
-          <li><code>.github/workflows/check-plugin-versions.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">new step running `tests/plugins/test-progressive-disclosure.sh`</span></li>
-          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">`plan-agent` version 5.0.0 to 5.1.0</span></li>
+          <li><code>.github/workflows/check-plugin-versions.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">new step running <code class="md">tests/plugins/test-progressive-disclosure.sh</code></span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note"><code class="md">plan-agent</code> version 5.0.0 to 5.1.0</span></li>
           <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">5.1.0 entry</span></li>
         </ul>
       </div>
@@ -1505,155 +1737,182 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write `tests/plugins/test-progressive-disclosure.sh` covering the five skill directories, asserting each `SKILL.md` is under 600 words via `wc -w`, has at least one `references/*.md`, links every reference file that exists on disk, and mentions no `references/*.md` path that does not exist.</span>
+                <span class="step-chip-text">Write <code class="md">tests/plugins/test-progressive-disclosure.sh</code> covering the five skill directories, asserting each <code class="md">SKILL.md</code> is under 600 words via <code class="md">wc -w</code>, has at least one <code class="md">references/*.md</code>, links every reference file that exists on disk, and mentions no <code class="md">references/*.md</code> path that does not exist.</span>
               </div>
-              <div class="step-why">writing the gate before the refactor means every subsequent step has an objective pass/fail instead of a judgment call, and the failing-first run proves the test can fail.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`bash tests/plugins/test-progressive-disclosure.sh` exits 1 and names all five skills as over the ceiling with no reference files.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">writing the gate before the refactor means every subsequent step has an objective pass/fail instead of a judgment call, and the failing-first run proves the test can fail.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-progressive-disclosure.sh</code> exits 1 and names all five skills as over the ceiling with no reference files.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Wire the new test into `.github/workflows/check-plugin-versions.yml` as a step named &quot;Test skill progressive disclosure&quot;, placed after the existing `test-build-skill.sh` step, with a comment explaining that a re-monolithized skill is invisible in review otherwise.</span>
+                <span class="step-chip-text">Wire the new test into <code class="md">.github/workflows/check-plugin-versions.yml</code> as a step named &quot;Test skill progressive disclosure&quot;, placed after the existing <code class="md">test-build-skill.sh</code> step, with a comment explaining that a re-monolithized skill is invisible in review otherwise.</span>
               </div>
-              <div class="step-why">the repo has no test runner, so a test not named in a workflow never runs in CI.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`grep -c &quot;test-progressive-disclosure.sh&quot; .github/workflows/check-plugin-versions.yml` prints 1 and `python3 -c &quot;import yaml,sys;yaml.safe_load(open(&#39;.github/workflows/check-plugin-versions.yml&#39;))&quot;` exits 0.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the repo has no test runner, so a test not named in a workflow never runs in CI.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">grep -c &quot;test-progressive-disclosure.sh&quot; .github/workflows/check-plugin-versions.yml</code> prints 1 and <code class="md">python3 -c &quot;import yaml,sys;yaml.safe_load(open(&#39;.github/workflows/check-plugin-versions.yml&#39;))&quot;</code> exits 0.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Split `kit/plugins/plan-agent/skills/build/SKILL.md` into a core plus `references/invocation.md`, `references/resolve-plan.md`, `references/author-plan-chain.md`, and `references/completion-gates.md`, moving section text verbatim, leaving the re-render subroutine in the core, and replacing each moved section with a named step line that links its reference file.</span>
+                <span class="step-chip-text">Split <code class="md">kit/plugins/plan-agent/skills/build/SKILL.md</code> into a core plus <code class="md">references/invocation.md</code>, <code class="md">references/resolve-plan.md</code>, <code class="md">references/author-plan-chain.md</code>, and <code class="md">references/completion-gates.md</code>, moving section text verbatim, leaving the re-render subroutine in the core, and replacing each moved section with a named step line that links its reference file.</span>
               </div>
-              <div class="step-why">`Step 1b` alone is ~60 lines that fire only on a no-plan invocation, and the three gates are ~80 more that matter only at the end of a run.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`wc -w kit/plugins/plan-agent/skills/build/SKILL.md` reports under 600, and `git diff main -- kit/plugins/plan-agent/skills/build/SKILL.md | grep &#39;^-description:&#39;` prints nothing.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why"><code class="md">Step 1b</code> alone is ~60 lines that fire only on a no-plan invocation, and the three gates are ~80 more that matter only at the end of a run.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">wc -w kit/plugins/plan-agent/skills/build/SKILL.md</code> reports under 600, and <code class="md">git diff main -- kit/plugins/plan-agent/skills/build/SKILL.md | grep &#39;^-description:&#39;</code> prints nothing.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Update `tests/plugins/test-build-skill.sh` so its `flatten`/`sed` section extractors search `SKILL.md` and every `references/*.md` in the skill directory for the owning heading, keeping all 18 checks and their exact phrase assertions untouched.</span>
+                <span class="step-chip-text">Update <code class="md">tests/plugins/test-build-skill.sh</code> so its <code class="md">flatten</code>/<code class="md">sed</code> section extractors search <code class="md">SKILL.md</code> and every <code class="md">references/*.md</code> in the skill directory for the owning heading, keeping all 18 checks and their exact phrase assertions untouched.</span>
               </div>
-              <div class="step-why">those assertions are the only record that `build`&#39;s contract survived the move, so they must keep failing on a dropped rule rather than being relaxed to match the new layout.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`bash tests/plugins/test-build-skill.sh` prints &quot;All build-skill checks passed.&quot; and exits 0.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">those assertions are the only record that <code class="md">build</code>&#39;s contract survived the move, so they must keep failing on a dropped rule rather than being relaxed to match the new layout.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-build-skill.sh</code> prints &quot;All build-skill checks passed.&quot; and exits 0.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Split `kit/plugins/plan-agent/skills/finalize-plan/SKILL.md` into a core plus `references/resolve-and-modes.md`, `references/sweep-mode.md`, `references/evidence-analysis.md`, and `references/write-completions.md`, then update `tests/plugins/test-finalize-all-flag.sh` to resolve its assertions across the split.</span>
+                <span class="step-chip-text">Split <code class="md">kit/plugins/plan-agent/skills/finalize-plan/SKILL.md</code> into a core plus <code class="md">references/resolve-and-modes.md</code>, <code class="md">references/sweep-mode.md</code>, <code class="md">references/evidence-analysis.md</code>, and <code class="md">references/write-completions.md</code>, then update <code class="md">tests/plugins/test-finalize-all-flag.sh</code> to resolve its assertions across the split.</span>
               </div>
-              <div class="step-why">the `--all` sweep and the legacy HTML-surgery path are each a whole branch that most invocations never enter.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`wc -w kit/plugins/plan-agent/skills/finalize-plan/SKILL.md` reports under 600 and `bash tests/plugins/test-finalize-all-flag.sh` exits 0.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the <code class="md">--all</code> sweep and the legacy HTML-surgery path are each a whole branch that most invocations never enter.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">wc -w kit/plugins/plan-agent/skills/finalize-plan/SKILL.md</code> reports under 600 and <code class="md">bash tests/plugins/test-finalize-all-flag.sh</code> exits 0.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Split `kit/plugins/plan-agent/skills/documenting-plans/SKILL.md` into a core plus `references/resolve-and-preconditions.md`, `references/gather-evidence.md`, and `references/doc-template.md`, and delete the now-redundant `## Table of Contents` section in favor of the linked step list.</span>
+                <span class="step-chip-text">Split <code class="md">kit/plugins/plan-agent/skills/documenting-plans/SKILL.md</code> into a core plus <code class="md">references/resolve-and-preconditions.md</code>, <code class="md">references/gather-evidence.md</code>, and <code class="md">references/doc-template.md</code>, and delete the now-redundant <code class="md">## Table of Contents</code> section in favor of the linked step list.</span>
               </div>
-              <div class="step-why">the ~75-line document template is output formatting that is irrelevant until Step 8, and a hand-maintained TOC beside a step list is Rule 4 repetition.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`wc -w kit/plugins/plan-agent/skills/documenting-plans/SKILL.md` reports under 600 and `grep -c &quot;Table of Contents&quot; kit/plugins/plan-agent/skills/documenting-plans/SKILL.md` prints 0.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the ~75-line document template is output formatting that is irrelevant until Step 8, and a hand-maintained TOC beside a step list is Rule 4 repetition.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">wc -w kit/plugins/plan-agent/skills/documenting-plans/SKILL.md</code> reports under 600 and <code class="md">grep -c &quot;Table of Contents&quot; kit/plugins/plan-agent/skills/documenting-plans/SKILL.md</code> prints 0.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Split `kit/plugins/plan-agent/skills/plan-status/SKILL.md` into a core plus `references/single-file-flow.md`, `references/bulk-mode.md`, and `references/type-classification.md`, dropping its `## Table of Contents` the same way.</span>
+                <span class="step-chip-text">Split <code class="md">kit/plugins/plan-agent/skills/plan-status/SKILL.md</code> into a core plus <code class="md">references/single-file-flow.md</code>, <code class="md">references/bulk-mode.md</code>, and <code class="md">references/type-classification.md</code>, dropping its <code class="md">## Table of Contents</code> the same way.</span>
               </div>
-              <div class="step-why">bulk mode is an entire alternate seven-stage workflow that a single-file status check never touches.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`wc -w kit/plugins/plan-agent/skills/plan-status/SKILL.md` reports under 600 and `grep -c &quot;references/bulk-mode.md&quot; kit/plugins/plan-agent/skills/plan-status/SKILL.md` prints at least 1.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">bulk mode is an entire alternate seven-stage workflow that a single-file status check never touches.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">wc -w kit/plugins/plan-agent/skills/plan-status/SKILL.md</code> reports under 600 and <code class="md">grep -c &quot;references/bulk-mode.md&quot; kit/plugins/plan-agent/skills/plan-status/SKILL.md</code> prints at least 1.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Split `kit/plugins/plan-agent/skills/setup-sites/SKILL.md` into a core plus `references/preflight.md`, `references/scaffold.md`, and `references/enable-and-verify.md`, moving all four embedded shell/python blocks with their steps, then update `tests/plugins/test-setup-sites.sh` to resolve across the split.</span>
+                <span class="step-chip-text">Split <code class="md">kit/plugins/plan-agent/skills/setup-sites/SKILL.md</code> into a core plus <code class="md">references/preflight.md</code>, <code class="md">references/scaffold.md</code>, and <code class="md">references/enable-and-verify.md</code>, moving all four embedded shell/python blocks with their steps, then update <code class="md">tests/plugins/test-setup-sites.sh</code> to resolve across the split.</span>
               </div>
-              <div class="step-why">the scaffold shell blocks are the bulk of the file and are needed only once the preflight has passed.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`wc -w kit/plugins/plan-agent/skills/setup-sites/SKILL.md` reports under 600 and `bash tests/plugins/test-setup-sites.sh` exits 0.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the scaffold shell blocks are the bulk of the file and are needed only once the preflight has passed.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">wc -w kit/plugins/plan-agent/skills/setup-sites/SKILL.md</code> reports under 600 and <code class="md">bash tests/plugins/test-setup-sites.sh</code> exits 0.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-9">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Bump `plan-agent` from `5.0.0` to `5.1.0` in `.claude-plugin/marketplace.json` (never adding a `version` key to `kit/plugins/plan-agent/.claude-plugin/plugin.json`) and add a `## 5.1.0` entry to `kit/plugins/plan-agent/CHANGELOG.md` naming the five split skills, the word counts before and after, and the new test.</span>
+                <span class="step-chip-text">Bump <code class="md">plan-agent</code> from <code class="md">5.0.0</code> to <code class="md">5.1.0</code> in <code class="md">.claude-plugin/marketplace.json</code> (never adding a <code class="md">version</code> key to <code class="md">kit/plugins/plan-agent/.claude-plugin/plugin.json</code>) and add a <code class="md">## 5.1.0</code> entry to <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> naming the five split skills, the word counts before and after, and the new test.</span>
               </div>
-              <div class="step-why">`plan-agent` is the only plugin this plan touches, and any edit under `kit/plugins/&lt;name&gt;/` requires a marketplace version higher than `main` plus a CHANGELOG entry; the new `references/*.md` files are added skill content, which `.claude/rules/marketplace.md` puts in the MINOR row.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 and `head -5 kit/plugins/plan-agent/CHANGELOG.md` shows the 5.1.0 heading.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why"><code class="md">plan-agent</code> is the only plugin this plan touches, and any edit under <code class="md">kit/plugins/&lt;name&gt;/</code> requires a marketplace version higher than <code class="md">main</code> plus a CHANGELOG entry; the new <code class="md">references/*.md</code> files are added skill content, which <code class="md">.claude/rules/marketplace.md</code> puts in the MINOR row.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 and <code class="md">head -5 kit/plugins/plan-agent/CHANGELOG.md</code> shows the 5.1.0 heading.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1668,11 +1927,11 @@ img, video { max-width: 100%; height: auto; }
       </h2>
       <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 1 — This plan changes application code</div>
-      <div class="objective-test-card">Objective: proves every one of the five skills is genuinely progressively disclosed — a small core plus reachable references — and not merely shorter. File: tests/plugins/test-progressive-disclosure.sh; Type: smoke; Asserts: for each of `build`, `finalize-plan`, `documenting-plans`, `plan-status`, `setup-sites`, that `SKILL.md` is under 600 words, that at least one `references/*.md` exists beside it, that every `references/*.md` file on disk is linked by name from that `SKILL.md` (no orphans), and that every `references/&lt;name&gt;.md` string appearing in that `SKILL.md` resolves to an existing file (no dangling links); Run: bash tests/plugins/test-progressive-disclosure.sh</div>
+      <div class="objective-test-card">Objective: proves every one of the five skills is genuinely progressively disclosed — a small core plus reachable references — and not merely shorter. File: tests/plugins/test-progressive-disclosure.sh; Type: smoke; Asserts: for each of <code class="md">build</code>, <code class="md">finalize-plan</code>, <code class="md">documenting-plans</code>, <code class="md">plan-status</code>, <code class="md">setup-sites</code>, that <code class="md">SKILL.md</code> is under 600 words, that at least one <code class="md">references/*.md</code> exists beside it, that every <code class="md">references/*.md</code> file on disk is linked by name from that <code class="md">SKILL.md</code> (no orphans), and that every <code class="md">references/&lt;name&gt;.md</code> string appearing in that <code class="md">SKILL.md</code> resolves to an existing file (no dangling links); Run: bash tests/plugins/test-progressive-disclosure.sh</div>
       <div class="test-list">
-        <div class="test-card">Unit: behavior preservation for `build`, the most contract-heavy of the five. File: tests/plugins/test-build-skill.sh; Targets: kit/plugins/plan-agent/skills/build/SKILL.md and its references/; Key cases: all 18 existing checks pass unchanged after the split — Step 1b&#39;s two `Skill(...)` delegation calls, the &quot;offer, never a silent pickup&quot; discovery rule, the three-candidate cap, the objective-versus-path misparse note, the AskUserQuestion-unavailable stop-and-report rule, and the `Do not set status: completed here` gate ordering — each resolved from whichever file now carries its section.</div>
-        <div class="test-card">Unit: behavior preservation for the two other tested skills. File: tests/plugins/test-finalize-all-flag.sh and tests/plugins/test-setup-sites.sh; Targets: finalize-plan and setup-sites SKILL.md plus their references/; Key cases: the `--all` sweep assertions and the scaffold/verification assertions pass unchanged with extractors that search the whole skill directory.</div>
-        <div class="test-card">Unit: descriptions are untouched by the split. File: tests/plugins/test-description-budget.sh; Targets: every shipped SKILL.md frontmatter description; Key cases: all five descriptions still pass the 200-char total and 80-char first-sentence budget, complementing the plan&#39;s byte-identical `git diff` criterion.</div>
+        <div class="test-card">Unit: behavior preservation for <code class="md">build</code>, the most contract-heavy of the five. File: tests/plugins/test-build-skill.sh; Targets: kit/plugins/plan-agent/skills/build/SKILL.md and its references/; Key cases: all 18 existing checks pass unchanged after the split — Step 1b&#39;s two <code class="md">Skill(...)</code> delegation calls, the &quot;offer, never a silent pickup&quot; discovery rule, the three-candidate cap, the objective-versus-path misparse note, the AskUserQuestion-unavailable stop-and-report rule, and the <code class="md">Do not set status: completed here</code> gate ordering — each resolved from whichever file now carries its section.</div>
+        <div class="test-card">Unit: behavior preservation for the two other tested skills. File: tests/plugins/test-finalize-all-flag.sh and tests/plugins/test-setup-sites.sh; Targets: finalize-plan and setup-sites SKILL.md plus their references/; Key cases: the <code class="md">--all</code> sweep assertions and the scaffold/verification assertions pass unchanged with extractors that search the whole skill directory.</div>
+        <div class="test-card">Unit: descriptions are untouched by the split. File: tests/plugins/test-description-budget.sh; Targets: every shipped SKILL.md frontmatter description; Key cases: all five descriptions still pass the 200-char total and 80-char first-sentence budget, complementing the plan&#39;s byte-identical <code class="md">git diff</code> criterion.</div>
       </div>
     </section>
 
@@ -1685,51 +1944,51 @@ img, video { max-width: 100%; height: auto; }
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1">`wc -w` reports under 600 words for each of the five files `kit/plugins/plan-agent/skills/{build,finalize-plan,documenting-plans,plan-status,setup-sites}/SKILL.md`</label>
+          <label for="ac1"><code class="md">wc -w</code> reports under 600 words for each of the five files <code class="md">kit/plugins/plan-agent/skills/{build,finalize-plan,documenting-plans,plan-status,setup-sites}/SKILL.md</code></label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">Each of those five skill directories contains a `references/` directory with at least one `.md` file in it</label>
+          <label for="ac2">Each of those five skill directories contains a <code class="md">references/</code> directory with at least one <code class="md">.md</code> file in it</label>
         </li>
         <li>
           <input type="checkbox" id="ac3">
-          <label for="ac3">`bash tests/plugins/test-progressive-disclosure.sh` exits 0</label>
+          <label for="ac3"><code class="md">bash tests/plugins/test-progressive-disclosure.sh</code> exits 0</label>
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4">`bash tests/plugins/test-build-skill.sh` exits 0 with all 18 checks passing and no check deleted or weakened (`grep -c &#39;^echo &quot;[0-9]&#39; tests/plugins/test-build-skill.sh` is unchanged from `main`)</label>
+          <label for="ac4"><code class="md">bash tests/plugins/test-build-skill.sh</code> exits 0 with all 18 checks passing and no check deleted or weakened (<code class="md">grep -c &#39;^echo &quot;[0-9]&#39; tests/plugins/test-build-skill.sh</code> is unchanged from <code class="md">main</code>)</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5">`bash tests/plugins/test-finalize-all-flag.sh` and `bash tests/plugins/test-setup-sites.sh` both exit 0</label>
+          <label for="ac5"><code class="md">bash tests/plugins/test-finalize-all-flag.sh</code> and <code class="md">bash tests/plugins/test-setup-sites.sh</code> both exit 0</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">`bash tests/plugins/test-description-budget.sh` exits 0</label>
+          <label for="ac6"><code class="md">bash tests/plugins/test-description-budget.sh</code> exits 0</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">`git diff main -- kit/plugins/plan-agent/skills/ | grep -c &#39;^[-+]description:&#39;` prints 0 — no frontmatter description changed</label>
+          <label for="ac7"><code class="md">git diff main -- kit/plugins/plan-agent/skills/ | grep -c &#39;^[-+]description:&#39;</code> prints 0 — no frontmatter description changed</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8">`.github/workflows/check-plugin-versions.yml` contains a step running `tests/plugins/test-progressive-disclosure.sh`</label>
+          <label for="ac8"><code class="md">.github/workflows/check-plugin-versions.yml</code> contains a step running <code class="md">tests/plugins/test-progressive-disclosure.sh</code></label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9">`.claude-plugin/marketplace.json` sets `plan-agent` to `5.1.0`, and `python3 -c &quot;import json;print(&#39;version&#39; in json.load(open(&#39;kit/plugins/plan-agent/.claude-plugin/plugin.json&#39;)))&quot;` prints `False`</label>
+          <label for="ac9"><code class="md">.claude-plugin/marketplace.json</code> sets <code class="md">plan-agent</code> to <code class="md">5.1.0</code>, and <code class="md">python3 -c &quot;import json;print(&#39;version&#39; in json.load(open(&#39;kit/plugins/plan-agent/.claude-plugin/plugin.json&#39;)))&quot;</code> prints <code class="md">False</code></label>
         </li>
         <li>
           <input type="checkbox" id="ac10">
-          <label for="ac10">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0</label>
+          <label for="ac10"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0</label>
         </li>
         <li>
           <input type="checkbox" id="ac11">
-          <label for="ac11">`kit/plugins/plan-agent/CHANGELOG.md` has a `## 5.1.0` entry naming all five split skills</label>
+          <label for="ac11"><code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> has a <code class="md">## 5.1.0</code> entry naming all five split skills</label>
         </li>
         <li>
           <input type="checkbox" id="ac12">
-          <label for="ac12">`node scripts/build-dist.mjs` produces `dist/` containing every new `references/*.md` under `kit/plugins/plan-agent/skills/*/references/`</label>
+          <label for="ac12"><code class="md">node scripts/build-dist.mjs</code> produces <code class="md">dist/</code> containing every new <code class="md">references/*.md</code> under <code class="md">kit/plugins/plan-agent/skills/*/references/</code></label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1742,9 +2001,9 @@ img, video { max-width: 100%; height: auto; }
         Final check
       </h2>
       <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
-      <p>Run `bash tests/plugins/test-progressive-disclosure.sh` — expected result: exit 0 with a passing line for each of the five skills and no orphan or dangling-link report. Then run `bash tests/plugins/test-build-skill.sh`, `bash tests/plugins/test-finalize-all-flag.sh`, `bash tests/plugins/test-setup-sites.sh`, and `bash tests/plugins/test-description-budget.sh` — all four exit 0. Confirm the version guard with `BASE_REF=main node scripts/check-plugin-versions.mjs` (exit 0), and confirm distribution with `node scripts/build-dist.mjs &amp;&amp; find dist -path &#39;*plan-agent/skills/*/references/*.md&#39; | wc -l`, which must equal the number of reference files created.</p>
-      <p>**Tautology check — the objective test must be able to fail three times, once per assertion it makes.** First break the ceiling: append 700 words of filler to `kit/plugins/plan-agent/skills/setup-sites/SKILL.md`, re-run `bash tests/plugins/test-progressive-disclosure.sh`, confirm it exits 1 naming that file as over 600 words, then `git checkout -- kit/plugins/plan-agent/skills/setup-sites/SKILL.md`. Next break the links: delete the line in `kit/plugins/plan-agent/skills/build/SKILL.md` that links `references/author-plan-chain.md`, re-run, confirm it exits 1 reporting that file as an orphaned reference, then revert. Finally break the other direction: add a link to `references/does-not-exist.md` in the same core, re-run, confirm it exits 1 reporting a dangling link, then revert. A test that stays green through any of the three is measuring nothing and must be fixed before this plan is done.</p>
-      <p>**Behavioral check — the skills must still work, not merely be shorter.** Word counts falling is not evidence of correctness. In a scratch git repo outside this worktree, load the plugin with `claude --plugin-dir kit/plugins/plan-agent` and exercise each split skill end to end: run `/plan-agent:setup-sites` and confirm it still writes `.github/workflows/deploy-pages.yml`, `docs/.nojekyll`, `scripts/serve-docs.sh`, and `docs/index.html` and prints its PASS verification lines; run `/plan-agent:plan-status &lt;a plan file&gt;` and confirm it presents the findings table and writes frontmatter only after confirmation; run `/plan-agent:finalize-plan &lt;a plan file&gt;` and confirm it produces the evidence table, per-criterion breakdown, and objective-test result; run `/plan-agent:build &lt;an existing small plan&gt;` and confirm it reaches all three gates and re-renders the HTML; run `/plan-agent:build` with no arguments and confirm it still enters the Step 1b chain and asks the proposal-versus-direct question. In each run, confirm the model actually opened the relevant `references/*.md` file — a core that names a reference the model never reads is a broken handoff, not a smaller skill. Record any skill whose behavior changed; a behavioral regression blocks this plan regardless of test results.</p>
+      <p>Run <code class="md">bash tests/plugins/test-progressive-disclosure.sh</code> — expected result: exit 0 with a passing line for each of the five skills and no orphan or dangling-link report. Then run <code class="md">bash tests/plugins/test-build-skill.sh</code>, <code class="md">bash tests/plugins/test-finalize-all-flag.sh</code>, <code class="md">bash tests/plugins/test-setup-sites.sh</code>, and <code class="md">bash tests/plugins/test-description-budget.sh</code> — all four exit 0. Confirm the version guard with <code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> (exit 0), and confirm distribution with <code class="md">node scripts/build-dist.mjs &amp;&amp; find dist -path &#39;*plan-agent/skills/*/references/*.md&#39; | wc -l</code>, which must equal the number of reference files created.</p>
+      <p><strong class="md">Tautology check — the objective test must be able to fail three times, once per assertion it makes.</strong> First break the ceiling: append 700 words of filler to <code class="md">kit/plugins/plan-agent/skills/setup-sites/SKILL.md</code>, re-run <code class="md">bash tests/plugins/test-progressive-disclosure.sh</code>, confirm it exits 1 naming that file as over 600 words, then <code class="md">git checkout -- kit/plugins/plan-agent/skills/setup-sites/SKILL.md</code>. Next break the links: delete the line in <code class="md">kit/plugins/plan-agent/skills/build/SKILL.md</code> that links <code class="md">references/author-plan-chain.md</code>, re-run, confirm it exits 1 reporting that file as an orphaned reference, then revert. Finally break the other direction: add a link to <code class="md">references/does-not-exist.md</code> in the same core, re-run, confirm it exits 1 reporting a dangling link, then revert. A test that stays green through any of the three is measuring nothing and must be fixed before this plan is done.</p>
+      <p><strong class="md">Behavioral check — the skills must still work, not merely be shorter.</strong> Word counts falling is not evidence of correctness. In a scratch git repo outside this worktree, load the plugin with <code class="md">claude --plugin-dir kit/plugins/plan-agent</code> and exercise each split skill end to end: run <code class="md">/plan-agent:setup-sites</code> and confirm it still writes <code class="md">.github/workflows/deploy-pages.yml</code>, <code class="md">docs/.nojekyll</code>, <code class="md">scripts/serve-docs.sh</code>, and <code class="md">docs/index.html</code> and prints its PASS verification lines; run <code class="md">/plan-agent:plan-status &lt;a plan file&gt;</code> and confirm it presents the findings table and writes frontmatter only after confirmation; run <code class="md">/plan-agent:finalize-plan &lt;a plan file&gt;</code> and confirm it produces the evidence table, per-criterion breakdown, and objective-test result; run <code class="md">/plan-agent:build &lt;an existing small plan&gt;</code> and confirm it reaches all three gates and re-renders the HTML; run <code class="md">/plan-agent:build</code> with no arguments and confirm it still enters the Step 1b chain and asks the proposal-versus-direct question. In each run, confirm the model actually opened the relevant <code class="md">references/*.md</code> file — a core that names a reference the model never reads is a broken handoff, not a smaller skill. Record any skill whose behavior changed; a behavioral regression blocks this plan regardless of test results.</p>
     </section>
 
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
@@ -1788,7 +2047,7 @@ img, video { max-width: 100%; height: auto; }
         <details class="next-step-item">
           <summary>Split the remaining oversized skills in the other plugins</summary>
           <div class="next-step-prompt">
-            <p>The audit found 17 single-file SKILL.md files over 1,200 words; this plan handles the five in `plan-agent`. The other twelve span several plugins and each needs its own version bump and CHANGELOG entry, so they are separate units of work.</p>
+            <p>The audit found 17 single-file SKILL.md files over 1,200 words; this plan handles the five in <code class="md">plan-agent</code>. The other twelve span several plugins and each needs its own version bump and CHANGELOG entry, so they are separate units of work.</p>
             <p>Paste this prompt into Claude to execute this follow-up:</p>
             <pre>In the agentics repo (a Claude Code plugin marketplace), find every SKILL.md under kit/plugins/ that is over 1,200 words and ships as a single file with no sibling reference files, excluding the five in kit/plugins/plan-agent/skills/ (build, finalize-plan, documenting-plans, plan-status, setup-sites) which were already split. Measure with `wc -w`. For each one found, split it into a SKILL.md core under 600 words holding the trigger, arguments, and step names, plus references/&lt;topic&gt;.md files beside it holding the mechanics, following the pattern in kit/plugins/plan-agent/skills/implementation-plan/ (guidelines/ + reference/) and kit/plugins/code-testing-agent/skills/*/references/. Do not change any frontmatter description. For every plugin you touch, bump its version in .claude-plugin/marketplace.json (semver: refactor = minor bump, must be higher than the value on main; never add a version field to plugin.json) and add an entry to kit/plugins/&lt;name&gt;/CHANGELOG.md. Verify with: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0; `bash tests/plugins/test-progressive-disclosure.sh` exits 0 after you extend its skill list to cover the newly split skills; `bash tests/plugins/test-description-budget.sh` exits 0; and `git diff main -- kit/plugins/ | grep -c &#39;^[-+]description:&#39;` prints 0.</pre>
             <button class="copy-prompt-btn" type="button"
@@ -1818,6 +2077,31 @@ img, video { max-width: 100%; height: auto; }
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
 /* ── Save as PDF (native browser print dialog) ──────────────── */
 function savePDF() {
   window.print();
@@ -2029,27 +2313,59 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
     }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
-    sections.forEach(function (el) { observer.observe(el); });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
 </script>

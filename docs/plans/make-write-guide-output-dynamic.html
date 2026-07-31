@@ -1,65 +1,180 @@
 <!DOCTYPE html>
-<html lang="en" data-status="completed">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="completed">
+<meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-19">
 <meta name="plan-repo" content="agentics">
 <meta name="plan-file" content="make-write-guide-output-dynamic.html">
 <meta name="plan-path" content="docs/plans/make-write-guide-output-dynamic.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/make-write-guide-output-dynamic.html — Make write-guide output dynamic via a section library and archetypes. Start from the embedded digest: awk '!f &amp;&amp; /&lt;script[^&gt;]*id=&quot;plan-digest&quot;/{f=1;next} f &amp;&amp; /&lt;\/script&gt;/{exit} f' docs/plans/make-write-guide-output-dynamic.html">
+<meta name="plan-md" content="docs/plans/make-write-guide-output-dynamic.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/make-write-guide-output-dynamic.md — Make write-guide output dynamic. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/make-write-guide-output-dynamic.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Make write-guide output dynamic. The plan at docs/plans/make-write-guide-output-dynamic.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/make-write-guide-output-dynamic.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/make-write-guide-output-dynamic.md — Make write-guide output dynamic. Brief subagents with the plan file at docs/plans/make-write-guide-output-dynamic.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/make-write-guide-output-dynamic.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Make write-guide output dynamic</title>
 <style>
-  /* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --purple:     #a21caf;
-    --purple-bg:  #fdf4ff;
-    --purple-border:#f0abfc;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -89,7 +204,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -99,8 +214,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -115,9 +230,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -126,11 +242,14 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
   }
   .plan-header-actions {
     display: flex;
@@ -153,7 +272,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -164,13 +286,39 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
+
+  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
+  .effort-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+  }
+  .effort-badge::before { content: "Effort "; opacity: .7; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-status="in-progress"] .status-badge::before { animation: none; }
   }
 
   /* Save as PDF button */
@@ -179,9 +327,10 @@
     align-items: center;
     gap: .4rem;
     padding: .4rem 1rem;
-    font-size: .8rem;
+    font-size: .75rem;
     font-weight: 600;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--on-accent);
     background: var(--accent);
     border: 1px solid var(--accent);
     border-radius: 4px;
@@ -197,6 +346,31 @@
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   /* Meta row */
   .plan-meta {
     display: flex;
@@ -204,9 +378,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -218,14 +393,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -236,29 +414,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -273,85 +452,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
   }
-  .objective-card .section-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .objective-card .section-label,
+  .plan-glance-label {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
+  .plan-glance {
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
+  }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
+
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -359,18 +638,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: .9rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
+  .section-card .section-intro {
+    font-size: .85rem;
+    color: var(--ink-2);
+    margin: -1rem 0 1.25rem;
+  }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -379,65 +673,34 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-card.completed .step-number { color: var(--moss); }
   .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
@@ -446,58 +709,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .step-chip-text { flex: 1; }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -509,31 +770,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -547,14 +808,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -565,20 +826,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -587,25 +848,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -618,11 +879,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -632,10 +893,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -646,14 +907,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -667,20 +928,22 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
 
   /* Wish list variant */
   .wish-list-header {
@@ -691,7 +954,7 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
@@ -702,27 +965,27 @@
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -736,13 +999,48 @@
     user-select: none;
     min-height: 44px;
   }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
-  .optional-section[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-section > summary::before,
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
+  .optional-section[open] > summary::before,
+  .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
-  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before, .plan-more-ways > summary::before { transition: none; } }
+
+  /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
+  .plan-more-ways {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--panel);
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+    overflow: hidden;
+  }
+  .plan-more-ways > summary {
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
+  .plan-more-ways-body {
+    padding: .75rem 1rem 1rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  @media print { .plan-more-ways { display: none !important; } }
 
   /* ── Implement prompt ─────────────────────────────────────────── */
   .plan-implement {
@@ -751,8 +1049,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -761,14 +1059,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -779,9 +1077,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -790,23 +1088,21 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Plan source (file name + relative path) ──────────────────── */
+  /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
   .plan-source {
     display: flex;
     flex-direction: column;
     gap: .4rem;
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     padding: .55rem .75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     font-size: .8rem;
   }
   .plan-source-row { display: flex; align-items: center; gap: .6rem; }
@@ -815,14 +1111,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -833,9 +1129,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -844,40 +1140,37 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
 
-  /* ── Workflow prompt (conditional — remove element when empty) ── */
+  /* ── Workflow prompt row (conditional — remove row when empty; lives in the drawer) ── */
   .plan-workflow {
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     font-size: .8rem;
   }
-  .plan-workflow summary {
+  .plan-workflow-label {
     font-size: .7rem;
     font-weight: 600;
     color: var(--accent);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
+    padding: .1rem 0;
   }
-  .plan-workflow summary:hover { text-decoration: underline; }
   .plan-workflow-inner {
     display: flex;
     align-items: flex-start;
     gap: .6rem;
     margin-top: .4rem;
     padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
   }
   .plan-workflow code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -888,9 +1181,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -899,12 +1192,67 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
   @media print { .plan-workflow { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
+
+  /* ── Goal prompt row (outcome-driven — always present; lives in the drawer) ── */
+  .plan-goal {
+    margin: 0;
+    font-size: .8rem;
+  }
+  .plan-goal-label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--purple);
+    padding: .1rem 0;
+  }
+  .plan-goal-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--purple-bg);
+    border: 1px solid var(--purple-border);
+    border-radius: var(--radius);
+  }
+  .plan-goal code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-goal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
+  @media print { .plan-goal { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
 
   /* ── Tests section ──────────────────────────────────────────────── */
   .test-list {
@@ -913,8 +1261,8 @@
     gap: .75rem;
   }
   .test-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow);
@@ -936,27 +1284,27 @@
     border-radius: 999px;
     flex-shrink: 0;
   }
-  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
   .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
-  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
   .test-card-title {
     font-weight: 600;
     font-size: .95rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
   }
-  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
   .test-card-body p { margin-bottom: .4rem; }
   .test-card-body p:last-child { margin-bottom: 0; }
   .test-card-body code { font-size: .85em; }
-  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
   .test-tier-label {
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
     display: flex;
     align-items: center;
@@ -966,21 +1314,21 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--rule);
   }
   .objective-test-card {
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-left: 4px solid var(--green);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow);
   }
   .objective-test-card .test-card-header { margin-bottom: .6rem; }
-  .objective-test-card .test-card-title { color: #14532d; }
-  .objective-test-card .test-card-body { color: #166534; }
-  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -988,10 +1336,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -1000,7 +1348,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -1017,56 +1365,69 @@
 
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
+  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
 
   /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
   .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
   @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
   .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
 
   /* ── Bar chart (value via inline --val) ─────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
   .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
   @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
-  .bar-label { font-size: .82rem; color: var(--text); }
-  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
   .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
-  .bar-fill.full { background: var(--green); }
-  .bar-fill.zero { background: var(--subtle); }
-  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
 
   /* ── Data table ─────────────────────────────────────────────────── */
   .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
-  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
-  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
-  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
   .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
+
+  /* ── Resources (images, screenshots & reference links) ──────────── */
+  .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+  .resource-figure > a { display: block; line-height: 0; }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
+  .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
+  .resource-links li:last-child { border-bottom: none; }
+  .resource-links a { font-weight: 600; word-break: break-word; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
 
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
@@ -1074,7 +1435,7 @@
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
@@ -1094,103 +1455,6 @@ img, video { max-width: 100%; height: auto; }
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════════════
-     MACHINE-READABLE DIGEST
-     First element child of <body> — this comment is not an element, so
-     the script below stays firstElementChild. type="text/markdown"
-     never renders or runs. Spec only: objective, context, files, steps
-     (action/why/verify), tests, acceptance criteria, verification.
-     Never put status, checkbox, or progress state in this block.
-     Guard any literal closing-script sequence in the content as
-     <\/script so it cannot terminate this block early.
-     Extract (first-match flag-and-exit; the !f guard keeps digest body
-     lines that quote the opening tag from being swallowed, and the
-     anchored flag never re-triggers on later mentions of the id):
-       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
-     ══════════════════════════════════════════════════════════════════ -->
-<script type="text/markdown" id="plan-digest">
-# Plan: Make write-guide output dynamic
-
-> Authored spec only. Status and progress live in the <head> meta tags and the live DOM, never in this block.
-
-## Objective
-
-Make the write-guide skill produce genuinely topic-shaped guides. The section library is the primary unit: the author assembles each guide from it to fit the topic — adding, dropping, reordering, or blending sections freely. The five archetypes (system-explainer, rule-deep-dive, how-to/tutorial, concept-explainer, change/recap) are non-binding starting points, not molds. What every guide is held to is the evidentiary spine — the six discipline rules, verbatim quoting, a quoted-source/worked-example depth bar, and the provenance → body → Quick reference → Cross-references frame — never a fixed section sequence.
-
-## Context
-
-write-guide (kit/plugins/social-media-tools/skills/write-guide/) advertises broad scope — "systems, rules, concepts, tools, resources, plans, changes, or saved memories" (SKILL.md:10-11) — but builds every guide to a single "fixed 12-section skeleton" (SKILL.md:12) reverse-engineered from only two exemplars, both rule/system deep-dives. Its devices (incident §3, diagnostic question §6, do/do-NOT §7, numbered carve-outs §8, verification protocol §12) fit guardrail/subsystem topics but misfit tutorials, concepts, and change recaps. Flex valves exist (titles flex, sections may be omitted) but the framing — "copy verbatim", "Every guide follows it", and a self-check that counts all 12 sections (SKILL.md:136) — pushes authors to fill the template rather than fit the topic. Empirically, write-guide produced two guides: publish-docs-to-github-pages.md used all 12 sections (it is a system); using-design-md-and-component-md.md abandoned the numbered skeleton for six renamed sections — proving the flex works but is treated as a deviation. This plan makes the section library the primary unit (A) and adds five archetypes as non-binding starting points (B), with the spine + depth bar — not a fixed shape — as the enforced quality contract. The write-guide ↔ documenting-plans scope overlap is deferred to Next Steps.
-
-## Files
-
-- CLAUDE.md (modified) — reframe the write-guide plugin-table line (drop "fixed 12-section")
-- .claude-plugin/marketplace.json (modified) — bump social-media-tools 2.12.1 → 2.13.0
-- kit/plugins/social-media-tools/README.md (modified) — reframe the write-guide row (drop "12-section skeleton")
-- kit/plugins/social-media-tools/CHANGELOG.md (modified) — add v2.13.0 entry (house heading format)
-- kit/plugins/social-media-tools/skills/write-guide/SKILL.md (modified) — library-primary framing (5 refs), §3 wording, shaping step (archetype as starting point), spine + depth contract, boundary note
-- kit/plugins/social-media-tools/skills/write-guide/references/skeleton.md (modified) — reframe as a section library (incl. lines 7-10)
-- kit/plugins/social-media-tools/skills/write-guide/references/exemplars.md (modified) — five archetypes as non-binding starting points + picker + most-specific-wins heuristic
-
-## Steps
-
-1. Reframe SKILL.md to section-library language across ALL five "12-section" references — overview (~10-14), "What this skill produces" (25), "Before you write" list (60), Workflow §3 Structure (81), self-check (136).
-   - Why: the rigidity is in the framing; three of the five references sit outside the originally-scoped lines.
-   - Verify: `grep -nE '12-section|12 skeleton|Every guide follows' SKILL.md` returns nothing.
-
-2. Reframe references/skeleton.md as a section library — retitle "The template (copy verbatim)" (lines 1, 12), rewrite line 3, and reword lines 7-10 ("two exemplars… all twelve… §1–§6") to be archetype-count-agnostic.
-   - Why: if the title or lines 7-10 still assert "copy verbatim" / "all twelve" / "two exemplars", the library framing is contradicted at the source.
-   - Verify: all 12 intents/devices remain documented but framed as a menu; nothing still asserts "two exemplars", "all twelve", or "copy verbatim" as the default.
-
-3. Expand references/exemplars.md to five archetypes — keep system-explainer and rule-deep-dive; add how-to/tutorial, concept-explainer, change/recap (kebab ids how-to, concept-explainer, change-recap). Frame each as a NON-BINDING starting point: a suggested section set + a "what to steal" note, with explicit permission to add/drop/reorder/blend per topic. Rewrite line 3, the binary picker (75), and the fallback (82-84); give the picker one row per archetype and a most-specific-wins starting-point heuristic (not a constraint).
-   - Why: tutorials/concepts/change recaps had no first-class shape; framing archetypes as starting points (not molds) is what makes output topic-shaped, not one-of-five-shaped.
-   - Verify: five archetypes with kebab ids, each labelled a starting point with add/drop/reorder/blend permission; picker has one row each, a tell each, and a most-specific-wins heuristic; `grep 'default to the 12-section' exemplars.md` returns nothing.
-
-4. Add a "Select a starting archetype" Workflow step (after Structure, before Write): pick the closest archetype as a starting point, then assemble the body from the section library to fit the topic (add/drop/reorder/blend) — the archetype is a starting shape, not a contract. Change Workflow §3 Structure (81) from "map onto the 12-section skeleton" to "map onto the section library". Renumber subsequent steps.
-   - Why: the shaping step makes the library the active unit and the archetype a hint; without "not a contract" it would re-impose a fixed shape.
-   - Verify: a numbered shaping step sits between Structure and Write, naming the archetype as a starting point and the library as the assembly source with deviate/blend permission; §3 says "section library"; numbering consistent.
-
-5. Add an "Invariant spine (every guide)" note; add a quality-floor bar to the self-check (≥1 verbatim-quoted source + ≥1 worked example per guide); state that the spine + depth bar — not any fixed section sequence — is the enforced contract; add one change/recap-vs-documenting-plans boundary sentence. Leave discipline rules (111-128) and tone-rules.md unchanged in intent.
-   - Why: with the shape free, the spine + depth bar is the only enforced quality contract, so it must be explicit and shape-independent.
-   - Verify: SKILL.md names the spine + depth bar as the enforced contract (the shape explicitly is not); self-check requires ≥1 verbatim source + ≥1 worked example; boundary sentence present; discipline rules (111-128) and tone-rules.md byte-unchanged.
-
-6. Reframe the external discovery surfaces — root CLAUDE.md (line 79 plugin table) and kit/plugins/social-media-tools/README.md (line 33) — from "fixed 12-section skeleton" to section-library/archetype language. Leave the marketplace.json description unchanged.
-   - Why: these advertise the skill's contract; left stale they contradict the new behavior, and the plan's own grep criteria would pass while the docs are wrong.
-   - Verify: `grep -rnE 'fixed 12-section|12-section skeleton' CLAUDE.md kit/plugins/social-media-tools/README.md` returns nothing.
-
-7. Bump social-media-tools 2.12.1 → 2.13.0 in .claude-plugin/marketplace.json (MINOR); add a CHANGELOG entry in house format (a "## v2.13.0 — 2026-06-19 — …" heading with ### Changed / ### Added). Do not add a version to plugin.json; leave both description fields unchanged.
-   - Why: new capability (MINOR); marketplace.json is the single version source; the CHANGELOG must match existing format.
-   - Verify: marketplace.json shows 2.13.0; CHANGELOG has a "## v2.13.0 — 2026-06-19" section with ### sub-headings; plugin.json has no version; descriptions unchanged; settings.json validation passes.
-
-## Tests
-
-Tier 2 — Non-code plan.
-
-Objective-verification test — "write-guide shapes each guide to its topic — spine + depth enforced, never a forced mold"
-- File: manual smoke check — invoke write-guide on two pinned topics (skill is prose; no automated runner).
-- Topics (pinned): (1) rule/system regression — re-derive a guide for the GitHub Pages publishing pipeline (topic behind docs/guides/publish-docs-to-github-pages.md); (2) tutorial — e.g. "how to add a new archetype to write-guide".
-- Type: smoke test
-- Asserts (topic-fit + spine + depth, NOT conformance): the tutorial run passes if it is shaped to the topic (sections a how-to needs present; non-fitting sections absent, not padded in), carries the full spine (provenance frame, Quick reference, Cross-references, six discipline rules), and meets the depth bar (≥1 verbatim source + ≥1 worked example); the rule/system run passes if it still uses the deep-dive devices because they fit, with the same spine + depth. No conformance to a fixed archetype list.
-- Re-run stability: same topic twice — both runs carry the spine, meet the depth bar, stay shaped to the topic; structural wording may vary.
-- Run: per topic, check (a) spine present, (b) depth bar met, (c) no non-fitting section padded in, (d) no needed section missing.
-
-## Acceptance Criteria
-
-- SKILL.md no longer contains "fixed 12-section" or "12 skeleton sections"; its framing describes a section library.
-- skeleton.md presents its 12 sections as a library/menu (intents and devices), not a copy-verbatim default sequence; all 12 intents remain documented.
-- exemplars.md documents five archetypes (system-explainer, rule-deep-dive, how-to/tutorial, concept-explainer, change/recap), each framed as a non-binding starting point with a suggested section set, and the "Picking an archetype" table has a row per archetype.
-- SKILL.md's Workflow has a step that selects a starting archetype then assembles the body from the section library, with explicit add/drop/reorder/blend permission (the archetype is a starting point, not a contract); downstream numbering consistent.
-- The six discipline rules (SKILL.md:111-128) are unchanged in intent and tone-rules.md is unmodified (no diff); every archetype keeps the frame (provenance callout, Quick reference, Cross-references).
-- A tutorial topic produces a how-to-shaped guide (the sections it needs, nothing padded in) rather than a forced 12-section doc, and a rule topic naturally uses the deep-dive devices because they fit — per the objective smoke test.
-- marketplace.json lists social-media-tools at 2.13.0; CHANGELOG.md has a v2.13.0 entry; plugin.json has no version field.
-- No "fixed 12-section" / "12-section skeleton" framing remains in SKILL.md, skeleton.md, exemplars.md, root CLAUDE.md, or kit/plugins/social-media-tools/README.md (repo-wide grep, excluding the historical CHANGELOG entry).
-- Output is quality-stable, not structurally locked — exemplars.md gives a most-specific-wins starting-point heuristic, and the same topic on two runs carries the full spine and meets the depth bar while staying shaped to the topic (structural wording may vary).
-
-## Verification
-
-Re-read the write-guide files: SKILL.md frames the section library as the primary unit and adds a shaping step where the archetype is a starting point and the body is assembled freely; skeleton.md presents its sections as a catalog (incl. lines 7-10); exemplars.md defines five archetypes as non-binding starting points with a most-specific-wins heuristic. Confirm the six discipline rules and tone-rules.md are unchanged and that the spine + depth bar — not a fixed shape — is the enforced contract. Reframe and re-check the external surfaces (CLAUDE.md, README.md). Run the objective smoke test on the two pinned topics: each shaped to its topic, carrying the full spine and meeting the depth bar, without conforming to a fixed archetype list. Confirm marketplace.json shows 2.13.0, the CHANGELOG entry matches house format, plugin.json has no version field, and the settings.json validation passes. Coverage gate: `grep -rniE 'fixed 12-section|12-section skeleton|two exemplars|both archetypes|all twelve|default to the 12-section' kit/plugins/social-media-tools/skills/write-guide CLAUDE.md kit/plugins/social-media-tools/README.md` returns nothing (historical CHANGELOG excluded).
-</script>
-
-<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
@@ -1238,11 +1502,13 @@ Re-read the write-guide files: SKILL.md frames the section library as the primar
   <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
   </symbol>
+  <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
 </svg>
 
 <a href="#main" class="skip-link">Skip to content</a>
 
-<!-- ── Header — document cover ─────────────────────────────────── -->
 <header class="plan-header">
   <div class="plan-header-inner">
     <div class="plan-back-nav">
@@ -1257,29 +1523,23 @@ Re-read the write-guide files: SKILL.md frames the section library as the primar
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
-        <span class="status-badge">todo</span>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
+        <span class="effort-badge" aria-label="Effort level">High</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-19
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        agentics
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        feature
-      </span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-06-19</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> feature</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> High effort</span>
     </div>
   </div>
 </header>
 
 <div class="layout">
 
-  <!-- ── Sidebar — table of contents ─────────────────────────── -->
   <nav class="plan-nav" aria-label="Plan sections">
     <div class="scroll-rail" aria-hidden="true"></div>
     <div class="nav-heading">On this page</div>
@@ -1287,253 +1547,282 @@ Re-read the write-guide files: SKILL.md frames the section library as the primar
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <!-- Keep the next link only if the Files section is kept; delete otherwise -->
-      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
-      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
-      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
-      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
-      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>7 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Reframe SKILL.md from &quot;fixed 12-section skeleton&quot; to section-library language across ALL five references: the overview (lines ~10-14), &quot;What this skill produces&quot; (line 25), the &quot;Before you write&quot; reference list (line 60), Workflow §3 Structure (line 81), and the self-check bullet (line 136) — so the skeleton reads as a library of section types to draw from.</span><span class="rail-state">step 1 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Reframe references/skeleton.md as a section library — retitle &quot;The template (copy verbatim)&quot; (lines 1, 12), rewrite the line-3 &quot;Every guide ... follows the structure below&quot;, AND reword lines 7-10 (&quot;the two exemplars map onto this skeleton exactly… all twelve… §1–§6&quot;) to be archetype-count-agnostic, so the 12 sections read as a catalog of intents and devices, not a default sequence.</span><span class="rail-state">step 2 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Expand references/exemplars.md to five archetypes — keep system-explainer and rule-deep-dive; add how-to/tutorial, concept-explainer, and change/recap (kebab ids how-to, concept-explainer, change-recap). Frame each as a non-binding starting point: a suggested section set drawn from the library plus a short &quot;what to steal&quot; note (lighter than A/B, which have backing exemplar files), with explicit permission to add, drop, reorder, or blend sections to fit the topic. Rewrite the contradictory framing: line 3 (&quot;two archetypes every topic falls into&quot;), the binary picker question (line 75, &quot;one rule, or a whole system?&quot;), and lines 82-84 (&quot;default to the 12-section skeleton… fits both archetypes&quot;). Give the picker one row per archetype and a most-specific-wins starting-point heuristic (not a constraint — blend when a topic genuinely spans two).</span><span class="rail-state">step 3 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Add a &quot;Select a starting archetype&quot; step to the SKILL.md Workflow, after Structure and before Write — pick the closest archetype as a starting point, then assemble the body from the section library to fit the topic, adding/dropping/reordering/blending sections as needed. State explicitly that the archetype is a starting shape, not a contract. As part of this, change Workflow §3 Structure (line 81) from &quot;map onto the 12-section skeleton&quot; to &quot;map onto the section library&quot;. Renumber the subsequent workflow steps.</span><span class="rail-state">step 4 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Add an &quot;Invariant spine (every guide)&quot; note to SKILL.md — every guide keeps the six discipline rules, the concreteness rules, and the frame (title + subtitle + provenance callout → body → Quick reference → Cross-references), regardless of shape. Strengthen the self-check with a quality-floor bar: every guide must include at least one verbatim-quoted primary source and one concrete/worked example. State explicitly that the spine + depth bar — not any fixed section sequence — is what every guide is held to. Add one boundary sentence distinguishing write-guide&#39;s change/recap (ad-hoc topic recap) from the documenting-plans skill (recap of a completed plan from git history). Leave the discipline rules (lines 111-128) and tone-rules.md unchanged in intent.</span><span class="rail-state">step 5 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Reframe the external discovery surfaces — root CLAUDE.md (line 79 plugin table) and kit/plugins/social-media-tools/README.md (line 33), both of which describe write-guide as following &quot;a fixed 12-section skeleton&quot;. Reword each to section-library/archetype language. Leave the marketplace.json plugin description unchanged (it does not mention 12-section).</span><span class="rail-state">step 6 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Bump social-media-tools 2.12.1 → 2.13.0 in .claude-plugin/marketplace.json (MINOR). Add a CHANGELOG entry in the house format — &quot;## v2.13.0 — 2026-06-19 — &lt;summary&gt;&quot; with ### Changed / ### Added sub-headings. Do not add a version field to plugin.json, and leave the SKILL.md frontmatter description and the marketplace.json plugin description unchanged (neither contains &quot;12-section&quot;; preserve the three-part ≤200-char format).</span><span class="rail-state">step 7 of 7, done</span></a></li>
+      </ul>
+    </details>
   </nav>
 
-  <!-- ── Main content ─────────────────────────────────────────── -->
   <main id="main">
 
-    <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
       <p>Make the write-guide skill produce genuinely topic-shaped guides. The section library is the primary unit: the author assembles each guide from it to fit the topic — adding, dropping, reordering, or blending sections freely. The five archetypes (system-explainer, rule-deep-dive, how-to/tutorial, concept-explainer, change/recap) are non-binding starting points, not molds. What every guide is held to is the evidentiary spine — the six discipline rules, verbatim quoting, a quoted-source/worked-example depth bar, and the provenance → body → Quick reference → Cross-references frame — never a fixed section sequence.</p>
     </div>
 
-    <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/make-write-guide-output-dynamic.html — Make write-guide output dynamic via a section library and archetypes. Start from the embedded digest: awk '!f &amp;&amp; /&lt;script[^&gt;]*id=&quot;plan-digest&quot;/{f=1;next} f &amp;&amp; /&lt;\/script&gt;/{exit} f' docs/plans/make-write-guide-output-dynamic.html</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/make-write-guide-output-dynamic.md — Make write-guide output dynamic. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/make-write-guide-output-dynamic.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
-    <div class="plan-source">
-      <div class="plan-source-row">
-        <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">make-write-guide-output-dynamic.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
-      </div>
-      <div class="plan-source-row">
-        <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/make-write-guide-output-dynamic.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
-      </div>
-    </div>
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
 
-    <!-- ── Progress ─────────────────────────────────────────────── -->
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome, in parallel</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Make write-guide output dynamic. The plan at docs/plans/make-write-guide-output-dynamic.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/make-write-guide-output-dynamic.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-workflow">
+          <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
+          <div class="plan-workflow-inner">
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/make-write-guide-output-dynamic.md — Make write-guide output dynamic. Brief subagents with the plan file at docs/plans/make-write-guide-output-dynamic.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/make-write-guide-output-dynamic.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-workflow-btn" type="button"
+                    onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">make-write-guide-output-dynamic.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/make-write-guide-output-dynamic.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/make-write-guide-output-dynamic.md</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
+          </div>
+        </div>
+
+      </div>
+    </details>
+
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
-        <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 9 done</span>
+        <span>Definition of done</span>
+        <span id="progress-label">9 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
-    <!-- ── Context ──────────────────────────────────────────────── -->
     <section class="section-card card-context" id="context" aria-labelledby="h-context">
       <h2 id="h-context">
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>The <code>write-guide</code> skill (<code>kit/plugins/social-media-tools/skills/write-guide/</code>) advertises broad scope — "systems, rules, concepts, tools, resources, plans, changes, or saved memories" (SKILL.md:10-11) — but builds every guide to a single "fixed 12-section skeleton" (SKILL.md:12) reverse-engineered from only two exemplars, both rule/system deep-dives. The skeleton's rhetorical devices (incident with numbers §3, italic diagnostic question §6, do/do-NOT script §7, numbered carve-outs §8, verification protocol §12) fit guardrail and subsystem topics but misfit tutorials, concept explainers, and change recaps. Flex valves exist (titles may flex, sections may be omitted) but the framing — "copy verbatim", "Every guide follows it", and a self-check that counts all 12 sections (SKILL.md:136) — pushes authors to fill the template rather than fit the topic. Empirically, write-guide has produced two guides: <code>publish-docs-to-github-pages.md</code> used all 12 sections (it is a system), while <code>using-design-md-and-component-md.md</code> abandoned the numbered skeleton for six renamed sections — proving the flex works but is treated as a deviation. This plan implements recommendations A (reframe the template as a section library) and B (add archetypes) while leaving the evidentiary spine untouched. The write-guide ↔ documenting-plans scope overlap is deliberately deferred to Next Steps.</p>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
+      <p>The write-guide skill ( kit/plugins/social-media-tools/skills/write-guide/ ) advertises broad scope — &quot;systems, rules, concepts, tools, resources, plans, changes, or saved memories&quot; (SKILL.md:10-11) — but builds every guide to a single &quot;fixed 12-section skeleton&quot; (SKILL.md:12) reverse-engineered from only two exemplars, both rule/system deep-dives. The skeleton&#39;s rhetorical devices (incident with numbers §3, italic diagnostic question §6, do/do-NOT script §7, numbered carve-outs §8, verification protocol §12) fit guardrail and subsystem topics but misfit tutorials, concept explainers, and change recaps. Flex valves exist (titles may flex, sections may be omitted) but the framing — &quot;copy verbatim&quot;, &quot;Every guide follows it&quot;, and a self-check that counts all 12 sections (SKILL.md:136) — pushes authors to fill the template rather than fit the topic. Empirically, write-guide has produced two guides: publish-docs-to-github-pages.md used all 12 sections (it is a system), while using-design-md-and-component-md.md abandoned the numbered skeleton for six renamed sections — proving the flex works but is treated as a deviation. This plan implements recommendations A (reframe the template as a section library) and B (add archetypes) while leaving the evidentiary spine untouched. The write-guide ↔ documenting-plans scope overlap is deliberately deferred to Next Steps.</p>
     </section>
 
-    <!-- Files to Modify — auto-generated from the plan's steps -->
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files to Modify
+        Files that change
       </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li><code>CLAUDE.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">reframe write-guide plugin-table line (drop "fixed 12-section")</span></li>
+          <li><code>CLAUDE.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">reframe write-guide plugin-table line (drop &quot;fixed 12-section&quot;)</span></li>
           <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">bump social-media-tools 2.12.1 → 2.13.0</span></li>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/social-media-tools/</li>
-          <ul class="file-list">
-            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">reframe write-guide row (drop "12-section skeleton")</span></li>
-            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add v2.13.0 entry (house heading format)</span></li>
-            <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> skills/write-guide/</li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/social-media-tools/
             <ul class="file-list">
-              <li><code>SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">library-primary framing (5 refs) + §3 + shaping step + spine/depth contract + boundary note</span></li>
-              <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> references/</li>
-              <ul class="file-list">
-                <li><code>skeleton.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">section library (incl. lines 7-10 reframe)</span></li>
-                <li><code>exemplars.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">five archetypes as starting points + picker + most-specific-wins heuristic</span></li>
-              </ul>
+            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">reframe write-guide row (drop &quot;12-section skeleton&quot;)</span></li>
+            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add v2.13.0 entry (house heading format)</span></li>
             </ul>
-          </ul>
+          </li>
+          <li><code>skills/write-guide/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">library-primary framing (5 refs) + §3 + shaping step + spine/depth contract + boundary note</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> references/
+            <ul class="file-list">
+            <li><code>skeleton.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">section library (incl. lines 7-10 reframe)</span></li>
+            <li><code>exemplars.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">five archetypes as starting points + picker + most-specific-wins heuristic</span></li>
+            </ul>
+          </li>
         </ul>
       </div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Diagram / Chart / Table.
-         KEEP and fill when the plan has a flow, comparison,
-         distribution, or structured data worth showing. DELETE this
-         whole section element and its nav entry (the "#diagram" link)
-         when not needed. Use any subset of the building blocks below
-         (.pipeline, .compare-grid, .bar-chart, .plan-table); remove
-         the sub-blocks you do not use.
-         ════════════════════════════════════════════════════════════ -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <div class="diagram-subheading">How a guide gets its shape (new flow)</div>
-      <div class="pipeline">
-        <div class="pipeline-node"><div class="pipeline-label">Source</div><code>Gather facts</code><div class="pipeline-sub">conversation, files, git, code, canonical docs</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Select</div><code>Pick one archetype</code><div class="pipeline-sub">rule-deep-dive · system-explainer · how-to · concept · change-recap</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Assemble</div><code>Draw sections from the library</code><div class="pipeline-sub">only the sections the archetype needs — no filler, no forced 12</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Write</div><code>Apply the invariant spine</code><div class="pipeline-sub">6 discipline rules · provenance frame · Quick reference · Cross-references</div></div>
-      </div>
-    </section>
-
-    <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
       <h2 id="h-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
         Steps
       </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Reframe SKILL.md from "fixed 12-section skeleton" to section-library language across ALL five references: the overview (lines ~10-14), "What this skill produces" (line 25), the "Before you write" reference list (line 60), Workflow §3 Structure (line 81), and the self-check bullet (line 136) — so the skeleton reads as a library of section types to draw from.</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Reframe SKILL.md from &quot;fixed 12-section skeleton&quot; to section-library language across ALL five references: the overview (lines ~10-14), &quot;What this skill produces&quot; (line 25), the &quot;Before you write&quot; reference list (line 60), Workflow §3 Structure (line 81), and the self-check bullet (line 136) — so the skeleton reads as a library of section types to draw from.</span>
               </div>
-              <div class="step-why">The rigidity is in the framing — "fixed", "Every guide follows it", and a 12-count self-check push authors to fill the template instead of fitting the topic. Three of the five references sit outside the originally-scoped lines.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>grep -nE '12-section|12 skeleton|Every guide follows' SKILL.md</code> returns nothing; the self-check bullet reads as a filler/coverage quality test, not a count of 12.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">The rigidity is in the framing — &quot;fixed&quot;, &quot;Every guide follows it&quot;, and a 12-count self-check push authors to fill the template instead of fitting the topic. Three of the five references sit outside the originally-scoped lines.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">grep -nE &#39;12-section|12 skeleton|Every guide follows&#39; SKILL.md returns nothing; the self-check bullet reads as a filler/coverage quality test, not a count of 12.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Reframe references/skeleton.md as a section library — retitle "The template (copy verbatim)" (lines 1, 12), rewrite the line-3 "Every guide ... follows the structure below", AND reword lines 7-10 ("the two exemplars map onto this skeleton exactly… all twelve… §1–§6") to be archetype-count-agnostic, so the 12 sections read as a catalog of intents and devices, not a default sequence.</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Reframe references/skeleton.md as a section library — retitle &quot;The template (copy verbatim)&quot; (lines 1, 12), rewrite the line-3 &quot;Every guide ... follows the structure below&quot;, AND reword lines 7-10 (&quot;the two exemplars map onto this skeleton exactly… all twelve… §1–§6&quot;) to be archetype-count-agnostic, so the 12 sections read as a catalog of intents and devices, not a default sequence.</span>
               </div>
-              <div class="step-why">skeleton.md is the authoritative structure spec; if its title or the lines 7-10 narration still assert "copy verbatim" / "all twelve" / "two exemplars", the section-library framing added to SKILL.md is contradicted at the source.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Re-read skeleton.md: all 12 section intents/devices remain documented but framed as a menu; nothing still asserts "two exemplars", "all twelve", or "copy verbatim" as the default shape.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">skeleton.md is the authoritative structure spec; if its title or the lines 7-10 narration still assert &quot;copy verbatim&quot; / &quot;all twelve&quot; / &quot;two exemplars&quot;, the section-library framing added to SKILL.md is contradicted at the source.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Re-read skeleton.md: all 12 section intents/devices remain documented but framed as a menu; nothing still asserts &quot;two exemplars&quot;, &quot;all twelve&quot;, or &quot;copy verbatim&quot; as the default shape.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Expand references/exemplars.md to five archetypes — keep system-explainer and rule-deep-dive; add how-to/tutorial, concept-explainer, and change/recap (kebab ids how-to, concept-explainer, change-recap). Frame each as a non-binding starting point: a suggested section set drawn from the library plus a short "what to steal" note (lighter than A/B, which have backing exemplar files), with explicit permission to add, drop, reorder, or blend sections to fit the topic. Rewrite the contradictory framing: line 3 ("two archetypes every topic falls into"), the binary picker question (line 75, "one rule, or a whole system?"), and lines 82-84 ("default to the 12-section skeleton… fits both archetypes"). Give the picker one row per archetype and a most-specific-wins starting-point heuristic (not a constraint — blend when a topic genuinely spans two).</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Expand references/exemplars.md to five archetypes — keep system-explainer and rule-deep-dive; add how-to/tutorial, concept-explainer, and change/recap (kebab ids how-to, concept-explainer, change-recap). Frame each as a non-binding starting point: a suggested section set drawn from the library plus a short &quot;what to steal&quot; note (lighter than A/B, which have backing exemplar files), with explicit permission to add, drop, reorder, or blend sections to fit the topic. Rewrite the contradictory framing: line 3 (&quot;two archetypes every topic falls into&quot;), the binary picker question (line 75, &quot;one rule, or a whole system?&quot;), and lines 82-84 (&quot;default to the 12-section skeleton… fits both archetypes&quot;). Give the picker one row per archetype and a most-specific-wins starting-point heuristic (not a constraint — blend when a topic genuinely spans two).</span>
               </div>
-              <div class="step-why">Both existing exemplars are rule/system docs, so tutorials, concepts, and change recaps had no first-class shape; framing the archetypes as starting points (not molds) is what makes output topic-shaped rather than one-of-five-shaped.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">exemplars.md lists five archetypes with kebab ids; each is labelled a starting point with explicit add/drop/reorder/blend permission; the picker has one row each, a tell each, and a most-specific-wins heuristic; <code>grep 'default to the 12-section' exemplars.md</code> returns nothing.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Both existing exemplars are rule/system docs, so tutorials, concepts, and change recaps had no first-class shape; framing the archetypes as starting points (not molds) is what makes output topic-shaped rather than one-of-five-shaped.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">exemplars.md lists five archetypes with kebab ids; each is labelled a starting point with explicit add/drop/reorder/blend permission; the picker has one row each, a tell each, and a most-specific-wins heuristic; grep &#39;default to the 12-section&#39; exemplars.md returns nothing.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add a "Select a starting archetype" step to the SKILL.md Workflow, after Structure and before Write — pick the closest archetype as a starting point, then assemble the body from the section library to fit the topic, adding/dropping/reordering/blending sections as needed. State explicitly that the archetype is a starting shape, not a contract. As part of this, change Workflow §3 Structure (line 81) from "map onto the 12-section skeleton" to "map onto the section library". Renumber the subsequent workflow steps.</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Add a &quot;Select a starting archetype&quot; step to the SKILL.md Workflow, after Structure and before Write — pick the closest archetype as a starting point, then assemble the body from the section library to fit the topic, adding/dropping/reordering/blending sections as needed. State explicitly that the archetype is a starting shape, not a contract. As part of this, change Workflow §3 Structure (line 81) from &quot;map onto the 12-section skeleton&quot; to &quot;map onto the section library&quot;. Renumber the subsequent workflow steps.</span>
               </div>
-              <div class="step-why">A shaping step makes the section library the active unit and the archetype a hint; without the "not a contract" wording the step would re-impose a fixed shape — the very rigidity being removed.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">SKILL.md Workflow has a numbered "Select a starting archetype" step between Structure and Write that names the archetype as a starting point and the library as the assembly source, with explicit add/drop/reorder/blend permission; §3 Structure now says "section library"; downstream numbering stays consistent.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">A shaping step makes the section library the active unit and the archetype a hint; without the &quot;not a contract&quot; wording the step would re-impose a fixed shape — the very rigidity being removed.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">SKILL.md Workflow has a numbered &quot;Select a starting archetype&quot; step between Structure and Write that names the archetype as a starting point and the library as the assembly source, with explicit add/drop/reorder/blend permission; §3 Structure now says &quot;section library&quot;; downstream numbering stays consistent.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add an "Invariant spine (every guide)" note to SKILL.md — every guide keeps the six discipline rules, the concreteness rules, and the frame (title + subtitle + provenance callout → body → Quick reference → Cross-references), regardless of shape. Strengthen the self-check with a quality-floor bar: every guide must include at least one verbatim-quoted primary source and one concrete/worked example. State explicitly that the spine + depth bar — not any fixed section sequence — is what every guide is held to. Add one boundary sentence distinguishing write-guide's change/recap (ad-hoc topic recap) from the documenting-plans skill (recap of a completed plan from git history). Leave the discipline rules (lines 111-128) and tone-rules.md unchanged in intent.</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Add an &quot;Invariant spine (every guide)&quot; note to SKILL.md — every guide keeps the six discipline rules, the concreteness rules, and the frame (title + subtitle + provenance callout → body → Quick reference → Cross-references), regardless of shape. Strengthen the self-check with a quality-floor bar: every guide must include at least one verbatim-quoted primary source and one concrete/worked example. State explicitly that the spine + depth bar — not any fixed section sequence — is what every guide is held to. Add one boundary sentence distinguishing write-guide&#39;s change/recap (ad-hoc topic recap) from the documenting-plans skill (recap of a completed plan from git history). Leave the discipline rules (lines 111-128) and tone-rules.md unchanged in intent.</span>
               </div>
-              <div class="step-why">With the section shape now free, the spine + depth bar is the only enforced quality contract, so it must be explicit and shape-independent; the boundary sentence keeps change/recap from silently competing with documenting-plans.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">With the section shape now free, the spine + depth bar is the only enforced quality contract, so it must be explicit and shape-independent; the boundary sentence keeps change/recap from silently competing with documenting-plans.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
                 <div class="verify-body">SKILL.md names the spine + depth bar as the enforced contract (the section shape is explicitly not); the self-check requires ≥1 verbatim source and ≥1 worked example per guide; a change/recap-vs-documenting-plans boundary sentence is present; the discipline rules (111-128) and tone-rules.md are byte-unchanged.</div>
-              </details>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Reframe the external discovery surfaces — root CLAUDE.md (line 79 plugin table) and kit/plugins/social-media-tools/README.md (line 33), both of which describe write-guide as following "a fixed 12-section skeleton". Reword each to section-library/archetype language. Leave the marketplace.json plugin description unchanged (it does not mention 12-section).</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Reframe the external discovery surfaces — root CLAUDE.md (line 79 plugin table) and kit/plugins/social-media-tools/README.md (line 33), both of which describe write-guide as following &quot;a fixed 12-section skeleton&quot;. Reword each to section-library/archetype language. Leave the marketplace.json plugin description unchanged (it does not mention 12-section).</span>
               </div>
-              <div class="step-why">These are the session-loaded capability index and the plugin's public README; if left stale they keep advertising the old rigid contract after the skill changed — and the plan's own grep-based criteria would otherwise pass while the docs contradict the skill.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>grep -rnE 'fixed 12-section|12-section skeleton' CLAUDE.md kit/plugins/social-media-tools/README.md</code> returns nothing.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">These are the session-loaded capability index and the plugin&#39;s public README; if left stale they keep advertising the old rigid contract after the skill changed — and the plan&#39;s own grep-based criteria would otherwise pass while the docs contradict the skill.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">grep -rnE &#39;fixed 12-section|12-section skeleton&#39; CLAUDE.md kit/plugins/social-media-tools/README.md returns nothing.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Bump social-media-tools 2.12.1 → 2.13.0 in .claude-plugin/marketplace.json (MINOR). Add a CHANGELOG entry in the house format — "## v2.13.0 — 2026-06-19 — &lt;summary&gt;" with ### Changed / ### Added sub-headings. Do not add a version field to plugin.json, and leave the SKILL.md frontmatter description and the marketplace.json plugin description unchanged (neither contains "12-section"; preserve the three-part ≤200-char format).</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Bump social-media-tools 2.12.1 → 2.13.0 in .claude-plugin/marketplace.json (MINOR). Add a CHANGELOG entry in the house format — &quot;## v2.13.0 — 2026-06-19 — &lt;summary&gt;&quot; with ### Changed / ### Added sub-headings. Do not add a version field to plugin.json, and leave the SKILL.md frontmatter description and the marketplace.json plugin description unchanged (neither contains &quot;12-section&quot;; preserve the three-part ≤200-char format).</span>
               </div>
-              <div class="step-why">Adding archetypes and a selection step is a new capability (MINOR per semver); marketplace.json is the single version source for relative-path plugins, and the CHANGELOG must match the existing entry format.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">marketplace.json shows social-media-tools 2.13.0; CHANGELOG.md has a "## v2.13.0 — 2026-06-19" section with ### sub-headings; plugin.json has no version field; both description fields are unchanged; the .claude/settings.json post-write JSON validation on marketplace.json passes.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Adding archetypes and a selection step is a new capability (MINOR per semver); marketplace.json is the single version source for relative-path plugins, and the CHANGELOG must match the existing entry format.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">marketplace.json shows social-media-tools 2.13.0; CHANGELOG.md has a &quot;## v2.13.0 — 2026-06-19&quot; section with ### sub-headings; plugin.json has no version field; both description fields are unchanged; the .claude/settings.json post-write JSON validation on marketplace.json passes.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1541,41 +1830,26 @@ Re-read the write-guide files: SKILL.md frames the section library as the primar
       </div>
     </section>
 
-    <!-- ── Tests ────────────────────────────────────────────────── -->
     <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
       <h2 id="h-tests">
         <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
         Tests
       </h2>
+      <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 2 — Non-code plan</div>
-
-      <!-- Objective-verification test — mandatory, always first -->
-      <div class="objective-test-card">
-        <div class="test-card-header">
-          <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">write-guide shapes each guide to its topic — spine + depth enforced, never a forced mold</span>
-        </div>
-        <div class="test-card-body">
-          <p><strong>File:</strong> manual smoke check — invoke <code>write-guide</code> on two pinned topics; the skill is prose, so there is no automated runner.</p>
-          <p><strong>Topics (pinned):</strong> (1) rule/system regression — re-derive a guide for the GitHub Pages publishing pipeline (the topic behind <code>docs/guides/publish-docs-to-github-pages.md</code>); (2) tutorial — a how-to such as "how to add a new archetype to write-guide".</p>
-          <p><strong>Type:</strong> smoke test</p>
-          <p><strong>Asserts (pass bar — topic-fit + spine + depth, NOT conformance to a fixed list):</strong> the tutorial run passes if it is shaped to the topic (the sections a how-to needs — goal, prerequisites, steps, pitfalls — present; sections that do not fit, such as an incident or numbered carve-outs, absent rather than padded in), carries the full invariant spine (provenance frame, Quick reference, Cross-references, six discipline rules), and meets the depth bar (≥1 verbatim-quoted source + ≥1 worked example). The rule/system run passes if it still naturally uses the deep-dive devices because they fit, and carries the same spine + depth. The test never requires conformance to a fixed archetype section list.</p>
-          <p><strong>Re-run stability:</strong> invoke the same topic twice and confirm both runs carry the full spine, meet the depth bar, and stay shaped to the topic; structural wording may vary run-to-run (expected in a dynamic system) — the spine and depth must hold every time.</p>
-          <p><strong>Run:</strong> invoke the skill per topic; check (a) the spine is present, (b) the depth bar is met, (c) no section that does not fit the topic was padded in, and (d) no section the topic needs is missing.</p>
-        </div>
-      </div>
+      <div class="objective-test-card">Objective write-guide shapes each guide to its topic — spine + depth enforced, never a forced mold File: manual smoke check — invoke write-guide on two pinned topics; the skill is prose, so there is no automated runner. Topics (pinned): (1) rule/system regression — re-derive a guide for the GitHub Pages publishing pipeline (the topic behind docs/guides/publish-docs-to-github-pages.md ); (2) tutorial — a how-to such as &quot;how to add a new archetype to write-guide&quot;. Type: smoke test Asserts (pass bar — topic-fit + spine + depth, NOT conformance to a fixed list): the tutorial run passes if it is shaped to the topic (the sections a how-to needs — goal, prerequisites, steps, pitfalls — present; sections that do not fit, such as an incident or numbered carve-outs, absent rather than padded in), carries the full invariant spine (provenance frame, Quick reference, Cross-references, six discipline rules), and meets the depth bar (≥1 verbatim-quoted source + ≥1 worked example). The rule/system run passes if it still naturally uses the deep-dive devices because they fit, and carries the same spine + depth. The test never requires conformance to a fixed archetype section list. Re-run stability: invoke the same topic twice and confirm both runs carry the full spine, meet the depth bar, and stay shaped to the topic; structural wording may vary run-to-run (expected in a dynamic system) — the spine and depth must hold every time. Run: invoke the skill per topic; check (a) the spine is present, (b) the depth bar is met, (c) no section that does not fit the topic was padded in, and (d) no section the topic needs is missing.</div>
     </section>
 
-    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria">
         <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
-        Acceptance Criteria
+        Definition of done
       </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1" checked>
-          <label for="ac1">SKILL.md no longer contains the strings "fixed 12-section" or "12 skeleton sections"; its framing describes a section library.</label>
+          <label for="ac1">SKILL.md no longer contains the strings &quot;fixed 12-section&quot; or &quot;12 skeleton sections&quot;; its framing describes a section library.</label>
         </li>
         <li>
           <input type="checkbox" id="ac2" checked>
@@ -1583,11 +1857,11 @@ Re-read the write-guide files: SKILL.md frames the section library as the primar
         </li>
         <li>
           <input type="checkbox" id="ac3" checked>
-          <label for="ac3">exemplars.md documents five archetypes (system-explainer, rule-deep-dive, how-to/tutorial, concept-explainer, change/recap), each framed as a non-binding starting point with a suggested section set, and the "Picking an archetype" table has a row per archetype.</label>
+          <label for="ac3">exemplars.md documents five archetypes (system-explainer, rule-deep-dive, how-to/tutorial, concept-explainer, change/recap), each framed as a non-binding starting point with a suggested section set, and the &quot;Picking an archetype&quot; table has a row per archetype.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4" checked>
-          <label for="ac4">SKILL.md's Workflow has a step that selects a starting archetype and then assembles the body from the section library, with explicit permission to add/drop/reorder/blend sections per topic (the archetype is a starting point, not a contract); downstream step numbering is consistent.</label>
+          <label for="ac4">SKILL.md&#39;s Workflow has a step that selects a starting archetype and then assembles the body from the section library, with explicit permission to add/drop/reorder/blend sections per topic (the archetype is a starting point, not a contract); downstream step numbering is consistent.</label>
         </li>
         <li>
           <input type="checkbox" id="ac5" checked>
@@ -1603,7 +1877,7 @@ Re-read the write-guide files: SKILL.md frames the section library as the primar
         </li>
         <li>
           <input type="checkbox" id="ac8" checked>
-          <label for="ac8">No "fixed 12-section" / "12-section skeleton" framing remains in SKILL.md, skeleton.md, exemplars.md, root CLAUDE.md, or kit/plugins/social-media-tools/README.md (repo-wide grep, excluding the historical CHANGELOG entry).</label>
+          <label for="ac8">No &quot;fixed 12-section&quot; / &quot;12-section skeleton&quot; framing remains in SKILL.md, skeleton.md, exemplars.md, root CLAUDE.md, or kit/plugins/social-media-tools/README.md (repo-wide grep, excluding the historical CHANGELOG entry).</label>
         </li>
         <li>
           <input type="checkbox" id="ac9" checked>
@@ -1614,22 +1888,22 @@ Re-read the write-guide files: SKILL.md frames the section library as the primar
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
 
-    <!-- ── Verification ──────────────────────────────────────────── -->
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
       <h2 id="h-verification">
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
-        Verification
+        Final check
       </h2>
-      <p>Re-read the write-guide files: SKILL.md frames the section library as the primary unit and adds a shaping step where the archetype is a starting point and the body is assembled freely; skeleton.md presents its sections as a catalog (incl. lines 7-10); exemplars.md defines five archetypes as non-binding starting points with a most-specific-wins heuristic. Confirm the six discipline rules and tone-rules.md are unchanged and that the spine + depth bar — not a fixed shape — is named as the enforced contract. Reframe and re-check the external surfaces (CLAUDE.md, README.md). Run the objective smoke test on the two pinned topics: each must be shaped to its topic, carry the full spine, and meet the depth bar — without conforming to a fixed archetype section list. Confirm marketplace.json shows social-media-tools 2.13.0, CHANGELOG.md has the v2.13.0 entry in house format, plugin.json has no version field, and the settings.json post-write JSON validation passes. As a coverage gate, run <code>grep -rniE 'fixed 12-section|12-section skeleton|two exemplars|both archetypes|all twelve|default to the 12-section' kit/plugins/social-media-tools/skills/write-guide CLAUDE.md kit/plugins/social-media-tools/README.md</code> and confirm it returns nothing (the historical CHANGELOG entry is excluded from scope).</p>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
+      <p>Re-read the write-guide files: SKILL.md frames the section library as the primary unit and adds a shaping step where the archetype is a starting point and the body is assembled freely; skeleton.md presents its sections as a catalog (incl. lines 7-10); exemplars.md defines five archetypes as non-binding starting points with a most-specific-wins heuristic. Confirm the six discipline rules and tone-rules.md are unchanged and that the spine + depth bar — not a fixed shape — is named as the enforced contract. Reframe and re-check the external surfaces (CLAUDE.md, README.md). Run the objective smoke test on the two pinned topics: each must be shaped to its topic, carry the full spine, and meet the depth bar — without conforming to a fixed archetype section list. Confirm marketplace.json shows social-media-tools 2.13.0, CHANGELOG.md has the v2.13.0 entry in house format, plugin.json has no version field, and the settings.json post-write JSON validation passes. As a coverage gate, run grep -rniE &#39;fixed 12-section|12-section skeleton|two exemplars|both archetypes|all twelve|default to the 12-section&#39; kit/plugins/social-media-tools/skills/write-guide CLAUDE.md kit/plugins/social-media-tools/README.md and confirm it returns nothing (the historical CHANGELOG entry is excluded from scope).</p>
     </section>
 
-    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
       <h2 id="h-completion">
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
-        Completion Checklist
+        Wrapping up
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
@@ -1654,93 +1928,70 @@ Re-read the write-guide files: SKILL.md frames the section library as the primar
       </div>
     </section>
 
-    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
-        Next Steps
+        Next steps
       </h2>
+      <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
       <div class="next-steps-list">
-
-        <!-- Actionable next step -->
         <details class="next-step-item">
           <summary>Resolve the write-guide ↔ documenting-plans scope overlap</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>In the agentics repo, decide and implement the boundary between the write-guide skill (kit/plugins/social-media-tools/skills/write-guide/) and the documenting-plans skill (kit/plugins/plan-interview/, which writes docs/&lt;slug&gt;.md). Today write-guide's description claims "plans/changes" scope and now also ships a change/recap archetype — but documenting-plans already owns plan recaps: 59 of ~61 files in docs/guides/ carry documenting-plans' &lt;!-- generated:start --&gt; markers and **Plan:** backlinks, and only 2 are write-guide output. Choose one: (a) narrow write-guide's description to drop "plans/changes" and route change-recap requests to documenting-plans, or (b) keep write-guide's change/recap archetype as the deliberate bridge and document when to use which skill. Update the skill descriptions, the root CLAUDE.md plugin table, and bump the affected plugin version(s) in marketplace.json. Report the decision and the files changed.</pre>
+            <pre>In the agentics repo, decide and implement the boundary between the write-guide skill (kit/plugins/social-media-tools/skills/write-guide/) and the documenting-plans skill (kit/plugins/plan-interview/, which writes docs/&lt;slug&gt;.md). Today write-guide&#39;s description claims &quot;plans/changes&quot; scope and now also ships a change/recap archetype — but documenting-plans already owns plan recaps: 59 of ~61 files in docs/guides/ carry documenting-plans&#39; &lt;!-- generated:start --&gt; markers and **Plan:** backlinks, and only 2 are write-guide output. Choose one: (a) narrow write-guide&#39;s description to drop &quot;plans/changes&quot; and route change-recap requests to documenting-plans, or (b) keep write-guide&#39;s change/recap archetype as the deliberate bridge and document when to use which skill. Update the skill descriptions, the root CLAUDE.md plugin table, and bump the affected plugin version(s) in marketplace.json. Report the decision and the files changed.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
-        <div class="wish-list-header">
-          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-          Wish List
-        </div>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            Archetype-aware guides gallery
-            <span class="wish-badge">Wish List</span>
-          </summary>
+        <details class="next-step-item">
+          <summary>Archetype-aware guides gallery Wish List</summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
             <pre>Add an `archetype:` field to the metadata write-guide emits on every generated guide (one of: system-explainer, rule-deep-dive, how-to, concept-explainer, change-recap). Then build or extend a docs/guides gallery — mirroring the plans-library / media-library pattern in this repo — so guides can be filtered by archetype, with the archetype shown as a visible badge on each guide card.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
-
       </div>
     </section>
-
-    <!-- No unresolved questions — all planning decisions were resolved during the interview. -->
 
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
       Generated by plan-agent · 2026-06-19 · agentics
     </footer>
 
-    <details id="team-review-2026-06-19" class="team-review">
-      <summary>Team Review (2026-06-19)</summary>
-      <div class="review-body">
-        <p><strong>Reviewers:</strong> 5 core (architecture, completeness, testability, risk, conventions). UI reviewers skipped — no UI signals (Markdown/JSON skill-authoring change).</p>
-        <p><strong>Executive summary.</strong> Sound, approve with revisions — no reviewer recommended rejection. The section-library + archetype + invariant-spine design was called "architecturally sound" and "a clean information-architecture pattern." Findings clustered on scope completeness (the "12-section" reframe missed several references and two external surfaces) and verification tightening, not on the approach.</p>
-        <p><strong>Architecture.</strong> Design is sound and extensible. Flagged orphaned cross-file references the steps did not enumerate (SKILL.md:25, :81; skeleton.md:7-10) and archetype overlap without an arbitration rule. Recommended a most-specific-wins picker rule and broadening the sweep.</p>
-        <p><strong>Completeness.</strong> Steps are specific, but file coverage was under-scoped: SKILL.md has five "12-section" references (Step 1 named three), and root CLAUDE.md:79 + README.md:33 were missing from the Files list. Recommended adding both external surfaces, a coverage criterion, and a pinned smoke-test topic.</p>
-        <p><strong>Testability.</strong> The Tier-2 smoke-test approach is correct (no false demand for unit tests on prose). The objective test lacked an explicit pass bar and a concrete regression assertion. Recommended a strict pass bar, pinned topics, and a "no-diff" tone-rules criterion.</p>
-        <p><strong>Risk.</strong> Medium. Highest: stale discovery surfaces (CLAUDE.md/README.md) shipping the old contract; incomplete SKILL.md sweep; change/recap overlapping documenting-plans (boundary deferred). Recommended a quality-floor bar in the spine and an interim boundary sentence. Versioning (MINOR 2.13.0) confirmed correct; the merge driver keeps the higher semver.</p>
-        <p><strong>Conventions.</strong> Close fit. Version handling, the reference-file pattern, and the 141-line SKILL.md (≤500 budget) all align. Recommended pinning the CHANGELOG heading format and stating the description fields are deliberately unchanged.</p>
-        <p><strong>Agreements &amp; conflicts.</strong> Three reviewers independently confirmed the under-scoped reframe (amplified to highest priority). One soft conflict: Risk offered "hold change/recap" as an option, which conflicts with the "all three now" decision — resolved by keeping the archetype and adding a boundary sentence instead.</p>
-        <p><strong>Highest-risk issues (priority order):</strong></p>
-        <ul>
-          <li>Incomplete "12-section" sweep — SKILL.md:25/81, skeleton.md:7-10, exemplars.md:3/75/82-84 (Architecture + Completeness + Risk).</li>
-          <li>Stale external surfaces not in scope — CLAUDE.md:79, README.md:33 (Completeness + Risk).</li>
-          <li>Archetype-selection ambiguity for overlapping topics — needs an arbitration rule (Architecture + Risk).</li>
-          <li>Quality-floor regression from loosening the fixed skeleton (Risk).</li>
-          <li>Loose smoke-test pass bar (Testability).</li>
-        </ul>
-        <p><strong>Triage outcome — walkthrough mode; all 8 findings Accepted and applied:</strong></p>
-        <ul>
-          <li>Accepted — Step 1 broadened to all five SKILL.md "12-section" references + grep verify.</li>
-          <li>Accepted — Step 2 extended to skeleton.md lines 7-10.</li>
-          <li>Accepted — Step 3 expanded: rewrite exemplars.md framing (3/75/82-84), most-specific-wins arbitration, kebab ids, synopsis depth.</li>
-          <li>Accepted — new Step 6 reframes CLAUDE.md:79 + README.md:33; both added to the Files tree.</li>
-          <li>Accepted — Step 4 names the Workflow §3 Structure wording change.</li>
-          <li>Accepted — Step 5 adds the quality-floor depth bar + a change/recap↔documenting-plans boundary sentence (archetype kept, per "all three now").</li>
-          <li>Accepted — Step 7 (was 6) pins the CHANGELOG house format + descriptions-unchanged note.</li>
-          <li>Accepted — Tests pass bar + pinned topics + determinism; acceptance criteria ac8 (external-surface coverage) and ac9 (determinism) added; ac5 tightened to "no diff"; verification coverage grep added.</li>
-        </ul>
-        <p><strong>Modified / Rejected:</strong> none.</p>
-        <p><strong>Result:</strong> Steps grew 6 → 7; acceptance criteria 7 → 9; Files +2; digest refreshed. Plan remains status: todo.</p>
-      </div>
-    </details>
-
   </main>
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
 /* ── Save as PDF (native browser print dialog) ──────────────── */
 function savePDF() {
   window.print();
@@ -1763,7 +2014,8 @@ function buildImplementPrompt() {
 
   var planPathMeta = document.querySelector('meta[name="plan-path"]');
   var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
-  var digestCmd = "awk '!f && /<script[^>]*id=\"plan-digest\"/{f=1;next} f && /<\\/script>/{exit} f' " + planPath;
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\.html$/, '.md');
 
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
@@ -1771,27 +2023,35 @@ function buildImplementPrompt() {
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the spec from the embedded digest: ' + digestCmd + ' (fall back to reading the full HTML only if the digest block is missing).');
-  lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
-  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
-  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Run the objective test\'s Run command from the plan\'s Tests section, then walk the Verification section end-to-end and confirm the stated objective actually works — on failure, fix and re-verify before continuing; never mark the plan done on a failing check.');
+  lines.push('5. Set "status: completed" in the spec frontmatter only once every step is marked, every criterion is checked, and verification passes.');
+  lines.push('6. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
 
   return lines.join('\n');
 }
 
-/* ── Copy implement prompt ──────────────────────────────────── */
-function copyCmd(btn) {
-  var text = buildImplementPrompt();
-  function flash() {
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
     if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
     btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
       btn._copyTimer = null;
-    }, 2000);
+    }, delay);
   }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
   function fallback() {
     var ta = document.createElement('textarea');
     ta.value = text;
@@ -1801,7 +2061,7 @@ function copyCmd(btn) {
     var ok = false;
     try { ok = document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
-    if (ok) flash();
+    if (ok) flash(); else fail();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(flash).catch(fallback);
@@ -1810,70 +2070,30 @@ function copyCmd(btn) {
   }
 }
 
-/* ── Copy workflow prompt ──────────────────────────────────── */
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
 function copyWorkflow(btn) {
   var code = document.getElementById('workflow-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy goal prompt ──────────────────────────────────────── */
+function copyGoal(btn) {
+  var code = document.getElementById('goal-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy plan file name / relative path ────────────────────── */
 function copyPath(btn, id) {
   var el = document.getElementById(id);
   if (!el) return;
-  var text = el.textContent.trim();
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
 }
 
 /* ── Copy prompt button (global — required by inline onclick) ── */
@@ -1883,47 +2103,18 @@ function copyPrompt(btn) {
     pre = btn.parentElement && btn.parentElement.querySelector('pre');
   }
   if (!pre) return;
-  var text = pre.textContent;
-
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy prompt';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
 }
 
 (function () {
   'use strict';
 
-  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* ── Progress bar — state from HTML attributes ──────────────── */
   /* State lives in the HTML itself: a criterion is done iff its       */
   /* <input> carries the `checked` attribute, which the browser        */
-  /* renders natively on load — no localStorage. Toggling a box syncs  */
-  /* the attribute so the live DOM (and any saved copy of this file)   */
-  /* stays the single source of truth.                                 */
+  /* renders natively on load. Toggling a box syncs the attribute so   */
+  /* the live DOM (and any saved copy of this file) stays the single   */
+  /* portable source of truth — no browser-only storage layer.         */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -2012,27 +2203,59 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
-    }, { threshold: 0.3 });
-    sections.forEach(function (el) { observer.observe(el); });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
 </script>

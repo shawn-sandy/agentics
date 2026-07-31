@@ -1,67 +1,180 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="todo" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="todo">
+<meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-23">
 <meta name="plan-repo" content="agentics">
 <meta name="plan-file" content="build-html-artifact-system.html">
 <meta name="plan-path" content="docs/plans/build-html-artifact-system.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/build-html-artifact-system.html — Ship artifact-forge: an independent self-contained HTML artifact generator">
-<meta name="plan-goal" content="Achieve this goal: Ship artifact-forge: an independent self-contained HTML artifact generator. The plan at docs/plans/build-html-artifact-system.html describes one approach — use it as reference, but optimize for the outcome">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/build-html-artifact-system.html — Ship artifact-forge: an independent self-contained HTML artifact generator. Brief subagents with the plan file at docs/plans/build-html-artifact-system.html">
+<meta name="plan-md" content="docs/plans/build-html-artifact-system.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/build-html-artifact-system.md — Build artifact-forge — an independent HTML artifact system. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-html-artifact-system.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Build artifact-forge — an independent HTML artifact system. The plan at docs/plans/build-html-artifact-system.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-html-artifact-system.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/build-html-artifact-system.md — Build artifact-forge — an independent HTML artifact system. Brief subagents with the plan file at docs/plans/build-html-artifact-system.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-html-artifact-system.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Build artifact-forge — an independent HTML artifact system</title>
 <style>
-  /* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --purple:     #a21caf;
-    --purple-bg:  #fdf4ff;
-    --purple-border:#f0abfc;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -91,7 +204,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -101,8 +214,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -117,9 +230,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -128,11 +242,14 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
   }
   .plan-header-actions {
     display: flex;
@@ -155,7 +272,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -166,13 +286,39 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
+
+  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
+  .effort-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+  }
+  .effort-badge::before { content: "Effort "; opacity: .7; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-status="in-progress"] .status-badge::before { animation: none; }
   }
 
   /* Save as PDF button */
@@ -181,9 +327,10 @@
     align-items: center;
     gap: .4rem;
     padding: .4rem 1rem;
-    font-size: .8rem;
+    font-size: .75rem;
     font-weight: 600;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--on-accent);
     background: var(--accent);
     border: 1px solid var(--accent);
     border-radius: 4px;
@@ -199,6 +346,31 @@
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   /* Meta row */
   .plan-meta {
     display: flex;
@@ -206,9 +378,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -220,14 +393,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -238,29 +414,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -275,85 +452,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
   }
-  .objective-card .section-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .objective-card .section-label,
+  .plan-glance-label {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
+  .plan-glance {
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
+  }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
+
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -361,18 +638,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: .9rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
+  .section-card .section-intro {
+    font-size: .85rem;
+    color: var(--ink-2);
+    margin: -1rem 0 1.25rem;
+  }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -381,65 +673,34 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-card.completed .step-number { color: var(--moss); }
   .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
@@ -448,58 +709,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .step-chip-text { flex: 1; }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -511,31 +770,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -549,14 +808,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -567,20 +826,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -589,25 +848,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -620,11 +879,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -634,10 +893,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -648,14 +907,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -669,20 +928,22 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
 
   /* Wish list variant */
   .wish-list-header {
@@ -693,7 +954,7 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
@@ -704,27 +965,27 @@
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -738,13 +999,48 @@
     user-select: none;
     min-height: 44px;
   }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
-  .optional-section[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-section > summary::before,
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
+  .optional-section[open] > summary::before,
+  .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
-  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before, .plan-more-ways > summary::before { transition: none; } }
+
+  /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
+  .plan-more-ways {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--panel);
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+    overflow: hidden;
+  }
+  .plan-more-ways > summary {
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
+  .plan-more-ways-body {
+    padding: .75rem 1rem 1rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  @media print { .plan-more-ways { display: none !important; } }
 
   /* ── Implement prompt ─────────────────────────────────────────── */
   .plan-implement {
@@ -753,8 +1049,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -763,14 +1059,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -781,9 +1077,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -792,23 +1088,21 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Plan source (file name + relative path) ──────────────────── */
+  /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
   .plan-source {
     display: flex;
     flex-direction: column;
     gap: .4rem;
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     padding: .55rem .75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     font-size: .8rem;
   }
   .plan-source-row { display: flex; align-items: center; gap: .6rem; }
@@ -817,14 +1111,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -835,9 +1129,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -846,40 +1140,37 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
 
-  /* ── Workflow prompt (conditional — remove element when empty) ── */
+  /* ── Workflow prompt row (conditional — remove row when empty; lives in the drawer) ── */
   .plan-workflow {
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     font-size: .8rem;
   }
-  .plan-workflow summary {
+  .plan-workflow-label {
     font-size: .7rem;
     font-weight: 600;
     color: var(--accent);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
+    padding: .1rem 0;
   }
-  .plan-workflow summary:hover { text-decoration: underline; }
   .plan-workflow-inner {
     display: flex;
     align-items: flex-start;
     gap: .6rem;
     margin-top: .4rem;
     padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
   }
   .plan-workflow code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -890,9 +1181,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -901,27 +1192,25 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
   @media print { .plan-workflow { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
 
-  /* ── Goal prompt (outcome-driven — always present) ────────────── */
+  /* ── Goal prompt row (outcome-driven — always present; lives in the drawer) ── */
   .plan-goal {
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     font-size: .8rem;
   }
-  .plan-goal summary {
+  .plan-goal-label {
     font-size: .7rem;
     font-weight: 600;
     color: var(--purple);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
+    padding: .1rem 0;
   }
-  .plan-goal summary:hover { text-decoration: underline; }
   .plan-goal-inner {
     display: flex;
     align-items: flex-start;
@@ -935,7 +1224,7 @@
   .plan-goal code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -946,9 +1235,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -957,10 +1246,11 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-goal-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
   @media print { .plan-goal { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
 
@@ -971,8 +1261,8 @@
     gap: .75rem;
   }
   .test-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow);
@@ -994,27 +1284,27 @@
     border-radius: 999px;
     flex-shrink: 0;
   }
-  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
   .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
-  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
   .test-card-title {
     font-weight: 600;
     font-size: .95rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
   }
-  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
   .test-card-body p { margin-bottom: .4rem; }
   .test-card-body p:last-child { margin-bottom: 0; }
   .test-card-body code { font-size: .85em; }
-  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
   .test-tier-label {
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
     display: flex;
     align-items: center;
@@ -1024,21 +1314,21 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--rule);
   }
   .objective-test-card {
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-left: 4px solid var(--green);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow);
   }
   .objective-test-card .test-card-header { margin-bottom: .6rem; }
-  .objective-test-card .test-card-title { color: #14532d; }
-  .objective-test-card .test-card-body { color: #166534; }
-  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -1046,10 +1336,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -1058,7 +1348,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -1067,41 +1357,77 @@
 
   /* ═════════════════════════════════════════════════════════════════
      OPT-IN VISUAL COMPONENTS
+     Pure-CSS / token-driven — no CDN, no external script. These rules
+     are always present (harmless when unused); the matching <body>
+     section blocks are kept only when a plan needs them and deleted
+     otherwise. See SKILL.md → "Visual Components".
      ═════════════════════════════════════════════════════════════════ */
 
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
+  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
 
   /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
   .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
   @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
   .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
+
+  /* ── Bar chart (value via inline --val) ─────────────────────────── */
+  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
+  .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
+  @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
+
+  /* ── Data table ─────────────────────────────────────────────────── */
+  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
+  .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
+
+  /* ── Resources (images, screenshots & reference links) ──────────── */
+  .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+  .resource-figure > a { display: block; line-height: 0; }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
+  .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
+  .resource-links li:last-child { border-bottom: none; }
+  .resource-links a { font-weight: 600; word-break: break-word; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
 
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
@@ -1109,7 +1435,7 @@
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
@@ -1117,7 +1443,7 @@
   .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
 </style>
 <style id="plan-responsive-fix" data-version="1">
-/* plan-responsive-fix v1 */
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
 body { overflow-wrap: anywhere; }
 main, nav, aside { min-width: 0; }
 .layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
@@ -1129,7 +1455,6 @@ img, video { max-width: 100%; height: auto; }
 </head>
 <body>
 
-<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
@@ -1177,11 +1502,13 @@ img, video { max-width: 100%; height: auto; }
   <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
   </symbol>
+  <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
 </svg>
 
 <a href="#main" class="skip-link">Skip to content</a>
 
-<!-- ── Header — document cover ─────────────────────────────────── -->
 <header class="plan-header">
   <div class="plan-header-inner">
     <div class="plan-back-nav">
@@ -1196,29 +1523,23 @@ img, video { max-width: 100%; height: auto; }
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
+        <span class="effort-badge" aria-label="Effort level">High</span>
         <span class="status-badge">todo</span>
       </div>
     </div>
     <div class="plan-meta">
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-23
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        agentics
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        feature
-      </span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-06-23</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> feature</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> High effort</span>
     </div>
   </div>
 </header>
 
 <div class="layout">
 
-  <!-- ── Sidebar — table of contents ─────────────────────────── -->
   <nav class="plan-nav" aria-label="Plan sections">
     <div class="scroll-rail" aria-hidden="true"></div>
     <div class="nav-heading">On this page</div>
@@ -1226,74 +1547,94 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
-      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
-      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
-      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
-      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>9 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Scaffold the artifact-forge plugin and register it</span><span class="rail-state">step 1 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Define the IR schema and the single design-token core</span><span class="rail-state">step 2 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Write the four input adapters</span><span class="rail-state">step 3 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Build the renderer and the self-contained guarantee</span><span class="rail-state">step 4 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Implement the four v1 shapes: document , card , plan , gallery</span><span class="rail-state">step 5 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Wire the forge.py CLI front door</span><span class="rail-state">step 6 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Add the shared render-to-PNG wrapper</span><span class="rail-state">step 7 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Author the forge-artifact skill</span><span class="rail-state">step 8 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-9"><span class="rail-no">9</span><span class="rail-text">Migrate one pilot skill onto the engine</span><span class="rail-state">step 9 of 9</span></a></li>
+      </ul>
+    </details>
   </nav>
 
-  <!-- ── Main content ─────────────────────────────────────────── -->
   <main id="main">
 
-    <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Ship a standalone <code>artifact-forge</code> plugin that forges self-contained, accessible HTML artifacts on demand from any source — conversation context, markdown, code files, or session logs — and prove it end-to-end by migrating one real skill off its hand-rolled HTML.</p>
+      <p>Ship a standalone artifact-forge plugin that forges self-contained, accessible HTML artifacts on demand from any source — conversation context, markdown, code files, or session logs — and prove it end-to-end by migrating one real skill off its hand-rolled HTML.</p>
     </div>
 
-    <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/build-html-artifact-system.html — Ship artifact-forge: an independent self-contained HTML artifact generator</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/build-html-artifact-system.md — Build artifact-forge — an independent HTML artifact system. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-html-artifact-system.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Goal prompt (outcome-driven — always present) ─────────── -->
-    <details class="plan-goal">
-      <summary>Pursue as goal — optimize for the outcome</summary>
-      <div class="plan-goal-inner">
-        <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Ship artifact-forge: an independent self-contained HTML artifact generator. The plan at docs/plans/build-html-artifact-system.html describes one approach — use it as reference, but optimize for the outcome</code>
-        <button class="copy-goal-btn" type="button"
-                onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
+
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome, in parallel</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Build artifact-forge — an independent HTML artifact system. The plan at docs/plans/build-html-artifact-system.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-html-artifact-system.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-workflow">
+          <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
+          <div class="plan-workflow-inner">
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/build-html-artifact-system.md — Build artifact-forge — an independent HTML artifact system. Brief subagents with the plan file at docs/plans/build-html-artifact-system.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-html-artifact-system.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-workflow-btn" type="button"
+                    onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">build-html-artifact-system.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/build-html-artifact-system.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/build-html-artifact-system.md</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
+          </div>
+        </div>
+
       </div>
     </details>
 
-    <!-- ── Workflow prompt ── -->
-    <details class="plan-workflow">
-      <summary>Run as workflow — launch parallel subagents</summary>
-      <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/build-html-artifact-system.html — Ship artifact-forge: an independent self-contained HTML artifact generator. Brief subagents with the plan file at docs/plans/build-html-artifact-system.html</code>
-        <button class="copy-workflow-btn" type="button"
-                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
-      </div>
-    </details>
-
-    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
-    <div class="plan-source">
-      <div class="plan-source-row">
-        <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">build-html-artifact-system.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
-      </div>
-      <div class="plan-source-row">
-        <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/build-html-artifact-system.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
-      </div>
-    </div>
-
-    <!-- ── Progress ─────────────────────────────────────────────── -->
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
-        <span>Acceptance criteria</span>
+        <span>Definition of done</span>
         <span id="progress-label">0 / 11 done</span>
       </div>
       <div class="progress-bar-bg">
@@ -1303,73 +1644,71 @@ img, video { max-width: 100%; height: auto; }
       </div>
     </div>
 
-    <!-- ── Context ──────────────────────────────────────────────── -->
     <section class="section-card card-context" id="context" aria-labelledby="h-context">
       <h2 id="h-context">
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>HTML generation is scattered across the marketplace with heavy duplication. Two mature patterns already exist — <code>plan-agent</code>'s inlined <code>SKELETON.html</code> (the model fills placeholders) and <code>plan-interview:markdown-to-html</code>'s spec-driven <code>html-spec.md</code> + <code>build-assets.sh</code> extraction — alongside <code>social-media-tools</code>, where 9+ card templates each re-inline the same <code>~1.5KB</code> of CSS tokens and 8+ <code>share-*</code> skills each re-implement the identical &ldquo;find free port → <code>http.server</code> → Playwright screenshot → kill&rdquo; pipeline with no shared code.</p>
-      <p>The goal is one independent system that any skill can call on demand to turn a source — conversation context, markdown content, a code file, or a session log — into a single self-contained <code>.html</code> artifact (optionally screenshotted to PNG). Built and tested first, it later replaces the hand-rolled HTML across all skills. This plan builds and tests that system as a new standalone plugin and proves it with one live pilot migration; the remaining migrations are Next Steps.</p>
-      <p><strong>Decided up front (Clarify):</strong> a new standalone plugin (<code>artifact-forge</code>); a greenfield engine (a deterministic Python core, not a model-filled skeleton — so it is genuinely unit-testable); scope is build + test + one pilot migration; and the engine owns a thin shared render-to-PNG wrapper. Greenfield reuses the <em>rules</em> already proven in <code>html-spec.md</code> (per-sink escaping, URL and theme allow-lists, a11y landmarks, reduced-motion and print styles) — it does not re-derive them.</p>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
+      <p>HTML generation is scattered across the marketplace with heavy duplication. Two mature patterns already exist — plan-agent &#39;s inlined SKELETON.html (the model fills placeholders) and plan-interview:markdown-to-html &#39;s spec-driven html-spec.md + build-assets.sh extraction — alongside social-media-tools , where 9+ card templates each re-inline the same ~1.5KB of CSS tokens and 8+ share-* skills each re-implement the identical &amp;ldquo;find free port → http.server → Playwright screenshot → kill&amp;rdquo; pipeline with no shared code.</p>
+      <p>The goal is one independent system that any skill can call on demand to turn a source — conversation context, markdown content, a code file, or a session log — into a single self-contained .html artifact (optionally screenshotted to PNG). Built and tested first, it later replaces the hand-rolled HTML across all skills. This plan builds and tests that system as a new standalone plugin and proves it with one live pilot migration; the remaining migrations are Next Steps.</p>
+      <p>Decided up front (Clarify): a new standalone plugin ( artifact-forge ); a greenfield engine (a deterministic Python core, not a model-filled skeleton — so it is genuinely unit-testable); scope is build + test + one pilot migration; and the engine owns a thin shared render-to-PNG wrapper. Greenfield reuses the rules already proven in html-spec.md (per-sink escaping, URL and theme allow-lists, a11y landmarks, reduced-motion and print styles) — it does not re-derive them.</p>
     </section>
 
-    <!-- ── Files ──────────────────────────────────────────────── -->
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files to Modify
+        Files that change
       </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
           <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">register artifact-forge @ v0.1.0</span></li>
           <li><code>kit/plugins/artifact-forge/.claude-plugin/plugin.json</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">name only, no version field</span></li>
-
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/</li>
-          <ul class="file-list">
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/
+            <ul class="file-list">
             <li><code>README.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">overview, usage, delegation contract</span></li>
             <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">0.1.0 initial release</span></li>
             <li><code>requirements.txt</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">pytest + playwright</span></li>
             <li><code>pytest.ini</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">testpaths = tests</span></li>
-          </ul>
-
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/</li>
-          <ul class="file-list">
+            </ul>
+          </li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/
+            <ul class="file-list">
             <li><code>forge.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">CLI entry: source → shape → html (+ png)</span></li>
             <li><code>ir.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">IR schema + validate()</span></li>
             <li><code>render.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">IR → self-contained HTML</span></li>
             <li><code>screenshot.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">shared serve → shoot → kill wrapper</span></li>
             <li><code>find_free_port.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">OS-assigned free port</span></li>
-          </ul>
-
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/adapters/</li>
-          <ul class="file-list">
+            </ul>
+          </li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/adapters/
+            <ul class="file-list">
             <li><code>context.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">conversation/text → IR</span></li>
             <li><code>markdown.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">markdown → IR sections</span></li>
             <li><code>code.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">code file → IR with language</span></li>
             <li><code>session.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">session JSONL → recap IR</span></li>
-          </ul>
-
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/shapes/</li>
-          <ul class="file-list">
+            </ul>
+          </li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/shapes/
+            <ul class="file-list">
             <li><code>document.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">doc/explainer layout</span></li>
             <li><code>card.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">fixed-width social card</span></li>
             <li><code>plan.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">mirrors SKELETON.html</span></li>
             <li><code>gallery.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">filterable index grid</span></li>
-          </ul>
-
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/assets/</li>
-          <ul class="file-list">
+            </ul>
+          </li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/scripts/assets/
+            <ul class="file-list">
             <li><code>tokens.css</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">single source of design tokens</span></li>
             <li><code>base.css</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">layout + a11y + print</span></li>
             <li><code>enhance.js</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">savePDF, scroll-spy, copy buttons</span></li>
-          </ul>
-
+            </ul>
+          </li>
           <li><code>kit/plugins/artifact-forge/skills/forge-artifact/SKILL.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">model-invocable front door</span></li>
-
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/tests/</li>
-          <ul class="file-list">
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/tests/
+            <ul class="file-list">
             <li><code>conftest.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">shared tmp_path fixture</span></li>
             <li><code>test_objective_smoke.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">hero: all 4 sources + pilot</span></li>
             <li><code>test_adapters.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">unit: source → IR</span></li>
@@ -1378,102 +1717,50 @@ img, video { max-width: 100%; height: auto; }
             <li><code>test_a11y.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">unit: landmarks + contrast per shape</span></li>
             <li><code>test_forge_cli.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">integration: CLI per source/shape</span></li>
             <li><code>test_screenshot.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">e2e: render → png → teardown</span></li>
-          </ul>
-          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/tests/fixtures/</li>
-          <ul class="file-list">
+            </ul>
+          </li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/artifact-forge/tests/fixtures/
+            <ul class="file-list">
             <li><code>sample.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">markdown adapter input</span></li>
             <li><code>sample_code.py</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">code adapter input</span></li>
             <li><code>sample-session.jsonl</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">session adapter input</span></li>
             <li><code>sample_context.txt</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">context adapter input</span></li>
-          </ul>
-
+            </ul>
+          </li>
           <li><code>kit/plugins/social-media-tools/skills/share-code/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">pilot: migrate to forge.py</span></li>
         </ul>
       </div>
     </section>
 
-    <!-- ── Diagram ──────────────────────────────────────────────── -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <div class="diagram-subheading">Forge pipeline — source to artifact</div>
-      <div class="pipeline">
-        <div class="pipeline-node"><div class="pipeline-label">Input</div><code>context · markdown · code · session</code><div class="pipeline-sub">any source, on demand</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Adapter</div><code>adapters/*.py → to_ir()</code><div class="pipeline-sub">normalize to one shape</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">IR</div><code>{title, meta, theme, sections[]}</code><div class="pipeline-sub">plain dict, validated</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Renderer</div><code>render.py + assets/*</code><div class="pipeline-sub">inline tokens.css · base.css · enhance.js</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Artifact</div><code>self-contained .html</code><div class="pipeline-sub">zero external refs</div></div>
-        <div class="pipeline-arrow" aria-hidden="true">↓</div>
-        <div class="pipeline-node"><div class="pipeline-label">Optional</div><code>screenshot.py → .png</code><div class="pipeline-sub">shared serve → shoot → kill</div></div>
-      </div>
-
-      <div class="diagram-subheading">Before → after for the pilot</div>
-      <div class="compare-grid">
-        <div class="compare-col-add">
-          <div class="compare-header">New (shared)</div>
-          <ul class="compare-list">
-            <li>tokens.css — one token source</li>
-            <li>render.py — IR → HTML</li>
-            <li>forge.py — CLI front door</li>
-            <li>screenshot.py — PNG wrapper</li>
-            <li>forge-artifact skill</li>
-          </ul>
-        </div>
-        <div class="compare-col-neutral">
-          <div class="compare-header">Reused rules</div>
-          <ul class="compare-list">
-            <li>per-sink escaping</li>
-            <li>URL allow-list</li>
-            <li>theme allow-list</li>
-            <li>a11y landmarks + focus</li>
-            <li>reduced-motion + print</li>
-          </ul>
-        </div>
-        <div class="compare-col-remove">
-          <div class="compare-header">Retired (pilot)</div>
-          <ul class="compare-list">
-            <li>diff-card inlined &lt;style&gt;</li>
-            <li>share-code screenshot steps</li>
-            <li>duplicate find-port copy</li>
-            <li>manual token re-declare</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
       <h2 id="h-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
         Steps
       </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Scaffold the <code>artifact-forge</code> plugin and register it</span>
+                <span class="step-chip-text">Scaffold the artifact-forge plugin and register it</span>
               </div>
-              <div class="step-why">Establishes the standalone-plugin boundary the whole system lives in, so every later file has a home and the marketplace can serve it.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Create <code>kit/plugins/artifact-forge/.claude-plugin/plugin.json</code> with the full standard manifest (<code>name</code>, <code>description</code>, <code>author</code>, <code>license</code>, <code>keywords</code>, <code>repository</code>, and <code>homepage: https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/artifact-forge</code>) but <strong>no</strong> <code>version</code> field; add <code>README.md</code>, <code>CHANGELOG.md</code>, and the pytest infrastructure (<code>requirements.txt</code> pinning <code>pytest</code> + <code>playwright</code>, <code>pytest.ini</code> with <code>testpaths = tests</code>, <code>tests/conftest.py</code> for the shared <code>tmp_path</code>); register a relative <code>git-subdir</code> entry in <code>.claude-plugin/marketplace.json</code> at <code>version: 0.1.0</code>, <code>category: development</code>, with specific searchable <code>tags</code>. <strong>Verify:</strong> <code>python3 -c "import json; json.load(open('.claude-plugin/marketplace.json'))"</code> parses, the new entry (with tags) appears, <code>claude --plugin-dir kit/plugins/artifact-forge</code> loads with no manifest error, and <code>pytest --collect-only kit/plugins/artifact-forge/tests/</code> succeeds on a clean checkout.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Establishes the standalone-plugin boundary the whole system lives in, so every later file has a home and the marketplace can serve it.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Create kit/plugins/artifact-forge/.claude-plugin/plugin.json with the full standard manifest ( name , description , author , license , keywords , repository , and homepage: https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/artifact-forge ) but no version field; add README.md , CHANGELOG.md , and the pytest infrastructure ( requirements.txt pinning pytest + playwright , pytest.ini with testpaths = tests , tests/conftest.py for the shared tmp_path ); register a relative git-subdir entry in .claude-plugin/marketplace.json at version: 0.1.0 , category: development , with specific searchable tags . Verify: python3 -c &quot;import json; json.load(open(&#39;.claude-plugin/marketplace.json&#39;))&quot; parses, the new entry (with tags) appears, claude --plugin-dir kit/plugins/artifact-forge loads with no manifest error, and pytest --collect-only kit/plugins/artifact-forge/tests/ succeeds on a clean checkout.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
@@ -1481,16 +1768,19 @@ img, video { max-width: 100%; height: auto; }
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Define the IR schema and the single design-token core</span>
               </div>
-              <div class="step-why">One IR and one token file are the whole point — a single <code>tokens.css</code> kills the ~11× CSS duplication, and a <em>versioned, fully-specified</em> IR is the contract every adapter, shape, and downstream skill migration depends on; getting it wrong breaks every future caller at once (four reviewers flagged this as the linchpin).</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Write <code>scripts/ir.py</code> defining the IR as a documented <code>TypedDict</code> — <code>{schema_version, title, meta, theme, shape, sections[]}</code> — with a per-section-type schema (<code>type</code> ∈ <code>prose|code|steps|criteria|cards</code> plus type-specific keys: <code>steps[].{action,why,verify}</code>, <code>criteria[].text</code>, and <code>cards[].{title,href,tags,date,status}</code> for the gallery variant) and a <code>validate(ir)</code> guard. Write <code>scripts/assets/tokens.css</code> (one canonical token set + the four named themes ported from the existing palettes, with the status-badge gray darkened to meet 4.5:1 contrast). <strong>Verify:</strong> <code>validate()</code> rejects an IR missing <code>title</code>/<code>sections</code>, rejects an unknown <code>schema_version</code> or section <code>type</code>, rejects a theme outside the allow-list, and accepts a minimal valid one; grep confirms every token referenced by <code>base.css</code> is declared once in <code>tokens.css</code>.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">One IR and one token file are the whole point — a single tokens.css kills the ~11× CSS duplication, and a versioned, fully-specified IR is the contract every adapter, shape, and downstream skill migration depends on; getting it wrong breaks every future caller at once (four reviewers flagged this as the linchpin).</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Write scripts/ir.py defining the IR as a documented TypedDict — {schema_version, title, meta, theme, shape, sections[]} — with a per-section-type schema ( type ∈ prose|code|steps|criteria|cards plus type-specific keys: steps[].{action,why,verify} , criteria[].text , and cards[].{title,href,tags,date,status} for the gallery variant) and a validate(ir) guard. Write scripts/assets/tokens.css (one canonical token set + the four named themes ported from the existing palettes, with the status-badge gray darkened to meet 4.5:1 contrast). Verify: validate() rejects an IR missing title / sections , rejects an unknown schema_version or section type , rejects a theme outside the allow-list, and accepts a minimal valid one; grep confirms every token referenced by base.css is declared once in tokens.css .</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
@@ -1498,16 +1788,19 @@ img, video { max-width: 100%; height: auto; }
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Write the four input adapters</span>
               </div>
-              <div class="step-why">These are exactly the &ldquo;context, content, code files, sessions&rdquo; inputs the objective names — each must normalize its source into one common IR so the renderer never sees source-specific shapes.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Add <code>scripts/adapters/{context,markdown,code,session}.py</code>, each a pure <code>to_ir(raw, opts) -&gt; ir</code> function: context → prose sections, markdown → parsed sections, code → a code section with language, session JSONL → a recap (title + highlights); empty or malformed input yields a minimal valid IR rather than raising. Create the fixtures they consume: <code>tests/fixtures/{sample.md,sample_code.py,sample-session.jsonl,sample_context.txt}</code>. <strong>Verify:</strong> <code>pytest tests/test_adapters.py</code> — each adapter turns its fixture into an IR that passes <code>validate()</code> with the expected section types, and an empty input still validates.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">These are exactly the &amp;ldquo;context, content, code files, sessions&amp;rdquo; inputs the objective names — each must normalize its source into one common IR so the renderer never sees source-specific shapes.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Add scripts/adapters/{context,markdown,code,session}.py , each a pure to_ir(raw, opts) -&gt; ir function: context → prose sections, markdown → parsed sections, code → a code section with language, session JSONL → a recap (title + highlights); empty or malformed input yields a minimal valid IR rather than raising. Create the fixtures they consume: tests/fixtures/{sample.md,sample_code.py,sample-session.jsonl,sample_context.txt} . Verify: pytest tests/test_adapters.py — each adapter turns its fixture into an IR that passes validate() with the expected section types, and an empty input still validates.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
@@ -1515,50 +1808,59 @@ img, video { max-width: 100%; height: auto; }
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Build the renderer and the self-contained guarantee</span>
               </div>
-              <div class="step-why">Deterministic IR → HTML assembly is what makes the system testable and the output truly standalone — and since the engine becomes the single HTML sink for every skill, a missed escaping context has cross-skill blast radius, so escaping and allow-lists must live here where no caller can bypass them.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Write <code>scripts/render.py</code> <code>render(ir) -&gt; html</code>: inline <code>tokens.css</code> + <code>base.css</code> + shape CSS + <code>enhance.js</code>; escape user content at <strong>every</strong> sink per the <code>html-spec.md</code> rules — element text, attribute values, and CSS custom-property values — and enforce the URL and theme allow-lists <em>in the renderer</em> (not only in adapters), so a hand-supplied <code>--source ir</code> JSON cannot bypass sanitization. Emit <code>&lt;main id="main-content"&gt;</code> as the skip-link target per the spec. Add <code>assets/base.css</code> (skip-link, landmarks, focus, reduced-motion, print) and <code>assets/enhance.js</code> (savePDF, scroll-spy, copy buttons). <strong>Verify:</strong> <code>pytest tests/test_render.py tests/test_self_contained.py</code> — output has no <code>&lt;link&gt;</code>, no <code>http(s)://</code> asset ref, no <code>@import</code>; and a title carrying <code>&lt;script&gt;</code>, an attribute payload <code>" onclick="</code>, and a <code>javascript:</code> URL are each neutralized in the text, attribute, and href sinks.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Deterministic IR → HTML assembly is what makes the system testable and the output truly standalone — and since the engine becomes the single HTML sink for every skill, a missed escaping context has cross-skill blast radius, so escaping and allow-lists must live here where no caller can bypass them.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Write scripts/render.py render(ir) -&gt; html : inline tokens.css + base.css + shape CSS + enhance.js ; escape user content at every sink per the html-spec.md rules — element text, attribute values, and CSS custom-property values — and enforce the URL and theme allow-lists in the renderer (not only in adapters), so a hand-supplied --source ir JSON cannot bypass sanitization. Emit &lt;main id=&quot;main-content&quot;&gt; as the skip-link target per the spec. Add assets/base.css (skip-link, landmarks, focus, reduced-motion, print) and assets/enhance.js (savePDF, scroll-spy, copy buttons). Verify: pytest tests/test_render.py tests/test_self_contained.py — output has no &lt;link&gt; , no http(s):// asset ref, no @import ; and a title carrying &lt;script&gt; , an attribute payload &quot; onclick=&quot; , and a javascript: URL are each neutralized in the text, attribute, and href sinks.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Implement the four v1 shapes: <code>document</code>, <code>card</code>, <code>plan</code>, <code>gallery</code></span>
+                <span class="step-chip-text">Implement the four v1 shapes: document , card , plan , gallery</span>
               </div>
-              <div class="step-why"><code>document</code> covers context/markdown/code/session artifacts and <code>card</code> covers the social-card pilot; <code>plan</code> reproduces the plan-agent <code>SKELETON.html</code> structure and <code>gallery</code> the index grid, so implementation-plan and the galleries can later adopt the engine without a second shape-building pass. Reproducing two already-shipped designs is the proof the engine can absorb the existing systems.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Add <code>scripts/shapes/{document,card,plan,gallery}.py</code>, each consuming the same IR: <code>document</code> (header + sticky nav + sections), <code>card</code> (a fixed-width card — define a canonical width, e.g. 800px, in <code>tokens.css</code> so PNG output is deterministic — wrapped in an <code>&lt;article&gt;</code> landmark with a single heading), <code>plan</code> (steps + acceptance criteria + completion checklist + meta tags, mirroring <code>SKELETON.html</code>), <code>gallery</code> (filterable index grid mirroring plans-library/media-library; filter triggers are <code>&lt;button&gt;</code>s inside <code>&lt;div role="group" aria-label="Filter"&gt;</code>, the result region carries <code>aria-live="polite"</code> with a visible empty-state, filtering is keyboard-operable). Every shape emits the spec landmarks (skip-link, <code>&lt;main id="main-content"&gt;</code>, heading hierarchy). <strong>Verify:</strong> <code>pytest tests/test_render.py</code> renders all four shapes from IR fixtures and asserts shape-specific structure via concrete selectors — nav for <code>document</code>, a <code>.card</code> wrapper + fixed width for <code>card</code>, a step list + completion checklist for <code>plan</code>, and <code>role="group"</code> filter buttons + an <code>aria-live</code> result region for <code>gallery</code>.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">document covers context/markdown/code/session artifacts and card covers the social-card pilot; plan reproduces the plan-agent SKELETON.html structure and gallery the index grid, so implementation-plan and the galleries can later adopt the engine without a second shape-building pass. Reproducing two already-shipped designs is the proof the engine can absorb the existing systems.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Add scripts/shapes/{document,card,plan,gallery}.py , each consuming the same IR: document (header + sticky nav + sections), card (a fixed-width card — define a canonical width, e.g. 800px, in tokens.css so PNG output is deterministic — wrapped in an &lt;article&gt; landmark with a single heading), plan (steps + acceptance criteria + completion checklist + meta tags, mirroring SKELETON.html ), gallery (filterable index grid mirroring plans-library/media-library; filter triggers are &lt;button&gt; s inside &lt;div role=&quot;group&quot; aria-label=&quot;Filter&quot;&gt; , the result region carries aria-live=&quot;polite&quot; with a visible empty-state, filtering is keyboard-operable). Every shape emits the spec landmarks (skip-link, &lt;main id=&quot;main-content&quot;&gt; , heading hierarchy). Verify: pytest tests/test_render.py renders all four shapes from IR fixtures and asserts shape-specific structure via concrete selectors — nav for document , a .card wrapper + fixed width for card , a step list + completion checklist for plan , and role=&quot;group&quot; filter buttons + an aria-live result region for gallery .</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Wire the <code>forge.py</code> CLI front door</span>
+                <span class="step-chip-text">Wire the forge.py CLI front door</span>
               </div>
-              <div class="step-why">A single entry point is how every skill invokes the system on demand — adapter dispatch, render, write, optional screenshot, all behind one command.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Write <code>scripts/forge.py</code> accepting <code>--source context|markdown|code|session|ir</code>, <code>--in &lt;path|-&gt;</code>, <code>--shape document|card|plan|gallery</code>, <code>--theme &lt;name&gt;</code>, <code>--out &lt;path&gt;</code>, and optional <code>--png &lt;path&gt;</code>; the <code>ir</code> source reads a ready-made IR JSON for skill delegation. Define an explicit error contract: a missing <code>--in</code> file, malformed input, empty stdin, or invalid IR exits non-zero with a clear stderr message; an unknown <code>--theme</code> degrades to <code>default</code>. <strong>Verify:</strong> <code>pytest tests/test_forge_cli.py</code> — each <code>--source</code> writes a valid <code>.html</code> for every <code>--shape</code>; <code>--in -</code> reads stdin; a missing file and a malformed IR each exit non-zero with a message; an unknown <code>--theme</code> falls back to <code>default</code>.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">A single entry point is how every skill invokes the system on demand — adapter dispatch, render, write, optional screenshot, all behind one command.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Write scripts/forge.py accepting --source context|markdown|code|session|ir , --in &lt;path|-&gt; , --shape document|card|plan|gallery , --theme &lt;name&gt; , --out &lt;path&gt; , and optional --png &lt;path&gt; ; the ir source reads a ready-made IR JSON for skill delegation. Define an explicit error contract: a missing --in file, malformed input, empty stdin, or invalid IR exits non-zero with a clear stderr message; an unknown --theme degrades to default . Verify: pytest tests/test_forge_cli.py — each --source writes a valid .html for every --shape ; --in - reads stdin; a missing file and a malformed IR each exit non-zero with a message; an unknown --theme falls back to default .</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
@@ -1566,33 +1868,39 @@ img, video { max-width: 100%; height: auto; }
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Add the shared render-to-PNG wrapper</span>
               </div>
-              <div class="step-why">This single copy replaces the find-port → serve → screenshot → kill flow duplicated across 8+ <code>share-*</code> skills. It must <strong>always</strong> tear the server down — a leaked <code>http.server</code> accumulates across invocations — and degrade gracefully when Playwright (a heavy, optional dependency) is absent rather than crashing the caller.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Write <code>scripts/screenshot.py</code> <code>to_png(html_path, png_path)</code> + <code>scripts/find_free_port.py</code> using Playwright-as-library (the Python package, documented as a prerequisite with <code>playwright install chromium</code> in the README): free port → background <code>python3 -m http.server</code> → navigate + full-page screenshot → a <code>finally</code> block that kills the whole process group (<code>os.killpg</code>) with a timeout then SIGKILL fallback. A soft preflight emits an advisory and skips the PNG (non-fatal) when Playwright is unavailable. <strong>Verify:</strong> <code>forge.py … --png /tmp/out.png</code> on a fixture writes a non-empty PNG and leaves no server alive (<code>pgrep -f http.server</code> empty afterward) <em>even when the screenshot step raises</em>; with Playwright absent, <code>forge.py</code> still emits HTML and exits zero.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">This single copy replaces the find-port → serve → screenshot → kill flow duplicated across 8+ share-* skills. It must always tear the server down — a leaked http.server accumulates across invocations — and degrade gracefully when Playwright (a heavy, optional dependency) is absent rather than crashing the caller.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Write scripts/screenshot.py to_png(html_path, png_path) + scripts/find_free_port.py using Playwright-as-library (the Python package, documented as a prerequisite with playwright install chromium in the README): free port → background python3 -m http.server → navigate + full-page screenshot → a finally block that kills the whole process group ( os.killpg ) with a timeout then SIGKILL fallback. A soft preflight emits an advisory and skips the PNG (non-fatal) when Playwright is unavailable. Verify: forge.py … --png /tmp/out.png on a fixture writes a non-empty PNG and leaves no server alive ( pgrep -f http.server empty afterward) even when the screenshot step raises ; with Playwright absent, forge.py still emits HTML and exits zero.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Author the <code>forge-artifact</code> skill</span>
+                <span class="step-chip-text">Author the forge-artifact skill</span>
               </div>
-              <div class="step-why">The skill is the on-demand, model-invocable front door — and its delegation contract is how other skills reach the engine instead of hand-writing HTML, so that contract must be decided and documented now, not deferred.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Write <code>skills/forge-artifact/SKILL.md</code> (three-part description; <code>allowed-tools: Bash, Read, Write, AskUserQuestion, Glob, SendUserFile, ToolSearch</code>): gather the source, build or emit the IR, call <code>forge.py</code>, deliver the HTML (and PNG when asked). Make <code>--source ir --in -</code> (IR JSON on stdin) the <strong>primary, documented</strong> delegation contract in the README, with the Skill tool as the interactive fallback, and specify how a consuming plugin resolves <code>forge.py</code> across plugins (a documented <code>ARTIFACT_FORGE_ROOT</code> / <code>$CLAUDE_PLUGIN_ROOT</code> lookup) rather than hard-coding an absolute path. <strong>Verify:</strong> <code>claude --plugin-dir kit/plugins/artifact-forge</code> lists <code>forge-artifact</code>; running it on a sample produces an artifact via <code>forge.py</code> (not hand-written HTML), and piping an IR JSON to <code>forge.py --source ir --in -</code> round-trips to valid HTML.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">The skill is the on-demand, model-invocable front door — and its delegation contract is how other skills reach the engine instead of hand-writing HTML, so that contract must be decided and documented now, not deferred.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Write skills/forge-artifact/SKILL.md (three-part description; allowed-tools: Bash, Read, Write, AskUserQuestion, Glob, SendUserFile, ToolSearch ): gather the source, build or emit the IR, call forge.py , deliver the HTML (and PNG when asked). Make --source ir --in - (IR JSON on stdin) the primary, documented delegation contract in the README, with the Skill tool as the interactive fallback, and specify how a consuming plugin resolves forge.py across plugins (a documented ARTIFACT_FORGE_ROOT / $CLAUDE_PLUGIN_ROOT lookup) rather than hard-coding an absolute path. Verify: claude --plugin-dir kit/plugins/artifact-forge lists forge-artifact ; running it on a sample produces an artifact via forge.py (not hand-written HTML), and piping an IR JSON to forge.py --source ir --in - round-trips to valid HTML.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-9">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
@@ -1600,11 +1908,14 @@ img, video { max-width: 100%; height: auto; }
                 <span class="step-chip">todo</span>
                 <span class="step-chip-text">Migrate one pilot skill onto the engine</span>
               </div>
-              <div class="step-why">A live migration is the only real proof the system can replace hand-rolled HTML — <code>share-code</code> exercises both the <code>card</code> shape and the PNG wrapper, the two riskiest new pieces, while retiring the most duplication.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">Convert <code>social-media-tools:share-code</code> to build a <code>card</code> IR and call <code>forge.py --shape card --png …</code> (resolving <code>forge.py</code> via the documented cross-plugin lookup, not a hard-coded path), deleting its inlined <code>&lt;style&gt;</code> and private screenshot steps; leave all other skills untouched. Capture a reference of the current <code>diff-card.html</code> output first and gate the deletion behind a temporary toggle until the new path passes, so rollback is one revert. <strong>Verify:</strong> a structural/dimensional parity check (presence of <code>.card</code>, the copy panel, and matching card width) passes against the captured reference, <code>test_self_contained.py</code> passes on the migrated HTML, the PNG is non-empty, and grep shows no <code>&lt;style&gt;</code> or <code>http.server</code> remaining in the migrated path.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">A live migration is the only real proof the system can replace hand-rolled HTML — share-code exercises both the card shape and the PNG wrapper, the two riskiest new pieces, while retiring the most duplication.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Convert social-media-tools:share-code to build a card IR and call forge.py --shape card --png … (resolving forge.py via the documented cross-plugin lookup, not a hard-coded path), deleting its inlined &lt;style&gt; and private screenshot steps; leave all other skills untouched. Capture a reference of the current diff-card.html output first and gate the deletion behind a temporary toggle until the new path passes, so rollback is one revert. Verify: a structural/dimensional parity check (presence of .card , the copy panel, and matching card width) passes against the captured reference, test_self_contained.py passes on the migrated HTML, the PNG is non-empty, and grep shows no &lt;style&gt; or http.server remaining in the migrated path.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1612,139 +1923,58 @@ img, video { max-width: 100%; height: auto; }
       </div>
     </section>
 
-    <!-- ── Tests ────────────────────────────────────────────────── -->
     <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
       <h2 id="h-tests">
         <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
         Tests
       </h2>
+      <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 1 — Code-touching plan</div>
-
-      <!-- Objective-verification test — mandatory, always first -->
-      <div class="objective-test-card">
-        <div class="test-card-header">
-          <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">Forge produces a self-contained HTML artifact from every source</span>
-        </div>
-        <div class="test-card-body">
-          <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_objective_smoke.py</code></p>
-          <p><strong>Type:</strong> smoke test</p>
-          <p><strong>Asserts:</strong> for each of the four sources (<code>context</code>, <code>markdown</code>, <code>code</code>, <code>session</code>), <code>forge.py</code> writes a single <code>.html</code> with zero external refs (no <code>&lt;link&gt;</code>, no <code>http(s)://</code> asset, no CDN) whose title matches the fixture's expected title <em>exactly</em>, whose section count matches, and which parses as well-formed HTML; and the migrated pilot emits a valid <code>card</code> artifact through the engine. Directly proves &ldquo;an independent system generates self-contained HTML artifacts on demand from context, content, code, and sessions.&rdquo;</p>
-          <p><strong>Run:</strong> <code>pytest kit/plugins/artifact-forge/tests/test_objective_smoke.py</code></p>
-        </div>
-      </div>
-
+      <div class="objective-test-card">Objective Forge produces a self-contained HTML artifact from every source File: kit/plugins/artifact-forge/tests/test_objective_smoke.py Type: smoke test Asserts: for each of the four sources ( context , markdown , code , session ), forge.py writes a single .html with zero external refs (no &lt;link&gt; , no http(s):// asset, no CDN) whose title matches the fixture&#39;s expected title exactly , whose section count matches, and which parses as well-formed HTML; and the migrated pilot emits a valid card artifact through the engine. Directly proves &amp;ldquo;an independent system generates self-contained HTML artifacts on demand from context, content, code, and sessions.&amp;rdquo; Run: pytest kit/plugins/artifact-forge/tests/test_objective_smoke.py</div>
       <div class="test-list">
-
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-unit">Unit</span>
-            <span class="test-card-title">Adapters normalize each source to a valid IR</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_adapters.py</code></p>
-            <p><strong>Targets:</strong> <code>adapters/{context,markdown,code,session}.py</code> <code>to_ir()</code></p>
-            <p><strong>Key cases:</strong> each fixture source produces a valid IR with the expected section types; empty input yields a minimal valid IR; escaping-sensitive content (a literal <code>&lt;script&gt;</code>) survives into IR text unmangled, ready for the renderer to escape.</p>
-          </div>
-        </div>
-
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-unit">Unit</span>
-            <span class="test-card-title">Renderer emits correct structure and escapes content</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_render.py</code></p>
-            <p><strong>Targets:</strong> <code>render.py</code> <code>render()</code> + <code>shapes/{document,card,plan,gallery}.py</code></p>
-            <p><strong>Key cases:</strong> <code>document</code> includes a nav landmark, <code>card</code> a <code>.card</code> wrapper at the canonical width, <code>plan</code> a step list + completion checklist, <code>gallery</code> <code>role="group"</code> filter buttons + an <code>aria-live</code> region; user content in the text (<code>&lt;script&gt;</code>), attribute (<code>" onclick="</code>), and CSS-value sinks is each escaped; a <code>javascript:</code> URL is dropped; an unknown theme falls back to <code>default</code>.</p>
-          </div>
-        </div>
-
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-unit">Unit</span>
-            <span class="test-card-title">Output is fully self-contained (no external refs)</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_self_contained.py</code></p>
-            <p><strong>Targets:</strong> the rendered HTML invariant (a pure check over the output string)</p>
-            <p><strong>Key cases:</strong> rendered output contains no <code>&lt;link rel&gt;</code>, no <code>src=</code> or <code>href=</code> pointing at <code>http(s)://</code>, no <code>@import url(</code>, and no host from the pinned CDN-host constant — the guarantee that lets artifacts open offline from <code>file://</code>.</p>
-          </div>
-        </div>
-
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-unit">Unit</span>
-            <span class="test-card-title">Every shape meets the accessibility baseline</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_a11y.py</code></p>
-            <p><strong>Targets:</strong> rendered output of all four shapes (axe-core / pa11y over the static HTML)</p>
-            <p><strong>Key cases:</strong> each shape has a skip-link, a <code>&lt;main id="main-content"&gt;</code> landmark, and correct heading order; <code>gallery</code> filter buttons are keyboard-reachable with an <code>aria-live</code> result count; token/badge contrast meets 4.5:1 — zero WCAG AA violations per shape.</p>
-          </div>
-        </div>
-
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-integration">Integration</span>
-            <span class="test-card-title">forge.py CLI runs end-to-end per source and shape</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_forge_cli.py</code></p>
-            <p><strong>Targets:</strong> <code>forge.py</code> argument dispatch → adapter → renderer → file write</p>
-            <p><strong>Key cases:</strong> each <code>--source</code> writes a valid <code>.html</code> to disk; <code>--in -</code> reads an IR from stdin (the delegation path); <code>--shape</code> selects the right layout; a bad <code>--theme</code> degrades to <code>default</code> without error.</p>
-          </div>
-        </div>
-
-        <div class="test-card">
-          <div class="test-card-header">
-            <span class="test-badge test-badge-e2e">E2E</span>
-            <span class="test-card-title">Render-to-PNG produces an image and tears down the server</span>
-          </div>
-          <div class="test-card-body">
-            <p><strong>File:</strong> <code>kit/plugins/artifact-forge/tests/test_screenshot.py</code></p>
-            <p><strong>Targets:</strong> <code>screenshot.py</code> <code>to_png()</code> via <code>forge.py --png</code> (skipped when Playwright is unavailable)</p>
-            <p><strong>Key cases:</strong> a fixture render produces a non-empty PNG; the temporary <code>http.server</code> is killed afterward (no lingering process, port released) even when the screenshot step raises.</p>
-          </div>
-        </div>
-
+        <div class="test-card">Unit Adapters normalize each source to a valid IR File: kit/plugins/artifact-forge/tests/test_adapters.py Targets: adapters/{context,markdown,code,session}.py to_ir() Key cases: each fixture source produces a valid IR with the expected section types; empty input yields a minimal valid IR; escaping-sensitive content (a literal &lt;script&gt; ) survives into IR text unmangled, ready for the renderer to escape.</div>
+        <div class="test-card">Unit Renderer emits correct structure and escapes content File: kit/plugins/artifact-forge/tests/test_render.py Targets: render.py render() + shapes/{document,card,plan,gallery}.py Key cases: document includes a nav landmark, card a .card wrapper at the canonical width, plan a step list + completion checklist, gallery role=&quot;group&quot; filter buttons + an aria-live region; user content in the text ( &lt;script&gt; ), attribute ( &quot; onclick=&quot; ), and CSS-value sinks is each escaped; a javascript: URL is dropped; an unknown theme falls back to default .</div>
+        <div class="test-card">Unit Output is fully self-contained (no external refs) File: kit/plugins/artifact-forge/tests/test_self_contained.py Targets: the rendered HTML invariant (a pure check over the output string) Key cases: rendered output contains no &lt;link rel&gt; , no src= or href= pointing at http(s):// , no @import url( , and no host from the pinned CDN-host constant — the guarantee that lets artifacts open offline from file:// .</div>
+        <div class="test-card">Unit Every shape meets the accessibility baseline File: kit/plugins/artifact-forge/tests/test_a11y.py Targets: rendered output of all four shapes (axe-core / pa11y over the static HTML) Key cases: each shape has a skip-link, a &lt;main id=&quot;main-content&quot;&gt; landmark, and correct heading order; gallery filter buttons are keyboard-reachable with an aria-live result count; token/badge contrast meets 4.5:1 — zero WCAG AA violations per shape.</div>
+        <div class="test-card">Integration forge.py CLI runs end-to-end per source and shape File: kit/plugins/artifact-forge/tests/test_forge_cli.py Targets: forge.py argument dispatch → adapter → renderer → file write Key cases: each --source writes a valid .html to disk; --in - reads an IR from stdin (the delegation path); --shape selects the right layout; a bad --theme degrades to default without error.</div>
+        <div class="test-card">E2E Render-to-PNG produces an image and tears down the server File: kit/plugins/artifact-forge/tests/test_screenshot.py Targets: screenshot.py to_png() via forge.py --png (skipped when Playwright is unavailable) Key cases: a fixture render produces a non-empty PNG; the temporary http.server is killed afterward (no lingering process, port released) even when the screenshot step raises.</div>
       </div>
     </section>
 
-    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria">
         <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
-        Acceptance Criteria
+        Definition of done
       </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1"><code>artifact-forge</code> is registered in <code>.claude-plugin/marketplace.json</code> at v0.1.0 and loads via <code>--plugin-dir</code> with no manifest error.</label>
+          <label for="ac1">artifact-forge is registered in .claude-plugin/marketplace.json at v0.1.0 and loads via --plugin-dir with no manifest error.</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2"><code>forge.py</code> emits a single self-contained <code>.html</code> (zero external <code>&lt;link&gt;</code>, script, or CDN refs) for all four sources: context, markdown, code, and session.</label>
+          <label for="ac2">forge.py emits a single self-contained .html (zero external &lt;link&gt; , script, or CDN refs) for all four sources: context, markdown, code, and session.</label>
         </li>
         <li>
           <input type="checkbox" id="ac3">
-          <label for="ac3">The core design tokens are declared exactly once in <code>assets/tokens.css</code>; no shape or adapter re-declares them.</label>
+          <label for="ac3">The core design tokens are declared exactly once in assets/tokens.css ; no shape or adapter re-declares them.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4"><code>forge.py --png</code> produces a PNG and leaves no <code>http.server</code> process running afterward.</label>
+          <label for="ac4">forge.py --png produces a PNG and leaves no http.server process running afterward.</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5">The <code>forge-artifact</code> skill generates artifacts by calling <code>forge.py</code>, never by hand-writing HTML.</label>
+          <label for="ac5">The forge-artifact skill generates artifacts by calling forge.py , never by hand-writing HTML.</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">The pilot <code>share-code</code> produces its card through <code>forge.py</code>, and its inlined <code>&lt;style&gt;</code> and private screenshot steps are deleted.</label>
+          <label for="ac6">The pilot share-code produces its card through forge.py , and its inlined &lt;style&gt; and private screenshot steps are deleted.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7"><code>pytest kit/plugins/artifact-forge/tests/</code> passes — objective-smoke, unit, integration, and E2E all green.</label>
+          <label for="ac7">pytest kit/plugins/artifact-forge/tests/ passes — objective-smoke, unit, integration, and E2E all green.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
@@ -1752,7 +1982,7 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9">All four shapes render valid HTML: <code>document</code>, <code>card</code>, <code>plan</code> (mirroring <code>SKELETON.html</code>), and <code>gallery</code> (filterable index).</label>
+          <label for="ac9">All four shapes render valid HTML: document , card , plan (mirroring SKELETON.html ), and gallery (filterable index).</label>
         </li>
         <li>
           <input type="checkbox" id="ac10">
@@ -1760,28 +1990,28 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac11">
-          <label for="ac11">The IR is versioned (<code>schema_version</code>) with a documented per-section-type schema; <code>validate()</code> enforces it plus the URL and theme allow-lists, even for hand-supplied <code>--source ir</code> input.</label>
+          <label for="ac11">The IR is versioned ( schema_version ) with a documented per-section-type schema; validate() enforces it plus the URL and theme allow-lists, even for hand-supplied --source ir input.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
 
-    <!-- ── Verification ──────────────────────────────────────────── -->
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
       <h2 id="h-verification">
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
-        Verification
+        Final check
       </h2>
-      <p>Run <code>pytest kit/plugins/artifact-forge/tests/</code> — every test passes and the objective-smoke test confirms all four sources plus the pilot. Then spot-check by hand: <code>forge.py --source markdown --in README.md --shape document --out /tmp/d.html</code> opens correctly from <code>file://</code> with the network disabled (proving self-containment); <code>forge.py --source code --in kit/plugins/artifact-forge/scripts/forge.py --shape card --png /tmp/c.png</code> writes a non-empty PNG. Load the plugin and run <code>forge-artifact</code> on a recent session to confirm an artifact is produced through <code>forge.py</code>. Finally, diff the migrated <code>share-code</code> card against the previous <code>diff-card.html</code> output for visual parity, and run <code>git diff --stat</code> to confirm no skill other than the pilot changed.</p>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
+      <p>Run pytest kit/plugins/artifact-forge/tests/ — every test passes and the objective-smoke test confirms all four sources plus the pilot. Then spot-check by hand: forge.py --source markdown --in README.md --shape document --out /tmp/d.html opens correctly from file:// with the network disabled (proving self-containment); forge.py --source code --in kit/plugins/artifact-forge/scripts/forge.py --shape card --png /tmp/c.png writes a non-empty PNG. Load the plugin and run forge-artifact on a recent session to confirm an artifact is produced through forge.py . Finally, diff the migrated share-code card against the previous diff-card.html output for visual parity, and run git diff --stat to confirm no skill other than the pilot changed.</p>
     </section>
 
-    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
       <h2 id="h-completion">
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
-        Completion Checklist
+        Wrapping up
       </h2>
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
       <div class="completion-checklist" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
@@ -1807,19 +2037,18 @@ img, video { max-width: 100%; height: auto; }
       </div>
     </section>
 
-    <!-- ── Next Steps ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
-        Next Steps
+        Next steps
       </h2>
+      <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
       <div class="next-steps-list">
-
         <details class="next-step-item">
           <summary>Migrate the remaining HTML-emitting skills onto forge.py</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Run a workflow to migrate every remaining HTML-emitting skill in kit/plugins/ onto the artifact-forge engine (forge.py). In scope: the social-media-tools share-* card skills (share-blog, share-react, share-github, share-selection, share-session, share-video, share-explanation) and the media-library/plans-library gallery builders. For each skill: build the appropriate IR, call forge.py with the right --shape (and --png for cards), delete the skill's inlined &lt;style&gt; and its private screenshot pipeline, and verify the output passes the self-contained test and matches the prior visual output. Brief each subagent with kit/plugins/artifact-forge/README.md and the forge-artifact delegation contract. Leave the implementation-plan plan shape for its own follow-up. Report a table of skill → shape → lines removed.</pre>
+            <pre>Run a workflow to migrate every remaining HTML-emitting skill in kit/plugins/ onto the artifact-forge engine (forge.py). In scope: the social-media-tools share-* card skills (share-blog, share-react, share-github, share-selection, share-session, share-video, share-explanation) and the media-library/plans-library gallery builders. For each skill: build the appropriate IR, call forge.py with the right --shape (and --png for cards), delete the skill&#39;s inlined &lt;style&gt; and its private screenshot pipeline, and verify the output passes the self-contained test and matches the prior visual output. Brief each subagent with kit/plugins/artifact-forge/README.md and the forge-artifact delegation contract. Leave the implementation-plan plan shape for its own follow-up. Report a table of skill → shape → lines removed.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1839,132 +2068,70 @@ img, video { max-width: 100%; height: auto; }
           <summary>Retire the duplicated screenshot pipeline copies</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>Once all share-* skills render through artifact-forge, remove the now-redundant screenshot infrastructure: the standalone kit/plugins/social-media-tools/scripts/find_free_port.py and the references/rendering-pipeline.md, replacing their usages with kit/plugins/artifact-forge/scripts/screenshot.py. Grep the whole repo for "http.server" and "find_free_port" to confirm no skill still hand-rolls the pipeline. Bump social-media-tools in marketplace.json (minor) and add CHANGELOG entries. Report every file touched.</pre>
+            <pre>Once all share-* skills render through artifact-forge, remove the now-redundant screenshot infrastructure: the standalone kit/plugins/social-media-tools/scripts/find_free_port.py and the references/rendering-pipeline.md, replacing their usages with kit/plugins/artifact-forge/scripts/screenshot.py. Grep the whole repo for &quot;http.server&quot; and &quot;find_free_port&quot; to confirm no skill still hand-rolls the pipeline. Bump social-media-tools in marketplace.json (minor) and add CHANGELOG entries. Report every file touched.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <div class="wish-list-header">
-          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-          Wish List
-        </div>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            Live-preview watch mode for forge.py
-            <span class="wish-badge">Wish List</span>
-          </summary>
+        <details class="next-step-item">
+          <summary>Live-preview watch mode for forge.py Wish List</summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Add a "forge.py serve --watch &lt;source&gt;" mode that re-renders the artifact and reloads the browser whenever the source file changes, for fast iterative authoring. Use only the standard library (http.server + a simple mtime poll + an injected dev-only reload snippet that is stripped from the final artifact). Keep the production output path byte-identical to the non-watch path.</pre>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Add a &quot;forge.py serve --watch &lt;source&gt;&quot; mode that re-renders the artifact and reloads the browser whenever the source file changes, for fast iterative authoring. Use only the standard library (http.server + a simple mtime poll + an injected dev-only reload snippet that is stripped from the final artifact). Keep the production output path byte-identical to the non-watch path.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
 
-        <details class="next-step-item wish-item">
-          <summary>
-            theme-from-image adapter
-            <span class="wish-badge">Wish List</span>
-          </summary>
+        <details class="next-step-item">
+          <summary>theme-from-image adapter Wish List</summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Add a fifth theme-generation path to artifact-forge that derives a tokens.css palette from an input image or brand color (reusing the design-token-extractor approach already in the marketplace), so artifacts can match a project's brand without hand-editing tokens. Validate contrast ratios stay WCAG AA before emitting the theme.</pre>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Add a fifth theme-generation path to artifact-forge that derives a tokens.css palette from an input image or brand color (reusing the design-token-extractor approach already in the marketplace), so artifacts can match a project&#39;s brand without hand-editing tokens. Validate contrast ratios stay WCAG AA before emitting the theme.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
-
       </div>
     </section>
-
-    <!-- ── Unresolved Questions ─ -->
-    <details class="optional-section">
-      <summary>
-        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved Questions
-      </summary>
-      <div class="optional-body">
-        <ul class="unresolved-list">
-          <li>
-            <details class="unresolved-item">
-              <summary>Validate the IR-on-stdin delegation contract against the pilot before the remaining migrations.</summary>
-              <div class="unresolved-prompt">
-                <pre>Step 8 sets `--source ir --in -` (IR JSON on stdin) as artifact-forge's primary delegation contract, with the forge-artifact Skill as the interactive fallback. Validate this end-to-end against the share-code pilot: confirm a delegating skill can construct the IR, pipe it, and recover from a non-zero exit; confirm the cross-plugin forge.py lookup works when the two plugins load at different paths; then lock the IR schema_version before handing off the remaining skill migrations.</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-        </ul>
-      </div>
-    </details>
 
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
       Generated by plan-agent · 2026-06-23 · agentics
     </footer>
 
-    <details id="team-review-20260623201017" class="team-review" style="margin-top:2.5rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--grey-bg);">
-      <summary style="padding:.875rem 1.25rem;font-weight:700;cursor:pointer;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);">Team Review (2026-06-23 20:10:17 UTC) — 7 reviewers</summary>
-      <div class="review-body" style="padding:0 1.5rem 1.5rem;font-size:.9rem;line-height:1.65;">
-
-        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Executive Summary</h3>
-        <p style="margin-bottom:.75rem;">Verdict: <strong>sound, with revisions</strong>. All seven reviewers agreed the layered pipeline (adapters → validated IR → shapes → inlining renderer → optional PNG wrapper) is architecturally right with correct dependency direction. The dominant, four-reviewer-convergent concern was that the <strong>IR contract is the linchpin and was underspecified</strong> — no section schema, no version, and a flat schema that does not fit the gallery's card-list. Choosing all four shapes for v1 raised the stakes on accessibility (the engine becomes the single a11y sink), test infrastructure, and the plan/gallery shape reproductions. None of these are fatal; all were addressable by tightening existing steps.</p>
-
-        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Role-by-Role</h3>
-        <ul style="padding-left:1.25rem;display:flex;flex-direction:column;gap:.35rem;margin-bottom:.75rem;">
-          <li><strong>Architecture:</strong> sound seam; flagged an unversioned IR/delegation contract (high), parallel-truth drift for the plan/gallery shapes vs the still-authoritative SKELETON/gallery templates (high), ambiguous Playwright-as-library vs MCP (high), narrow <code>allowed-tools</code> (medium), gallery's structurally-different IR (medium), and undefined cross-plugin <code>forge.py</code> resolution (medium).</li>
-          <li><strong>Completeness:</strong> executable through Step 7 but flagged the undefined <code>sections[]</code> element schema (critical), missing pytest config + fixtures so <code>pytest</code> fails on a clean clone (high), and the unspecified mapping of SKELETON's 20+ placeholders to the <code>plan</code> shape (high).</li>
-          <li><strong>Testability:</strong> good breadth; flagged loose objective-smoke assertions (high), no automated pilot visual-parity gate (high), prose-only shape assertions (medium), and AC3/AC5 having no backing test (medium).</li>
-          <li><strong>Risk:</strong> overall <strong>high</strong>; screenshot process-leak without process-group kill (high), unguarded pilot visual regression with no rollback (high), Playwright as an unchecked hard dependency that lets CI go green with zero screenshot coverage (high), and IR blast-radius across all future migrations (high).</li>
-          <li><strong>Conventions:</strong> good fit on naming/registration/CHANGELOG; flagged colocated pytest vs the repo's top-level <code>tests/&lt;area&gt;/</code> shell/Node tests (high), an underspecified <code>plugin.json</code> missing standard fields incl. the tree-scoped <code>homepage</code> (high), and a novel three-level <code>scripts/</code> subtree (medium).</li>
-          <li><strong>UX:</strong> flagged the delegation contract being parked in Unresolved while the pilot needs it (high), unspecified <code>forge.py</code> error messaging (high), the <code>--shape</code> flag listing only two of four shapes (medium), and an undefined canonical card width for deterministic PNGs (low).</li>
-          <li><strong>Accessibility:</strong> solid inherited baseline from <code>html-spec.md</code>, but no a11y tests or criteria (high), the new <code>card</code>/<code>gallery</code> shapes have no a11y contract (high), the status badge is ~3.35:1 (&lt; 4.5:1) (high), and the skip-link target should be <code>id="main-content"</code> (low).</li>
-        </ul>
-
-        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Agreements &amp; Conflicts</h3>
-        <p style="margin-bottom:.5rem;"><strong>Confirmed (multi-reviewer):</strong> the IR schema gap (Architecture + Completeness + Risk + UX); broadening <code>forge-artifact</code> <code>allowed-tools</code> (Architecture + Conventions); the <code>--shape</code> two-of-four inconsistency (Completeness + UX); deciding the delegation contract now (Architecture + UX); pilot visual-parity needing a real gate (Testability + Risk).</p>
-        <p style="margin-bottom:.75rem;"><strong>Conflict:</strong> Conventions wants tests under the repo's top-level <code>tests/&lt;area&gt;/</code> as <code>test-*.sh|.mjs</code>; the user explicitly chose <em>in-plugin pytest</em>. <strong>Resolution:</strong> keep the user's in-plugin pytest choice (it is a deliberate decision and a deterministic engine is far better tested in pytest than shell); add a top-level pointer to the suite rather than relocating it.</p>
-
-        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Highest-Risk Issues (priority order)</h3>
-        <ol style="padding-left:1.25rem;display:flex;flex-direction:column;gap:.35rem;margin-bottom:.75rem;">
-          <li>Underspecified, unversioned IR contract — the linchpin for all downstream migrations.</li>
-          <li><code>pytest</code> cannot run on a clean clone (no config/fixtures).</li>
-          <li>Screenshot teardown + Playwright as an unchecked hard dependency.</li>
-          <li>No a11y tests/criteria; new card/gallery shapes lack an a11y contract; badge contrast &lt; 4.5:1.</li>
-          <li>Quick correctness gaps: <code>--shape</code> list, <code>allowed-tools</code>, parked delegation contract.</li>
-          <li>Manifest fields/tags + undefined cross-plugin <code>forge.py</code> resolution.</li>
-          <li>Pilot visual parity asserted in prose, not by a test; no rollback gate.</li>
-        </ol>
-
-        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Edits Applied</h3>
-        <ul style="padding-left:1.25rem;display:flex;flex-direction:column;gap:.3rem;margin-bottom:.75rem;">
-          <li><strong>Step 1:</strong> full <code>plugin.json</code> manifest (incl. tree-scoped <code>homepage</code>) + marketplace <code>tags</code> + pytest infra (<code>requirements.txt</code>, <code>pytest.ini</code>, <code>conftest.py</code>).</li>
-          <li><strong>Step 2:</strong> IR redefined as a versioned <code>TypedDict</code> with a per-section-type schema (incl. gallery <code>cards[]</code>); <code>validate()</code> enforces version, type, and theme allow-list; badge contrast fixed in tokens.</li>
-          <li><strong>Step 3:</strong> create <code>tests/fixtures/*</code>; empty/malformed input yields a minimal valid IR.</li>
-          <li><strong>Step 4:</strong> escape every sink (text/attribute/CSS-value); enforce URL/theme allow-lists in the renderer so <code>--source ir</code> cannot bypass; emit <code>&lt;main id="main-content"&gt;</code>.</li>
-          <li><strong>Step 5:</strong> a11y contracts for <code>card</code> (article landmark, single heading, canonical width) and <code>gallery</code> (<code>role="group"</code> filter buttons, <code>aria-live</code> results, keyboard ops); selector-based assertions.</li>
-          <li><strong>Step 6:</strong> <code>--shape</code> lists all four; explicit non-zero error contract for missing file / malformed input / empty stdin.</li>
-          <li><strong>Step 7:</strong> process-group kill (<code>os.killpg</code>) + timeout + SIGKILL fallback; Playwright-as-library prerequisite + soft preflight that skips PNG non-fatally.</li>
-          <li><strong>Step 8:</strong> broadened <code>allowed-tools</code>; promoted <code>--source ir --in -</code> to the primary documented contract; documented cross-plugin <code>forge.py</code> lookup.</li>
-          <li><strong>Step 9:</strong> reference capture + structural/dimensional parity check + temporary rollback toggle; cross-plugin path resolution.</li>
-          <li><strong>Tests/Criteria:</strong> added <code>test_a11y.py</code>; tightened objective-smoke (exact title, section count, well-formed parse) and render (injection sinks); added AC10 (a11y scan + contrast) and AC11 (versioned IR + enforced allow-lists).</li>
-          <li><strong>Unresolved:</strong> narrowed from "which interface?" to a validation gate for the now-decided IR-on-stdin contract.</li>
-        </ul>
-
-        <h3 style="margin:1.25rem 0 .5rem;font-size:.95rem;">Triage Outcome</h3>
-        <p style="margin-bottom:.4rem;">The Step 6b gate was shown; the developer chose <strong>"Apply the recommended set"</strong>. All recommended edits above were applied as-is. None were modified inline or rejected.</p>
-        <p style="margin-bottom:0;"><strong>Not applied (by design):</strong> relocating tests to the repo's top-level <code>tests/</code> tree — superseded by the user's explicit in-plugin pytest decision (a top-level pointer is the agreed compromise). The "flatten <code>scripts/</code>" convention note was left as reviewer advice, not enforced, since the adapters/shapes/assets subtree is a deliberate structural choice for an engine of this scale.</p>
-
-      </div>
-    </details>
-
   </main>
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
 /* ── Save as PDF (native browser print dialog) ──────────────── */
 function savePDF() {
   window.print();
@@ -1987,6 +2154,8 @@ function buildImplementPrompt() {
 
   var planPathMeta = document.querySelector('meta[name="plan-path"]');
   var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\.html$/, '.md');
 
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
@@ -1994,27 +2163,35 @@ function buildImplementPrompt() {
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the plan at ' + planPath + ' (a self-contained HTML file).');
-  lines.push('2. Implement every step marked todo; after completing each step, mark it done in the plan.');
-  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
-  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Run the objective test\'s Run command from the plan\'s Tests section, then walk the Verification section end-to-end and confirm the stated objective actually works — on failure, fix and re-verify before continuing; never mark the plan done on a failing check.');
+  lines.push('5. Set "status: completed" in the spec frontmatter only once every step is marked, every criterion is checked, and verification passes.');
+  lines.push('6. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
 
   return lines.join('\n');
 }
 
-/* ── Copy implement prompt ──────────────────────────────────── */
-function copyCmd(btn) {
-  var text = buildImplementPrompt();
-  function flash() {
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
     if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
     btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
       btn._copyTimer = null;
-    }, 2000);
+    }, delay);
   }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
   function fallback() {
     var ta = document.createElement('textarea');
     ta.value = text;
@@ -2024,7 +2201,7 @@ function copyCmd(btn) {
     var ok = false;
     try { ok = document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
-    if (ok) flash();
+    if (ok) flash(); else fail();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(flash).catch(fallback);
@@ -2033,103 +2210,30 @@ function copyCmd(btn) {
   }
 }
 
-/* ── Copy workflow prompt ──────────────────────────────────── */
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
 function copyWorkflow(btn) {
   var code = document.getElementById('workflow-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy goal prompt ──────────────────────────────────────── */
 function copyGoal(btn) {
   var code = document.getElementById('goal-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy plan file name / relative path ────────────────────── */
 function copyPath(btn, id) {
   var el = document.getElementById(id);
   if (!el) return;
-  var text = el.textContent.trim();
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
 }
 
 /* ── Copy prompt button (global — required by inline onclick) ── */
@@ -2139,47 +2243,18 @@ function copyPrompt(btn) {
     pre = btn.parentElement && btn.parentElement.querySelector('pre');
   }
   if (!pre) return;
-  var text = pre.textContent;
-
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy prompt';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
 }
 
 (function () {
   'use strict';
 
-  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* ── Progress bar — state from HTML attributes ──────────────── */
   /* State lives in the HTML itself: a criterion is done iff its       */
   /* <input> carries the `checked` attribute, which the browser        */
-  /* renders natively on load — no localStorage. Toggling a box syncs  */
-  /* the attribute so the live DOM (and any saved copy of this file)   */
-  /* stays the single source of truth.                                 */
+  /* renders natively on load. Toggling a box syncs the attribute so   */
+  /* the live DOM (and any saved copy of this file) stays the single   */
+  /* portable source of truth — no browser-only storage layer.         */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -2268,27 +2343,59 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
-    }, { threshold: 0.3 });
-    sections.forEach(function (el) { observer.observe(el); });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
 </script>

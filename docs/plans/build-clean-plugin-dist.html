@@ -1,57 +1,180 @@
 <!DOCTYPE html>
-<html lang="en" data-status="completed">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="completed">
+<meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-06-05">
 <meta name="plan-repo" content="agentics">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/build-clean-plugin-dist.html — Publish a clean, stripped-down plugin distribution repo">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/build-clean-plugin-dist.html — Publish a clean, stripped-down plugin distribution repo">
 <meta name="plan-file" content="build-clean-plugin-dist.html">
 <meta name="plan-path" content="docs/plans/build-clean-plugin-dist.html">
+<meta name="plan-md" content="docs/plans/build-clean-plugin-dist.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/build-clean-plugin-dist.md — Publish a clean plugin distribution repo. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-clean-plugin-dist.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Publish a clean plugin distribution repo. The plan at docs/plans/build-clean-plugin-dist.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-clean-plugin-dist.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/build-clean-plugin-dist.md — Publish a clean plugin distribution repo. Brief subagents with the plan file at docs/plans/build-clean-plugin-dist.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-clean-plugin-dist.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Publish a clean plugin distribution repo</title>
 <style>
-  /* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --amber:      #d97706;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -81,7 +204,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -91,8 +214,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -107,9 +230,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -118,11 +242,21 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
+  }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
   }
 
   /* Status badge */
@@ -138,7 +272,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -149,14 +286,90 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
+
+  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
+  .effort-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+  }
+  .effort-badge::before { content: "Effort "; opacity: .7; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-status="in-progress"] .status-badge::before { animation: none; }
+  }
+
+  /* Save as PDF button */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .75rem;
+    font-weight: 600;
+    font-family: var(--mono);
+    color: var(--on-accent);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* Meta row */
   .plan-meta {
@@ -165,9 +378,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -179,14 +393,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -197,29 +414,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -234,85 +452,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
   }
-  .objective-card .section-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .objective-card .section-label,
+  .plan-glance-label {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
+  .plan-glance {
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
+  }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
+
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -320,18 +638,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: .9rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
+  .section-card .section-intro {
+    font-size: .85rem;
+    color: var(--ink-2);
+    margin: -1rem 0 1.25rem;
+  }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -340,66 +673,35 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
-  .step-body { min-width: 0; }
+  .step-card.completed .step-number { color: var(--moss); }
+  .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
     margin-bottom: .3rem;
@@ -407,58 +709,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
-  .step-chip-text { }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+  .step-chip-text { flex: 1; }
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -470,31 +770,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -508,14 +808,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -526,20 +826,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -548,25 +848,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -579,11 +879,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -593,10 +893,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -607,14 +907,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -628,20 +928,22 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
 
   /* Wish list variant */
   .wish-list-header {
@@ -652,37 +954,38 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
     content: "";
+    flex: 1;
     height: 1px;
     background: var(--wish-border);
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -696,13 +999,48 @@
     user-select: none;
     min-height: 44px;
   }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
-  .optional-section[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-section > summary::before,
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
+  .optional-section[open] > summary::before,
+  .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
-  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before, .plan-more-ways > summary::before { transition: none; } }
+
+  /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
+  .plan-more-ways {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--panel);
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+    overflow: hidden;
+  }
+  .plan-more-ways > summary {
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
+  .plan-more-ways-body {
+    padding: .75rem 1rem 1rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  @media print { .plan-more-ways { display: none !important; } }
 
   /* ── Implement prompt ─────────────────────────────────────────── */
   .plan-implement {
@@ -711,8 +1049,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -721,14 +1059,15 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
     word-break: break-all;
   }
   .copy-cmd-btn {
@@ -738,9 +1077,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -749,240 +1088,21 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Workflow prompt ─────────────────────────────────────────── */
-  .plan-workflow {
-    margin: -.5rem 0 1.5rem;
-    font-size: .8rem;
-  }
-  .plan-workflow summary {
-    font-size: .7rem;
-    font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
-  }
-  .plan-workflow summary:hover { text-decoration: underline; }
-  .plan-workflow-inner {
-    display: flex;
-    align-items: flex-start;
-    gap: .6rem;
-    margin-top: .4rem;
-    padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-radius: var(--radius);
-  }
-  .plan-workflow code {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
-    font-size: .82rem;
-    color: var(--text);
-    word-break: break-all;
-  }
-  .copy-workflow-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    padding: .2rem .6rem;
-    font-size: .72rem;
-    font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: background .12s, color .12s, border-color .12s;
-    font-family: inherit;
-    line-height: 1.4;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
-  .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  [data-status="completed"] .plan-workflow { display: none; }
-  @media print { .plan-workflow { display: none !important; } }
-  @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
-
-  /* ── Footer ────────────────────────────────────────────────────── */
-  .plan-footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: .4rem;
-    font-size: .75rem;
-    color: var(--subtle);
-    margin-top: 3rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
-  }
-  .plan-footer .icon { opacity: .35; }
-
-  /* ── Focus styles ───────────────────────────────────────────────── */
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  /* ── Print styles ───────────────────────────────────────────────── */
-  @media print {
-    .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
-    .layout { display: block !important; }
-    .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
-    .step-chip { display: none !important; }
-    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
-  }
-
-  /* ── File tree ──────────────────────────────────────────────── */
-  .file-tree {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
-    font-size: .85rem;
-  }
-  .file-tree-root {
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: .5rem;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-  }
-  .file-list, .file-list ul {
-    list-style: none;
-    padding-left: 1.25rem;
-    margin: 0;
-    border-left: 1px dashed var(--border);
-  }
-  .file-list li {
-    padding: .2rem 0;
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    flex-wrap: wrap;
-    color: var(--muted);
-  }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
-  .file-list li.file-new     { color: #15803d; }
-  .file-list li.file-modified{ color: #b45309; }
-  .file-list li.file-generated{ color: var(--accent); }
-  .file-badge {
-    font-size: .6rem;
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    padding: .1em .45em;
-    border-radius: 999px;
-  }
-  .file-badge-new       { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-  .file-badge-modified  { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic;
-               font-family: system-ui, sans-serif; }
-
-  /* ── Pipeline diagram ───────────────────────────────────────── */
-  .pipeline {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-    margin: 0 auto;
-    max-width: 520px;
-  }
-  .pipeline-node {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: .85rem 1.25rem;
-    background: var(--surface);
-    text-align: center;
-    box-shadow: var(--shadow);
-  }
-  .pipeline-label {
-    font-size: .63rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    margin-bottom: .3rem;
-  }
-  .pipeline-node code { font-size: .875rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .3rem; }
-  .pipeline-source  { border-color: #bfdbfe; background: var(--accent-bg); }
-  .pipeline-source  .pipeline-label { color: var(--accent); }
-  .pipeline-script  { border-color: #d1d5db; }
-  .pipeline-script  .pipeline-label { color: var(--muted); }
-  .pipeline-dist    { border-color: #fde68a; background: #fffbeb; }
-  .pipeline-dist    .pipeline-label { color: #d97706; }
-  .pipeline-action  { border-color: #ddd6fe; background: #faf5ff; }
-  .pipeline-action  .pipeline-label { color: #7c3aed; }
-  .pipeline-output  { border-color: #bbf7d0; background: var(--green-bg); }
-  .pipeline-output  .pipeline-label { color: var(--green); }
-  .pipeline-arrow {
-    font-size: .8rem;
-    color: var(--subtle);
-    padding: .3rem 0;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-  }
-  .pipeline-arrow em { font-style: italic; }
-
-  /* ── Allowlist split ────────────────────────────────────────── */
-  .allowlist-diagram {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin-top: 1.5rem;
-  }
-  @media (max-width: 600px) { .allowlist-diagram { grid-template-columns: 1fr; } }
-  .allow-header {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    padding: .3rem .75rem;
-    border-radius: var(--radius) var(--radius) 0 0;
-    text-align: center;
-  }
-  .allow-keep      { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-  .allow-drop      { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-  .allow-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .allow-list {
-    list-style: none;
-    padding: .5rem .75rem;
-    margin: 0;
-    border: 1px solid var(--border);
-    border-top: none;
-    border-radius: 0 0 var(--radius) var(--radius);
-    background: var(--surface);
-  }
-  .allow-list li {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
-    font-size: .8rem;
-    color: var(--muted);
-    padding: .15rem 0;
-  }
-  .diagram-subheading {
-    font-size: .78rem;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 1.75rem 0 .75rem;
-  }
-
-  /* ── Plan source (file name + relative path) ──────────────────── */
+  /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
   .plan-source {
     display: flex;
     flex-direction: column;
     gap: .4rem;
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     padding: .55rem .75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     font-size: .8rem;
   }
   .plan-source-row { display: flex; align-items: center; gap: .6rem; }
@@ -991,14 +1111,15 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
     word-break: break-all;
   }
   .copy-src-btn {
@@ -1008,9 +1129,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -1019,55 +1140,307 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+
+  /* ── Workflow prompt row (conditional — remove row when empty; lives in the drawer) ── */
+  .plan-workflow {
+    margin: 0;
+    font-size: .8rem;
+  }
+  .plan-workflow-label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding: .1rem 0;
+  }
+  .plan-workflow-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-radius: var(--radius);
+  }
+  .plan-workflow code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-workflow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
+  @media print { .plan-workflow { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
+
+  /* ── Goal prompt row (outcome-driven — always present; lives in the drawer) ── */
+  .plan-goal {
+    margin: 0;
+    font-size: .8rem;
+  }
+  .plan-goal-label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--purple);
+    padding: .1rem 0;
+  }
+  .plan-goal-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--purple-bg);
+    border: 1px solid var(--purple-border);
+    border-radius: var(--radius);
+  }
+  .plan-goal code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-goal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
+  @media print { .plan-goal { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
+
+  /* ── Tests section ──────────────────────────────────────────────── */
+  .test-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .test-card {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .test-card-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .5rem;
+    flex-wrap: wrap;
+  }
+  .test-badge {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .15em .55em;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
+  .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .test-card-title {
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--ink);
+    flex: 1;
+  }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
+  .test-card-body p { margin-bottom: .4rem; }
+  .test-card-body p:last-child { margin-bottom: 0; }
+  .test-card-body code { font-size: .85em; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
+  .test-tier-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin-bottom: .75rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .test-tier-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+  .objective-test-card {
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .objective-test-card .test-card-header { margin-bottom: .6rem; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
+  /* ── Footer ────────────────────────────────────────────────────── */
+  .plan-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    font-size: .75rem;
+    color: var(--ink-3);
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+  }
+  .plan-footer .icon { opacity: .35; }
+
+  /* ── Focus styles ───────────────────────────────────────────────── */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Print styles ───────────────────────────────────────────────── */
+  @media print {
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
+    .layout { display: block !important; }
+    .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
+    .step-chip { display: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     OPT-IN VISUAL COMPONENTS
+     Pure-CSS / token-driven — no CDN, no external script. These rules
+     are always present (harmless when unused); the matching <body>
+     section blocks are kept only when a plan needs them and deleted
+     otherwise. See SKILL.md → "Visual Components".
+     ═════════════════════════════════════════════════════════════════ */
+
+  /* ── Files file-tree ────────────────────────────────────────────── */
+  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
+  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
+  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
+  .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
+
+  /* ── Flow / pipeline diagram ────────────────────────────────────── */
+  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
+
+  /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
+  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
+
+  /* ── Bar chart (value via inline --val) ─────────────────────────── */
+  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
+  .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
+  @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
+
+  /* ── Data table ─────────────────────────────────────────────────── */
+  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
+  .plan-table code { font-size: .8em; }
+
+  /* Shared sub-heading used inside visual sections */
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
+
+  /* ── Resources (images, screenshots & reference links) ──────────── */
+  .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+  .resource-figure > a { display: block; line-height: 0; }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
+  .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
+  .resource-links li:last-child { border-bottom: none; }
+  .resource-links a { font-weight: 600; word-break: break-word; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
+
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
     display: inline-flex;
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
   .plan-back-link:hover { color: var(--accent); }
   .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
-
-  /* ── Save as PDF button (backfilled) ──────────────────────────── */
-  .save-pdf-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .4rem 1rem;
-    font-size: .8rem;
-    font-weight: 600;
-    color: #fff;
-    background: var(--accent, #2563eb);
-    border: 1px solid var(--accent, #2563eb);
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: inherit;
-    line-height: 1.4;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: filter .15s, box-shadow .15s;
-  }
-  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-  .save-pdf-btn:active { filter: brightness(.75); }
-  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent, #2563eb); outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
-  .plan-header-actions {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    flex-wrap: wrap;
-    margin-top: .75rem;
-  }
-  @media print { .save-pdf-btn { display: none !important; } }
 </style>
 <style id="plan-responsive-fix" data-version="1">
 /* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
@@ -1082,67 +1455,6 @@ img, video { max-width: 100%; height: auto; }
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════════════
-     MACHINE-READABLE DIGEST (backfilled)
-     First element child of <body>. type="text/markdown" never renders
-     or runs. Spec only — no status/checkbox/progress state. Literal
-     closing-script sequences in the content are guarded as <\/script.
-     Extract (first-match flag-and-exit):
-       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
-     ══════════════════════════════════════════════════════════════════ -->
-<script type="text/markdown" id="plan-digest">
-# Plan: Publish a clean plugin distribution repo
-
-> Authored spec only. Status and progress live in the <head> meta tags and
-> the live DOM, never in this block.
-
-## Objective
-Ship a build pipeline that mirrors the agentics-kit marketplace into a single clean distribution repo — keeping only each plugin's manifest, components, README, and CHANGELOG — so users who install pull plugin-required files instead of docs/ , scratch markdown, and repo configs.
-
-## Context
-The agentics repo is both the development workspace and the install source. Its .claude-plugin/marketplace.json registers 12 active plugins via git-subdir sources whose url points at https://github.com/shawn-sandy/agentics.git . When a user installs, Claude Code pulls the plugin's path subtree — but the working repo carries a lot that has no business in an install: a 35 KB root README.md , docs/ , examples/ , scripts/ , .playwright-mcp/ , a session .png , CLAUDE.local.md , .DS_Store files, and assorted top-level markdown ( ROADMAP.md , SECURITY.md , SOCIAL.md ). Inside individual plugin dirs there can also be scratch notes that ship unintentionally.
-
-The fix is a dedicated, clean distribution repo — one repo shaped exactly like the marketplace (not per-plugin repos) — generated from this source repo by a build script. The build reads marketplace.json plugins[] as the source of truth (so the six entries in removed[] and any reference-only directories never ship), copies only an allowlisted set of files per plugin, rewrites each source.url to point at the distribution repo, and publishes the result. A GitHub Action reruns the build and publishes on every release so the clean repo never drifts from source.
-
-Decisions locked in clarification: keep rules = manifest + component dirs + README + CHANGELOG; shape = one marketplace-style repo like agentics-kit ; automation = a build script plus a GitHub Action that publishes on release.
-
-Superseded by publish-plugins-to-dist-repo-daily.html — the --publish implementation, GitHub Action, and dist repo setup described here were completed under that plan with a daily cron trigger instead of release-triggered.
-
-## Files
-- scripts/build-dist.mjs (new)
-- .github/workflows/publish-dist.yml (new)
-- .github/workflows/README.md (modified) — add Distribution section: build command, strip rules, new install path
-- .github/workflows/CLAUDE.md (modified) — add Distribution section
-- .claude/rules/marketplace.md (modified) — note that source.url rewriting is handled by the build script, not hand-edited
-- dist/ (generated) — build output — not committed to source repo
-- .claude-plugin/marketplace.json (generated)
-- README.md (generated)
-- LICENSE (generated)
-- kit/plugins/<name>/ × 12 (generated)
-
-## Steps
-1. Scaffold scripts/build-dist.mjs with config and a manifest-driven plugin list Why: A single ESM script (matching the existing merge-marketplace.mjs convention; no package.json , run via bare node ) becomes the one entry point. Define an OUT_DIR ( dist/ ), a DIST_REPO URL constant overridable via the DIST_REPO_URL env var, a KEEP allowlist ( .claude-plugin , commands , skills , agents , hooks , hooks.json , templates , README.md , CHANGELOG.md , LICENSE ), and a DROP denylist ( docs , *.local.md , .DS_Store , *.png , .playwright-mcp ). Enumerate plugins by reading marketplace.json plugins[] — never by globbing kit/plugins/* . Verify: node scripts/build-dist.mjs --list prints exactly the 12 active plugin names ( memory-tools … issue-agent ) and omits the 6 in removed[] ( agent-creator , agent-reviewer , marketplace-builder , react-perf-analyzer , agentic-plugin-dev , code-simplifier ).
-2. Implement the per-plugin clean copy into dist/ Why: For each active plugin, resolve its source.path (e.g. kit/plugins/plan-agent ) and recursively copy only the KEEP top-level entries into dist/<path>/ , pruning any .DS_Store encountered inside kept directories. Component dirs are copied wholesale so nested support files (e.g. skills/*/reference/ , templates/ ) come along automatically. Start from a clean dist/ each run (delete and recreate) so stale files never linger. Verify: After node scripts/build-dist.mjs , find dist/kit/plugins/plan-agent -type f lists the manifest, skills/ , hooks/ , hooks.json , templates/ , README.md , and CHANGELOG.md — and shows no docs/ , no *.local.md , no .DS_Store .
-3. Emit a rewritten marketplace.json plus slim root files Why: Write dist/.claude-plugin/marketplace.json derived from the source manifest: keep name ( agentics-kit ), version , owner , and every plugins[] entry, but rewrite each source.url to DIST_REPO (leaving source.path unchanged) and drop the removed[] array entirely. Generate a concise dist/README.md with the new install instructions and copy LICENSE to the dist root. Keep the JSON pretty-printed so the published manifest stays diffable. Verify: jq -r '.plugins[].source.url' dist/.claude-plugin/marketplace.json | sort -u returns only the distribution repo URL; jq '.removed' dist/.claude-plugin/marketplace.json is null ; dist/README.md and dist/LICENSE exist.
-4. Add --check and --publish modes Why: --check walks the built dist/ tree and exits non-zero if any DROP pattern leaked through (a CI tripwire against accidental bloat). --publish syncs dist/ into a checkout of the distribution repo, commits with a message referencing the source commit SHA, and pushes — authenticating via a GITHUB_TOKEN env var first, falling back to a PAT ( DIST_REPO_TOKEN ) when set. Caveat: the default Actions GITHUB_TOKEN is scoped to the source repo and usually cannot push to a separate repo like agentics-kit ; if the cross-repo push is denied, a fine-grained PAT with write on the dist repo is required (see Unresolved Questions). Publishing must clear the target working tree first so deleted plugins disappear downstream. Verify: On a clean build, node scripts/build-dist.mjs --check; echo $? prints 0 . Temporarily drop a docs/ folder into the KEEP list, rebuild, rerun --check , and confirm it exits non-zero with a message naming the offending path; then revert.
-5. Add the .github/workflows/publish-dist.yml Action Why: Trigger on release: { types: [published] } plus workflow_dispatch for manual reruns. Steps: checkout, actions/setup-node , node scripts/build-dist.mjs --check (fail fast on leakage), then node scripts/build-dist.mjs --publish with GITHUB_TOKEN wired in (and DIST_REPO_TOKEN as an optional override secret) and DIST_REPO_URL from a repo variable. Because the dist repo is separate, verify the token actually has cross-repo write during the first workflow_dispatch run — if the default GITHUB_TOKEN is rejected, switch the secret to a PAT. This keeps the clean repo in lockstep with releases without manual steps, mirroring the existing version-guard.yml / update-readme.yml patterns. Verify: YAML parses ( actionlint .github/workflows/publish-dist.yml or a YAML lint) with no errors; a workflow_dispatch run from a test branch completes green and pushes a commit to the distribution repo.
-6. Create the distribution repo, wire secrets, and document the flow Why: Create the clean GitHub repo shawn-sandy/agentics-kit , set the DIST_REPO_URL variable on the source repo (and add a DIST_REPO_TOKEN PAT secret only if the default GITHUB_TOKEN can't push cross-repo), run the first publish manually, and document the build + install flow in README.md and CLAUDE.md (new "Distribution" section: how to run the build, what gets stripped, and the new /plugin marketplace add path). Note in .claude/rules/marketplace.md that source.url rewriting is handled by the build, not hand-edited. Verify: In a fresh session, /plugin marketplace add shawn-sandy/agentics-kit then /plugin install plan-agent@agentics-kit installs successfully, and the installed tree contains no docs/ , *.local.md , or other cruft.
-
-## Acceptance Criteria
-- scripts/build-dist.mjs enumerates plugins from marketplace.json plugins[] ; the 6 removed[] plugins never appear in dist/ .
-- Each plugin in dist/ contains only allowlisted files (manifest, component dirs, hooks.json , templates/ , README.md , CHANGELOG.md ) — no docs/ , *.local.md , .DS_Store , or session PNGs.
-- dist/.claude-plugin/marketplace.json rewrites every source.url to the distribution repo and omits the removed[] array.
-- dist/ root has a slim generated README.md with install instructions and a copied LICENSE .
-- node scripts/build-dist.mjs --check exits 0 on a clean build and non-zero when a denylisted path leaks into dist/ .
-- .github/workflows/publish-dist.yml rebuilds and publishes dist/ to the distribution repo on release: published (and via workflow_dispatch ).
-- Installing a plugin from the distribution repo ( /plugin install <name>@agentics-kit ) yields a working plugin with no repo cruft.
-- README.md and CLAUDE.md document the build command, the strip rules, and the new install path.
-
-## Verification
-Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f | sort should show 12 plugin directories, each carrying only allowlisted files, plus a rewritten root marketplace.json , slim README.md , and LICENSE . Confirm jq reports a single distribution-repo source.url and a null removed . Run node scripts/build-dist.mjs --check and confirm exit code 0, then verify the leak tripwire by temporarily allowlisting docs and confirming a non-zero exit. Trigger the Action via workflow_dispatch and confirm it publishes a commit to the distribution repo. Finally, in a clean session, register shawn-sandy/agentics-kit and install plan-agent , then list the installed files to confirm zero cruft. The source agentics repo and its existing marketplace.json must remain unchanged except for the new script, workflow, and docs.
-</script>
-
-<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
@@ -1152,6 +1464,9 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
   </symbol>
   <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+  </symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
   </symbol>
   <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
@@ -1184,17 +1499,16 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
   <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
   </symbol>
-  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v8.25A2.25 2.25 0 0 0 4.5 16.5h15a2.25 2.25 0 0 0 2.25-2.25V9A2.25 2.25 0 0 0 19.5 6.75H9.88a1.5 1.5 0 0 1-1.06-.44l-.5-.5Z"/>
+  <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
   </symbol>
-  <symbol id="ic-presentation-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605"/>
+  <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
   </symbol>
 </svg>
 
 <a href="#main" class="skip-link">Skip to content</a>
 
-<!-- ── Header — document cover ─────────────────────────────────── -->
 <header class="plan-header">
   <div class="plan-header-inner">
     <div class="plan-back-nav">
@@ -1208,30 +1522,24 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
       <h1 class="plan-title">Publish a clean plugin distribution repo</h1>
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
-              aria-label="Save this plan as PDF">Save as PDF</button>
+                aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
+        <span class="effort-badge" aria-label="Effort level">High</span>
         <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-05
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        agentics
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        feature
-      </span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-06-05</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> feature</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> High effort</span>
     </div>
   </div>
 </header>
 
 <div class="layout">
 
-  <!-- ── Sidebar — table of contents ─────────────────────────── -->
   <nav class="plan-nav" aria-label="Plan sections">
     <div class="scroll-rail" aria-hidden="true"></div>
     <div class="nav-heading">On this page</div>
@@ -1239,332 +1547,262 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-presentation-chart"/></svg> Diagram</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
-      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
-      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
-      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
-      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>6 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Scaffold scripts/build-dist.mjs with config and a manifest-driven plugin list</span><span class="rail-state">step 1 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Implement the per-plugin clean copy into dist/</span><span class="rail-state">step 2 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Emit a rewritten marketplace.json plus slim root files</span><span class="rail-state">step 3 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Add --check and --publish modes</span><span class="rail-state">step 4 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Add the .github/workflows/publish-dist.yml Action</span><span class="rail-state">step 5 of 6, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Create the distribution repo, wire secrets, and document the flow</span><span class="rail-state">step 6 of 6, done</span></a></li>
+      </ul>
+    </details>
   </nav>
 
-  <!-- ── Main content ─────────────────────────────────────────── -->
   <main id="main">
 
-    <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Ship a build pipeline that mirrors the <code>agentics-kit</code> marketplace into a single clean distribution repo — keeping only each plugin's manifest, components, README, and CHANGELOG — so users who install pull plugin-required files instead of <code>docs/</code>, scratch markdown, and repo configs.</p>
+      <p>Ship a build pipeline that mirrors the agentics-kit marketplace into a single clean distribution repo — keeping only each plugin&#39;s manifest, components, README, and CHANGELOG — so users who install pull plugin-required files instead of docs/ , scratch markdown, and repo configs.</p>
     </div>
 
-    <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/build-clean-plugin-dist.html — Publish a clean, stripped-down plugin distribution repo</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/build-clean-plugin-dist.md — Publish a clean plugin distribution repo. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-clean-plugin-dist.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Workflow prompt ── -->
-    <details class="plan-workflow">
-      <summary>Run as workflow — launch parallel subagents</summary>
-      <div class="plan-workflow-inner">
-        <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/build-clean-plugin-dist.html — Publish a clean, stripped-down plugin distribution repo</code>
-        <button class="copy-workflow-btn" type="button"
-                onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
+
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome, in parallel</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Publish a clean plugin distribution repo. The plan at docs/plans/build-clean-plugin-dist.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-clean-plugin-dist.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-workflow">
+          <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
+          <div class="plan-workflow-inner">
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/build-clean-plugin-dist.md — Publish a clean plugin distribution repo. Brief subagents with the plan file at docs/plans/build-clean-plugin-dist.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/build-clean-plugin-dist.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-workflow-btn" type="button"
+                    onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">build-clean-plugin-dist.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/build-clean-plugin-dist.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/build-clean-plugin-dist.md</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
+          </div>
+        </div>
+
       </div>
     </details>
-    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
-    <div class="plan-source">
-      <div class="plan-source-row">
-        <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">build-clean-plugin-dist.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
-      </div>
-      <div class="plan-source-row">
-        <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/build-clean-plugin-dist.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
-      </div>
-    </div>
 
-
-    <!-- ── Progress ─────────────────────────────────────────────── -->
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
-        <span>Acceptance criteria</span>
-        <span id="progress-label">0 / 8 done</span>
+        <span>Definition of done</span>
+        <span id="progress-label">8 / 8 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
-    <!-- ── Context ──────────────────────────────────────────────── -->
     <section class="section-card card-context" id="context" aria-labelledby="h-context">
       <h2 id="h-context">
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p>The <code>agentics</code> repo is both the development workspace and the install source. Its <code>.claude-plugin/marketplace.json</code> registers 12 active plugins via <code>git-subdir</code> sources whose <code>url</code> points at <code>https://github.com/shawn-sandy/agentics.git</code>. When a user installs, Claude Code pulls the plugin's <code>path</code> subtree — but the working repo carries a lot that has no business in an install: a 35&nbsp;KB root <code>README.md</code>, <code>docs/</code>, <code>examples/</code>, <code>scripts/</code>, <code>.playwright-mcp/</code>, a session <code>.png</code>, <code>CLAUDE.local.md</code>, <code>.DS_Store</code> files, and assorted top-level markdown (<code>ROADMAP.md</code>, <code>SECURITY.md</code>, <code>SOCIAL.md</code>). Inside individual plugin dirs there can also be scratch notes that ship unintentionally.</p>
-      <p>The fix is a dedicated, clean distribution repo — one repo shaped exactly like the marketplace (not per-plugin repos) — generated from this source repo by a build script. The build reads <code>marketplace.json</code> <code>plugins[]</code> as the source of truth (so the six entries in <code>removed[]</code> and any reference-only directories never ship), copies only an allowlisted set of files per plugin, rewrites each <code>source.url</code> to point at the distribution repo, and publishes the result. A GitHub Action reruns the build and publishes on every release so the clean repo never drifts from source.</p>
-      <p>Decisions locked in clarification: <strong>keep rules</strong> = manifest + component dirs + README + CHANGELOG; <strong>shape</strong> = one marketplace-style repo like <code>agentics-kit</code>; <strong>automation</strong> = a build script plus a GitHub Action that publishes on release.</p>
-      <p><strong>Superseded by <code>publish-plugins-to-dist-repo-daily.html</code></strong> — the <code>--publish</code> implementation, GitHub Action, and dist repo setup described here were completed under that plan with a daily cron trigger instead of release-triggered.</p>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
+      <p>The agentics repo is both the development workspace and the install source. Its .claude-plugin/marketplace.json registers 12 active plugins via git-subdir sources whose url points at https://github.com/shawn-sandy/agentics.git . When a user installs, Claude Code pulls the plugin&#39;s path subtree — but the working repo carries a lot that has no business in an install: a 35 KB root README.md , docs/ , examples/ , scripts/ , .playwright-mcp/ , a session .png , CLAUDE.local.md , .DS_Store files, and assorted top-level markdown ( ROADMAP.md , SECURITY.md , SOCIAL.md ). Inside individual plugin dirs there can also be scratch notes that ship unintentionally.</p>
+      <p>The fix is a dedicated, clean distribution repo — one repo shaped exactly like the marketplace (not per-plugin repos) — generated from this source repo by a build script. The build reads marketplace.json plugins[] as the source of truth (so the six entries in removed[] and any reference-only directories never ship), copies only an allowlisted set of files per plugin, rewrites each source.url to point at the distribution repo, and publishes the result. A GitHub Action reruns the build and publishes on every release so the clean repo never drifts from source.</p>
+      <p>Decisions locked in clarification: keep rules = manifest + component dirs + README + CHANGELOG; shape = one marketplace-style repo like agentics-kit ; automation = a build script plus a GitHub Action that publishes on release.</p>
+      <p>Superseded by publish-plugins-to-dist-repo-daily.html — the --publish implementation, GitHub Action, and dist repo setup described here were completed under that plan with a daily cron trigger instead of release-triggered.</p>
     </section>
 
-    <!-- ── Files ─────────────────────────────────────────────────── -->
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files
+        Files that change
       </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
       <div class="file-tree">
-        <div class="file-tree-root">
-          <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-          agentics/
-        </div>
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li class="file-dir">
-            <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-            scripts/
-            <ul>
-              <li class="file-new">build-dist.mjs <span class="file-badge file-badge-new">new</span></li>
+          <li><code>scripts/build-dist.mjs</code> <span class="file-badge file-badge-new">new</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> .github/workflows/
+            <ul class="file-list">
+            <li><code>publish-dist.yml</code> <span class="file-badge file-badge-new">new</span></li>
+            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add Distribution section: build command, strip rules, new install path</span></li>
+            <li><code>CLAUDE.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">add Distribution section</span></li>
             </ul>
           </li>
-          <li class="file-dir">
-            <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-            .github/workflows/
-            <ul>
-              <li class="file-new">publish-dist.yml <span class="file-badge file-badge-new">new</span></li>
-            </ul>
-          </li>
-          <li class="file-modified">
-            README.md <span class="file-badge file-badge-modified">modified</span>
-            <span class="file-note">add Distribution section: build command, strip rules, new install path</span>
-          </li>
-          <li class="file-modified">
-            CLAUDE.md <span class="file-badge file-badge-modified">modified</span>
-            <span class="file-note">add Distribution section</span>
-          </li>
-          <li class="file-dir">
-            <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-            .claude/rules/
-            <ul>
-              <li class="file-modified">marketplace.md <span class="file-badge file-badge-modified">modified</span>
-                <span class="file-note">note that source.url rewriting is handled by the build script, not hand-edited</span>
-              </li>
-            </ul>
-          </li>
-          <li class="file-generated">
-            <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-            dist/ <span class="file-badge file-badge-generated">generated</span>
-            <span class="file-note">build output — not committed to source repo</span>
-            <ul>
-              <li class="file-generated">.claude-plugin/marketplace.json <span class="file-badge file-badge-generated">rewritten</span></li>
-              <li class="file-generated">README.md <span class="file-badge file-badge-generated">generated</span></li>
-              <li class="file-generated">LICENSE <span class="file-badge file-badge-generated">copied</span></li>
-              <li class="file-generated">kit/plugins/&lt;name&gt;/ × 12 <span class="file-badge file-badge-generated">stripped</span></li>
-            </ul>
-          </li>
+          <li><code>.claude/rules/marketplace.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">note that source.url rewriting is handled by the build script, not hand-edited</span></li>
+          <li><code>dist/</code> <span class="file-badge file-badge-generated">generated</span> <span class="file-note">build output — not committed to source repo</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-generated">generated</span></li>
+          <li><code>README.md</code> <span class="file-badge file-badge-generated">generated</span></li>
+          <li><code>LICENSE</code> <span class="file-badge file-badge-generated">generated</span></li>
+          <li><code>kit/plugins/&lt;name&gt;/ × 12</code> <span class="file-badge file-badge-generated">generated</span></li>
         </ul>
       </div>
     </section>
 
-    <!-- ── Diagram ────────────────────────────────────────────────── -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-presentation-chart"/></svg>
-        Build Pipeline
-      </h2>
-
-      <div class="pipeline">
-        <div class="pipeline-node pipeline-source">
-          <div class="pipeline-label">Source Repo</div>
-          <code>shawn-sandy/agentics</code>
-          <div class="pipeline-sub">.claude-plugin/marketplace.json &middot; kit/plugins/* (12 active)</div>
-        </div>
-        <div class="pipeline-arrow">&#8595; <em>release: published &mdash; triggers</em></div>
-        <div class="pipeline-node pipeline-action">
-          <div class="pipeline-label">GitHub Action</div>
-          <code>.github/workflows/publish-dist.yml</code>
-          <div class="pipeline-sub">checkout &rarr; setup-node &rarr; build &rarr; --check &rarr; --publish</div>
-        </div>
-        <div class="pipeline-arrow">&#8595; <em>runs</em></div>
-        <div class="pipeline-node pipeline-script">
-          <div class="pipeline-label">Build Script</div>
-          <code>scripts/build-dist.mjs</code>
-          <div class="pipeline-sub">reads plugins[] &middot; copies KEEP &middot; rewrites source.url &middot; drops removed[]</div>
-        </div>
-        <div class="pipeline-arrow">&#8595; <em>writes to</em></div>
-        <div class="pipeline-node pipeline-dist">
-          <div class="pipeline-label">Clean Output</div>
-          <code>dist/</code>
-          <div class="pipeline-sub">manifest &middot; component dirs &middot; README &middot; CHANGELOG &middot; LICENSE &mdash; no docs/ or cruft</div>
-        </div>
-        <div class="pipeline-arrow">&#8595; <em>--publish pushes to</em></div>
-        <div class="pipeline-node pipeline-output">
-          <div class="pipeline-label">Distribution Repo</div>
-          <code>shawn-sandy/agentics-kit</code>
-          <div class="pipeline-sub">/plugin marketplace add shawn-sandy/agentics-kit</div>
-        </div>
-      </div>
-
-      <h3 class="diagram-subheading">Per-plugin allowlist</h3>
-      <div class="allowlist-diagram">
-        <div>
-          <div class="allow-header allow-keep">Kept</div>
-          <ul class="allow-list">
-            <li>.claude-plugin/</li>
-            <li>commands/</li>
-            <li>skills/</li>
-            <li>agents/</li>
-            <li>hooks/</li>
-            <li>hooks.json</li>
-            <li>templates/</li>
-            <li>README.md</li>
-            <li>CHANGELOG.md</li>
-            <li>LICENSE</li>
-          </ul>
-        </div>
-        <div>
-          <div class="allow-header allow-drop">Dropped</div>
-          <ul class="allow-list">
-            <li>docs/</li>
-            <li>*.local.md</li>
-            <li>.DS_Store</li>
-            <li>*.png</li>
-            <li>.playwright-mcp/</li>
-            <li>ROADMAP.md</li>
-            <li>SECURITY.md</li>
-            <li>SOCIAL.md</li>
-            <li>examples/</li>
-            <li>scripts/</li>
-          </ul>
-        </div>
-        <div>
-          <div class="allow-header allow-generated">Root (generated)</div>
-          <ul class="allow-list">
-            <li>marketplace.json</li>
-            <li>&nbsp;&nbsp;source.url &rarr; dist repo</li>
-            <li>&nbsp;&nbsp;removed[] dropped</li>
-            <li>README.md (slim)</li>
-            <li>LICENSE (copied)</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
       <h2 id="h-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
         Steps
       </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">completed</span>
-                <span class="step-chip-text">Scaffold <code>scripts/build-dist.mjs</code> with config and a manifest-driven plugin list</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Scaffold scripts/build-dist.mjs with config and a manifest-driven plugin list</span>
               </div>
-              <div class="step-why">A single ESM script (matching the existing <code>merge-marketplace.mjs</code> convention; no <code>package.json</code>, run via bare <code>node</code>) becomes the one entry point. Define an <code>OUT_DIR</code> (<code>dist/</code>), a <code>DIST_REPO</code> URL constant overridable via the <code>DIST_REPO_URL</code> env var, a <code>KEEP</code> allowlist (<code>.claude-plugin</code>, <code>commands</code>, <code>skills</code>, <code>agents</code>, <code>hooks</code>, <code>hooks.json</code>, <code>templates</code>, <code>README.md</code>, <code>CHANGELOG.md</code>, <code>LICENSE</code>), and a <code>DROP</code> denylist (<code>docs</code>, <code>*.local.md</code>, <code>.DS_Store</code>, <code>*.png</code>, <code>.playwright-mcp</code>). Enumerate plugins by reading <code>marketplace.json</code> <code>plugins[]</code> — never by globbing <code>kit/plugins/*</code>.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>node scripts/build-dist.mjs --list</code> prints exactly the 12 active plugin names (<code>memory-tools</code> … <code>issue-agent</code>) and omits the 6 in <code>removed[]</code> (<code>agent-creator</code>, <code>agent-reviewer</code>, <code>marketplace-builder</code>, <code>react-perf-analyzer</code>, <code>agentic-plugin-dev</code>, <code>code-simplifier</code>).</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">A single ESM script (matching the existing merge-marketplace.mjs convention; no package.json , run via bare node ) becomes the one entry point. Define an OUT_DIR ( dist/ ), a DIST_REPO URL constant overridable via the DIST_REPO_URL env var, a KEEP allowlist ( .claude-plugin , commands , skills , agents , hooks , hooks.json , templates , README.md , CHANGELOG.md , LICENSE ), and a DROP denylist ( docs , *.local.md , .DS_Store , *.png , .playwright-mcp ). Enumerate plugins by reading marketplace.json plugins[] — never by globbing kit/plugins/* .</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">node scripts/build-dist.mjs --list prints exactly the 12 active plugin names ( memory-tools … issue-agent ) and omits the 6 in removed[] ( agent-creator , agent-reviewer , marketplace-builder , react-perf-analyzer , agentic-plugin-dev , code-simplifier ).</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">completed</span>
-                <span class="step-chip-text">Implement the per-plugin clean copy into <code>dist/</code></span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Implement the per-plugin clean copy into dist/</span>
               </div>
-              <div class="step-why">For each active plugin, resolve its <code>source.path</code> (e.g. <code>kit/plugins/plan-agent</code>) and recursively copy only the <code>KEEP</code> top-level entries into <code>dist/&lt;path&gt;/</code>, pruning any <code>.DS_Store</code> encountered inside kept directories. Component dirs are copied wholesale so nested support files (e.g. <code>skills/*/reference/</code>, <code>templates/</code>) come along automatically. Start from a clean <code>dist/</code> each run (delete and recreate) so stale files never linger.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">After <code>node scripts/build-dist.mjs</code>, <code>find dist/kit/plugins/plan-agent -type f</code> lists the manifest, <code>skills/</code>, <code>hooks/</code>, <code>hooks.json</code>, <code>templates/</code>, <code>README.md</code>, and <code>CHANGELOG.md</code> — and shows no <code>docs/</code>, no <code>*.local.md</code>, no <code>.DS_Store</code>.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">For each active plugin, resolve its source.path (e.g. kit/plugins/plan-agent ) and recursively copy only the KEEP top-level entries into dist/&lt;path&gt;/ , pruning any .DS_Store encountered inside kept directories. Component dirs are copied wholesale so nested support files (e.g. skills/*/reference/ , templates/ ) come along automatically. Start from a clean dist/ each run (delete and recreate) so stale files never linger.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">After node scripts/build-dist.mjs , find dist/kit/plugins/plan-agent -type f lists the manifest, skills/ , hooks/ , hooks.json , templates/ , README.md , and CHANGELOG.md — and shows no docs/ , no *.local.md , no .DS_Store .</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">completed</span>
-                <span class="step-chip-text">Emit a rewritten <code>marketplace.json</code> plus slim root files</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Emit a rewritten marketplace.json plus slim root files</span>
               </div>
-              <div class="step-why">Write <code>dist/.claude-plugin/marketplace.json</code> derived from the source manifest: keep <code>name</code> (<code>agentics-kit</code>), <code>version</code>, <code>owner</code>, and every <code>plugins[]</code> entry, but rewrite each <code>source.url</code> to <code>DIST_REPO</code> (leaving <code>source.path</code> unchanged) and drop the <code>removed[]</code> array entirely. Generate a concise <code>dist/README.md</code> with the new install instructions and copy <code>LICENSE</code> to the dist root. Keep the JSON pretty-printed so the published manifest stays diffable.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>jq -r '.plugins[].source.url' dist/.claude-plugin/marketplace.json | sort -u</code> returns only the distribution repo URL; <code>jq '.removed' dist/.claude-plugin/marketplace.json</code> is <code>null</code>; <code>dist/README.md</code> and <code>dist/LICENSE</code> exist.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Write dist/.claude-plugin/marketplace.json derived from the source manifest: keep name ( agentics-kit ), version , owner , and every plugins[] entry, but rewrite each source.url to DIST_REPO (leaving source.path unchanged) and drop the removed[] array entirely. Generate a concise dist/README.md with the new install instructions and copy LICENSE to the dist root. Keep the JSON pretty-printed so the published manifest stays diffable.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">jq -r &#39;.plugins[].source.url&#39; dist/.claude-plugin/marketplace.json | sort -u returns only the distribution repo URL; jq &#39;.removed&#39; dist/.claude-plugin/marketplace.json is null ; dist/README.md and dist/LICENSE exist.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">completed</span>
-                <span class="step-chip-text">Add <code>--check</code> and <code>--publish</code> modes</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Add --check and --publish modes</span>
               </div>
-              <div class="step-why"><code>--check</code> walks the built <code>dist/</code> tree and exits non-zero if any <code>DROP</code> pattern leaked through (a CI tripwire against accidental bloat). <code>--publish</code> syncs <code>dist/</code> into a checkout of the distribution repo, commits with a message referencing the source commit SHA, and pushes — authenticating via a <code>GITHUB_TOKEN</code> env var first, falling back to a PAT (<code>DIST_REPO_TOKEN</code>) when set. <strong>Caveat:</strong> the default Actions <code>GITHUB_TOKEN</code> is scoped to the source repo and usually cannot push to a separate repo like <code>agentics-kit</code>; if the cross-repo push is denied, a fine-grained PAT with write on the dist repo is required (see Unresolved Questions). Publishing must clear the target working tree first so deleted plugins disappear downstream.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">On a clean build, <code>node scripts/build-dist.mjs --check; echo $?</code> prints <code>0</code>. Temporarily drop a <code>docs/</code> folder into the <code>KEEP</code> list, rebuild, rerun <code>--check</code>, and confirm it exits non-zero with a message naming the offending path; then revert.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">--check walks the built dist/ tree and exits non-zero if any DROP pattern leaked through (a CI tripwire against accidental bloat). --publish syncs dist/ into a checkout of the distribution repo, commits with a message referencing the source commit SHA, and pushes — authenticating via a GITHUB_TOKEN env var first, falling back to a PAT ( DIST_REPO_TOKEN ) when set. Caveat: the default Actions GITHUB_TOKEN is scoped to the source repo and usually cannot push to a separate repo like agentics-kit ; if the cross-repo push is denied, a fine-grained PAT with write on the dist repo is required (see Unresolved Questions). Publishing must clear the target working tree first so deleted plugins disappear downstream.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">On a clean build, node scripts/build-dist.mjs --check; echo $? prints 0 . Temporarily drop a docs/ folder into the KEEP list, rebuild, rerun --check , and confirm it exits non-zero with a message naming the offending path; then revert.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">completed</span>
-                <span class="step-chip-text">Add the <code>.github/workflows/publish-dist.yml</code> Action</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Add the .github/workflows/publish-dist.yml Action</span>
               </div>
-              <div class="step-why">Trigger on <code>release: { types: [published] }</code> plus <code>workflow_dispatch</code> for manual reruns. Steps: checkout, <code>actions/setup-node</code>, <code>node scripts/build-dist.mjs --check</code> (fail fast on leakage), then <code>node scripts/build-dist.mjs --publish</code> with <code>GITHUB_TOKEN</code> wired in (and <code>DIST_REPO_TOKEN</code> as an optional override secret) and <code>DIST_REPO_URL</code> from a repo variable. Because the dist repo is separate, verify the token actually has cross-repo write during the first <code>workflow_dispatch</code> run — if the default <code>GITHUB_TOKEN</code> is rejected, switch the secret to a PAT. This keeps the clean repo in lockstep with releases without manual steps, mirroring the existing <code>version-guard.yml</code>/<code>update-readme.yml</code> patterns.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">YAML parses (<code>actionlint .github/workflows/publish-dist.yml</code> or a YAML lint) with no errors; a <code>workflow_dispatch</code> run from a test branch completes green and pushes a commit to the distribution repo.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Trigger on release: { types: [published] } plus workflow_dispatch for manual reruns. Steps: checkout, actions/setup-node , node scripts/build-dist.mjs --check (fail fast on leakage), then node scripts/build-dist.mjs --publish with GITHUB_TOKEN wired in (and DIST_REPO_TOKEN as an optional override secret) and DIST_REPO_URL from a repo variable. Because the dist repo is separate, verify the token actually has cross-repo write during the first workflow_dispatch run — if the default GITHUB_TOKEN is rejected, switch the secret to a PAT. This keeps the clean repo in lockstep with releases without manual steps, mirroring the existing version-guard.yml / update-readme.yml patterns.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">YAML parses ( actionlint .github/workflows/publish-dist.yml or a YAML lint) with no errors; a workflow_dispatch run from a test branch completes green and pushes a commit to the distribution repo.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">completed</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Create the distribution repo, wire secrets, and document the flow</span>
               </div>
-              <div class="step-why">Create the clean GitHub repo <code>shawn-sandy/agentics-kit</code>, set the <code>DIST_REPO_URL</code> variable on the source repo (and add a <code>DIST_REPO_TOKEN</code> PAT secret only if the default <code>GITHUB_TOKEN</code> can't push cross-repo), run the first publish manually, and document the build + install flow in <code>README.md</code> and <code>CLAUDE.md</code> (new "Distribution" section: how to run the build, what gets stripped, and the new <code>/plugin marketplace add</code> path). Note in <code>.claude/rules/marketplace.md</code> that <code>source.url</code> rewriting is handled by the build, not hand-edited.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body">In a fresh session, <code>/plugin marketplace add shawn-sandy/agentics-kit</code> then <code>/plugin install plan-agent@agentics-kit</code> installs successfully, and the installed tree contains no <code>docs/</code>, <code>*.local.md</code>, or other cruft.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Create the clean GitHub repo shawn-sandy/agentics-kit , set the DIST_REPO_URL variable on the source repo (and add a DIST_REPO_TOKEN PAT secret only if the default GITHUB_TOKEN can&#39;t push cross-repo), run the first publish manually, and document the build + install flow in README.md and CLAUDE.md (new &quot;Distribution&quot; section: how to run the build, what gets stripped, and the new /plugin marketplace add path). Note in .claude/rules/marketplace.md that source.url rewriting is handled by the build, not hand-edited.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">In a fresh session, /plugin marketplace add shawn-sandy/agentics-kit then /plugin install plan-agent@agentics-kit installs successfully, and the installed tree contains no docs/ , *.local.md , or other cruft.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1572,66 +1810,66 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
       </div>
     </section>
 
-    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria">
         <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
-        Acceptance Criteria
+        Definition of done
       </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1" checked>
-          <label for="ac1"><code>scripts/build-dist.mjs</code> enumerates plugins from <code>marketplace.json</code> <code>plugins[]</code>; the 6 <code>removed[]</code> plugins never appear in <code>dist/</code>.</label>
+          <label for="ac1">scripts/build-dist.mjs enumerates plugins from marketplace.json plugins[] ; the 6 removed[] plugins never appear in dist/ .</label>
         </li>
         <li>
           <input type="checkbox" id="ac2" checked>
-          <label for="ac2">Each plugin in <code>dist/</code> contains only allowlisted files (manifest, component dirs, <code>hooks.json</code>, <code>templates/</code>, <code>README.md</code>, <code>CHANGELOG.md</code>) — no <code>docs/</code>, <code>*.local.md</code>, <code>.DS_Store</code>, or session PNGs.</label>
+          <label for="ac2">Each plugin in dist/ contains only allowlisted files (manifest, component dirs, hooks.json , templates/ , README.md , CHANGELOG.md ) — no docs/ , *.local.md , .DS_Store , or session PNGs.</label>
         </li>
         <li>
           <input type="checkbox" id="ac3" checked>
-          <label for="ac3"><code>dist/.claude-plugin/marketplace.json</code> rewrites every <code>source.url</code> to the distribution repo and omits the <code>removed[]</code> array.</label>
+          <label for="ac3">dist/.claude-plugin/marketplace.json rewrites every source.url to the distribution repo and omits the removed[] array.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4" checked>
-          <label for="ac4"><code>dist/</code> root has a slim generated <code>README.md</code> with install instructions and a copied <code>LICENSE</code>.</label>
+          <label for="ac4">dist/ root has a slim generated README.md with install instructions and a copied LICENSE .</label>
         </li>
         <li>
           <input type="checkbox" id="ac5" checked>
-          <label for="ac5"><code>node scripts/build-dist.mjs --check</code> exits 0 on a clean build and non-zero when a denylisted path leaks into <code>dist/</code>.</label>
+          <label for="ac5">node scripts/build-dist.mjs --check exits 0 on a clean build and non-zero when a denylisted path leaks into dist/ .</label>
         </li>
         <li>
           <input type="checkbox" id="ac6" checked>
-          <label for="ac6"><code>.github/workflows/publish-dist.yml</code> rebuilds and publishes <code>dist/</code> to the distribution repo on <code>release: published</code> (and via <code>workflow_dispatch</code>).</label>
+          <label for="ac6">.github/workflows/publish-dist.yml rebuilds and publishes dist/ to the distribution repo on release: published (and via workflow_dispatch ).</label>
         </li>
         <li>
           <input type="checkbox" id="ac7" checked>
-          <label for="ac7">Installing a plugin from the distribution repo (<code>/plugin install &lt;name&gt;@agentics-kit</code>) yields a working plugin with no repo cruft.</label>
+          <label for="ac7">Installing a plugin from the distribution repo ( /plugin install &lt;name&gt;@agentics-kit ) yields a working plugin with no repo cruft.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8" checked>
-          <label for="ac8"><code>README.md</code> and <code>CLAUDE.md</code> document the build command, the strip rules, and the new install path.</label>
+          <label for="ac8">README.md and CLAUDE.md document the build command, the strip rules, and the new install path.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
 
-    <!-- ── Verification ──────────────────────────────────────────── -->
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
       <h2 id="h-verification">
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
-        Verification
+        Final check
       </h2>
-      <p>Run <code>node scripts/build-dist.mjs</code> locally and inspect the tree: <code>find dist -type f | sort</code> should show 12 plugin directories, each carrying only allowlisted files, plus a rewritten root <code>marketplace.json</code>, slim <code>README.md</code>, and <code>LICENSE</code>. Confirm <code>jq</code> reports a single distribution-repo <code>source.url</code> and a null <code>removed</code>. Run <code>node scripts/build-dist.mjs --check</code> and confirm exit code 0, then verify the leak tripwire by temporarily allowlisting <code>docs</code> and confirming a non-zero exit. Trigger the Action via <code>workflow_dispatch</code> and confirm it publishes a commit to the distribution repo. Finally, in a clean session, register <code>shawn-sandy/agentics-kit</code> and install <code>plan-agent</code>, then list the installed files to confirm zero cruft. The source <code>agentics</code> repo and its existing <code>marketplace.json</code> must remain unchanged except for the new script, workflow, and docs.</p>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
+      <p>Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f | sort should show 12 plugin directories, each carrying only allowlisted files, plus a rewritten root marketplace.json , slim README.md , and LICENSE . Confirm jq reports a single distribution-repo source.url and a null removed . Run node scripts/build-dist.mjs --check and confirm exit code 0, then verify the leak tripwire by temporarily allowlisting docs and confirming a non-zero exit. Trigger the Action via workflow_dispatch and confirm it publishes a commit to the distribution repo. Finally, in a clean session, register shawn-sandy/agentics-kit and install plan-agent , then list the installed files to confirm zero cruft. The source agentics repo and its existing marketplace.json must remain unchanged except for the new script, workflow, and docs.</p>
     </section>
 
-    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
       <h2 id="h-completion">
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
-        Completion Checklist
+        Wrapping up
       </h2>
-      <div class="completion-checklist" id="completion-checklist">
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
@@ -1656,19 +1894,18 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
       </div>
     </section>
 
-    <!-- ── Next Steps ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
-        Next Steps
+        Next steps
       </h2>
+      <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
       <div class="next-steps-list">
-
         <details class="next-step-item">
           <summary>Add a per-plugin install-size report to the build</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>In scripts/build-dist.mjs (the clean-distribution build for the agentics marketplace), add a post-build summary that prints, per plugin, the source file count and byte size versus the stripped dist file count and byte size, plus a total "bytes saved" line. Drive the plugin list from .claude-plugin/marketplace.json plugins[]. Keep it dependency-free (Node built-ins only) and add a --quiet flag to suppress the table in CI.</pre>
+            <pre>In scripts/build-dist.mjs (the clean-distribution build for the agentics marketplace), add a post-build summary that prints, per plugin, the source file count and byte size versus the stripped dist file count and byte size, plus a total &quot;bytes saved&quot; line. Drive the plugin list from .claude-plugin/marketplace.json plugins[]. Keep it dependency-free (Node built-ins only) and add a --quiet flag to suppress the table in CI.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1684,49 +1921,18 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
           </div>
         </details>
 
-        <!-- Wish List -->
-        <div class="wish-list-header">
-          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-          Wish List
-        </div>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            Per-plugin release tags and changelog automation
-            <span class="wish-badge">Wish List</span>
-          </summary>
+        <details class="next-step-item">
+          <summary>Per-plugin release tags and changelog automation Wish List</summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
-            <pre>Explore extending the agentics clean-distribution pipeline so each plugin gets its own version tag in the distribution repo (e.g. plan-agent-v1.4.0) generated from the marketplace.json version, with an auto-aggregated release notes body pulled from each plugin's CHANGELOG.md. Recommend whether GitHub Releases per plugin or a single rolling release is the better model for a single marketplace-shaped repo, with tradeoffs.</pre>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>Explore extending the agentics clean-distribution pipeline so each plugin gets its own version tag in the distribution repo (e.g. plan-agent-v1.4.0) generated from the marketplace.json version, with an auto-aggregated release notes body pulled from each plugin&#39;s CHANGELOG.md. Recommend whether GitHub Releases per plugin or a single rolling release is the better model for a single marketplace-shaped repo, with tradeoffs.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
-
       </div>
     </section>
-
-    <!-- ── Unresolved Questions ─ -->
-    <details class="optional-section">
-      <summary>
-        <svg class="icon" aria-hidden="true"><use href="#ic-question-mark-circle"/></svg>
-        Unresolved Questions
-      </summary>
-      <div class="optional-body">
-        <ul class="unresolved-list">
-          <li>
-            <details class="unresolved-item">
-              <summary>Can the default GITHUB_TOKEN push to the separate agentics-kit repo?</summary>
-              <div class="unresolved-prompt">
-                <pre>Investigate whether a GitHub Actions workflow in shawn-sandy/agentics can push commits to a separate same-owner repo (shawn-sandy/agentics-kit) using only the default GITHUB_TOKEN. Confirm GitHub's current behavior for cross-repository writes with the default token, and if it cannot, recommend the minimal-privilege alternative (fine-grained PAT scoped to just agentics-kit contents:write, GitHub App installation token, or SSH deploy key) with the exact secret setup steps. Output a concrete recommendation for the publish-dist.yml workflow.</pre>
-                <button class="copy-prompt-btn" type="button"
-                        onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
-              </div>
-            </details>
-          </li>
-        </ul>
-      </div>
-    </details>
 
     <footer class="plan-footer">
       <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
@@ -1737,39 +1943,36 @@ Run node scripts/build-dist.mjs locally and inspect the tree: find dist -type f 
 </div><!-- /.layout -->
 
 <script>
-
-/* ── Copy plan file name / relative path ────────────────────── */
-function copyPath(btn, id) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  var text = el.textContent.trim();
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied \u2713';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
 }
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
+/* ── Save as PDF (native browser print dialog) ──────────────── */
+function savePDF() {
+  window.print();
+}
+
 /* ── Build rich implementation prompt from DOM ──────────────── */
 function buildImplementPrompt() {
   var cmdEl = document.getElementById('implement-cmd');
@@ -1785,33 +1988,46 @@ function buildImplementPrompt() {
     return cb && cb.checked;
   }).length;
 
+  var planPathMeta = document.querySelector('meta[name="plan-path"]');
+  var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\.html$/, '.md');
+
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
   lines.push('');
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the plan file and implement every step marked todo.');
-  lines.push('2. After completing each step, mark it done in the plan.');
-  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
-  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Run the objective test\'s Run command from the plan\'s Tests section, then walk the Verification section end-to-end and confirm the stated objective actually works — on failure, fix and re-verify before continuing; never mark the plan done on a failing check.');
+  lines.push('5. Set "status: completed" in the spec frontmatter only once every step is marked, every criterion is checked, and verification passes.');
+  lines.push('6. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
 
   return lines.join('\n');
 }
 
-/* ── Copy implement prompt ──────────────────────────────────── */
-function copyCmd(btn) {
-  var text = buildImplementPrompt();
-  function flash() {
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
     if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
     btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
       btn._copyTimer = null;
-    }, 2000);
+    }, delay);
   }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
   function fallback() {
     var ta = document.createElement('textarea');
     ta.value = text;
@@ -1821,7 +2037,7 @@ function copyCmd(btn) {
     var ok = false;
     try { ok = document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
-    if (ok) flash();
+    if (ok) flash(); else fail();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(flash).catch(fallback);
@@ -1830,37 +2046,30 @@ function copyCmd(btn) {
   }
 }
 
-/* ── Copy workflow prompt ──────────────────────────────────── */
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
 function copyWorkflow(btn) {
   var code = document.getElementById('workflow-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy goal prompt ──────────────────────────────────────── */
+function copyGoal(btn) {
+  var code = document.getElementById('goal-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
 }
 
 /* ── Copy prompt button (global — required by inline onclick) ── */
@@ -1870,47 +2079,18 @@ function copyPrompt(btn) {
     pre = btn.parentElement && btn.parentElement.querySelector('pre');
   }
   if (!pre) return;
-  var text = pre.textContent;
-
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy prompt';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
 }
 
 (function () {
   'use strict';
 
-  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* ── Progress bar — state from HTML attributes ──────────────── */
   /* State lives in the HTML itself: a criterion is done iff its       */
   /* <input> carries the `checked` attribute, which the browser        */
-  /* renders natively on load — no localStorage. Toggling a box syncs  */
-  /* the attribute so the live DOM (and any saved copy of this file)   */
-  /* stays the single source of truth.                                 */
+  /* renders natively on load. Toggling a box syncs the attribute so   */
+  /* the live DOM (and any saved copy of this file) stays the single   */
+  /* portable source of truth — no browser-only storage layer.         */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -1999,35 +2179,61 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
-    }, { threshold: 0.3 });
-    sections.forEach(function (el) { observer.observe(el); });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
-</script>
-<script>
-/* Save as PDF (native browser print dialog) — backfilled */
-function savePDF() {
-  window.print();
-}
 </script>
 </body>
 </html>

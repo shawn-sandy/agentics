@@ -1,6 +1,71 @@
 # Changelog
 
 
+## 7.5.0 — rebuilt plan document and gallery design (2026-07-31)
+
+### Added
+
+- **A dark theme, with a toggle that survives a reload.** A small script in
+  `<head>` applies the stored choice before first paint — a plan opened from
+  `file://` has no server to stamp the attribute, and a flash of the wrong
+  theme on every load is worse than no dark mode. A first visit with nothing
+  stored follows `prefers-color-scheme`. The button is hidden by the print
+  stylesheet.
+- **A step rail in the sidebar.** `nav()` now emits one link per step
+  alongside the section links, each carrying the step's action text and a
+  visually-hidden `step N of M[, done]`. Every `.step-card` gained
+  `id="step-N"` to link to. Below 720px the list collapses into a 44px
+  disclosure rather than disappearing. The section anchors keep a bare `href`
+  and nothing else, so nothing that reads them had to change.
+- **Gallery grouping.** The generated indexes sort in-progress plans first and
+  stamp each card with `data-month`; the gallery script builds the "In flight"
+  band and the month headings at load time and rebuilds them on every filter
+  change. Nothing is emitted between the cards, so `merge-plans-index.mjs`
+  still splices the card region untouched.
+- **`tests/plugins/test-plan-redesign.mjs`** — measures the contrast of every
+  text token against every surface it renders on, in both palettes, plus the
+  goal panel, the Verify line, the rail, and the gallery grouping.
+
+### Changed
+
+- **A new token set: `--paper` / `--panel` / `--sunk`, `--ink` / `--ink-2` /
+  `--ink-3`, `--rule` / `--rule-soft`, `--accent` / `--accent-soft` /
+  `--accent-line`, `--moss`, `--signal`, and the `--mono` / `--ui` / `--prose`
+  type roles.** Structural labels speak in mono, body prose in serif. Status
+  is carried by form (soft fill plus a rule) rather than white text on a solid
+  hue, so one palette drives both themes.
+- **One goal panel.** The At-a-glance block renders inside `#objective`
+  instead of beside it — two sibling abstracts left a reader unable to tell
+  which was authoritative. `extractSections()` already stripped a nested
+  `.plan-glance`, so the extractor contract is unchanged.
+- **`Verify:` is always visible.** It was behind a `<details>`; it is the one
+  line a reader needs *while* executing a step. Still inside
+  `<div class="verify-body">`.
+- **The gallery controls.** Twenty always-on filter chips became a search
+  field, a status segmented control carrying per-status counts, and a
+  disclosure holding type and effort. A gallery whose cards carry no status
+  (the artifacts library) hides the status control entirely.
+
+### Fixed
+
+- **`--subtle: #9ca3af` measured 2.5:1 on white** and styled the sidebar links
+  and step chips, so every generated plan failed WCAG AA. Every text token now
+  clears 4.5:1 against each surface it is used on, in both palettes, and a
+  test measures it.
+- **The scroll spy never cleared its active link.** The observer only reacted
+  to intersecting entries, so the last match stayed highlighted forever. With
+  one link per step a stale "you are here" marker is worse than none, so it
+  now tracks what leaves the viewport too and clears when nothing intersects.
+- **The progress bar no longer shimmers.** An animation running while nothing
+  is happening reads as activity the page cannot vouch for.
+- **The back-compat guard in `tests/plugins/test-build-plan-html.mjs`** compared
+  whole rendered documents, so it failed on every deliberate markup change —
+  making an intentional redesign indistinguishable from a regression. It now
+  compares `extractSections()` output, which is what its own comment always
+  said it protected, plus explicit assertions that the prototype feature does
+  not leak into a spec without the key.
+
+
 ## 7.4.4 — out-of-scope items no longer vanish from rendered plans (2026-07-31)
 
 ### Fixed

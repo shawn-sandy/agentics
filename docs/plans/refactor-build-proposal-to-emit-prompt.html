@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="completed">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="refactor">
@@ -16,54 +27,154 @@
 <meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/refactor-build-proposal-to-emit-prompt.md — Make build-proposal converge on a saved prompt authored by write-prompt. Brief subagents with the plan file at docs/plans/refactor-build-proposal-to-emit-prompt.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/refactor-build-proposal-to-emit-prompt.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Make build-proposal converge on a saved prompt authored by write-prompt</title>
 <style>
-/* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --purple:     #a21caf;
-    --purple-bg:  #fdf4ff;
-    --purple-border:#f0abfc;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -93,7 +204,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -103,8 +214,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -119,9 +230,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -130,11 +242,14 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
   }
   .plan-header-actions {
     display: flex;
@@ -157,7 +272,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -168,9 +286,8 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
 
   /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
   .effort-badge {
@@ -185,12 +302,15 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .effort-badge::before { content: "Effort "; opacity: .7; }
-  [data-effort="low"]    .effort-badge { background: #16a34a; }
-  [data-effort="medium"] .effort-badge { background: #d97706; }
-  [data-effort="high"]   .effort-badge { background: #dc2626; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
@@ -207,9 +327,10 @@
     align-items: center;
     gap: .4rem;
     padding: .4rem 1rem;
-    font-size: .8rem;
+    font-size: .75rem;
     font-weight: 600;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--on-accent);
     background: var(--accent);
     border: 1px solid var(--accent);
     border-radius: 4px;
@@ -225,6 +346,31 @@
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   /* Meta row */
   .plan-meta {
     display: flex;
@@ -232,9 +378,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -246,14 +393,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -264,29 +414,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -301,98 +452,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
+  }
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
   }
   .objective-card .section-label,
   .plan-glance-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
-  /* ── At a glance — plain-language summary (sibling of #objective) ── */
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
   .plan-glance {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.5rem;
-    margin: -1.5rem 0 1.5rem;
-    line-height: 1.7;
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
   }
-  .plan-glance-label { color: var(--muted); }
-  .plan-glance p { margin: 0; color: var(--text); font-size: .95rem; }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
 
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -400,22 +638,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
     letter-spacing: -.01em;
-    color: var(--text);
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
   .section-card .section-intro {
-    font-size: .875rem;
-    color: var(--muted);
+    font-size: .85rem;
+    color: var(--ink-2);
     margin: -1rem 0 1.25rem;
   }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -424,65 +673,34 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-card.completed .step-number { color: var(--moss); }
   .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
@@ -491,58 +709,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .step-chip-text { flex: 1; }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why this matters: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -554,31 +770,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -592,14 +808,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -610,20 +826,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -632,25 +848,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -663,11 +879,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -677,10 +893,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -691,14 +907,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -712,17 +928,17 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
@@ -738,7 +954,7 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
@@ -749,27 +965,27 @@
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -784,10 +1000,10 @@
     min-height: 44px;
   }
   .optional-section > summary::before,
-  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .optional-section[open] > summary::before,
   .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
@@ -795,9 +1011,9 @@
 
   /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
   .plan-more-ways {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     margin: -.5rem 0 1.5rem;
     font-size: .8rem;
     overflow: hidden;
@@ -806,7 +1022,7 @@
     padding: .55rem 1rem;
     font-size: .78rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     cursor: pointer;
     list-style: none;
     display: flex;
@@ -816,10 +1032,10 @@
     min-height: 44px;
   }
   .plan-more-ways > summary:hover { color: var(--accent); }
-  .more-ways-hint { font-weight: 400; color: var(--muted); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
   .plan-more-ways-body {
     padding: .75rem 1rem 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     display: flex;
     flex-direction: column;
     gap: .75rem;
@@ -833,8 +1049,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -843,14 +1059,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -861,9 +1077,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -872,8 +1088,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
@@ -895,14 +1111,14 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -913,9 +1129,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -924,8 +1140,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
@@ -947,14 +1163,14 @@
     gap: .6rem;
     margin-top: .4rem;
     padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
   }
   .plan-workflow code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -965,9 +1181,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -976,8 +1192,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
   /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
@@ -1008,7 +1224,7 @@
   .plan-goal code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
     word-break: break-all;
   }
@@ -1019,9 +1235,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -1030,8 +1246,8 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-goal-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-goal { display: none; }
   /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
@@ -1045,8 +1261,8 @@
     gap: .75rem;
   }
   .test-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow);
@@ -1068,27 +1284,27 @@
     border-radius: 999px;
     flex-shrink: 0;
   }
-  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
   .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
-  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
   .test-card-title {
     font-weight: 600;
     font-size: .95rem;
-    color: var(--text);
+    color: var(--ink);
     flex: 1;
   }
-  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
   .test-card-body p { margin-bottom: .4rem; }
   .test-card-body p:last-child { margin-bottom: 0; }
   .test-card-body code { font-size: .85em; }
-  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
   .test-tier-label {
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
     display: flex;
     align-items: center;
@@ -1098,21 +1314,21 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--rule);
   }
   .objective-test-card {
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-left: 4px solid var(--green);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow);
   }
   .objective-test-card .test-card-header { margin-bottom: .6rem; }
-  .objective-test-card .test-card-title { color: #14532d; }
-  .objective-test-card .test-card-body { color: #166534; }
-  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -1120,10 +1336,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -1132,7 +1348,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -1149,69 +1365,69 @@
 
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
   .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
 
   /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
   .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
   @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
   .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
 
   /* ── Bar chart (value via inline --val) ─────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
   .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
   @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
-  .bar-label { font-size: .82rem; color: var(--text); }
-  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
   .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
-  .bar-fill.full { background: var(--green); }
-  .bar-fill.zero { background: var(--subtle); }
-  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
 
   /* ── Data table ─────────────────────────────────────────────────── */
   .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
-  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
-  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
-  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
   .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
 
   /* ── Resources (images, screenshots & reference links) ──────────── */
   .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
-  .resource-figure { margin: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
   .resource-figure > a { display: block; line-height: 0; }
-  .resource-figure img { display: block; width: 100%; height: auto; background: var(--grey-bg); }
-  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--muted); padding: .5rem .75rem; border-top: 1px solid var(--border); }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
   .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
-  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--border); }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
   .resource-links li:last-child { border-bottom: none; }
   .resource-links a { font-weight: 600; word-break: break-word; }
-  .resource-note { font-size: .78rem; color: var(--subtle); font-style: italic; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
 
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
@@ -1219,7 +1435,7 @@
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
@@ -1307,6 +1523,8 @@ img, video { max-width: 100%; height: auto; }
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
         <span class="status-badge">completed</span>
       </div>
@@ -1337,6 +1555,24 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
       <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>12 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Create <code class="md">kit/plugins/plan-agent/commands/write-prompt.md</code> mirroring <code class="md">commands/deep-grill.md</code> exactly — frontmatter with <code class="md">description</code>, <code class="md">allowed-tools: Skill</code>, and <code class="md">argument-hint</code>, a two-sentence body, and one fenced <code class="md">Skill(skill: &quot;plan-agent:write-prompt&quot;, args: &quot;$ARGUMENTS&quot;)</code> call.</span><span class="rail-state">step 1 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Prove the invocation seam before building on it — from a session with the plugin loaded, invoke <code class="md">/plan-agent:write-prompt</code>, confirm it runs and appears in the session skill registry, then confirm a nested <code class="md">build</code> to <code class="md">build-proposal</code> to <code class="md">write-prompt</code> call completes and note whether the <code class="md">claude-fable-5</code> caller invoking an <code class="md">opus</code> callee changes behavior.</span><span class="rail-state">step 2 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Create <code class="md">kit/plugins/plan-agent/skills/write-prompt/references/proposal-prompt-template.md</code> following the shape of the existing four templates — a <code class="md">## Template</code> fenced block, a <code class="md">## Placeholder Guide</code> table, and a <code class="md">## Assembled Example</code> — carrying <code class="md">{{TLDR}}</code>, <code class="md">{{CONTEXT}}</code>, <code class="md">{{CORE_FINDING}}</code>, <code class="md">{{COMPARISON_TABLE}}</code>, <code class="md">{{LOCKED_DECISIONS}}</code>, <code class="md">{{WORKSTREAMS}}</code>, <code class="md">{{RISKS}}</code>, <code class="md">{{OPEN_QUESTIONS}}</code>, <code class="md">{{ROADMAP}}</code>, <code class="md">{{APPENDICES}}</code>, and <code class="md">{{CORE_INSTRUCTION}}</code>.</span><span class="rail-state">step 3 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Wire the <code class="md">proposal</code> type through <code class="md">kit/plugins/plan-agent/skills/write-prompt/SKILL.md</code> — add the fifth row to the Phase 1 type table and technique matrix, the Phase 3 XML layer mapping, the Phase 4 template-selection entry, and extend Phase 7 with three things: a <strong class="md">caller-supplied output path contract</strong> (<code class="md">--out &lt;path&gt;</code>) that, when present, overrides Phase 7&#39;s own directory resolution and its 3-5-word intent slug entirely; <code class="md">status:</code> (<code class="md">gathering</code> or <code class="md">converged</code>), <code class="md">modified:</code>, and <code class="md">generated-sha:</code> frontmatter keys; and an in-place rewrite rule replacing the <code class="md">-2</code>/<code class="md">-3</code> uniqueness guard for this type, gated by comparing the current body&#39;s hash against the recorded <code class="md">generated-sha:</code> and asking via <code class="md">AskUserQuestion</code> when they differ.</span><span class="rail-state">step 4 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Add a pre-gathered-answers bypass to <code class="md">write-prompt</code> Phase 2 so a caller that has already interviewed the user skips the interview batch.</span><span class="rail-state">step 5 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Update <code class="md">kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md</code> — add <code class="md">proposal</code> as a fifth filter chip at lines 148-149, make the frontmatter reader tolerate the new <code class="md">status:</code> and <code class="md">modified:</code> keys without breaking card rendering, and confirm the existing <code class="md">&lt;details&gt;</code> collapse plus a horizontally scrolling <code class="md">&lt;pre&gt;</code> handle a 300-line body without forcing page-level overflow.</span><span class="rail-state">step 6 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Rewrite <code class="md">build-proposal</code>&#39;s Step 6 to dual-write — invoke <code class="md">write-prompt</code> with the proposal content and the Step 5 bypass token, compute the target path once as <code class="md">{resolved-prompts-dir}/proposal-{verb-target-slug}.md</code> — <strong class="md">date-free, slug is the identity</strong> — and <strong class="md">pass it to <code class="md">write-prompt</code> via the Step 4 <code class="md">--out</code> contract</strong> so the caller dictates the path rather than both sides deriving one independently, and additionally write the legacy <code class="md">docs/proposals/&lt;slug&gt;.md</code> carrying a deprecation banner naming the prompt as authoritative — then rewrite Step 8 to hand off that same path, and retarget <code class="md">--dir</code> to the prompts directory.</span><span class="rail-state">step 7 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-8"><span class="rail-no">✓</span><span class="rail-text">Preserve tier behavior across the refactor in <code class="md">build-proposal/SKILL.md</code> — Tier 0 continues to answer directly and write <strong class="md">no</strong> artifact of either kind, and Tier 1 emits a prompt populated only from the short subset of slots (<code class="md">{{CONTEXT}}</code>, <code class="md">{{CORE_FINDING}}</code>, <code class="md">{{OPEN_QUESTIONS}}</code>, <code class="md">{{CORE_INSTRUCTION}}</code>) with the remaining slots omitted rather than emitted empty.</span><span class="rail-state">step 8 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-9"><span class="rail-no">✓</span><span class="rail-text">Update <code class="md">kit/plugins/plan-agent/skills/build-proposal/references/artifact-shape.md</code> — add the section-to-slot mapping table from the proposal&#39;s Appendix B, and fix line 102&#39;s <code class="md">/plan-agent:implementation-plan docs/proposals/&lt;slug&gt;.md</code> to lead with objective text.</span><span class="rail-state">step 9 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-10"><span class="rail-no">✓</span><span class="rail-text">Update <code class="md">kit/plugins/plan-agent/skills/build/SKILL.md</code> Step 1b so the returned artifact is a prompt path — the <code class="md">Skill(skill: &quot;plan-agent:build-proposal&quot;)</code> call site at L179, the <code class="md">implementation-plan</code> handoff string at L181-185, the dirty-tree exclusion at L100, and the abandonment contract at L216-218.</span><span class="rail-state">step 10 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-11"><span class="rail-no">✓</span><span class="rail-text">Update the three test files — rewrite <code class="md">tests/plugins/test-build-proposal.sh</code> checks 10, 11, 14, and 15 to the dual-write contract, update <code class="md">tests/plugins/test-build-skill.sh</code>&#39;s Step 1b assertions at L178-187, and add <code class="md">tests/plugins/test-write-prompt-proposal-type.sh</code> plus the objective test <code class="md">tests/plugins/test-proposal-prompt-pipeline.sh</code>.</span><span class="rail-state">step 11 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-12"><span class="rail-no">✓</span><span class="rail-text">Update the documentation and bump versions — <code class="md">kit/plugins/plan-agent/README.md</code> (the build-proposal and write-prompt sections, and add the missing <code class="md">write-prompt/</code> entry to the Plugin Structure tree), <code class="md">kit/plugins/artifact-tools/README.md</code>, <code class="md">CLAUDE.md:38,81</code>, root <code class="md">README.md:451,470,473</code>, both CHANGELOGs, and <code class="md">.claude-plugin/marketplace.json</code> moving plan-agent from 5.0.0 to 6.0.0 with an artifact-tools minor bump.</span><span class="rail-state">step 12 of 12, done</span></a></li>
+      </ul>
+    </details>
   </nav>
 
   <main id="main">
@@ -1344,12 +1580,11 @@ img, video { max-width: 100%; height: auto; }
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
       <p>Refactor build-proposal so its decision-complete output is a saved, copy-pasteable prompt under docs/prompts/, authored by delegating to write-prompt, while dual-writing the legacy docs/proposals/ document for one deprecation release. Ship the whole change as plan-agent 6.0.0.</p>
+      <section class="plan-glance" aria-labelledby="plan-glance-label">
+        <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
+        <p>build-proposal currently ends by hand-writing a one-line handoff string, and the skill that exists to author prompts properly cannot be called at all. This wires the two together so a proposal converges on a real saved prompt, and we will know it worked when a single pipeline test confirms the command wrapper, the fifth prompt type, the dual-write, and the gallery chip all line up.</p>
+      </section>
     </div>
-
-    <section class="plan-glance" aria-labelledby="plan-glance-label">
-      <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
-      <p>build-proposal currently ends by hand-writing a one-line handoff string, and the skill that exists to author prompts properly cannot be called at all. This wires the two together so a proposal converges on a real saved prompt, and we will know it worked when a single pipeline test confirms the command wrapper, the fifth prompt type, the dual-write, and the gallery chip all line up.</p>
-    </section>
 
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
@@ -1422,11 +1657,11 @@ img, video { max-width: 100%; height: auto; }
         Context
       </h2>
       <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
-      <p>`build-proposal` already ends by emitting a prompt — a hand-built one-line invocation string for `implementation-plan`. The skill spends an entire paragraph (`build-proposal/SKILL.md:207-214`), duplicated in `references/operating-principles.md:49` and `build/SKILL.md:185-188`, warning that getting that string&#39;s grammar wrong drops `implementation-plan` into conversion mode and yields a plan whose steps restate proposal headings. That is prompt authoring being done by hand, in prose, in triplicate — and `write-prompt` is the skill that exists to do it properly.</p>
-      <p>The blocker found during proposal research is mechanical, not conceptual. `disable-model-invocation: true` blocks programmatic `Skill` invocation, not just ambient auto-activation. Four plan-agent skills carry the flag; the two with thin `commands/*.md` wrappers (`deep-grill`, `documenting-plans`) are invocable and appear in the session skill registry, and the two without (`write-prompt`, `finalize-plan`) are not. The wrapper is the fix, and it is 15 lines.</p>
-      <p>Four decisions were locked in the 2026-07-27 proposal review and are not reopened here: keep `disable-model-invocation` and add the wrapper; make the saved prompt file the living document; add a fifth `proposal` prompt type rather than compressing into `task`; dual-write both artifacts for 6.0.0 with the prompt authoritative. Four follow-on decisions were settled while drafting this plan: `status:` uses the proposal-native vocabulary `gathering`/`converged`; `--dir` follows the authoritative artifact and now names the prompts directory; appendices map to a single catch-all `{{APPENDICES}}` slot; and this plan covers the full 6.0.0 release rather than the de-risking spike alone. Four more came out of the plan interview: Tier 0 keeps writing nothing while Tier 1 emits a short-subset prompt; the prompt path is derived rather than read back; an in-place rewrite diffs for hand edits before overwriting; and long proposal bodies rely on the gallery&#39;s existing `&lt;details&gt;` collapse rather than type-specific CSS. Code review then caught a defect in the derivation itself: including the date would break the living document across a calendar boundary, so the filename is `proposal-{slug}.md` with no date.</p>
-      <p>Known risk carried into implementation: `Skill()` has no documented return value. The interview resolved this by deriving the prompt path deterministically from the slug instead of parsing anything out of the transcript, which removes the dependency rather than working around it; the date is deliberately excluded from the filename so a multi-day loop keeps resolving to the same file. What remains unverified is whether `Skill()` can reach `write-prompt` at all once the wrapper lands, whether three-level nesting works, and whether the `claude-fable-5` to `opus` pin boundary changes behavior. Step 2 exists to prove those empirically before anything is built on them, and is a hard stop if they fail.</p>
-      <p>See `docs/proposals/replace-proposal-doc-with-prompt.md` for the full decision record, risk register, and the section-to-slot mapping table.</p>
+      <p><code class="md">build-proposal</code> already ends by emitting a prompt — a hand-built one-line invocation string for <code class="md">implementation-plan</code>. The skill spends an entire paragraph (<code class="md">build-proposal/SKILL.md:207-214</code>), duplicated in <code class="md">references/operating-principles.md:49</code> and <code class="md">build/SKILL.md:185-188</code>, warning that getting that string&#39;s grammar wrong drops <code class="md">implementation-plan</code> into conversion mode and yields a plan whose steps restate proposal headings. That is prompt authoring being done by hand, in prose, in triplicate — and <code class="md">write-prompt</code> is the skill that exists to do it properly.</p>
+      <p>The blocker found during proposal research is mechanical, not conceptual. <code class="md">disable-model-invocation: true</code> blocks programmatic <code class="md">Skill</code> invocation, not just ambient auto-activation. Four plan-agent skills carry the flag; the two with thin <code class="md">commands/*.md</code> wrappers (<code class="md">deep-grill</code>, <code class="md">documenting-plans</code>) are invocable and appear in the session skill registry, and the two without (<code class="md">write-prompt</code>, <code class="md">finalize-plan</code>) are not. The wrapper is the fix, and it is 15 lines.</p>
+      <p>Four decisions were locked in the 2026-07-27 proposal review and are not reopened here: keep <code class="md">disable-model-invocation</code> and add the wrapper; make the saved prompt file the living document; add a fifth <code class="md">proposal</code> prompt type rather than compressing into <code class="md">task</code>; dual-write both artifacts for 6.0.0 with the prompt authoritative. Four follow-on decisions were settled while drafting this plan: <code class="md">status:</code> uses the proposal-native vocabulary <code class="md">gathering</code>/<code class="md">converged</code>; <code class="md">--dir</code> follows the authoritative artifact and now names the prompts directory; appendices map to a single catch-all <code class="md">{{APPENDICES}}</code> slot; and this plan covers the full 6.0.0 release rather than the de-risking spike alone. Four more came out of the plan interview: Tier 0 keeps writing nothing while Tier 1 emits a short-subset prompt; the prompt path is derived rather than read back; an in-place rewrite diffs for hand edits before overwriting; and long proposal bodies rely on the gallery&#39;s existing <code class="md">&lt;details&gt;</code> collapse rather than type-specific CSS. Code review then caught a defect in the derivation itself: including the date would break the living document across a calendar boundary, so the filename is <code class="md">proposal-{slug}.md</code> with no date.</p>
+      <p>Known risk carried into implementation: <code class="md">Skill()</code> has no documented return value. The interview resolved this by deriving the prompt path deterministically from the slug instead of parsing anything out of the transcript, which removes the dependency rather than working around it; the date is deliberately excluded from the filename so a multi-day loop keeps resolving to the same file. What remains unverified is whether <code class="md">Skill()</code> can reach <code class="md">write-prompt</code> at all once the wrapper lands, whether three-level nesting works, and whether the <code class="md">claude-fable-5</code> to <code class="md">opus</code> pin boundary changes behavior. Step 2 exists to prove those empirically before anything is built on them, and is a hard stop if they fail.</p>
+      <p>See <code class="md">docs/proposals/replace-proposal-doc-with-prompt.md</code> for the full decision record, risk register, and the section-to-slot mapping table.</p>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
@@ -1472,206 +1707,242 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Create `kit/plugins/plan-agent/commands/write-prompt.md` mirroring `commands/deep-grill.md` exactly — frontmatter with `description`, `allowed-tools: Skill`, and `argument-hint`, a two-sentence body, and one fenced `Skill(skill: &quot;plan-agent:write-prompt&quot;, args: &quot;$ARGUMENTS&quot;)` call.</span>
+                <span class="step-chip-text">Create <code class="md">kit/plugins/plan-agent/commands/write-prompt.md</code> mirroring <code class="md">commands/deep-grill.md</code> exactly — frontmatter with <code class="md">description</code>, <code class="md">allowed-tools: Skill</code>, and <code class="md">argument-hint</code>, a two-sentence body, and one fenced <code class="md">Skill(skill: &quot;plan-agent:write-prompt&quot;, args: &quot;$ARGUMENTS&quot;)</code> call.</span>
               </div>
-              <div class="step-why">`disable-model-invocation: true` blocks programmatic invocation, and the wrapper is the established in-repo workaround that keeps ambient triggering on the word &quot;prompt&quot; suppressed.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">the file is 15 lines or fewer, `grep -qF &#39;Skill(skill: &quot;plan-agent:write-prompt&quot;&#39; kit/plugins/plan-agent/commands/write-prompt.md` exits 0, and `write-prompt/SKILL.md:5` still carries `disable-model-invocation: true`.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why"><code class="md">disable-model-invocation: true</code> blocks programmatic invocation, and the wrapper is the established in-repo workaround that keeps ambient triggering on the word &quot;prompt&quot; suppressed.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">the file is 15 lines or fewer, <code class="md">grep -qF &#39;Skill(skill: &quot;plan-agent:write-prompt&quot;&#39; kit/plugins/plan-agent/commands/write-prompt.md</code> exits 0, and <code class="md">write-prompt/SKILL.md:5</code> still carries <code class="md">disable-model-invocation: true</code>.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Prove the invocation seam before building on it — from a session with the plugin loaded, invoke `/plan-agent:write-prompt`, confirm it runs and appears in the session skill registry, then confirm a nested `build` to `build-proposal` to `write-prompt` call completes and note whether the `claude-fable-5` caller invoking an `opus` callee changes behavior.</span>
+                <span class="step-chip-text">Prove the invocation seam before building on it — from a session with the plugin loaded, invoke <code class="md">/plan-agent:write-prompt</code>, confirm it runs and appears in the session skill registry, then confirm a nested <code class="md">build</code> to <code class="md">build-proposal</code> to <code class="md">write-prompt</code> call completes and note whether the <code class="md">claude-fable-5</code> caller invoking an <code class="md">opus</code> callee changes behavior.</span>
               </div>
-              <div class="step-why">risks 1 through 3 in the proposal (no documented `Skill()` return value, three-level nesting, and cross-model-pin behavior) are all unverified, and every later step assumes they hold.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`write-prompt` is invocable, a prompt file is written to `docs/prompts/`, and a three-level nested invocation completes without a depth or permission error.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">risks 1 through 3 in the proposal (no documented <code class="md">Skill()</code> return value, three-level nesting, and cross-model-pin behavior) are all unverified, and every later step assumes they hold.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">write-prompt</code> is invocable, a prompt file is written to <code class="md">docs/prompts/</code>, and a three-level nested invocation completes without a depth or permission error.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Create `kit/plugins/plan-agent/skills/write-prompt/references/proposal-prompt-template.md` following the shape of the existing four templates — a `## Template` fenced block, a `## Placeholder Guide` table, and a `## Assembled Example` — carrying `{{TLDR}}`, `{{CONTEXT}}`, `{{CORE_FINDING}}`, `{{COMPARISON_TABLE}}`, `{{LOCKED_DECISIONS}}`, `{{WORKSTREAMS}}`, `{{RISKS}}`, `{{OPEN_QUESTIONS}}`, `{{ROADMAP}}`, `{{APPENDICES}}`, and `{{CORE_INSTRUCTION}}`.</span>
+                <span class="step-chip-text">Create <code class="md">kit/plugins/plan-agent/skills/write-prompt/references/proposal-prompt-template.md</code> following the shape of the existing four templates — a <code class="md">## Template</code> fenced block, a <code class="md">## Placeholder Guide</code> table, and a <code class="md">## Assembled Example</code> — carrying <code class="md">{{TLDR}}</code>, <code class="md">{{CONTEXT}}</code>, <code class="md">{{CORE_FINDING}}</code>, <code class="md">{{COMPARISON_TABLE}}</code>, <code class="md">{{LOCKED_DECISIONS}}</code>, <code class="md">{{WORKSTREAMS}}</code>, <code class="md">{{RISKS}}</code>, <code class="md">{{OPEN_QUESTIONS}}</code>, <code class="md">{{ROADMAP}}</code>, <code class="md">{{APPENDICES}}</code>, and <code class="md">{{CORE_INSTRUCTION}}</code>.</span>
               </div>
-              <div class="step-why">a 326-line proposal compressed into the `task` template&#39;s 10 slots loses appendices, roadmap phasing, and risk tables, and the proposal&#39;s Next-step section maps exactly onto a prompt&#39;s core instruction.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">all 11 placeholder tokens appear in both the template block and the Placeholder Guide table, and the Assembled Example contains no unsubstituted `{{` tokens.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">a 326-line proposal compressed into the <code class="md">task</code> template&#39;s 10 slots loses appendices, roadmap phasing, and risk tables, and the proposal&#39;s Next-step section maps exactly onto a prompt&#39;s core instruction.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">all 11 placeholder tokens appear in both the template block and the Placeholder Guide table, and the Assembled Example contains no unsubstituted <code class="md">{{</code> tokens.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Wire the `proposal` type through `kit/plugins/plan-agent/skills/write-prompt/SKILL.md` — add the fifth row to the Phase 1 type table and technique matrix, the Phase 3 XML layer mapping, the Phase 4 template-selection entry, and extend Phase 7 with three things: a **caller-supplied output path contract** (`--out &lt;path&gt;`) that, when present, overrides Phase 7&#39;s own directory resolution and its 3-5-word intent slug entirely; `status:` (`gathering` or `converged`), `modified:`, and `generated-sha:` frontmatter keys; and an in-place rewrite rule replacing the `-2`/`-3` uniqueness guard for this type, gated by comparing the current body&#39;s hash against the recorded `generated-sha:` and asking via `AskUserQuestion` when they differ.</span>
+                <span class="step-chip-text">Wire the <code class="md">proposal</code> type through <code class="md">kit/plugins/plan-agent/skills/write-prompt/SKILL.md</code> — add the fifth row to the Phase 1 type table and technique matrix, the Phase 3 XML layer mapping, the Phase 4 template-selection entry, and extend Phase 7 with three things: a <strong class="md">caller-supplied output path contract</strong> (<code class="md">--out &lt;path&gt;</code>) that, when present, overrides Phase 7&#39;s own directory resolution and its 3-5-word intent slug entirely; <code class="md">status:</code> (<code class="md">gathering</code> or <code class="md">converged</code>), <code class="md">modified:</code>, and <code class="md">generated-sha:</code> frontmatter keys; and an in-place rewrite rule replacing the <code class="md">-2</code>/<code class="md">-3</code> uniqueness guard for this type, gated by comparing the current body&#39;s hash against the recorded <code class="md">generated-sha:</code> and asking via <code class="md">AskUserQuestion</code> when they differ.</span>
               </div>
-              <div class="step-why">Phase 7 today picks its own directory and derives its own slug, so any caller that independently computes the path will disagree with it and name a file that was never written — the caller must dictate the path rather than guess it. And `generated-sha:` is what makes the drift check real: without a durable record of what the skill last wrote, an uncommitted previous round is indistinguishable from a hand edit, so the check would either warn on every rewrite or silently clobber.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">the type appears in all five phases, `--out` round-trips to the exact path given, a round-two run overwrites the same file rather than creating a `-2` variant, and hand-editing the body then re-running triggers the confirmation prompt while an untouched file does not.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Phase 7 today picks its own directory and derives its own slug, so any caller that independently computes the path will disagree with it and name a file that was never written — the caller must dictate the path rather than guess it. And <code class="md">generated-sha:</code> is what makes the drift check real: without a durable record of what the skill last wrote, an uncommitted previous round is indistinguishable from a hand edit, so the check would either warn on every rewrite or silently clobber.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">the type appears in all five phases, <code class="md">--out</code> round-trips to the exact path given, a round-two run overwrites the same file rather than creating a <code class="md">-2</code> variant, and hand-editing the body then re-running triggers the confirmation prompt while an untouched file does not.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Add a pre-gathered-answers bypass to `write-prompt` Phase 2 so a caller that has already interviewed the user skips the interview batch.</span>
+                <span class="step-chip-text">Add a pre-gathered-answers bypass to <code class="md">write-prompt</code> Phase 2 so a caller that has already interviewed the user skips the interview batch.</span>
               </div>
-              <div class="step-why">`build-proposal` Step 5 resolves decisions with the human already, and re-running Phase 2 would double-interview; the Claude Code docs are silent on any official pattern, so this is a documented repo-local `$ARGUMENTS` convention.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">Phase 2 documents the bypass token and its skip condition, and an invocation carrying the token produces a prompt with zero `AskUserQuestion` calls.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why"><code class="md">build-proposal</code> Step 5 resolves decisions with the human already, and re-running Phase 2 would double-interview; the Claude Code docs are silent on any official pattern, so this is a documented repo-local <code class="md">$ARGUMENTS</code> convention.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">Phase 2 documents the bypass token and its skip condition, and an invocation carrying the token produces a prompt with zero <code class="md">AskUserQuestion</code> calls.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Update `kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md` — add `proposal` as a fifth filter chip at lines 148-149, make the frontmatter reader tolerate the new `status:` and `modified:` keys without breaking card rendering, and confirm the existing `&lt;details&gt;` collapse plus a horizontally scrolling `&lt;pre&gt;` handle a 300-line body without forcing page-level overflow.</span>
+                <span class="step-chip-text">Update <code class="md">kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md</code> — add <code class="md">proposal</code> as a fifth filter chip at lines 148-149, make the frontmatter reader tolerate the new <code class="md">status:</code> and <code class="md">modified:</code> keys without breaking card rendering, and confirm the existing <code class="md">&lt;details&gt;</code> collapse plus a horizontally scrolling <code class="md">&lt;pre&gt;</code> handle a 300-line body without forcing page-level overflow.</span>
               </div>
-              <div class="step-why">the skill globs `$PROMPTS_DIR/*.md` and hard-codes four chip values, so a fifth type ships a gallery where proposal prompts are invisible to every filter, and proposal prompts are roughly 3x longer than any prompt the gallery has rendered so far.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">the chip list names all five types, publishing a library containing a `type: proposal` prompt renders a card reachable by its own chip, and the page body does not scroll horizontally at mobile width.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the skill globs <code class="md">$PROMPTS_DIR/*.md</code> and hard-codes four chip values, so a fifth type ships a gallery where proposal prompts are invisible to every filter, and proposal prompts are roughly 3x longer than any prompt the gallery has rendered so far.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">the chip list names all five types, publishing a library containing a <code class="md">type: proposal</code> prompt renders a card reachable by its own chip, and the page body does not scroll horizontally at mobile width.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Rewrite `build-proposal`&#39;s Step 6 to dual-write — invoke `write-prompt` with the proposal content and the Step 5 bypass token, compute the target path once as `{resolved-prompts-dir}/proposal-{verb-target-slug}.md` — **date-free, slug is the identity** — and **pass it to `write-prompt` via the Step 4 `--out` contract** so the caller dictates the path rather than both sides deriving one independently, and additionally write the legacy `docs/proposals/&lt;slug&gt;.md` carrying a deprecation banner naming the prompt as authoritative — then rewrite Step 8 to hand off that same path, and retarget `--dir` to the prompts directory.</span>
+                <span class="step-chip-text">Rewrite <code class="md">build-proposal</code>&#39;s Step 6 to dual-write — invoke <code class="md">write-prompt</code> with the proposal content and the Step 5 bypass token, compute the target path once as <code class="md">{resolved-prompts-dir}/proposal-{verb-target-slug}.md</code> — <strong class="md">date-free, slug is the identity</strong> — and <strong class="md">pass it to <code class="md">write-prompt</code> via the Step 4 <code class="md">--out</code> contract</strong> so the caller dictates the path rather than both sides deriving one independently, and additionally write the legacy <code class="md">docs/proposals/&lt;slug&gt;.md</code> carrying a deprecation banner naming the prompt as authoritative — then rewrite Step 8 to hand off that same path, and retarget <code class="md">--dir</code> to the prompts directory.</span>
               </div>
-              <div class="step-why">`Skill()` has no documented return value, and `write-prompt`&#39;s own Phase 7 would otherwise resolve a different directory and a different 3-5-word intent slug, so an independently derived path would name a file that was never written — passing it explicitly makes the two agree by construction. The date is omitted because a living document spanning two calendar days would otherwise resolve to a different filename on round two; `created:` and `modified:` carry the dates instead.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">the path `build-proposal` reports is byte-identical to the file `write-prompt` wrote, a loop spanning two dates resolves to one file, and `ls {prompts-dir}/proposal-*` shows exactly one file per slug.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why"><code class="md">Skill()</code> has no documented return value, and <code class="md">write-prompt</code>&#39;s own Phase 7 would otherwise resolve a different directory and a different 3-5-word intent slug, so an independently derived path would name a file that was never written — passing it explicitly makes the two agree by construction. The date is omitted because a living document spanning two calendar days would otherwise resolve to a different filename on round two; <code class="md">created:</code> and <code class="md">modified:</code> carry the dates instead.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">the path <code class="md">build-proposal</code> reports is byte-identical to the file <code class="md">write-prompt</code> wrote, a loop spanning two dates resolves to one file, and <code class="md">ls {prompts-dir}/proposal-*</code> shows exactly one file per slug.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Preserve tier behavior across the refactor in `build-proposal/SKILL.md` — Tier 0 continues to answer directly and write **no** artifact of either kind, and Tier 1 emits a prompt populated only from the short subset of slots (`{{CONTEXT}}`, `{{CORE_FINDING}}`, `{{OPEN_QUESTIONS}}`, `{{CORE_INSTRUCTION}}`) with the remaining slots omitted rather than emitted empty.</span>
+                <span class="step-chip-text">Preserve tier behavior across the refactor in <code class="md">build-proposal/SKILL.md</code> — Tier 0 continues to answer directly and write <strong class="md">no</strong> artifact of either kind, and Tier 1 emits a prompt populated only from the short subset of slots (<code class="md">{{CONTEXT}}</code>, <code class="md">{{CORE_FINDING}}</code>, <code class="md">{{OPEN_QUESTIONS}}</code>, <code class="md">{{CORE_INSTRUCTION}}</code>) with the remaining slots omitted rather than emitted empty.</span>
               </div>
-              <div class="step-why">`build/SKILL.md:189-193` documents a &quot;No proposal written&quot; fall-through that fires precisely when Tier 0 produces nothing, so making every tier write a file would silently break the chain, and the skill&#39;s own rule forbids emitting empty sections.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">a Tier 0 idea produces zero files in both directories and `build`&#39;s fall-through still triggers, and a Tier 1 run produces a prompt with no empty slot headings.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why"><code class="md">build/SKILL.md:189-193</code> documents a &quot;No proposal written&quot; fall-through that fires precisely when Tier 0 produces nothing, so making every tier write a file would silently break the chain, and the skill&#39;s own rule forbids emitting empty sections.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">a Tier 0 idea produces zero files in both directories and <code class="md">build</code>&#39;s fall-through still triggers, and a Tier 1 run produces a prompt with no empty slot headings.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-9">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Update `kit/plugins/plan-agent/skills/build-proposal/references/artifact-shape.md` — add the section-to-slot mapping table from the proposal&#39;s Appendix B, and fix line 102&#39;s `/plan-agent:implementation-plan docs/proposals/&lt;slug&gt;.md` to lead with objective text.</span>
+                <span class="step-chip-text">Update <code class="md">kit/plugins/plan-agent/skills/build-proposal/references/artifact-shape.md</code> — add the section-to-slot mapping table from the proposal&#39;s Appendix B, and fix line 102&#39;s <code class="md">/plan-agent:implementation-plan docs/proposals/&lt;slug&gt;.md</code> to lead with objective text.</span>
               </div>
-              <div class="step-why">line 102 currently advertises the bare-`.md` handoff that `SKILL.md:207-214` forbids and test check 15 greps for, but the check only scans `SKILL.md`, so the reference has been teaching the conversion-mode trap unnoticed.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`grep -qE &#39;implementation-plan +[^ ]+\.md&#39; kit/plugins/plan-agent/skills/build-proposal/references/artifact-shape.md` exits non-zero.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">line 102 currently advertises the bare-<code class="md">.md</code> handoff that <code class="md">SKILL.md:207-214</code> forbids and test check 15 greps for, but the check only scans <code class="md">SKILL.md</code>, so the reference has been teaching the conversion-mode trap unnoticed.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">grep -qE &#39;implementation-plan +[^ ]+\.md&#39; kit/plugins/plan-agent/skills/build-proposal/references/artifact-shape.md</code> exits non-zero.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-10">
           <div class="step-card-header">
             <div class="step-number">10</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Update `kit/plugins/plan-agent/skills/build/SKILL.md` Step 1b so the returned artifact is a prompt path — the `Skill(skill: &quot;plan-agent:build-proposal&quot;)` call site at L179, the `implementation-plan` handoff string at L181-185, the dirty-tree exclusion at L100, and the abandonment contract at L216-218.</span>
+                <span class="step-chip-text">Update <code class="md">kit/plugins/plan-agent/skills/build/SKILL.md</code> Step 1b so the returned artifact is a prompt path — the <code class="md">Skill(skill: &quot;plan-agent:build-proposal&quot;)</code> call site at L179, the <code class="md">implementation-plan</code> handoff string at L181-185, the dirty-tree exclusion at L100, and the abandonment contract at L216-218.</span>
               </div>
-              <div class="step-why">the chain interpolates whatever `build-proposal` reports without parsing it, so a changed artifact silently propagates unless every reference is updated together.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">no line in Step 1b refers to a proposal path as the chained artifact, and the `--dir` forwarding asymmetry documented at L180-185 still holds.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the chain interpolates whatever <code class="md">build-proposal</code> reports without parsing it, so a changed artifact silently propagates unless every reference is updated together.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">no line in Step 1b refers to a proposal path as the chained artifact, and the <code class="md">--dir</code> forwarding asymmetry documented at L180-185 still holds.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-11">
           <div class="step-card-header">
             <div class="step-number">11</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Update the three test files — rewrite `tests/plugins/test-build-proposal.sh` checks 10, 11, 14, and 15 to the dual-write contract, update `tests/plugins/test-build-skill.sh`&#39;s Step 1b assertions at L178-187, and add `tests/plugins/test-write-prompt-proposal-type.sh` plus the objective test `tests/plugins/test-proposal-prompt-pipeline.sh`.</span>
+                <span class="step-chip-text">Update the three test files — rewrite <code class="md">tests/plugins/test-build-proposal.sh</code> checks 10, 11, 14, and 15 to the dual-write contract, update <code class="md">tests/plugins/test-build-skill.sh</code>&#39;s Step 1b assertions at L178-187, and add <code class="md">tests/plugins/test-write-prompt-proposal-type.sh</code> plus the objective test <code class="md">tests/plugins/test-proposal-prompt-pipeline.sh</code>.</span>
               </div>
-              <div class="step-why">`test-build-skill.sh` runs in CI via `check-plugin-versions.yml:30` and `publish-dist.yml:44`, so leaving its assertions stale turns the release red.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`bash tests/plugins/test-build-skill.sh` and `bash tests/plugins/test-proposal-prompt-pipeline.sh` both exit 0.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why"><code class="md">test-build-skill.sh</code> runs in CI via <code class="md">check-plugin-versions.yml:30</code> and <code class="md">publish-dist.yml:44</code>, so leaving its assertions stale turns the release red.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-build-skill.sh</code> and <code class="md">bash tests/plugins/test-proposal-prompt-pipeline.sh</code> both exit 0.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card completed">
+        <div class="step-card completed" id="step-12">
           <div class="step-card-header">
             <div class="step-number">12</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Update the documentation and bump versions — `kit/plugins/plan-agent/README.md` (the build-proposal and write-prompt sections, and add the missing `write-prompt/` entry to the Plugin Structure tree), `kit/plugins/artifact-tools/README.md`, `CLAUDE.md:38,81`, root `README.md:451,470,473`, both CHANGELOGs, and `.claude-plugin/marketplace.json` moving plan-agent from 5.0.0 to 6.0.0 with an artifact-tools minor bump.</span>
+                <span class="step-chip-text">Update the documentation and bump versions — <code class="md">kit/plugins/plan-agent/README.md</code> (the build-proposal and write-prompt sections, and add the missing <code class="md">write-prompt/</code> entry to the Plugin Structure tree), <code class="md">kit/plugins/artifact-tools/README.md</code>, <code class="md">CLAUDE.md:38,81</code>, root <code class="md">README.md:451,470,473</code>, both CHANGELOGs, and <code class="md">.claude-plugin/marketplace.json</code> moving plan-agent from 5.0.0 to 6.0.0 with an artifact-tools minor bump.</span>
               </div>
-              <div class="step-why">the change removes an artifact contract, which is a major bump under the repo&#39;s semver rules, and `test-build-proposal.sh` check 12 asserts the marketplace version rises above `origin/main`.</div>
-              <details class="step-verify-toggle">
-                <summary>How to check this worked</summary>
-                <div class="verify-body">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 and no README or CLAUDE.md line still describes `docs/proposals/&lt;slug&gt;.md` as the sole deliverable.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the change removes an artifact contract, which is a major bump under the repo&#39;s semver rules, and <code class="md">test-build-proposal.sh</code> check 12 asserts the marketplace version rises above <code class="md">origin/main</code>.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 and no README or CLAUDE.md line still describes <code class="md">docs/proposals/&lt;slug&gt;.md</code> as the sole deliverable.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1703,63 +1974,63 @@ img, video { max-width: 100%; height: auto; }
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1" checked>
-          <label for="ac1">`/plan-agent:write-prompt` is invocable and `write-prompt` appears in the session skill registry while `disable-model-invocation: true` remains in its frontmatter.</label>
+          <label for="ac1"><code class="md">/plan-agent:write-prompt</code> is invocable and <code class="md">write-prompt</code> appears in the session skill registry while <code class="md">disable-model-invocation: true</code> remains in its frontmatter.</label>
         </li>
         <li>
           <input type="checkbox" id="ac2" checked>
-          <label for="ac2">`write-prompt` accepts a fifth `proposal` type and selects `references/proposal-prompt-template.md` for it.</label>
+          <label for="ac2"><code class="md">write-prompt</code> accepts a fifth <code class="md">proposal</code> type and selects <code class="md">references/proposal-prompt-template.md</code> for it.</label>
         </li>
         <li>
           <input type="checkbox" id="ac3" checked>
-          <label for="ac3">A saved proposal prompt carries `status:` (`gathering` or `converged`) and `modified:` frontmatter, and a second round overwrites the same file rather than creating a `-2` variant.</label>
+          <label for="ac3">A saved proposal prompt carries <code class="md">status:</code> (<code class="md">gathering</code> or <code class="md">converged</code>) and <code class="md">modified:</code> frontmatter, and a second round overwrites the same file rather than creating a <code class="md">-2</code> variant.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4" checked>
-          <label for="ac4">`write-prompt` honours a caller-supplied `--out &lt;path&gt;`, writing to exactly that path and bypassing its own directory resolution and intent-slug derivation.</label>
+          <label for="ac4"><code class="md">write-prompt</code> honours a caller-supplied <code class="md">--out &lt;path&gt;</code>, writing to exactly that path and bypassing its own directory resolution and intent-slug derivation.</label>
         </li>
         <li>
           <input type="checkbox" id="ac5" checked>
-          <label for="ac5">A hand-edited prompt file triggers a confirmation prompt before the next round overwrites it, detected via `generated-sha:` rather than a git-committed baseline, so an uncommitted previous round does not false-positive.</label>
+          <label for="ac5">A hand-edited prompt file triggers a confirmation prompt before the next round overwrites it, detected via <code class="md">generated-sha:</code> rather than a git-committed baseline, so an uncommitted previous round does not false-positive.</label>
         </li>
         <li>
           <input type="checkbox" id="ac6" checked>
-          <label for="ac6">A Tier 0 idea writes no file in either directory and `build`&#39;s &quot;No proposal written&quot; fall-through still fires; a Tier 1 idea writes a prompt with no empty slot headings.</label>
+          <label for="ac6">A Tier 0 idea writes no file in either directory and <code class="md">build</code>&#39;s &quot;No proposal written&quot; fall-through still fires; a Tier 1 idea writes a prompt with no empty slot headings.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7" checked>
-          <label for="ac7">`build-proposal` passes an explicit output path to `write-prompt` rather than reading its output back or independently deriving one, and the path it reports is byte-identical to the file actually written.</label>
+          <label for="ac7"><code class="md">build-proposal</code> passes an explicit output path to <code class="md">write-prompt</code> rather than reading its output back or independently deriving one, and the path it reports is byte-identical to the file actually written.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8" checked>
-          <label for="ac8">`write-prompt` Phase 2 runs zero `AskUserQuestion` calls when invoked with the pre-gathered-answers bypass token.</label>
+          <label for="ac8"><code class="md">write-prompt</code> Phase 2 runs zero <code class="md">AskUserQuestion</code> calls when invoked with the pre-gathered-answers bypass token.</label>
         </li>
         <li>
           <input type="checkbox" id="ac9" checked>
-          <label for="ac9">A full `build-proposal` run writes both a `docs/prompts/` prompt and a `docs/proposals/` copy, and the proposal copy carries a deprecation banner naming the prompt as authoritative.</label>
+          <label for="ac9">A full <code class="md">build-proposal</code> run writes both a <code class="md">docs/prompts/</code> prompt and a <code class="md">docs/proposals/</code> copy, and the proposal copy carries a deprecation banner naming the prompt as authoritative.</label>
         </li>
         <li>
           <input type="checkbox" id="ac10" checked>
-          <label for="ac10">`build-proposal`&#39;s Step 8 handoff names the `docs/prompts/` path and leads with objective text, not a bare `.md` token.</label>
+          <label for="ac10"><code class="md">build-proposal</code>&#39;s Step 8 handoff names the <code class="md">docs/prompts/</code> path and leads with objective text, not a bare <code class="md">.md</code> token.</label>
         </li>
         <li>
           <input type="checkbox" id="ac11" checked>
-          <label for="ac11">No file under `kit/plugins/plan-agent/skills/build-proposal/` matches `implementation-plan +[^ ]+\.md`, including `references/artifact-shape.md`.</label>
+          <label for="ac11">No file under <code class="md">kit/plugins/plan-agent/skills/build-proposal/</code> matches <code class="md">implementation-plan +[^ ]+\.md</code>, including <code class="md">references/artifact-shape.md</code>.</label>
         </li>
         <li>
           <input type="checkbox" id="ac12" checked>
-          <label for="ac12">`prompt-artifact`&#39;s library gallery offers five filter chips and renders `type: proposal` cards reachable by their own chip.</label>
+          <label for="ac12"><code class="md">prompt-artifact</code>&#39;s library gallery offers five filter chips and renders <code class="md">type: proposal</code> cards reachable by their own chip.</label>
         </li>
         <li>
           <input type="checkbox" id="ac13" checked>
-          <label for="ac13">`bash tests/plugins/test-build-skill.sh`, `bash tests/plugins/test-build-proposal.sh`, `bash tests/plugins/test-write-prompt-proposal-type.sh`, and `bash tests/plugins/test-proposal-prompt-pipeline.sh` all exit 0.</label>
+          <label for="ac13"><code class="md">bash tests/plugins/test-build-skill.sh</code>, <code class="md">bash tests/plugins/test-build-proposal.sh</code>, <code class="md">bash tests/plugins/test-write-prompt-proposal-type.sh</code>, and <code class="md">bash tests/plugins/test-proposal-prompt-pipeline.sh</code> all exit 0.</label>
         </li>
         <li>
           <input type="checkbox" id="ac14" checked>
-          <label for="ac14">`BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with plan-agent at 6.0.0.</label>
+          <label for="ac14"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 with plan-agent at 6.0.0.</label>
         </li>
         <li>
           <input type="checkbox" id="ac15" checked>
-          <label for="ac15">`docs/plans/merge-plan-interview-into-plan-agent.md:26`&#39;s relative link into `../proposals/` still resolves.</label>
+          <label for="ac15"><code class="md">docs/plans/merge-plan-interview-into-plan-agent.md:26</code>&#39;s relative link into <code class="md">../proposals/</code> still resolves.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -1772,10 +2043,10 @@ img, video { max-width: 100%; height: auto; }
         Final check
       </h2>
       <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
-      <p>Run the four test scripts and `BASE_REF=main node scripts/check-plugin-versions.mjs`; all five must exit 0. `bash tests/plugins/test-proposal-prompt-pipeline.sh` is the end-to-end gate — it asserts every seam of the refactor in one run.</p>
-      <p>Then exercise the real pipeline rather than trusting static assertions. From a session with the plugin loaded, run `/plan-agent:build-proposal &lt;a small test idea&gt; --dir /tmp/proposal-check` and confirm: a prompt file appears under the resolved prompts directory with `type: proposal`, `status:`, and `modified:` frontmatter; a legacy copy appears under `docs/proposals/` carrying the deprecation banner; the Step 8 handoff line names the prompt path and leads with objective text. Run the same idea a second time against the same slug and confirm the prompt file is overwritten in place rather than a `-2` variant appearing.</p>
-      <p>Finally publish the prompt library via `prompt-artifact --library` and confirm the rendered gallery shows five filter chips and that the proposal card is hidden and shown by the `proposal` chip.</p>
-      <p>Step 2 is a hard gate: if `write-prompt` does not become invocable after the wrapper lands, or the three-level nesting or cross-model-pin behavior fails, stop and report rather than continuing to Step 3 — every later step assumes that seam holds.</p>
+      <p>Run the four test scripts and <code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code>; all five must exit 0. <code class="md">bash tests/plugins/test-proposal-prompt-pipeline.sh</code> is the end-to-end gate — it asserts every seam of the refactor in one run.</p>
+      <p>Then exercise the real pipeline rather than trusting static assertions. From a session with the plugin loaded, run <code class="md">/plan-agent:build-proposal &lt;a small test idea&gt; --dir /tmp/proposal-check</code> and confirm: a prompt file appears under the resolved prompts directory with <code class="md">type: proposal</code>, <code class="md">status:</code>, and <code class="md">modified:</code> frontmatter; a legacy copy appears under <code class="md">docs/proposals/</code> carrying the deprecation banner; the Step 8 handoff line names the prompt path and leads with objective text. Run the same idea a second time against the same slug and confirm the prompt file is overwritten in place rather than a <code class="md">-2</code> variant appearing.</p>
+      <p>Finally publish the prompt library via <code class="md">prompt-artifact --library</code> and confirm the rendered gallery shows five filter chips and that the proposal card is hidden and shown by the <code class="md">proposal</code> chip.</p>
+      <p>Step 2 is a hard gate: if <code class="md">write-prompt</code> does not become invocable after the wrapper lands, or the three-level nesting or cross-model-pin behavior fails, stop and report rather than continuing to Step 3 — every later step assumes that seam holds.</p>
     </section>
 
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
@@ -1805,16 +2076,16 @@ img, video { max-width: 100%; height: auto; }
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
           <dl class="report-list">
-            <dt>Step 1 deviates from &quot;mirror `commands/deep-grill.md` exactly&quot;</dt>
-            <dd>a command shadows a skill of the same name in the `Skill` namespace, so a wrapper whose body is `Skill(skill: &quot;plan-agent:write-prompt&quot;, ...)` returns itself and `SKILL.md` never loads; measured with a headless probe against the worktree plugin, that shape put 0 `## Phase` headings in context while reading `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/SKILL.md` by path put all 7 there, so the wrapper loads the skill file by path (with a `Glob` fallback) and carries the reason inline</dd>
+            <dt>Step 1 deviates from &quot;mirror <code class="md">commands/deep-grill.md</code> exactly&quot;</dt>
+            <dd>a command shadows a skill of the same name in the <code class="md">Skill</code> namespace, so a wrapper whose body is <code class="md">Skill(skill: &quot;plan-agent:write-prompt&quot;, ...)</code> returns itself and <code class="md">SKILL.md</code> never loads; measured with a headless probe against the worktree plugin, that shape put 0 <code class="md">## Phase</code> headings in context while reading <code class="md">${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/SKILL.md</code> by path put all 7 there, so the wrapper loads the skill file by path (with a <code class="md">Glob</code> fallback) and carries the reason inline</dd>
             <dt>The first pass shipped the self-delegating wrapper and a chained run silently worked around it</dt>
-            <dd>`build` → `build-proposal` → `write-prompt` produced correct output by reading `SKILL.md` itself, through a seam that was not actually connected; that is the failure grep-based tests cannot see, and is why Step 2 exists as a hard gate</dd>
+            <dd><code class="md">build</code> → <code class="md">build-proposal</code> → <code class="md">write-prompt</code> produced correct output by reading <code class="md">SKILL.md</code> itself, through a seam that was not actually connected; that is the failure grep-based tests cannot see, and is why Step 2 exists as a hard gate</dd>
             <dt>Both new test files assert the by-path contract</dt>
-            <dd>check 1 in each now requires the wrapper to name `skills/write-prompt/SKILL.md` and to explain the shadowing, rather than requiring the presence of a `Skill()` call, which the broken wrapper also satisfied</dd>
-            <dt>`commands/deep-grill.md` and `commands/documenting-plans.md` carry the same shape and are presumed to have the same defect</dt>
+            <dd>check 1 in each now requires the wrapper to name <code class="md">skills/write-prompt/SKILL.md</code> and to explain the shadowing, rather than requiring the presence of a <code class="md">Skill()</code> call, which the broken wrapper also satisfied</dd>
+            <dt><code class="md">commands/deep-grill.md</code> and <code class="md">commands/documenting-plans.md</code> carry the same shape and are presumed to have the same defect</dt>
             <dd>left untouched as out of scope, with a follow-up task filed</dd>
             <dt>The prompt library gallery was verified structurally, not visually</dt>
-            <dd>five chips present, `data-type=&quot;proposal&quot;` on both proposal cards, exact-match filter JS (`card.dataset.type === t`), and `overflow-x: auto` on the `&lt;pre&gt;`; it was not published to claude.ai (an outward-facing action needing explicit approval) and not confirmed at mobile width, as the browser pane timed out</dd>
+            <dd>five chips present, <code class="md">data-type=&quot;proposal&quot;</code> on both proposal cards, exact-match filter JS (<code class="md">card.dataset.type === t</code>), and <code class="md">overflow-x: auto</code> on the <code class="md">&lt;pre&gt;</code>; it was not published to claude.ai (an outward-facing action needing explicit approval) and not confirmed at mobile width, as the browser pane timed out</dd>
           </dl>
         </div>
       </div>
@@ -1925,6 +2196,31 @@ body correctly into its &lt;pre&gt; block.</pre>
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
 /* ── Save as PDF (native browser print dialog) ──────────────── */
 function savePDF() {
   window.print();
@@ -2136,27 +2432,59 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
     }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
-    sections.forEach(function (el) { observer.observe(el); });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
 </script>

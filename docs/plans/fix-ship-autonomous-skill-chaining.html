@@ -1,66 +1,181 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo">
+<html lang="en" data-status="todo" data-effort="medium">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
 <meta name="plan-status" content="todo">
+<meta name="plan-effort" content="medium">
 <meta name="plan-type" content="fix">
 <meta name="plan-created" content="2026-06-10">
 <meta name="plan-repo" content="agentics">
 <meta name="plan-file" content="fix-ship-autonomous-skill-chaining.html">
 <meta name="plan-path" content="docs/plans/fix-ship-autonomous-skill-chaining.html">
-<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/fix-ship-autonomous-skill-chaining.html — Make ship-autonomous immune to issue #43809 via Read-based skill chaining">
+<meta name="plan-md" content="docs/plans/fix-ship-autonomous-skill-chaining.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/fix-ship-autonomous-skill-chaining.md — Fix ship-autonomous skill chaining (claude-code#43809). Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/fix-ship-autonomous-skill-chaining.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Fix ship-autonomous skill chaining (claude-code#43809). The plan at docs/plans/fix-ship-autonomous-skill-chaining.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/fix-ship-autonomous-skill-chaining.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/fix-ship-autonomous-skill-chaining.md — Fix ship-autonomous skill chaining (claude-code#43809). Brief subagents with the plan file at docs/plans/fix-ship-autonomous-skill-chaining.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/fix-ship-autonomous-skill-chaining.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <meta name="plan-issue" content="https://github.com/anthropics/claude-code/issues/43809">
 <title>Plan: Fix ship-autonomous skill chaining (claude-code#43809)</title>
 <style>
-  /* ── Design tokens ─────────────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --bg:         #ffffff;
-    --surface:    #ffffff;
-    --border:     #e5e7eb;
-    --border-mid: #d1d5db;
-    --text:       #111827;
-    --muted:      #6b7280;
-    --subtle:     #9ca3af;
-    --accent:     #2563eb;
-    --accent-bg:  #eff6ff;
-    --green:      #16a34a;
-    --green-bg:   #f0fdf4;
-    --green-border:#bbf7d0;
-    --amber:      #d97706;
-    --amber-bg:   #fffbeb;
-    --amber-border:#fde68a;
-    --red:        #dc2626;
-    --red-bg:     #fef2f2;
-    --red-border: #fecaca;
-    --purple:     #a21caf;
-    --purple-bg:  #fdf4ff;
-    --purple-border:#f0abfc;
-    --grey-bg:    #f9fafb;
-    --wish-bg:    #fdf8ff;
-    --wish-border:#d8b4fe;
+    --paper:      #fcfcfa;
+    --panel:      #ffffff;
+    --sunk:       #f5f4f1;
+    --ink:        #16151c;
+    --ink-2:      #4b4858;
+    --ink-3:      #6e6a80;
+    --rule:       #e6e3ec;
+    --rule-soft:  #f0eef4;
+    --accent:     #4a2fe0;
+    --accent-soft:#efebfe;
+    --accent-line:#c9befb;
+    --on-accent:  #ffffff;
+    --moss:       #2f6b45;
+    --moss-soft:  #edf5ef;
+    --moss-line:  #c3ddcd;
+    --signal:     #a8420c;
+    --signal-soft:#fbf0e9;
+    --signal-line:#e8c9b4;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #7b2d9e;
+    --purple-bg:  #f9f0fd;
+    --purple-border:#dcb8ee;
+    --wish-bg:    #fbf5fe;
+    --wish-border:#dcb8ee;
     --radius:     4px;
-    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #121118;
+    --panel:      #1a1922;
+    --sunk:       #201f29;
+    --ink:        #edebf3;
+    --ink-2:      #b3afc4;
+    --ink-3:      #8b87a0;
+    --rule:       #2c2a38;
+    --rule-soft:  #24232e;
+    --accent:     #a594ff;
+    --accent-soft:#221f36;
+    --accent-line:#4a4270;
+    --on-accent:  #16151c;
+    --moss:       #7bc098;
+    --moss-soft:  #1b2a21;
+    --moss-line:  #2f4a39;
+    --signal:     #e8a278;
+    --signal-soft:#2b2019;
+    --signal-line:#4d3826;
+    --red:        #f4998f;
+    --red-bg:     #2b1a19;
+    --red-border: #4d2b27;
+    --purple:     #d9a6f0;
+    --purple-bg:  #251b2d;
+    --purple-border:#4a3557;
+    --wish-bg:    #251b2d;
+    --wish-border:#4a3557;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #121118;
+      --panel:      #1a1922;
+      --sunk:       #201f29;
+      --ink:        #edebf3;
+      --ink-2:      #b3afc4;
+      --ink-3:      #8b87a0;
+      --rule:       #2c2a38;
+      --rule-soft:  #24232e;
+      --accent:     #a594ff;
+      --accent-soft:#221f36;
+      --accent-line:#4a4270;
+      --on-accent:  #16151c;
+      --moss:       #7bc098;
+      --moss-soft:  #1b2a21;
+      --moss-line:  #2f4a39;
+      --signal:     #e8a278;
+      --signal-soft:#2b2019;
+      --signal-line:#4d3826;
+      --red:        #f4998f;
+      --red-bg:     #2b1a19;
+      --red-border: #4d2b27;
+      --purple:     #d9a6f0;
+      --purple-bg:  #251b2d;
+      --purple-border:#4a3557;
+      --wish-bg:    #251b2d;
+      --wish-border:#4a3557;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
 
   /* ── Reset & base ──────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--bg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
   }
   a { color: var(--accent); }
   code, pre {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .875em;
   }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
   pre {
-    background: var(--grey-bg);
-    border: 1px solid var(--border);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: .75rem 1rem;
     overflow-x: auto;
@@ -90,7 +205,7 @@
     width: auto; height: auto;
     overflow: visible;
     background: var(--accent);
-    color: #fff;
+    color: var(--on-accent);
     padding: .5rem 1rem;
     border-radius: var(--radius);
     font-weight: 700;
@@ -100,8 +215,8 @@
 
   /* ── Header — document cover ────────────────────────────────────── */
   .plan-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
     padding: 0;
   }
   .plan-header::before {
@@ -116,9 +231,10 @@
     padding: 1.75rem 1.5rem 1.5rem;
   }
   .plan-doc-type {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .14em;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .6rem;
@@ -127,11 +243,21 @@
     display: block;
   }
   .plan-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1.14;
+    color: var(--ink);
+    max-width: 26ch;
+    text-wrap: balance;
+  }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
   }
 
   /* Status badge */
@@ -147,7 +273,10 @@
     border-radius: 999px;
     white-space: nowrap;
     flex-shrink: 0;
-    color: #fff;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
   }
   .status-badge::before {
     content: "";
@@ -158,14 +287,90 @@
     background: currentColor;
     flex-shrink: 0;
   }
-  [data-status="todo"]        .status-badge { background: #6b7280; }
-  [data-status="in-progress"] .status-badge { background: #d97706; }
-  [data-status="completed"]   .status-badge { background: #16a34a; }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
+
+  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
+  .effort-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+  }
+  .effort-badge::before { content: "Effort "; opacity: .7; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
     animation: pulse-dot 1.4s ease-in-out infinite;
   }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-status="in-progress"] .status-badge::before { animation: none; }
+  }
+
+  /* Save as PDF button */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .75rem;
+    font-weight: 600;
+    font-family: var(--mono);
+    color: var(--on-accent);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* Meta row */
   .plan-meta {
@@ -174,9 +379,10 @@
     flex-wrap: wrap;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
-    font-size: .8rem;
-    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
   }
   .plan-meta span {
     display: inline-flex;
@@ -188,14 +394,17 @@
   /* ── Layout ────────────────────────────────────────────────────── */
   .layout {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 3rem;
-    max-width: 1040px;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 5rem;
     align-items: start;
   }
-  @media (max-width: 720px) {
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
   }
 
@@ -206,29 +415,30 @@
     align-self: start;
     overflow: hidden;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .plan-nav {
       position: static;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--rule);
       padding-bottom: 1.5rem;
       margin-bottom: 2rem;
     }
   }
   .nav-heading {
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
-    color: var(--subtle);
+    color: var(--ink-3);
     padding: 0 1rem .6rem;
     margin-bottom: .25rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .scroll-rail {
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 2px;
-    background: var(--border);
+    background: var(--rule);
     border-radius: 1px;
     overflow: hidden;
     pointer-events: none;
@@ -243,85 +453,185 @@
   }
   @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
-  .plan-nav li a {
+  .plan-nav > ul > li > a {
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: .125rem 1rem .125rem 1.25rem;
     font-size: .825rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     gap: .5rem;
     border-left: 2px solid transparent;
     transition: color .12s, border-color .12s;
   }
-  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
-  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
-  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .plan-nav .icon { opacity: .5; }
-  .plan-nav li a.active .icon,
-  .plan-nav li a:hover .icon { opacity: .8; }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
 
   /* ── Objective card — executive summary ────────────────────────── */
   .objective-card {
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 1.35rem 1.5rem;
     margin-bottom: 2.5rem;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #1e3a5f;
-    line-height: 1.6;
+    color: var(--ink);
   }
-  .objective-card .section-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .12em;
+  .objective-card > p {
+    font-family: var(--prose);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .objective-card .section-label,
+  .plan-glance-label {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--accent);
     margin-bottom: .5rem;
   }
 
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
+  .plan-glance {
+    margin-top: 1.1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--accent-line);
+  }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
+
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
     margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--rule);
   }
   .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
-    font-size: .75rem;
+    font-family: var(--mono);
+    font-size: .65rem;
     font-weight: 600;
-    color: var(--muted);
+    color: var(--ink-2);
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .16em;
   }
-  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
-  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
+    background: var(--accent);
     transition: width .5s cubic-bezier(.4,0,.2,1);
     width: 0%;
   }
-  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
   @media (prefers-reduced-motion: reduce) {
-    .progress-bar-fill { animation: none; transition: none; }
+    .progress-bar-fill { transition: none; }
   }
 
   /* ── Document sections ─────────────────────────────────────────── */
   .section-card {
     background: transparent;
     border: none;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
     border-radius: 0;
     padding: 2rem 0 1.25rem;
     margin-bottom: 0;
@@ -329,18 +639,33 @@
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-size: .9rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-family: var(--mono);
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .6rem;
   }
-  .section-card h2 .icon { opacity: .6; }
-  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
+  .section-card .section-intro {
+    font-size: .85rem;
+    color: var(--ink-2);
+    margin: -1rem 0 1.25rem;
+  }
+  .section-card p {
+    margin-bottom: .75rem;
+    color: var(--ink-2);
+    font-family: var(--prose);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
   .section-card p:last-child { margin-bottom: 0; }
   .section-card ul, .section-card ol {
     padding-left: 1.4rem;
@@ -349,66 +674,35 @@
     gap: .4rem;
   }
 
-  /* ── Step timeline ──────────────────────────────────────────────── */
-  .steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-  }
-  .steps-list::before {
-    content: "";
-    position: absolute;
-    left: .9rem;
-    top: 1.75rem;
-    bottom: 1.75rem;
-    width: 1px;
-    background: var(--border);
-  }
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
 
-  /* ── Step cards ────────────────────────────────────────────────── */
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
   .step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow);
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
     position: relative;
-    margin-left: 2.25rem;
-    transition: border-color .15s;
+    scroll-margin-top: 1.5rem;
   }
-  .step-card:hover { border-color: var(--border-mid); }
-  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
-  .step-card::before {
-    content: "";
-    position: absolute;
-    left: -1.6rem; top: 1.1rem;
-    width: .75rem; height: .75rem;
-    border-radius: 50%;
-    background: var(--border);
-    border: 2px solid var(--bg);
-    transition: background .15s;
-  }
-  .step-card.completed::before { background: var(--green); }
-  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+  .step-card:first-child { border-top: 0; }
 
   .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
   .step-number {
     flex-shrink: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--grey-bg);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .75rem;
-    font-weight: 700;
-    margin-top: .1rem;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
   }
-  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
-  .step-body { min-width: 0; }
+  .step-card.completed .step-number { color: var(--moss); }
+  .step-body { flex: 1; min-width: 0; }
   .step-action {
     font-weight: 600;
     margin-bottom: .3rem;
@@ -416,58 +710,56 @@
     align-items: baseline;
     gap: .45rem;
     flex-wrap: wrap;
-    color: var(--text);
+    color: var(--ink);
   }
   .step-chip {
     display: inline-block;
-    font-size: .6rem;
-    font-weight: 700;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .06em;
-    padding: .1em .5em;
-    border-radius: 999px;
-    background: var(--grey-bg);
-    color: var(--subtle);
-    border: 1px solid var(--border);
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
     vertical-align: middle;
     user-select: none;
     flex-shrink: 0;
   }
   .step-card.completed .step-chip {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
-  .step-chip-text { }
-  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
-  .step-why::before { content: "Why: "; font-weight: 600; color: var(--text); }
-  .step-verify-toggle {
+  .step-chip-text { flex: 1; }
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
     margin-top: .5rem;
-    border: 0;
-    border-top: 1px solid var(--border);
-    padding-top: .4rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
   }
-  .step-verify-toggle summary {
-    font-size: .8rem;
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
     font-weight: 600;
-    color: var(--accent);
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    user-select: none;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
   }
-  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
-  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
-  .step-verify-toggle .verify-body {
-    font-size: .875rem;
-    color: var(--text);
-    margin-top: .4rem;
-    padding-left: .5rem;
-    border-left: 2px solid var(--accent);
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
   }
-  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
 
   /* ── Acceptance criteria ───────────────────────────────────────── */
   .criteria-list {
@@ -479,31 +771,31 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
   .criteria-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
     cursor: pointer;
   }
   .criteria-list label { cursor: pointer; font-size: .9rem; }
-  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
 
   /* ── Completion checklist ────────────────────────────────────── */
   .completion-checklist {
-    background: var(--surface);
-    border: 2px solid var(--amber);
+    background: var(--panel);
+    border: 2px solid var(--signal);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-top: 1rem;
   }
-  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-checklist.all-complete { border-color: var(--moss); }
   .completion-header {
     display: flex;
     align-items: center;
@@ -517,14 +809,14 @@
     text-transform: uppercase;
     padding: .15rem .6rem;
     border-radius: 999px;
-    background: #fef3c7;
-    color: var(--amber);
-    border: 1px solid #fde68a;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
   }
   .completion-checklist.all-complete .completion-badge {
-    background: var(--green-bg);
-    color: var(--green);
-    border-color: #bbf7d0;
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
   }
   .completion-list {
     list-style: none; padding: 0;
@@ -535,20 +827,20 @@
     align-items: flex-start;
     gap: .75rem;
     padding: .6rem .75rem;
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--surface);
+    background: var(--panel);
     transition: background .12s;
   }
-  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
   .completion-list input[type="checkbox"] {
     flex-shrink: 0;
     width: 1rem; height: 1rem;
     margin-top: .2rem;
-    accent-color: var(--green);
+    accent-color: var(--moss);
   }
   .completion-list label { font-size: .9rem; }
-  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
   @media (prefers-reduced-motion: reduce) {
     .completion-list li { transition: none; }
   }
@@ -557,25 +849,25 @@
   .completion-report {
     margin-top: 1.25rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .report-heading {
     font-size: .75rem;
     font-weight: 700;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
   }
   .report-empty {
     font-style: italic;
-    color: var(--subtle);
+    color: var(--ink-3);
     font-size: .875rem;
   }
   .report-list { margin: 0; padding: 0; }
   .report-list dt {
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     font-size: .875rem;
     display: flex;
     align-items: center;
@@ -588,11 +880,11 @@
     display: inline-block;
     width: .5rem; height: .5rem;
     border-radius: 50%;
-    background: #dc2626;
+    background: var(--red);
     flex-shrink: 0;
   }
   .report-list dd {
-    color: var(--muted);
+    color: var(--ink-2);
     font-size: .85rem;
     margin-left: .9rem;
     margin-top: .2rem;
@@ -602,10 +894,10 @@
   /* ── Next steps ────────────────────────────────────────────────── */
   .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
   .next-step-item {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .next-step-item summary {
     font-weight: 600;
@@ -616,14 +908,14 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: var(--surface);
+    background: var(--panel);
     user-select: none;
     min-height: 44px;
   }
-  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
   .next-step-item[open] summary::before { transform: rotate(90deg); }
-  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
-  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
   .next-step-prompt pre { margin: 0; }
   @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
 
@@ -637,20 +929,22 @@
     font-size: .775rem;
     font-weight: 500;
     color: var(--accent);
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
     font-family: inherit;
     line-height: 1.4;
   }
-  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
-  .copy-prompt-btn:active { background: #bfdbfe; }
-  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-prompt-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
 
   /* Wish list variant */
   .wish-list-header {
@@ -661,37 +955,38 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #7c3aed;
+    color: var(--purple);
     margin: 1.5rem 0 .75rem;
   }
   .wish-list-header::after {
     content: "";
+    flex: 1;
     height: 1px;
     background: var(--wish-border);
     opacity: .5;
   }
   .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
-  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
   .wish-badge {
     font-size: .6rem;
-    background: #f3e8ff;
-    color: #6d28d9;
+    background: var(--purple-bg);
+    color: var(--purple);
     padding: .1rem .5rem;
     border-radius: 999px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin-left: auto;
-    border: 1px solid #ddd6fe;
+    border: 1px solid var(--purple-border);
   }
 
   /* ── Collapsible optional sections ─────────────────────────────── */
   .optional-section {
-    border: 1px solid var(--border);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     margin-top: 1.5rem;
     overflow: hidden;
-    background: var(--surface);
+    background: var(--panel);
   }
   .optional-section > summary {
     padding: .875rem 1.25rem;
@@ -705,13 +1000,48 @@
     user-select: none;
     min-height: 44px;
   }
-  .optional-section > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
-  .optional-section[open] > summary::before { transform: rotate(90deg); }
-  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .optional-section > summary::before,
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
+  .optional-section[open] > summary::before,
+  .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
   .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
   .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
   .unresolved-prompt { margin-top: .5rem; }
-  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before, .plan-more-ways > summary::before { transition: none; } }
+
+  /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
+  .plan-more-ways {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--panel);
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+    overflow: hidden;
+  }
+  .plan-more-ways > summary {
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
+  .plan-more-ways-body {
+    padding: .75rem 1rem 1rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  @media print { .plan-more-ways { display: none !important; } }
 
   /* ── Implement prompt ─────────────────────────────────────────── */
   .plan-implement {
@@ -720,8 +1050,8 @@
     gap: .6rem;
     margin-bottom: 1.5rem;
     padding: .45rem .75rem;
-    background: var(--green-bg);
-    border: 1px solid #bbf7d0;
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
     border-radius: var(--radius);
     font-size: .8rem;
   }
@@ -730,14 +1060,15 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--green);
+    color: var(--moss);
     flex-shrink: 0;
     margin-top: .1rem;
   }
   .plan-implement code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
     word-break: break-all;
   }
   .copy-cmd-btn {
@@ -747,9 +1078,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -758,23 +1089,21 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .copy-cmd-btn { display: none; }
   @media print { .plan-implement { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
 
-  /* ── Plan source (file name + relative path) ──────────────────── */
+  /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
   .plan-source {
     display: flex;
     flex-direction: column;
     gap: .4rem;
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     padding: .55rem .75rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
     font-size: .8rem;
   }
   .plan-source-row { display: flex; align-items: center; gap: .6rem; }
@@ -783,14 +1112,15 @@
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     flex-shrink: 0;
     width: 2.4rem;
   }
   .plan-source code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
     word-break: break-all;
   }
   .copy-src-btn {
@@ -800,9 +1130,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -811,40 +1141,38 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   @media print { .copy-src-btn { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
 
-  /* ── Workflow prompt (conditional — remove element when empty) ── */
+  /* ── Workflow prompt row (conditional — remove row when empty; lives in the drawer) ── */
   .plan-workflow {
-    margin: -.5rem 0 1.5rem;
+    margin: 0;
     font-size: .8rem;
   }
-  .plan-workflow summary {
+  .plan-workflow-label {
     font-size: .7rem;
     font-weight: 600;
     color: var(--accent);
-    cursor: pointer;
-    padding: .25rem 0;
-    user-select: none;
+    padding: .1rem 0;
   }
-  .plan-workflow summary:hover { text-decoration: underline; }
   .plan-workflow-inner {
     display: flex;
     align-items: flex-start;
     gap: .6rem;
     margin-top: .4rem;
     padding: .45rem .75rem;
-    background: var(--accent-bg);
-    border: 1px solid #bfdbfe;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
     border-radius: var(--radius);
   }
   .plan-workflow code {
     font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
     font-size: .82rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
     word-break: break-all;
   }
   .copy-workflow-btn {
@@ -854,9 +1182,9 @@
     padding: .2rem .6rem;
     font-size: .72rem;
     font-weight: 500;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     cursor: pointer;
     transition: background .12s, color .12s, border-color .12s;
@@ -865,12 +1193,67 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
-  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
   .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
   @media print { .plan-workflow { display: none !important; } }
   @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
+
+  /* ── Goal prompt row (outcome-driven — always present; lives in the drawer) ── */
+  .plan-goal {
+    margin: 0;
+    font-size: .8rem;
+  }
+  .plan-goal-label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--purple);
+    padding: .1rem 0;
+  }
+  .plan-goal-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--purple-bg);
+    border: 1px solid var(--purple-border);
+    border-radius: var(--radius);
+  }
+  .plan-goal code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-goal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
+  @media print { .plan-goal { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
 
   /* ── Tests section ──────────────────────────────────────────────── */
   .test-list {
@@ -879,8 +1262,8 @@
     gap: .75rem;
   }
   .test-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--panel);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 1rem 1.25rem;
     box-shadow: var(--shadow);
@@ -902,26 +1285,27 @@
     border-radius: 999px;
     flex-shrink: 0;
   }
-  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
   .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
-  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
   .test-card-title {
     font-weight: 600;
     font-size: .95rem;
-    color: var(--text);
+    color: var(--ink);
+    flex: 1;
   }
-  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
   .test-card-body p { margin-bottom: .4rem; }
   .test-card-body p:last-child { margin-bottom: 0; }
   .test-card-body code { font-size: .85em; }
-  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
   .test-tier-label {
     font-size: .68rem;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-2);
     margin-bottom: .75rem;
     display: flex;
     align-items: center;
@@ -929,22 +1313,23 @@
   }
   .test-tier-label::after {
     content: "";
+    flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--rule);
   }
   .objective-test-card {
-    background: var(--green-bg);
-    border: 1px solid var(--green-border);
-    border-left: 4px solid var(--green);
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
     box-shadow: var(--shadow);
   }
   .objective-test-card .test-card-header { margin-bottom: .6rem; }
-  .objective-test-card .test-card-title { color: #14532d; }
-  .objective-test-card .test-card-body { color: #166534; }
-  .objective-test-card .test-card-body strong { color: #14532d; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
   /* ── Footer ────────────────────────────────────────────────────── */
   .plan-footer {
     display: flex;
@@ -952,10 +1337,10 @@
     justify-content: center;
     gap: .4rem;
     font-size: .75rem;
-    color: var(--subtle);
+    color: var(--ink-3);
     margin-top: 3rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--rule);
   }
   .plan-footer .icon { opacity: .35; }
 
@@ -964,7 +1349,7 @@
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
-    .plan-nav, .scroll-rail, .progress-wrap { display: none !important; }
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
     .layout { display: block !important; }
     .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
     .step-chip { display: none !important; }
@@ -981,56 +1366,69 @@
 
   /* ── Files file-tree ────────────────────────────────────────────── */
   .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
-  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
-  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
-  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
-  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
+  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
-  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
-  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
-  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
-  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
   .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
-  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
-  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
-  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
 
   /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
   .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
   @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
   .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
-  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
-  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
-  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
 
   /* ── Bar chart (value via inline --val) ─────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
   .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
   @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
-  .bar-label { font-size: .82rem; color: var(--text); }
-  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
   .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
-  .bar-fill.full { background: var(--green); }
-  .bar-fill.zero { background: var(--subtle); }
-  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
 
   /* ── Data table ─────────────────────────────────────────────────── */
   .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
-  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
-  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
-  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
   .plan-table code { font-size: .8em; }
 
   /* Shared sub-heading used inside visual sections */
-  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
+
+  /* ── Resources (images, screenshots & reference links) ──────────── */
+  .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+  .resource-figure > a { display: block; line-height: 0; }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
+  .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
+  .resource-links li:last-child { border-bottom: none; }
+  .resource-links a { font-weight: 600; word-break: break-word; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
 
   .plan-back-nav { margin-bottom: .5rem; }
   .plan-back-link {
@@ -1038,44 +1436,12 @@
     align-items: center;
     gap: .3125rem;
     font-size: .8125rem;
-    color: var(--muted);
+    color: var(--ink-2);
     text-decoration: none;
     transition: color .15s;
   }
   .plan-back-link:hover { color: var(--accent); }
   .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
-
-  /* ── Save as PDF button (backfilled) ──────────────────────────── */
-  .save-pdf-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .4rem 1rem;
-    font-size: .8rem;
-    font-weight: 600;
-    color: #fff;
-    background: var(--accent, #2563eb);
-    border: 1px solid var(--accent, #2563eb);
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: inherit;
-    line-height: 1.4;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: filter .15s, box-shadow .15s;
-  }
-  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-  .save-pdf-btn:active { filter: brightness(.75); }
-  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent, #2563eb); outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
-  .plan-header-actions {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    flex-wrap: wrap;
-    margin-top: .75rem;
-  }
-  @media print { .save-pdf-btn { display: none !important; } }
 </style>
 <style id="plan-responsive-fix" data-version="1">
 /* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
@@ -1090,76 +1456,6 @@ img, video { max-width: 100%; height: auto; }
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════════════
-     MACHINE-READABLE DIGEST (backfilled)
-     First element child of <body>. type="text/markdown" never renders
-     or runs. Spec only — no status/checkbox/progress state. Literal
-     closing-script sequences in the content are guarded as <\/script.
-     Extract (first-match flag-and-exit):
-       awk '!f && /<script[^>]*id="plan-digest"/{f=1;next} f && /<\/script>/{exit} f' <file>
-     ══════════════════════════════════════════════════════════════════ -->
-<script type="text/markdown" id="plan-digest">
-# Plan: Fix ship-autonomous skill chaining (claude-code#43809)
-
-> Authored spec only. Status and progress live in the <head> meta tags and
-> the live DOM, never in this block.
-
-## Objective
-Make /git-agent:ship-autonomous immune to claude-code#43809 — chain branch-agent, commit-agent, and pr-agent by Reading their SKILL.md files instead of gated Skill-tool calls, keeping disable-model-invocation: true (the guard against unsolicited git mutations) fully intact.
-
-## Context
-claude-code#43809 reports that disable-model-invocation: true blocks every model-driven Skill-tool invocation — not just unsolicited auto-triggering. Any nested call fails with Error: Skill <name> cannot be used with Skill tool due to disable-model-invocation , even when the user explicitly requested the parent workflow. The issue was filed against Claude Code 2.1.92 and auto-closed as inactive — the behavior was never fixed.
-
-The flag is deliberate in git-agent: commit-agent , pr-agent , branch-agent , and ship stage all changes and mutate git state, so they are command-only — explicit /git-agent:<name> invocation, never fuzzy intent matching. Keeping that guard is a hard requirement of this plan.
-
-The exposure: ship-autonomous chains its pipeline by instructing Skill-tool invocations of three flagged skills at five sites — Step 2 branch-agent (line 89), Step 3 commit-agent (line 99), Step 4 pr-agent (line 109), and the autofix loop's commit references (lines 229 and 238). The user typed /git-agent:ship-autonomous , not the child commands, so every nested call is model-driven and refusable. The plain ship skill and the agent-commit background agent are immune only because they inline duplicate copies of the same workflows — a maintenance tax this plan avoids.
-
-The fix: Read-based chaining. The flag gates only the Skill tool — SKILL.md files are plain markdown on disk, and ${CLAUDE_PLUGIN_ROOT} expands inside skill content at load time (verified empirically this session). Reading keeps a single source of truth. One behavioral consequence: under Skill-tool chaining each child ran under its own allowed-tools ; under Read-chaining the parent's list governs — so ship-autonomous must absorb Bash(date *) for branch-agent's auto-naming. (Branch-agent's model: Haiku pin likewise no longer applies — inlined steps run on the session model.)
-
-## Files
-- kit/plugins/git-agent/skills/ship-autonomous/SKILL.md (modified) — swap 5 Skill-tool calls to Read chaining; update allowed-tools
-- kit/plugins/git-agent/CHANGELOG.md (modified) — add v3.10.7 entry
-- .claude-plugin/marketplace.json (modified) — bump git-agent 3.10.6 → 3.10.7
-- tests/plugins/test-ship-autonomous-read-chaining.sh (new) — chaining-contract smoke test
-
-## Steps
-1. Swap the three pipeline invocations (Steps 2–4) in kit/plugins/git-agent/skills/ship-autonomous/SKILL.md to Read-based chaining — at the branch-agent (~line 89), commit-agent (~line 99), and pr-agent (~line 109) sites, replace "Invoke the existing git-agent:<name> skill" with: "Read ${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md and execute its steps inline — do not use the Skill tool. Treat every STOP in the child's content — including its terminal "do not take further action" clause — as ending that sub-workflow only, then continue this pipeline; skip its Step 0 (plan-mode exit is already handled here). If ${CLAUDE_PLUGIN_ROOT} is unexpanded, locate the file with Glob **/git-agent/skills/<name>/SKILL.md (on multiple matches prefer the running plugin's own root; if still ambiguous, STOP and report). If the file cannot be Read at all, STOP the pipeline and report — never improvise the child workflow from memory." Also tighten the PR URL capture (lines ~117–118): take the URL from the gh pr create output, with gh pr view --json url as fallback, instead of "pr-agent's final output". Special-case re-runs: when pr-agent's inlined steps find an existing OPEN PR, capture that PR's URL and continue to Step 5 (CI watch) — its "STOP, do not create a duplicate" is not a pipeline halt. Why: The Skill tool refuses every model-driven invocation of a disable-model-invocation: true skill (claude-code#43809); the Read tool is ungated and preserves a single source of truth instead of inlining duplicate copies of the child workflows. Verify: grep -ci "invoke the existing" kit/plugins/git-agent/skills/ship-autonomous/SKILL.md returns 0 — case-insensitive, because line 89's lowercase "invoke" would slip past a capital-I grep; a Read instruction referencing ${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md exists for each of branch-agent, commit-agent, and pr-agent (three explicit checks, not an aggregate count); the failed-Read STOP rule is present; the PR URL capture references the gh pr create output rather than "pr-agent's final output"; the existing-OPEN-PR continue-to-CI-watch rule is present.
-2. Swap the two autofix commit references (Steps 6c and 6d, lines ~229 and ~238) to the same pattern — "commit by re-applying the commit-agent workflow (Read ${CLAUDE_PLUGIN_ROOT}/skills/commit-agent/SKILL.md again if its steps are no longer in context)". Why: Autofix commits hit the same Skill-tool gate on every CI-failure event; pointing back to the already-loaded workflow stays gate-free without a redundant re-read per event. Verify: grep -n "commit-agent" kit/plugins/git-agent/skills/ship-autonomous/SKILL.md shows only Read-phrased references — no git-agent:commit-agent mention on a line lacking Read or ${CLAUDE_PLUGIN_ROOT} (lines 229/238's "commit via git-agent:commit-agent" phrasing would slip past the Step 1 grep alone); the file-wide case-insensitive count of "invoke the existing" is 0.
-3. Update the frontmatter and add a regression-guard note — on line 4 remove Skill from allowed-tools and add Bash(date *) ; below the intro add one note: child skills are command-only ( disable-model-invocation: true ) — chain them by Reading their SKILL.md, never via the Skill tool (claude-code#43809). The note also records three standing facts: the Bash(glab *) exclusion is intentional (GitHub-only pipeline); branch-agent's model: Haiku pin does not apply under Read-chaining; and any future addition to a child's allowed-tools must be mirrored here. Why: Under Skill-tool chaining each child ran under its own allowed-tools ; under Read-chaining the parent's list governs, and branch-agent's auto-naming runs date . Dropping Skill enforces least privilege; the note stops future edits from regressing. Bash(glab *) is deliberately not added — ship-autonomous is GitHub-only (Step 1 hard-requires gh auth ), so pr-agent's GitLab path is unreachable here. Verify: head -5 kit/plugins/git-agent/skills/ship-autonomous/SKILL.md shows allowed-tools containing Bash(date *) and no Skill token, with all previously listed tools otherwise intact; the guard note appears in the body and names the glab exclusion, the Haiku-pin loss, and the mirror obligation.
-4. Add the chaining-contract smoke test tests/plugins/test-ship-autonomous-read-chaining.sh , modeled on tests/plugins/test-step8-review-option.sh (bash, set -euo pipefail , numbered PASS/FAIL checks, FAILURES counter, non-zero exit on failure). Assertions: (1) case-insensitive count of "invoke the existing" is 0; (2) no git-agent:(branch|commit|pr)-agent reference on a line lacking Read or ${CLAUDE_PLUGIN_ROOT} ; (3) a literal ${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md Read reference per child — three explicit checks, not an aggregate count; (4) allowed-tools has Bash(date *) and no Skill token; (5) each child still declares disable-model-invocation: true and is unchanged from main ( git diff --quiet origin/main -- <child paths> ); (6) the failed-Read STOP rule is present; (7) the parent's allowed-tools is a superset of each child's, excluding the intentional Bash(glab *) . Note: tests/plugins/ is manual-run by repo convention — not wired into CI. Why: This is the objective-verification test — it pins the Read-chaining contract so a future edit cannot silently reintroduce gated Skill-tool calls or drop the children's command-only flag. Verify: bash tests/plugins/test-ship-autonomous-read-chaining.sh prints PASS for all seven assertion groups and exits 0; spot-check the guard by deliberately breaking one contract line (e.g. rewording a Read reference) and confirming the test fails before reverting.
-5. Bump git-agent from 3.10.6 to 3.10.7 in .claude-plugin/marketplace.json . Why: Internal fix = PATCH per .claude/rules/marketplace.md ; the new value must be higher than main's, and the settings hook auto-validates JSON syntax on save. Verify: jq -r '.plugins[] | select(.name=="git-agent").version' .claude-plugin/marketplace.json prints 3.10.7 ; the same query against git show origin/main:.claude-plugin/marketplace.json prints 3.10.6 .
-6. Prepend the CHANGELOG entry — ## v3.10.7 — 2026-06-10 — Read-based skill chaining in ship-autonomous with a ### Fixed list covering the five swapped sites, the allowed-tools change, the guard note, the new smoke test, and a link to claude-code#43809 — to kit/plugins/git-agent/CHANGELOG.md . Include a one-line note that 3.10.6 shipped without a CHANGELOG entry — the v3.10.7 → v3.10.5 lineage gap predates this fix and is acknowledged, not introduced, here. Why: marketplace.md requires a CHANGELOG entry with every version bump; this entry preserves the rationale for abandoning Skill-tool chaining beyond this session. Verify: head -15 kit/plugins/git-agent/CHANGELOG.md shows the v3.10.7 entry above v3.10.5, dated 2026-06-10, containing the issue link and the one-line v3.10.6 gap acknowledgement.
-
-## Tests
-Tier 1 — Code-touching plan
-- Objective ship-autonomous chains child skills via Read, not the gated Skill tool File: tests/plugins/test-ship-autonomous-read-chaining.sh Type: smoke test — static contract assertions, run with bash like the rest of tests/plugins/ Asserts: case-insensitive zero count of "invoke the existing"; no gated git-agent:<child> reference outside a Read line; a literal ${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md reference per child (three explicit checks); allowed-tools drops Skill , gains Bash(date *) , and is a superset of each child's tools (minus the intentional Bash(glab *) exclusion); all three children unchanged from main and still disable-model-invocation: true ; the failed-Read STOP rule is present. Run: bash tests/plugins/test-ship-autonomous-read-chaining.sh
-
-## Acceptance Criteria
-- grep -ci "invoke the existing" kit/plugins/git-agent/skills/ship-autonomous/SKILL.md returns 0 (case-insensitive), and no git-agent:<child> skill reference appears on a line lacking Read or ${CLAUDE_PLUGIN_ROOT} .
-- ship-autonomous Read-chains all three child skills via ${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md — branch-agent, commit-agent, and pr-agent each referenced.
-- The allowed-tools line contains Bash(date *) , contains no Skill token, and loses no other tool.
-- branch-agent , commit-agent , and pr-agent SKILL.md files are unchanged from main and still declare disable-model-invocation: true — verified by git diff --quiet origin/main -- kit/plugins/git-agent/skills/{branch-agent,commit-agent,pr-agent}/SKILL.md .
-- tests/plugins/test-ship-autonomous-read-chaining.sh exists and exits 0 when run with bash.
-- git-agent's version in .claude-plugin/marketplace.json is 3.10.7 — one patch above main's 3.10.6 — and the file parses with jq .
-- kit/plugins/git-agent/CHANGELOG.md opens with a v3.10.7 entry dated 2026-06-10 linking claude-code#43809.
-- git diff --name-only origin/main shows only the four files in Files to Modify, this plan file, and the auto-rebuilt docs/plans/index.html .
-- ship-autonomous's inlined pr-agent flow handles an existing OPEN PR by capturing its URL and continuing to CI watch — re-running the pipeline never halts on "PR already exists".
-
-## Verification
-Run the smoke test and the metadata checks, then (optionally) exercise the live pipeline:
-
-bash tests/plugins/test-ship-autonomous-read-chaining.sh — every check prints PASS, exit code 0.
-
-jq -r '.plugins[] | select(.name=="git-agent").version' .claude-plugin/marketplace.json prints 3.10.7 ; the same query against git show origin/main:.claude-plugin/marketplace.json prints 3.10.6 .
-
-git diff --name-only origin/main lists exactly: the ship-autonomous SKILL.md, the git-agent CHANGELOG, .claude-plugin/marketplace.json , the new test script, this plan file, and the auto-rebuilt docs/plans/index.html .
-
-Live smoke (required — the static test cannot catch runtime failure modes like a STOP-halt mid-pipeline or an unexpanded ${CLAUDE_PLUGIN_ROOT} ): run claude --plugin-dir ./kit/plugins/git-agent on a scratch branch with a trivial change, invoke /git-agent:ship-autonomous , and confirm Steps 2–4 Read the child SKILL.md files — no "cannot be used with Skill tool due to disable-model-invocation" error — and the pipeline reaches PR creation without halting at any inlined child STOP. Re-run once on a branch that already has an OPEN PR and confirm the pipeline continues to CI watch instead of halting.
-
-Commit all changed files together — repo convention ships the plan file with the plugin change.
-</script>
-
-<!-- ── Icon definitions (Heroicons outline, MIT) ─────────────── -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
@@ -1207,11 +1503,13 @@ Commit all changed files together — repo convention ships the plan file with t
   <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
   </symbol>
+  <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
 </svg>
 
 <a href="#main" class="skip-link">Skip to content</a>
 
-<!-- ── Header — document cover ─────────────────────────────────── -->
 <header class="plan-header">
   <div class="plan-header-inner">
     <div class="plan-back-nav">
@@ -1225,30 +1523,26 @@ Commit all changed files together — repo convention ships the plan file with t
       <h1 class="plan-title">Fix ship-autonomous skill chaining (claude-code#43809)</h1>
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
-              aria-label="Save this plan as PDF">Save as PDF</button>
+                aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
+        <span class="effort-badge" aria-label="Effort level">Medium</span>
+        <a class="issue-link" href="https://github.com/anthropics/claude-code/issues/43809"
+           aria-label="View the tracking issue for this plan">Issue #43809</a>
         <span class="status-badge">todo</span>
       </div>
     </div>
     <div class="plan-meta">
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg>
-        2026-06-10
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg>
-        agentics
-      </span>
-      <span>
-        <svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg>
-        fix
-      </span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-06-10</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> fix</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Medium effort</span>
     </div>
   </div>
 </header>
 
 <div class="layout">
 
-  <!-- ── Sidebar — table of contents ─────────────────────────── -->
   <nav class="plan-nav" aria-label="Plan sections">
     <div class="scroll-rail" aria-hidden="true"></div>
     <div class="nav-heading">On this page</div>
@@ -1256,56 +1550,91 @@ Commit all changed files together — repo convention ships the plan file with t
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
-      <!-- Keep the next link only if the Files section is kept; delete otherwise -->
-      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files</a></li>
-      <!-- Keep the next link only if the Diagram section is kept; delete otherwise -->
-      <li><a href="#diagram"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Diagram</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
-      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Criteria</a></li>
-      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Verification</a></li>
-      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Completion</a></li>
-      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next Steps</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
+    <details class="rail-disclosure" open>
+      <summary>6 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Swap the three pipeline invocations (Steps 2–4) in kit/plugins/git-agent/skills/ship-autonomous/SKILL.md to Read-based chaining — at the branch-agent (~line 89), commit-agent (~line 99), and pr-agent (~line 109) sites, replace &quot;Invoke the existing git-agent:&lt;name&gt; skill&quot; with: &quot;Read ${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md and execute its steps inline — do not use the Skill tool. Treat every STOP in the child&#39;s content — including its terminal &quot;do not take further action&quot; clause — as ending that sub-workflow only, then continue this pipeline; skip its Step 0 (plan-mode exit is already handled here). If ${CLAUDE_PLUGIN_ROOT} is unexpanded, locate the file with Glob **/git-agent/skills/&lt;name&gt;/SKILL.md (on multiple matches prefer the running plugin&#39;s own root; if still ambiguous, STOP and report). If the file cannot be Read at all, STOP the pipeline and report — never improvise the child workflow from memory.&quot; Also tighten the PR URL capture (lines ~117–118): take the URL from the gh pr create output, with gh pr view --json url as fallback, instead of &quot;pr-agent&#39;s final output&quot;. Special-case re-runs: when pr-agent&#39;s inlined steps find an existing OPEN PR, capture that PR&#39;s URL and continue to Step 5 (CI watch) — its &quot;STOP, do not create a duplicate&quot; is not a pipeline halt.</span><span class="rail-state">step 1 of 6</span></a></li>
+        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Swap the two autofix commit references (Steps 6c and 6d, lines ~229 and ~238) to the same pattern — &quot;commit by re-applying the commit-agent workflow (Read ${CLAUDE_PLUGIN_ROOT}/skills/commit-agent/SKILL.md again if its steps are no longer in context)&quot;.</span><span class="rail-state">step 2 of 6</span></a></li>
+        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Update the frontmatter and add a regression-guard note — on line 4 remove Skill from allowed-tools and add Bash(date *) ; below the intro add one note: child skills are command-only ( disable-model-invocation: true ) — chain them by Reading their SKILL.md, never via the Skill tool (claude-code#43809). The note also records three standing facts: the Bash(glab *) exclusion is intentional (GitHub-only pipeline); branch-agent&#39;s model: Haiku pin does not apply under Read-chaining; and any future addition to a child&#39;s allowed-tools must be mirrored here.</span><span class="rail-state">step 3 of 6</span></a></li>
+        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Add the chaining-contract smoke test tests/plugins/test-ship-autonomous-read-chaining.sh , modeled on tests/plugins/test-step8-review-option.sh (bash, set -euo pipefail , numbered PASS/FAIL checks, FAILURES counter, non-zero exit on failure). Assertions: (1) case-insensitive count of &quot;invoke the existing&quot; is 0; (2) no git-agent:(branch|commit|pr)-agent reference on a line lacking Read or ${CLAUDE_PLUGIN_ROOT} ; (3) a literal ${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md Read reference per child — three explicit checks, not an aggregate count; (4) allowed-tools has Bash(date *) and no Skill token; (5) each child still declares disable-model-invocation: true and is unchanged from main ( git diff --quiet origin/main -- &lt;child paths&gt; ); (6) the failed-Read STOP rule is present; (7) the parent&#39;s allowed-tools is a superset of each child&#39;s, excluding the intentional Bash(glab *) . Note: tests/plugins/ is manual-run by repo convention — not wired into CI.</span><span class="rail-state">step 4 of 6</span></a></li>
+        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Bump git-agent from 3.10.6 to 3.10.7 in .claude-plugin/marketplace.json .</span><span class="rail-state">step 5 of 6</span></a></li>
+        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Prepend the CHANGELOG entry — ## v3.10.7 — 2026-06-10 — Read-based skill chaining in ship-autonomous with a ### Fixed list covering the five swapped sites, the allowed-tools change, the guard note, the new smoke test, and a link to claude-code#43809 — to kit/plugins/git-agent/CHANGELOG.md . Include a one-line note that 3.10.6 shipped without a CHANGELOG entry — the v3.10.7 → v3.10.5 lineage gap predates this fix and is acknowledged, not introduced, here.</span><span class="rail-state">step 6 of 6</span></a></li>
+      </ul>
+    </details>
   </nav>
 
-  <!-- ── Main content ─────────────────────────────────────────── -->
   <main id="main">
 
-    <!-- ── Objective ────────────────────────────────────────────── -->
     <div class="objective-card" id="objective">
       <div class="section-label">Objective</div>
-      <p>Make <code>/git-agent:ship-autonomous</code> immune to claude-code#43809 — chain branch-agent, commit-agent, and pr-agent by Reading their SKILL.md files instead of gated Skill-tool calls, keeping <code>disable-model-invocation: true</code> (the guard against unsolicited git mutations) fully intact.</p>
+      <p>Make /git-agent:ship-autonomous immune to claude-code#43809 — chain branch-agent, commit-agent, and pr-agent by Reading their SKILL.md files instead of gated Skill-tool calls, keeping disable-model-invocation: true (the guard against unsolicited git mutations) fully intact.</p>
     </div>
 
-    <!-- ── Implement prompt ──────────────────────────────────────── -->
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/fix-ship-autonomous-skill-chaining.html — Make ship-autonomous immune to issue #43809 via Read-based skill chaining</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/fix-ship-autonomous-skill-chaining.md — Fix ship-autonomous skill chaining (claude-code#43809). Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/fix-ship-autonomous-skill-chaining.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
 
-    <!-- ── Plan source (file name + relative path, for docs & prompts) ── -->
-    <div class="plan-source">
-      <div class="plan-source-row">
-        <span class="plan-source-label">File</span>
-        <code id="plan-file" aria-label="Plan file name">fix-ship-autonomous-skill-chaining.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
-      </div>
-      <div class="plan-source-row">
-        <span class="plan-source-label">Path</span>
-        <code id="plan-path" aria-label="Plan relative path">docs/plans/fix-ship-autonomous-skill-chaining.html</code>
-        <button class="copy-src-btn" type="button"
-                onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
-      </div>
-    </div>
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
 
-    <!-- ── Progress ─────────────────────────────────────────────── -->
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome, in parallel</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Fix ship-autonomous skill chaining (claude-code#43809). The plan at docs/plans/fix-ship-autonomous-skill-chaining.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/fix-ship-autonomous-skill-chaining.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-workflow">
+          <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
+          <div class="plan-workflow-inner">
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/fix-ship-autonomous-skill-chaining.md — Fix ship-autonomous skill chaining (claude-code#43809). Brief subagents with the plan file at docs/plans/fix-ship-autonomous-skill-chaining.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/fix-ship-autonomous-skill-chaining.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-workflow-btn" type="button"
+                    onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">fix-ship-autonomous-skill-chaining.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/fix-ship-autonomous-skill-chaining.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/fix-ship-autonomous-skill-chaining.md</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
+          </div>
+        </div>
+
+      </div>
+    </details>
+
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
-        <span>Acceptance criteria</span>
+        <span>Definition of done</span>
         <span id="progress-label">0 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
@@ -1315,23 +1644,24 @@ Commit all changed files together — repo convention ships the plan file with t
       </div>
     </div>
 
-    <!-- ── Context ──────────────────────────────────────────────── -->
     <section class="section-card card-context" id="context" aria-labelledby="h-context">
       <h2 id="h-context">
         <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
         Context
       </h2>
-      <p><a href="https://github.com/anthropics/claude-code/issues/43809">claude-code#43809</a> reports that <code>disable-model-invocation: true</code> blocks <em>every</em> model-driven Skill-tool invocation — not just unsolicited auto-triggering. Any nested call fails with <code>Error: Skill &lt;name&gt; cannot be used with Skill tool due to disable-model-invocation</code>, even when the user explicitly requested the parent workflow. The issue was filed against Claude Code 2.1.92 and auto-closed as inactive — the behavior was never fixed.</p>
-      <p>The flag is deliberate in git-agent: <code>commit-agent</code>, <code>pr-agent</code>, <code>branch-agent</code>, and <code>ship</code> stage all changes and mutate git state, so they are command-only — explicit <code>/git-agent:&lt;name&gt;</code> invocation, never fuzzy intent matching. Keeping that guard is a hard requirement of this plan.</p>
-      <p>The exposure: <code>ship-autonomous</code> chains its pipeline by instructing Skill-tool invocations of three flagged skills at five sites — Step 2 branch-agent (line 89), Step 3 commit-agent (line 99), Step 4 pr-agent (line 109), and the autofix loop's commit references (lines 229 and 238). The user typed <code>/git-agent:ship-autonomous</code>, not the child commands, so every nested call is model-driven and refusable. The plain <code>ship</code> skill and the <code>agent-commit</code> background agent are immune only because they inline duplicate copies of the same workflows — a maintenance tax this plan avoids.</p>
-      <p>The fix: Read-based chaining. The flag gates only the Skill tool — SKILL.md files are plain markdown on disk, and <code>${CLAUDE_PLUGIN_ROOT}</code> expands inside skill content at load time (verified empirically this session). Reading keeps a single source of truth. One behavioral consequence: under Skill-tool chaining each child ran under its own <code>allowed-tools</code>; under Read-chaining the parent's list governs — so ship-autonomous must absorb <code>Bash(date *)</code> for branch-agent's auto-naming. (Branch-agent's <code>model: Haiku</code> pin likewise no longer applies — inlined steps run on the session model.)</p>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
+      <p>claude-code#43809 reports that disable-model-invocation: true blocks every model-driven Skill-tool invocation — not just unsolicited auto-triggering. Any nested call fails with Error: Skill &lt;name&gt; cannot be used with Skill tool due to disable-model-invocation , even when the user explicitly requested the parent workflow. The issue was filed against Claude Code 2.1.92 and auto-closed as inactive — the behavior was never fixed.</p>
+      <p>The flag is deliberate in git-agent: commit-agent , pr-agent , branch-agent , and ship stage all changes and mutate git state, so they are command-only — explicit /git-agent:&lt;name&gt; invocation, never fuzzy intent matching. Keeping that guard is a hard requirement of this plan.</p>
+      <p>The exposure: ship-autonomous chains its pipeline by instructing Skill-tool invocations of three flagged skills at five sites — Step 2 branch-agent (line 89), Step 3 commit-agent (line 99), Step 4 pr-agent (line 109), and the autofix loop&#39;s commit references (lines 229 and 238). The user typed /git-agent:ship-autonomous , not the child commands, so every nested call is model-driven and refusable. The plain ship skill and the agent-commit background agent are immune only because they inline duplicate copies of the same workflows — a maintenance tax this plan avoids.</p>
+      <p>The fix: Read-based chaining. The flag gates only the Skill tool — SKILL.md files are plain markdown on disk, and ${CLAUDE_PLUGIN_ROOT} expands inside skill content at load time (verified empirically this session). Reading keeps a single source of truth. One behavioral consequence: under Skill-tool chaining each child ran under its own allowed-tools ; under Read-chaining the parent&#39;s list governs — so ship-autonomous must absorb Bash(date *) for branch-agent&#39;s auto-naming. (Branch-agent&#39;s model: Haiku pin likewise no longer applies — inlined steps run on the session model.)</p>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
       <h2 id="h-files">
         <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
-        Files to Modify
+        Files that change
       </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
@@ -1343,150 +1673,130 @@ Commit all changed files together — repo convention ships the plan file with t
       </div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════
-         OPT-IN VISUAL: Diagram / Chart / Table.
-         KEEP and fill when the plan has a flow, comparison,
-         distribution, or structured data worth showing. DELETE this
-         whole section element and its nav entry (the "#diagram" link)
-         when not needed. Use any subset of the building blocks below
-         (.pipeline, .compare-grid, .bar-chart, .plan-table); remove
-         the sub-blocks you do not use.
-         ════════════════════════════════════════════════════════════ -->
-    <section class="section-card card-diagram" id="diagram" aria-labelledby="h-diagram">
-      <h2 id="h-diagram">
-        <svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg>
-        Diagram
-      </h2>
-
-      <div class="diagram-subheading">Chaining mechanism — before vs after</div>
-      <div class="compare-grid" style="grid-template-columns:repeat(2,1fr)">
-        <div class="compare-col-remove">
-          <div class="compare-header">Before — Skill-tool chaining</div>
-          <ul class="compare-list">
-            <li>Invoke git-agent:commit-agent via Skill tool</li>
-            <li>Gated: refuses disable-model-invocation skills</li>
-            <li>"cannot be used with Skill tool" (#43809)</li>
-            <li>Child skill's allowed-tools govern the sub-flow</li>
-          </ul>
-        </div>
-        <div class="compare-col-add">
-          <div class="compare-header">After — Read-based chaining</div>
-          <ul class="compare-list">
-            <li>Read ${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md</li>
-            <li>Ungated: Read is a plain file read</li>
-            <li>Single source of truth — no duplicated logic</li>
-            <li>Parent allowed-tools govern (+ Bash(date *))</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Steps ────────────────────────────────────────────────── -->
     <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
       <h2 id="h-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
         Steps
       </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card">
+        <div class="step-card" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Swap the three pipeline invocations (Steps 2–4) in <code>kit/plugins/git-agent/skills/ship-autonomous/SKILL.md</code> to Read-based chaining — at the branch-agent (~line 89), commit-agent (~line 99), and pr-agent (~line 109) sites, replace "Invoke the existing <code>git-agent:&lt;name&gt;</code> skill" with: "Read <code>${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md</code> and execute its steps inline — do not use the Skill tool. Treat every STOP in the child's content — including its terminal "do not take further action" clause — as ending that sub-workflow only, then continue this pipeline; skip its Step 0 (plan-mode exit is already handled here). If <code>${CLAUDE_PLUGIN_ROOT}</code> is unexpanded, locate the file with Glob <code>**/git-agent/skills/&lt;name&gt;/SKILL.md</code> (on multiple matches prefer the running plugin's own root; if still ambiguous, STOP and report). If the file cannot be Read at all, STOP the pipeline and report — never improvise the child workflow from memory." Also tighten the PR URL capture (lines ~117–118): take the URL from the <code>gh pr create</code> output, with <code>gh pr view --json url</code> as fallback, instead of "pr-agent's final output". Special-case re-runs: when pr-agent's inlined steps find an existing OPEN PR, capture that PR's URL and continue to Step 5 (CI watch) — its "STOP, do not create a duplicate" is not a pipeline halt.</span>
+                <span class="step-chip-text">Swap the three pipeline invocations (Steps 2–4) in kit/plugins/git-agent/skills/ship-autonomous/SKILL.md to Read-based chaining — at the branch-agent (~line 89), commit-agent (~line 99), and pr-agent (~line 109) sites, replace &quot;Invoke the existing git-agent:&lt;name&gt; skill&quot; with: &quot;Read ${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md and execute its steps inline — do not use the Skill tool. Treat every STOP in the child&#39;s content — including its terminal &quot;do not take further action&quot; clause — as ending that sub-workflow only, then continue this pipeline; skip its Step 0 (plan-mode exit is already handled here). If ${CLAUDE_PLUGIN_ROOT} is unexpanded, locate the file with Glob **/git-agent/skills/&lt;name&gt;/SKILL.md (on multiple matches prefer the running plugin&#39;s own root; if still ambiguous, STOP and report). If the file cannot be Read at all, STOP the pipeline and report — never improvise the child workflow from memory.&quot; Also tighten the PR URL capture (lines ~117–118): take the URL from the gh pr create output, with gh pr view --json url as fallback, instead of &quot;pr-agent&#39;s final output&quot;. Special-case re-runs: when pr-agent&#39;s inlined steps find an existing OPEN PR, capture that PR&#39;s URL and continue to Step 5 (CI watch) — its &quot;STOP, do not create a duplicate&quot; is not a pipeline halt.</span>
               </div>
-              <div class="step-why">The Skill tool refuses every model-driven invocation of a <code>disable-model-invocation: true</code> skill (claude-code#43809); the Read tool is ungated and preserves a single source of truth instead of inlining duplicate copies of the child workflows.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>grep -ci "invoke the existing" kit/plugins/git-agent/skills/ship-autonomous/SKILL.md</code> returns 0 — case-insensitive, because line 89's lowercase "invoke" would slip past a capital-I grep; a Read instruction referencing <code>${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md</code> exists for each of branch-agent, commit-agent, and pr-agent (three explicit checks, not an aggregate count); the failed-Read STOP rule is present; the PR URL capture references the <code>gh pr create</code> output rather than "pr-agent's final output"; the existing-OPEN-PR continue-to-CI-watch rule is present.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">The Skill tool refuses every model-driven invocation of a disable-model-invocation: true skill (claude-code#43809); the Read tool is ungated and preserves a single source of truth instead of inlining duplicate copies of the child workflows.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">grep -ci &quot;invoke the existing&quot; kit/plugins/git-agent/skills/ship-autonomous/SKILL.md returns 0 — case-insensitive, because line 89&#39;s lowercase &quot;invoke&quot; would slip past a capital-I grep; a Read instruction referencing ${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md exists for each of branch-agent, commit-agent, and pr-agent (three explicit checks, not an aggregate count); the failed-Read STOP rule is present; the PR URL capture references the gh pr create output rather than &quot;pr-agent&#39;s final output&quot;; the existing-OPEN-PR continue-to-CI-watch rule is present.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Swap the two autofix commit references (Steps 6c and 6d, lines ~229 and ~238) to the same pattern — "commit by re-applying the commit-agent workflow (Read <code>${CLAUDE_PLUGIN_ROOT}/skills/commit-agent/SKILL.md</code> again if its steps are no longer in context)".</span>
+                <span class="step-chip-text">Swap the two autofix commit references (Steps 6c and 6d, lines ~229 and ~238) to the same pattern — &quot;commit by re-applying the commit-agent workflow (Read ${CLAUDE_PLUGIN_ROOT}/skills/commit-agent/SKILL.md again if its steps are no longer in context)&quot;.</span>
               </div>
-              <div class="step-why">Autofix commits hit the same Skill-tool gate on every CI-failure event; pointing back to the already-loaded workflow stays gate-free without a redundant re-read per event.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>grep -n "commit-agent" kit/plugins/git-agent/skills/ship-autonomous/SKILL.md</code> shows only Read-phrased references — no <code>git-agent:commit-agent</code> mention on a line lacking Read or <code>${CLAUDE_PLUGIN_ROOT}</code> (lines 229/238's "commit via git-agent:commit-agent" phrasing would slip past the Step 1 grep alone); the file-wide case-insensitive count of "invoke the existing" is 0.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Autofix commits hit the same Skill-tool gate on every CI-failure event; pointing back to the already-loaded workflow stays gate-free without a redundant re-read per event.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">grep -n &quot;commit-agent&quot; kit/plugins/git-agent/skills/ship-autonomous/SKILL.md shows only Read-phrased references — no git-agent:commit-agent mention on a line lacking Read or ${CLAUDE_PLUGIN_ROOT} (lines 229/238&#39;s &quot;commit via git-agent:commit-agent&quot; phrasing would slip past the Step 1 grep alone); the file-wide case-insensitive count of &quot;invoke the existing&quot; is 0.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Update the frontmatter and add a regression-guard note — on line 4 remove <code>Skill</code> from <code>allowed-tools</code> and add <code>Bash(date *)</code>; below the intro add one note: child skills are command-only (<code>disable-model-invocation: true</code>) — chain them by Reading their SKILL.md, never via the Skill tool (claude-code#43809). The note also records three standing facts: the <code>Bash(glab *)</code> exclusion is intentional (GitHub-only pipeline); branch-agent's <code>model: Haiku</code> pin does not apply under Read-chaining; and any future addition to a child's <code>allowed-tools</code> must be mirrored here.</span>
+                <span class="step-chip-text">Update the frontmatter and add a regression-guard note — on line 4 remove Skill from allowed-tools and add Bash(date *) ; below the intro add one note: child skills are command-only ( disable-model-invocation: true ) — chain them by Reading their SKILL.md, never via the Skill tool (claude-code#43809). The note also records three standing facts: the Bash(glab *) exclusion is intentional (GitHub-only pipeline); branch-agent&#39;s model: Haiku pin does not apply under Read-chaining; and any future addition to a child&#39;s allowed-tools must be mirrored here.</span>
               </div>
-              <div class="step-why">Under Skill-tool chaining each child ran under its own <code>allowed-tools</code>; under Read-chaining the parent's list governs, and branch-agent's auto-naming runs <code>date</code>. Dropping <code>Skill</code> enforces least privilege; the note stops future edits from regressing. <code>Bash(glab *)</code> is deliberately not added — ship-autonomous is GitHub-only (Step 1 hard-requires <code>gh auth</code>), so pr-agent's GitLab path is unreachable here.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>head -5 kit/plugins/git-agent/skills/ship-autonomous/SKILL.md</code> shows <code>allowed-tools</code> containing <code>Bash(date *)</code> and no <code>Skill</code> token, with all previously listed tools otherwise intact; the guard note appears in the body and names the glab exclusion, the Haiku-pin loss, and the mirror obligation.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Under Skill-tool chaining each child ran under its own allowed-tools ; under Read-chaining the parent&#39;s list governs, and branch-agent&#39;s auto-naming runs date . Dropping Skill enforces least privilege; the note stops future edits from regressing. Bash(glab *) is deliberately not added — ship-autonomous is GitHub-only (Step 1 hard-requires gh auth ), so pr-agent&#39;s GitLab path is unreachable here.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">head -5 kit/plugins/git-agent/skills/ship-autonomous/SKILL.md shows allowed-tools containing Bash(date *) and no Skill token, with all previously listed tools otherwise intact; the guard note appears in the body and names the glab exclusion, the Haiku-pin loss, and the mirror obligation.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add the chaining-contract smoke test <code>tests/plugins/test-ship-autonomous-read-chaining.sh</code>, modeled on <code>tests/plugins/test-step8-review-option.sh</code> (bash, <code>set -euo pipefail</code>, numbered PASS/FAIL checks, FAILURES counter, non-zero exit on failure). Assertions: (1) case-insensitive count of "invoke the existing" is 0; (2) no <code>git-agent:(branch|commit|pr)-agent</code> reference on a line lacking Read or <code>${CLAUDE_PLUGIN_ROOT}</code>; (3) a literal <code>${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md</code> Read reference per child — three explicit checks, not an aggregate count; (4) <code>allowed-tools</code> has <code>Bash(date *)</code> and no <code>Skill</code> token; (5) each child still declares <code>disable-model-invocation: true</code> and is unchanged from main (<code>git diff --quiet origin/main -- &lt;child paths&gt;</code>); (6) the failed-Read STOP rule is present; (7) the parent's <code>allowed-tools</code> is a superset of each child's, excluding the intentional <code>Bash(glab *)</code>. Note: <code>tests/plugins/</code> is manual-run by repo convention — not wired into CI.</span>
+                <span class="step-chip-text">Add the chaining-contract smoke test tests/plugins/test-ship-autonomous-read-chaining.sh , modeled on tests/plugins/test-step8-review-option.sh (bash, set -euo pipefail , numbered PASS/FAIL checks, FAILURES counter, non-zero exit on failure). Assertions: (1) case-insensitive count of &quot;invoke the existing&quot; is 0; (2) no git-agent:(branch|commit|pr)-agent reference on a line lacking Read or ${CLAUDE_PLUGIN_ROOT} ; (3) a literal ${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md Read reference per child — three explicit checks, not an aggregate count; (4) allowed-tools has Bash(date *) and no Skill token; (5) each child still declares disable-model-invocation: true and is unchanged from main ( git diff --quiet origin/main -- &lt;child paths&gt; ); (6) the failed-Read STOP rule is present; (7) the parent&#39;s allowed-tools is a superset of each child&#39;s, excluding the intentional Bash(glab *) . Note: tests/plugins/ is manual-run by repo convention — not wired into CI.</span>
               </div>
-              <div class="step-why">This is the objective-verification test — it pins the Read-chaining contract so a future edit cannot silently reintroduce gated Skill-tool calls or drop the children's command-only flag.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>bash tests/plugins/test-ship-autonomous-read-chaining.sh</code> prints PASS for all seven assertion groups and exits 0; spot-check the guard by deliberately breaking one contract line (e.g. rewording a Read reference) and confirming the test fails before reverting.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">This is the objective-verification test — it pins the Read-chaining contract so a future edit cannot silently reintroduce gated Skill-tool calls or drop the children&#39;s command-only flag.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">bash tests/plugins/test-ship-autonomous-read-chaining.sh prints PASS for all seven assertion groups and exits 0; spot-check the guard by deliberately breaking one contract line (e.g. rewording a Read reference) and confirming the test fails before reverting.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Bump git-agent from 3.10.6 to 3.10.7 in <code>.claude-plugin/marketplace.json</code>.</span>
+                <span class="step-chip-text">Bump git-agent from 3.10.6 to 3.10.7 in .claude-plugin/marketplace.json .</span>
               </div>
-              <div class="step-why">Internal fix = PATCH per <code>.claude/rules/marketplace.md</code>; the new value must be higher than main's, and the settings hook auto-validates JSON syntax on save.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>jq -r '.plugins[] | select(.name=="git-agent").version' .claude-plugin/marketplace.json</code> prints <code>3.10.7</code>; the same query against <code>git show origin/main:.claude-plugin/marketplace.json</code> prints <code>3.10.6</code>.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">Internal fix = PATCH per .claude/rules/marketplace.md ; the new value must be higher than main&#39;s, and the settings hook auto-validates JSON syntax on save.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">jq -r &#39;.plugins[] | select(.name==&quot;git-agent&quot;).version&#39; .claude-plugin/marketplace.json prints 3.10.7 ; the same query against git show origin/main:.claude-plugin/marketplace.json prints 3.10.6 .</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
+        <div class="step-card" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Prepend the CHANGELOG entry — <code>## v3.10.7 — 2026-06-10 — Read-based skill chaining in ship-autonomous</code> with a <code>### Fixed</code> list covering the five swapped sites, the allowed-tools change, the guard note, the new smoke test, and a link to claude-code#43809 — to <code>kit/plugins/git-agent/CHANGELOG.md</code>. Include a one-line note that 3.10.6 shipped without a CHANGELOG entry — the v3.10.7 → v3.10.5 lineage gap predates this fix and is acknowledged, not introduced, here.</span>
+                <span class="step-chip-text">Prepend the CHANGELOG entry — ## v3.10.7 — 2026-06-10 — Read-based skill chaining in ship-autonomous with a ### Fixed list covering the five swapped sites, the allowed-tools change, the guard note, the new smoke test, and a link to claude-code#43809 — to kit/plugins/git-agent/CHANGELOG.md . Include a one-line note that 3.10.6 shipped without a CHANGELOG entry — the v3.10.7 → v3.10.5 lineage gap predates this fix and is acknowledged, not introduced, here.</span>
               </div>
-              <div class="step-why">marketplace.md requires a CHANGELOG entry with every version bump; this entry preserves the rationale for abandoning Skill-tool chaining beyond this session.</div>
-              <details class="step-verify-toggle">
-                <summary>Verify</summary>
-                <div class="verify-body"><code>head -15 kit/plugins/git-agent/CHANGELOG.md</code> shows the v3.10.7 entry above v3.10.5, dated 2026-06-10, containing the issue link and the one-line v3.10.6 gap acknowledgement.</div>
-              </details>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">marketplace.md requires a CHANGELOG entry with every version bump; this entry preserves the rationale for abandoning Skill-tool chaining beyond this session.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">head -15 kit/plugins/git-agent/CHANGELOG.md shows the v3.10.7 entry above v3.10.5, dated 2026-06-10, containing the issue link and the one-line v3.10.6 gap acknowledgement.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1494,101 +1804,84 @@ Commit all changed files together — repo convention ships the plan file with t
       </div>
     </section>
 
-    <!-- ── Tests ────────────────────────────────────────────────── -->
     <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
       <h2 id="h-tests">
         <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
         Tests
       </h2>
+      <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="test-tier-label">Tier 1 — Code-touching plan</div>
-
-      <!-- Objective-verification test — mandatory, always first -->
-      <div class="objective-test-card">
-        <div class="test-card-header">
-          <span class="test-badge test-badge-objective">Objective</span>
-          <span class="test-card-title">ship-autonomous chains child skills via Read, not the gated Skill tool</span>
-        </div>
-        <div class="test-card-body">
-          <p><strong>File:</strong> <code>tests/plugins/test-ship-autonomous-read-chaining.sh</code></p>
-          <p><strong>Type:</strong> smoke test — static contract assertions, run with bash like the rest of <code>tests/plugins/</code></p>
-          <p><strong>Asserts:</strong> case-insensitive zero count of "invoke the existing"; no gated <code>git-agent:&lt;child&gt;</code> reference outside a Read line; a literal <code>${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md</code> reference per child (three explicit checks); <code>allowed-tools</code> drops <code>Skill</code>, gains <code>Bash(date *)</code>, and is a superset of each child's tools (minus the intentional <code>Bash(glab *)</code> exclusion); all three children unchanged from main and still <code>disable-model-invocation: true</code>; the failed-Read STOP rule is present.</p>
-          <p><strong>Run:</strong> <code>bash tests/plugins/test-ship-autonomous-read-chaining.sh</code></p>
-        </div>
-      </div>
-
-      <p style="font-size:.875rem;color:var(--muted);margin-top:.5rem">Unit, integration, and E2E suites are not applicable — the change edits declarative skill markdown and plugin metadata with no executable application code. The smoke test above is the executable contract; a live pipeline run is covered in Verification.</p>
+      <div class="objective-test-card">Objective ship-autonomous chains child skills via Read, not the gated Skill tool File: tests/plugins/test-ship-autonomous-read-chaining.sh Type: smoke test — static contract assertions, run with bash like the rest of tests/plugins/ Asserts: case-insensitive zero count of &quot;invoke the existing&quot;; no gated git-agent:&lt;child&gt; reference outside a Read line; a literal ${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md reference per child (three explicit checks); allowed-tools drops Skill , gains Bash(date *) , and is a superset of each child&#39;s tools (minus the intentional Bash(glab *) exclusion); all three children unchanged from main and still disable-model-invocation: true ; the failed-Read STOP rule is present. Run: bash tests/plugins/test-ship-autonomous-read-chaining.sh</div>
     </section>
 
-    <!-- ── Acceptance Criteria ───────────────────────────────────── -->
     <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
       <h2 id="h-criteria">
         <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
-        Acceptance Criteria
+        Definition of done
       </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
           <input type="checkbox" id="ac1">
-          <label for="ac1"><code>grep -ci "invoke the existing" kit/plugins/git-agent/skills/ship-autonomous/SKILL.md</code> returns 0 (case-insensitive), and no <code>git-agent:&lt;child&gt;</code> skill reference appears on a line lacking Read or <code>${CLAUDE_PLUGIN_ROOT}</code>.</label>
+          <label for="ac1">grep -ci &quot;invoke the existing&quot; kit/plugins/git-agent/skills/ship-autonomous/SKILL.md returns 0 (case-insensitive), and no git-agent:&lt;child&gt; skill reference appears on a line lacking Read or ${CLAUDE_PLUGIN_ROOT} .</label>
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">ship-autonomous Read-chains all three child skills via <code>${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md</code> — branch-agent, commit-agent, and pr-agent each referenced.</label>
+          <label for="ac2">ship-autonomous Read-chains all three child skills via ${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md — branch-agent, commit-agent, and pr-agent each referenced.</label>
         </li>
         <li>
           <input type="checkbox" id="ac3">
-          <label for="ac3">The <code>allowed-tools</code> line contains <code>Bash(date *)</code>, contains no <code>Skill</code> token, and loses no other tool.</label>
+          <label for="ac3">The allowed-tools line contains Bash(date *) , contains no Skill token, and loses no other tool.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4"><code>branch-agent</code>, <code>commit-agent</code>, and <code>pr-agent</code> SKILL.md files are unchanged from main and still declare <code>disable-model-invocation: true</code> — verified by <code>git diff --quiet origin/main -- kit/plugins/git-agent/skills/{branch-agent,commit-agent,pr-agent}/SKILL.md</code>.</label>
+          <label for="ac4">branch-agent , commit-agent , and pr-agent SKILL.md files are unchanged from main and still declare disable-model-invocation: true — verified by git diff --quiet origin/main -- kit/plugins/git-agent/skills/{branch-agent,commit-agent,pr-agent}/SKILL.md .</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5"><code>tests/plugins/test-ship-autonomous-read-chaining.sh</code> exists and exits 0 when run with bash.</label>
+          <label for="ac5">tests/plugins/test-ship-autonomous-read-chaining.sh exists and exits 0 when run with bash.</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6">git-agent's version in <code>.claude-plugin/marketplace.json</code> is 3.10.7 — one patch above main's 3.10.6 — and the file parses with <code>jq</code>.</label>
+          <label for="ac6">git-agent&#39;s version in .claude-plugin/marketplace.json is 3.10.7 — one patch above main&#39;s 3.10.6 — and the file parses with jq .</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7"><code>kit/plugins/git-agent/CHANGELOG.md</code> opens with a v3.10.7 entry dated 2026-06-10 linking claude-code#43809.</label>
+          <label for="ac7">kit/plugins/git-agent/CHANGELOG.md opens with a v3.10.7 entry dated 2026-06-10 linking claude-code#43809.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8"><code>git diff --name-only origin/main</code> shows only the four files in Files to Modify, this plan file, and the auto-rebuilt <code>docs/plans/index.html</code>.</label>
+          <label for="ac8">git diff --name-only origin/main shows only the four files in Files to Modify, this plan file, and the auto-rebuilt docs/plans/index.html .</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9">ship-autonomous's inlined pr-agent flow handles an existing OPEN PR by capturing its URL and continuing to CI watch — re-running the pipeline never halts on "PR already exists".</label>
+          <label for="ac9">ship-autonomous&#39;s inlined pr-agent flow handles an existing OPEN PR by capturing its URL and continuing to CI watch — re-running the pipeline never halts on &quot;PR already exists&quot;.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
             style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
     </section>
 
-    <!-- ── Verification ──────────────────────────────────────────── -->
     <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
       <h2 id="h-verification">
         <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
-        Verification
+        Final check
       </h2>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
       <p>Run the smoke test and the metadata checks, then (optionally) exercise the live pipeline:</p>
-      <ol>
-        <li><code>bash tests/plugins/test-ship-autonomous-read-chaining.sh</code> — every check prints PASS, exit code 0.</li>
-        <li><code>jq -r '.plugins[] | select(.name=="git-agent").version' .claude-plugin/marketplace.json</code> prints <code>3.10.7</code>; the same query against <code>git show origin/main:.claude-plugin/marketplace.json</code> prints <code>3.10.6</code>.</li>
-        <li><code>git diff --name-only origin/main</code> lists exactly: the ship-autonomous SKILL.md, the git-agent CHANGELOG, <code>.claude-plugin/marketplace.json</code>, the new test script, this plan file, and the auto-rebuilt <code>docs/plans/index.html</code>.</li>
-        <li><strong>Live smoke (required — the static test cannot catch runtime failure modes like a STOP-halt mid-pipeline or an unexpanded <code>${CLAUDE_PLUGIN_ROOT}</code>):</strong> run <code>claude --plugin-dir ./kit/plugins/git-agent</code> on a scratch branch with a trivial change, invoke <code>/git-agent:ship-autonomous</code>, and confirm Steps 2–4 Read the child SKILL.md files — no "cannot be used with Skill tool due to disable-model-invocation" error — and the pipeline reaches PR creation without halting at any inlined child STOP. Re-run once on a branch that already has an OPEN PR and confirm the pipeline continues to CI watch instead of halting.</li>
-      </ol>
+      <p>bash tests/plugins/test-ship-autonomous-read-chaining.sh — every check prints PASS, exit code 0.</p>
+      <p>jq -r &#39;.plugins[] | select(.name==&quot;git-agent&quot;).version&#39; .claude-plugin/marketplace.json prints 3.10.7 ; the same query against git show origin/main:.claude-plugin/marketplace.json prints 3.10.6 .</p>
+      <p>git diff --name-only origin/main lists exactly: the ship-autonomous SKILL.md, the git-agent CHANGELOG, .claude-plugin/marketplace.json , the new test script, this plan file, and the auto-rebuilt docs/plans/index.html .</p>
+      <p>Live smoke (required — the static test cannot catch runtime failure modes like a STOP-halt mid-pipeline or an unexpanded ${CLAUDE_PLUGIN_ROOT} ): run claude --plugin-dir ./kit/plugins/git-agent on a scratch branch with a trivial change, invoke /git-agent:ship-autonomous , and confirm Steps 2–4 Read the child SKILL.md files — no &quot;cannot be used with Skill tool due to disable-model-invocation&quot; error — and the pipeline reaches PR creation without halting at any inlined child STOP. Re-run once on a branch that already has an OPEN PR and confirm the pipeline continues to CI watch instead of halting.</p>
       <p>Commit all changed files together — repo convention ships the plan file with the plugin change.</p>
     </section>
 
-    <!-- ── Completion Checklist (mandatory — always present) ──────── -->
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
       <h2 id="h-completion">
         <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
-        Completion Checklist
+        Wrapping up
       </h2>
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
       <div class="completion-checklist" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
@@ -1614,19 +1907,18 @@ Commit all changed files together — repo convention ships the plan file with t
       </div>
     </section>
 
-    <!-- ── Next Steps (optional — remove section if empty) ──────── -->
     <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
       <h2 id="h-next-steps">
         <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
-        Next Steps
+        Next steps
       </h2>
+      <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
       <div class="next-steps-list">
-
         <details class="next-step-item">
           <summary>Audit other plugins for gated Skill-tool chaining</summary>
           <div class="next-step-prompt">
             <p>Paste this prompt into Claude to execute this follow-up:</p>
-            <pre>In the shawn-sandy/agentics repo, audit every skill, command, and agent under kit/plugins/ for instructions that invoke another skill via the Skill tool where the target SKILL.md sets disable-model-invocation: true. Grep for phrases like "Invoke the existing", "Skill(skill:", and the names of flagged skills (commit-agent, pr-agent, branch-agent, ship). Skip docs/plans/archive/. For each exposed site, report plugin, file, and line, then convert it to Read-based chaining via ${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md following the pattern in kit/plugins/git-agent/skills/ship-autonomous/SKILL.md. Bump each touched plugin's version (patch) in .claude-plugin/marketplace.json and add a CHANGELOG entry per plugin.</pre>
+            <pre>In the shawn-sandy/agentics repo, audit every skill, command, and agent under kit/plugins/ for instructions that invoke another skill via the Skill tool where the target SKILL.md sets disable-model-invocation: true. Grep for phrases like &quot;Invoke the existing&quot;, &quot;Skill(skill:&quot;, and the names of flagged skills (commit-agent, pr-agent, branch-agent, ship). Skip docs/plans/archive/. For each exposed site, report plugin, file, and line, then convert it to Read-based chaining via ${CLAUDE_PLUGIN_ROOT}/skills/&lt;name&gt;/SKILL.md following the pattern in kit/plugins/git-agent/skills/ship-autonomous/SKILL.md. Bump each touched plugin&#39;s version (patch) in .claude-plugin/marketplace.json and add a CHANGELOG entry per plugin.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
@@ -1642,25 +1934,16 @@ Commit all changed files together — repo convention ships the plan file with t
           </div>
         </details>
 
-        <!-- Wish List (blue-sky / visionary items — remove subsection if none) -->
-        <div class="wish-list-header">
-          <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
-          Wish List
-        </div>
-
-        <details class="next-step-item wish-item">
-          <summary>
-            Revert to Skill-tool chaining if upstream fixes #43809
-            <span class="wish-badge">Wish List</span>
-          </summary>
+        <details class="next-step-item">
+          <summary>Revert to Skill-tool chaining if upstream fixes #43809 Wish List</summary>
           <div class="next-step-prompt">
             <p>Speculative / blue-sky idea — not on the critical path. Paste into Claude when ready to explore:</p>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
             <pre>Check the latest Claude Code release notes and re-test whether a skill body can invoke a disable-model-invocation: true skill via the Skill tool — the block reported in https://github.com/anthropics/claude-code/issues/43809. Build a minimal repro: a scratch plugin with a flagged child skill and a caller skill that invokes it via the Skill tool; run the caller and observe whether the nested call succeeds. If the gate now inherits user authorization, propose reverting kit/plugins/git-agent/skills/ship-autonomous/SKILL.md in shawn-sandy/agentics to direct Skill-tool chaining and removing the Read-based workaround.</pre>
             <button class="copy-prompt-btn" type="button"
                     onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
           </div>
         </details>
-
       </div>
     </section>
 
@@ -1669,60 +1952,40 @@ Commit all changed files together — repo convention ships the plan file with t
       Generated by plan-agent · 2026-06-10 · agentics
     </footer>
 
-    <details id="team-review-20260610-223241" class="team-review" style="margin-top:2rem;border:1px solid var(--border);border-radius:4px;padding:.75rem 1.25rem;font-size:.9rem">
-      <summary style="font-weight:600;cursor:pointer">Team Review (2026-06-10 22:32:41 UTC) — 5 core reviewers, plan updated in place</summary>
-      <div class="review-body">
-        <h3 style="margin:1rem 0 .5rem;font-size:.95rem">Executive Summary</h3>
-        <p>Sound with revisions — now applied. Five core reviewers (architecture, completeness, testability, risk, conventions; no UI signals, so UX/accessibility reviewers were not spawned) found no objection to the Read-based chaining direction; architecture confirmed it strictly improves on the repo's existing duplicate-the-workflow pattern. Two high-severity findings drove the revisions: the plan's own verification grep (capital-I "Invoke the existing") matched only 2 of the 5 sites it guards, and the inlined child skills' emphatic STOP directives (14/5/8 occurrences) risk halting the pipeline mid-run. Both are addressed in the updated plan, along with a newly surfaced re-entrancy bug (pr-agent's existing-OPEN-PR STOP) and a documented CHANGELOG lineage gap.</p>
-
-        <h3 style="margin:1rem 0 .5rem;font-size:.95rem">Role-by-Role Findings</h3>
-        <ul>
-          <li><strong>Architecture:</strong> Mechanism sound and consistent with the codebase; flagged the permanent allowed-tools flattening (parent must carry the union of child tool needs) and recommended a machine-checkable superset assertion in the smoke test, plus recording the <code>Bash(glab *)</code> exclusion as intentional and disambiguating the Glob fallback in multi-checkout layouts. All adopted.</li>
-          <li><strong>Completeness:</strong> Steps highly specific; line numbers and version arithmetic verified accurate against the repo. Found the high-severity case-sensitivity blind spot at line 89 (lowercase "invoke"), the unpinned Read anchor string between edit and test, the missing executable check for ac4, and the pre-existing missing v3.10.6 CHANGELOG entry. All adopted.</li>
-          <li><strong>Testability:</strong> Confirmed the line-89 and lines-229/238 blind spots live in the file; recommended case-insensitive zero-count, a no-gated-reference-outside-a-Read-line check, per-child positive assertions, and pinning the failed-Read STOP rule. Noted <code>tests/plugins/</code> is not CI-wired (manual-run convention, now stated in Step 4). All adopted.</li>
-          <li><strong>Risk (level: medium):</strong> Highest risk is the model obeying an inlined child's terminal STOP and ending the pipeline; second, pr-agent's existing-OPEN-PR STOP aborting re-runs; third, environment-dependent <code>${CLAUDE_PLUGIN_ROOT}</code> expansion in skill content. Mitigations adopted: strengthened STOP-override wording, the continue-to-CI-watch rule (new ac9), and the live <code>--plugin-dir</code> smoke promoted from optional to required. Rollback risk assessed low (declarative files only; marketplace merge driver covers version conflicts).</li>
-          <li><strong>Conventions:</strong> Version arithmetic, CHANGELOG header format, test naming, and restricted <code>Bash(...)</code> allowed-tools style all match repo practice. Flagged the v3.10.6 changelog gap (now acknowledged in Step 6) and, cosmetically, Step 1's multi-clause density (declined — see Conflicts).</li>
-        </ul>
-
-        <h3 style="margin:1rem 0 .5rem;font-size:.95rem">Agreements &amp; Conflicts</h3>
-        <p><strong>Confirmed concerns (multiple reviewers):</strong> the case-sensitive grep blind spot (completeness + testability, both high); the v3.10.6 CHANGELOG gap (completeness + risk + conventions); per-child positive Read assertions over an aggregate count (completeness + testability, with architecture's superset check as the stronger variant — both adopted).</p>
-        <p><strong>Conflict resolved:</strong> conventions suggested splitting Step 1 into two cards for one-idea-per-item style; declined to preserve the user-aligned six-step structure — the added safeguards stay consolidated in Step 1, accepted as a readability tradeoff.</p>
-
-        <h3 style="margin:1rem 0 .5rem;font-size:.95rem">Highest-Risk Issues (priority order)</h3>
-        <ol>
-          <li><strong>Verification blind spot (high, completeness + testability)</strong> — capital-I grep missed 3 of 5 guarded sites. Fixed: case-insensitive counts, per-child literal Read assertions, and a no-gated-reference-outside-a-Read-line check across Step 1/2 verifies, ac1, and the smoke test.</li>
-          <li><strong>Inlined child STOP halts the pipeline (high, risk)</strong> — children contain 14/5/8 STOP tokens. Fixed: Step 1 override now reads "treat every STOP in the child's content — including its terminal clause — as ending that sub-workflow only"; live smoke (now required) is the runtime check.</li>
-          <li><strong>pr-agent existing-OPEN-PR abort (medium, risk)</strong> — re-runs would halt at "do not create a duplicate". Fixed: explicit capture-URL-and-continue-to-CI-watch rule in Step 1 plus new acceptance criterion ac9.</li>
-          <li><strong><code>${CLAUDE_PLUGIN_ROOT}</code> expansion is environment-dependent (medium, risk + architecture)</strong> — mitigated by the Glob fallback (now with multi-match disambiguation), the failed-Read STOP rule, and the required live smoke.</li>
-          <li><strong>allowed-tools superset drift (medium, architecture)</strong> — fixed: smoke-test assertion 7 (parent superset of each child, minus intentional glab) and the guard note's mirror obligation.</li>
-          <li><strong>CHANGELOG v3.10.6 lineage gap (low, three reviewers)</strong> — acknowledged with a one-line note in the v3.10.7 entry rather than a fabricated backfill.</li>
-        </ol>
-
-        <h3 style="margin:1rem 0 .5rem;font-size:.95rem">Inline Edits Applied</h3>
-        <table class="plan-table">
-          <caption>Edits applied to this plan during the team review</caption>
-          <thead><tr><th scope="col">Target</th><th scope="col">Action</th><th scope="col">Change</th></tr></thead>
-          <tbody>
-            <tr><td>Step 1 action</td><td>edit</td><td>Strengthened STOP override (every STOP is sub-workflow-local), Glob multi-match disambiguation, existing-OPEN-PR continue-to-CI-watch rule</td></tr>
-            <tr><td>Step 1 verify</td><td>edit</td><td>Case-insensitive zero-count; per-child Read assertions; OPEN-PR rule check</td></tr>
-            <tr><td>Step 2 verify</td><td>edit</td><td>No gated commit-agent mention outside a Read line; case-insensitive count</td></tr>
-            <tr><td>Step 3 action + verify</td><td>edit</td><td>Guard note now records glab exclusion, Haiku-pin loss, and the mirror obligation</td></tr>
-            <tr><td>Step 4 action + verify</td><td>edit</td><td>Seven explicit test assertions incl. parent-superset check and children-unchanged git diff; manual-run convention noted</td></tr>
-            <tr><td>Step 6 action + verify</td><td>edit</td><td>One-line acknowledgement of the pre-existing v3.10.6 CHANGELOG gap</td></tr>
-            <tr><td>Objective test card</td><td>edit</td><td>Asserts rewritten to match the seven assertion groups</td></tr>
-            <tr><td>#criteria-list ac1, ac4</td><td>edit</td><td>ac1 case-insensitive + outside-Read-line clause; ac4 gains executable git diff command</td></tr>
-            <tr><td>#criteria-list</td><td>append</td><td>New ac9: OPEN-PR re-run continues to CI watch (progress count 8 → 9)</td></tr>
-            <tr><td>#verification item 4</td><td>edit</td><td>Live --plugin-dir smoke promoted from optional to required, plus an OPEN-PR re-run check</td></tr>
-            <tr><td>#context</td><td>append</td><td>Noted branch-agent's model: Haiku pin does not apply under Read-chaining</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </details>
-
   </main>
 </div><!-- /.layout -->
 
 <script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
+/* ── Save as PDF (native browser print dialog) ──────────────── */
+function savePDF() {
+  window.print();
+}
+
 /* ── Build rich implementation prompt from DOM ──────────────── */
 function buildImplementPrompt() {
   var cmdEl = document.getElementById('implement-cmd');
@@ -1738,33 +2001,46 @@ function buildImplementPrompt() {
     return cb && cb.checked;
   }).length;
 
+  var planPathMeta = document.querySelector('meta[name="plan-path"]');
+  var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\.html$/, '.md');
+
   var lines = [];
   lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
   lines.push('');
   lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
   lines.push('');
   lines.push('Instructions:');
-  lines.push('1. Read the plan file and implement every step marked todo.');
-  lines.push('2. After completing each step, mark it done in the plan.');
-  lines.push('3. When all steps are done, verify each acceptance criterion and check it off in the plan.');
-  lines.push('4. Complete the completion checklist to update the plan status to completed.');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Run the objective test\'s Run command from the plan\'s Tests section, then walk the Verification section end-to-end and confirm the stated objective actually works — on failure, fix and re-verify before continuing; never mark the plan done on a failing check.');
+  lines.push('5. Set "status: completed" in the spec frontmatter only once every step is marked, every criterion is checked, and verification passes.');
+  lines.push('6. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
 
   return lines.join('\n');
 }
 
-/* ── Copy implement prompt ──────────────────────────────────── */
-function copyCmd(btn) {
-  var text = buildImplementPrompt();
-  function flash() {
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
     if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
     btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
       btn._copyTimer = null;
-    }, 2000);
+    }, delay);
   }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
   function fallback() {
     var ta = document.createElement('textarea');
     ta.value = text;
@@ -1774,7 +2050,7 @@ function copyCmd(btn) {
     var ok = false;
     try { ok = document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
-    if (ok) flash();
+    if (ok) flash(); else fail();
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(flash).catch(fallback);
@@ -1783,70 +2059,30 @@ function copyCmd(btn) {
   }
 }
 
-/* ── Copy workflow prompt ──────────────────────────────────── */
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
 function copyWorkflow(btn) {
   var code = document.getElementById('workflow-cmd');
   if (!code) return;
-  var text = code.textContent;
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy goal prompt ──────────────────────────────────────── */
+function copyGoal(btn) {
+  var code = document.getElementById('goal-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
 }
 
 /* ── Copy plan file name / relative path ────────────────────── */
 function copyPath(btn, id) {
   var el = document.getElementById(id);
   if (!el) return;
-  var text = el.textContent.trim();
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
 }
 
 /* ── Copy prompt button (global — required by inline onclick) ── */
@@ -1856,47 +2092,18 @@ function copyPrompt(btn) {
     pre = btn.parentElement && btn.parentElement.querySelector('pre');
   }
   if (!pre) return;
-  var text = pre.textContent;
-
-  function flash() {
-    if (btn._copyTimer) clearTimeout(btn._copyTimer);
-    btn.textContent = 'Copied ✓';
-    btn.classList.add('copied');
-    btn._copyTimer = setTimeout(function () {
-      btn.textContent = 'Copy prompt';
-      btn.classList.remove('copied');
-      btn._copyTimer = null;
-    }, 2000);
-  }
-
-  function fallback() {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-    if (ok) flash();
-  }
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(flash).catch(fallback);
-  } else {
-    fallback();
-  }
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
 }
 
 (function () {
   'use strict';
 
-  /* ── Progress bar + HTML-attribute persistence ────────────── */
+  /* ── Progress bar — state from HTML attributes ──────────────── */
   /* State lives in the HTML itself: a criterion is done iff its       */
   /* <input> carries the `checked` attribute, which the browser        */
-  /* renders natively on load — no localStorage. Toggling a box syncs  */
-  /* the attribute so the live DOM (and any saved copy of this file)   */
-  /* stays the single source of truth.                                 */
+  /* renders natively on load. Toggling a box syncs the attribute so   */
+  /* the live DOM (and any saved copy of this file) stays the single   */
+  /* portable source of truth — no browser-only storage layer.         */
   var bar        = document.getElementById('progress-bar');
   var label      = document.getElementById('progress-label');
   var liveRegion = document.getElementById('criteria-status');
@@ -1985,35 +2192,61 @@ function copyPrompt(btn) {
     updateRail();
   }
 
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
   /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
   var navLinks = Array.prototype.slice.call(
     document.querySelectorAll('.plan-nav a[href^="#"]')
   );
   if (navLinks.length && 'IntersectionObserver' in window) {
-    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
-    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
-                               .filter(Boolean);
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var id = entry.target.id;
-        navLinks.forEach(function (a) {
-          var isActive = a.getAttribute('href') === '#' + id;
-          a.classList.toggle('active', isActive);
-          if (isActive) a.setAttribute('aria-current', 'true');
-          else          a.removeAttribute('aria-current');
-        });
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
       });
-    }, { threshold: 0.3 });
-    sections.forEach(function (el) { observer.observe(el); });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+    targets.forEach(function (el) { observer.observe(el); });
   }
 })();
-</script>
-<script>
-/* Save as PDF (native browser print dialog) — backfilled */
-function savePDF() {
-  window.print();
-}
 </script>
 </body>
 </html>
