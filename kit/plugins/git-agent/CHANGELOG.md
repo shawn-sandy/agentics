@@ -1,6 +1,51 @@
 # Changelog — git-agent
 
 
+## v4.10.0 — 2026-07-31 — commit-agent asks whether to push
+
+### Added
+
+- **`commit-agent` Steps 5–6: resolve the push command, then ask.** After a
+  successful commit the skill now always asks via `AskUserQuestion` ("Push /
+  Don't push") instead of ending at the undo note. Step 5 first runs
+  `pr-agent` Step 4's upstream probe —
+  `git rev-parse --abbrev-ref --symbolic-full-name @{u}` — to resolve
+  `git push -u origin <branch>` (no tracking ref) or `git push` (tracking ref
+  exists). The probe is read-only and deliberately precedes the question so the
+  prompt can name the exact command it is authorizing, rather than asking about
+  an abstract "push" and only then discovering which form it takes. Step 6 asks
+  and, on approval, runs the resolved command. A dismissed question counts as
+  "Don't push", so closing the dialog leaves the commit local.
+- **Push failures stop the skill.** Reported verbatim: no retry, no `--force`,
+  and no `pull`/`fetch`/`rebase`/`merge` to make the push land. A rejected push
+  means the branch diverged, and reconciling divergence is the user's call —
+  not a step the skill takes on its own to satisfy the approval it was given.
+- `AskUserQuestion` added to the skill's `allowed-tools`.
+
+- **Delegated invocation stops after Step 4.** The push question is for a user
+  who invoked `commit-agent` directly. When another skill or agent invokes it as
+  a sub-step it skips the probe and the prompt entirely, because the caller owns
+  the push: `ship-autonomous` Step 3 commits and then delegates the push to
+  `pr-agent` in Step 4, and its Step 6d commits and pushes directly. Without
+  this carve-out an unattended ship run would block on an interactive question,
+  and answering "Don't push" would not have stopped the caller from pushing a
+  moment later — a prompt that cannot honor its own answer. Both `ship-autonomous`
+  call sites and `references/pr-events.md` state the delegated contract.
+
+### Changed
+
+- The skill's stop marker moves from step 4 to step 6, and the "When not to
+  use" note narrows from "Does not push or create PRs" to "Does not create PRs
+   — use pr-agent for that. Never pushes without the Step 6 approval."
+
+### Unchanged
+
+- **`agent-commit` still never pushes.** A background subagent has no user to
+  ask, and the dispatch authorizes a commit, not a remote write — the same
+  reasoning that kept `agent-merge` from inheriting `merge`'s approval prompt.
+  Background flows that should reach the remote use `agent-pr` or `agent-ship`.
+
+
 ## v4.9.0 — 2026-07-30 — Prune ordering reminders, keep every irreversibility guard
 
 ### Changed

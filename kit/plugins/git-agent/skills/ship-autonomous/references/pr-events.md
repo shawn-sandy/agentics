@@ -7,7 +7,9 @@ SKILL.md; this file carries the mechanics.
 ## Steps 3–4: what the delegated skills do
 
 **`git-agent:commit-agent`** stages all changes, analyzes the diff, writes a
-conventional commit message, and commits.
+conventional commit message, and commits. Every invocation from this skill is a
+delegated one, so it stops there and never raises its push prompt — the caller
+pushes.
 
 **`git-agent:pr-agent`**:
 
@@ -78,8 +80,8 @@ routine investigation, and skip duplicate or no-op events silently.
 ## Step 6c: Review comments
 
 If the requested change is clear, safe, and in scope: apply it with `Edit`,
-commit via **`git-agent:commit-agent`**, `git push`, then reply to the comment
-via `gh` noting the commit that addresses it.
+commit via **`git-agent:commit-agent`** (delegated — no push prompt), `git push`,
+then reply to the comment via `gh` noting the commit that addresses it.
 
 If the comment is ambiguous, architecturally significant, or open to multiple
 interpretations: use **AskUserQuestion** with enough context that the user can
