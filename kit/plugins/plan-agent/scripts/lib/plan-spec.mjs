@@ -349,7 +349,11 @@ export function extractNextSteps(html) {
   const items = [];
   const listInner = innerByMarker(sectionInner, 'class="next-steps-list"', 'div');
   if (listInner !== null) {
-    for (const card of allInnerByMarker(listInner, 'class="next-step-item"', 'details')) {
+    // Token match, not an exact-string marker: a wish-list card renders
+    // class="next-step-item wish-item" (see plan-shell.mjs's .wish-item
+    // styling), and an exact '"next-step-item"' marker misses every one of
+    // those — the same [" ] pattern the step-card matcher above already uses.
+    for (const card of allInnerByRe(listInner, /<details\b[^>]*class="next-step-item[" ][^>]*>/, 'details')) {
       const summaryInner = innerByMarker(card, '<summary', 'summary');
       const summary = summaryInner === null ? '' : textOf(summaryInner);
       if (!summary) continue;
@@ -651,6 +655,34 @@ export function parseSpecMarkdown(md) {
 }
 
 /**
+ * The `## Next Steps` block as an array of markdown lines, leading blank line
+ * included — `[]` when there is nothing to render. Factored out of
+ * buildDigest() so resolveSpec() (extract-plan-spec.mjs) can splice
+ * DOM-recovered follow-ups onto a legacy embedded digest that predates Next
+ * Steps support, rather than only ever reaching this via a full sections
+ * object.
+ */
+export function nextStepsMarkdown(nextSteps) {
+  if (!nextSteps || (nextSteps.items.length === 0 && !nextSteps.prose)) return [];
+  const lines = ['', '## Next Steps'];
+  if (nextSteps.prose) lines.push(nextSteps.prose);
+  const indent = (s) => s.split('\n').map((l) => (l ? `  ${l}` : ''));
+  for (const it of nextSteps.items) {
+    lines.push(`- ${it.summary}`);
+    if (it.desc) lines.push(...indent(it.desc));
+    if (it.prompt) {
+      // Outrun any fence the prompt itself contains, so re-parsing the
+      // digest reads the whole prompt back rather than stopping inside it.
+      const fence = '`'.repeat(Math.max(3, longestFenceRun(it.prompt) + 1));
+      lines.push(`  ${fence}text`);
+      lines.push(...indent(it.prompt));
+      lines.push(`  ${fence}`);
+    }
+  }
+  return lines;
+}
+
+/**
  * Render the spec sections as the digest's markdown body (guarded).
  * `nextSteps` is optional and takes the parse-result shape — pass it (from
  * extractNextSteps()) or the follow-up cards vanish on the HTML round trip.
@@ -694,23 +726,6 @@ export function buildDigest(sections, nextSteps = null) {
   lines.push('');
   lines.push('## Verification');
   lines.push(sections.verification);
-  if (nextSteps && (nextSteps.items.length > 0 || nextSteps.prose)) {
-    lines.push('');
-    lines.push('## Next Steps');
-    if (nextSteps.prose) lines.push(nextSteps.prose);
-    const indent = (s) => s.split('\n').map((l) => (l ? `  ${l}` : ''));
-    for (const it of nextSteps.items) {
-      lines.push(`- ${it.summary}`);
-      if (it.desc) lines.push(...indent(it.desc));
-      if (it.prompt) {
-        // Outrun any fence the prompt itself contains, so re-parsing the
-        // digest reads the whole prompt back rather than stopping inside it.
-        const fence = '`'.repeat(Math.max(3, longestFenceRun(it.prompt) + 1));
-        lines.push(`  ${fence}text`);
-        lines.push(...indent(it.prompt));
-        lines.push(`  ${fence}`);
-      }
-    }
-  }
+  lines.push(...nextStepsMarkdown(nextSteps));
   return guardScriptClose(lines.join('\n'));
 }

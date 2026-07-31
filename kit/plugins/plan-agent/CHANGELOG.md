@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 7.4.3 — out-of-scope items no longer vanish from rendered plans (2026-07-31)
+## 7.4.4 — out-of-scope items no longer vanish from rendered plans (2026-07-31)
 
 ### Fixed
 
@@ -32,6 +32,22 @@
   depends on. The renderer escapes prompts, so a renderer-built card holds no
   markup there and the strip only ever destroyed real text. Removing it also
   clears a CodeQL incomplete-multi-character-sanitization alert.
+- **A legacy embedded digest no longer masks DOM-visible follow-ups.**
+  `resolveSpec()` returns an embedded `#plan-digest` block before ever looking
+  at the DOM; 49 committed plans carry a digest backfilled before Next Steps
+  round-tripping existed, so their frozen digest lacks the section even though
+  the visible page still renders the cards. Extraction (and therefore a
+  re-render sourced from it) silently dropped every one. `resolveSpec()` now
+  detects a digest with no Next Steps heading and splices in the DOM-recovered
+  follow-ups via the new shared `nextStepsMarkdown()` helper.
+- **A wish-list card is no longer dropped by an exact-string class match.**
+  `extractNextSteps()` matched the literal marker `class="next-step-item"`,
+  which requires the closing quote immediately after the class name — missing
+  every `class="next-step-item wish-item"` card the legacy renderer's
+  `.wish-item` styling produces (67 occurrences across the committed corpus).
+  Card matching now uses the same `class="next-step-item[" ]` token pattern
+  the step-card matcher already relies on for the identical `step-card` /
+  `step-card completed` distinction.
 ## 7.4.1 — harden the ticket link and the summary handoff (2026-07-31)
 
 ### Fixed

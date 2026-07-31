@@ -25,12 +25,15 @@ import { fileURLToPath } from 'node:url';
 
 import {
   buildDigest,
+  extractNextSteps,
   extractSections,
   hasDigest,
+  parseSpecMarkdown,
   readEmbeddedDigest,
   unguardScriptClose,
 } from '../../scripts/lib/plan-spec.mjs';
 import { resolveSpec } from '../../scripts/extract-plan-spec.mjs';
+import { renderPlanHtml } from '../../scripts/build-plan-html.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const EXTRACTOR = join(ROOT, 'scripts', 'extract-plan-spec.mjs');
@@ -160,6 +163,71 @@ ok('readEmbeddedDigest skips the quoted one-liner and un-guards without stopping
 
 ok('readEmbeddedDigest returns null when there is no digest', () => {
   assert.equal(readEmbeddedDigest(makePlan({})), null);
+});
+
+console.log('-- unit: legacy embedded digests that predate Next Steps --');
+
+// A digest built before this fix has no Next Steps section even when the
+// DOM does — resolveSpec() must splice the DOM-recovered follow-ups in
+// rather than silently returning a spec missing a whole section.
+ok('resolveSpec merges DOM-visible Next Steps into a legacy digest that lacks them', () => {
+  const specWithNextSteps = parseSpecMarkdown(`${unguardScriptClose(guardedDigest)}
+
+## Next Steps
+
+- Add a follow-up feature
+  \`\`\`text
+  Do the follow-up. Run npm test to verify.
+  \`\`\`
+`);
+  const domHtml = renderPlanHtml(specWithNextSteps, { fileName: 'p.html', planPath: 'p.html' });
+  assert.ok(domHtml.includes('id="next-steps"'), 'fixture precondition: DOM must carry a next-steps section');
+
+  // Embed a digest built the pre-fix way: sections only, no nextSteps arg —
+  // this is exactly what a plan backfilled before plan-agent 7.4.3 carries.
+  const staleDigest = buildDigest(extractSections(domHtml));
+  assert.ok(!/## Next Steps/i.test(staleDigest), 'fixture precondition: stale digest must lack Next Steps');
+  const embedded = makeEmbedded(domHtml, staleDigest);
+
+  const resolved = resolveSpec(embedded);
+  assert.match(resolved, /## Next Steps/, 'stale digest must gain the DOM-visible Next Steps section');
+  assert.match(resolved, /Add a follow-up feature/);
+  assert.match(resolved, /Do the follow-up\. Run npm test to verify\./);
+});
+
+ok('resolveSpec leaves a digest alone when it already has Next Steps', () => {
+  const digest = '# Plan: X\n\n## Objective\no\n\n## Steps\n1. a Why: b Verify: c\n\n## Acceptance Criteria\n- d\n\n## Verification\ne\n\n## Next Steps\n- Already there\n';
+  const embedded = makeEmbedded(makePlan({}), digest);
+  assert.equal(resolveSpec(embedded), digest.trim());
+});
+
+console.log('-- unit: wish-list cards (extra CSS class) --');
+
+// Legacy hand-authored plans style a wish-list follow-up as
+// class="next-step-item wish-item" — an exact '"next-step-item"' string
+// marker misses the space before the second class and silently drops the
+// card on extraction.
+ok('extractNextSteps recovers a wish-list card carrying an extra CSS class', () => {
+  const spec = parseSpecMarkdown(`${unguardScriptClose(guardedDigest)}
+
+## Next Steps
+
+- An ordinary follow-up
+- A wish-list item
+`);
+  const html = renderPlanHtml(spec, { fileName: 'p.html', planPath: 'p.html' });
+  // Simulate the legacy wish-list styling by tagging the second card.
+  const wished = html.replace(
+    /(<details class="next-step-item">\s*<summary>A wish-list item<\/summary>)/,
+    '<details class="next-step-item wish-item">\n          <summary>A wish-list item</summary>',
+  );
+  assert.ok(wished.includes('next-step-item wish-item'), 'fixture precondition: wish-item class present');
+  const recovered = extractNextSteps(wished);
+  assert.equal(recovered.items.length, 2, 'wish-list card must not be dropped');
+  assert.deepEqual(
+    recovered.items.map((i) => i.summary),
+    ['An ordinary follow-up', 'A wish-list item'],
+  );
 });
 
 ok('unguardScriptClose is the inverse of the guard', () => {
