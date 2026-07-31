@@ -1,6 +1,34 @@
 # Changelog — git-agent
 
 
+## v4.10.0 — 2026-07-31 — commit-agent asks whether to push
+
+### Added
+
+- **`commit-agent` Step 5: Ask Whether to Push.** After a successful commit the
+  skill now always asks via `AskUserQuestion` ("Push / Don't push") instead of
+  ending at the undo note. On approval it reuses `pr-agent` Step 4's upstream
+  probe — `git rev-parse --abbrev-ref --symbolic-full-name @{u}`, then
+  `git push -u origin <branch>` when there is no tracking ref and `git push`
+  when there is. A dismissed question counts as "Don't push", so closing the
+  dialog leaves the commit local. Push failures are reported verbatim and stop
+  the skill: no retry, no `--force`.
+- `AskUserQuestion` added to the skill's `allowed-tools`.
+
+### Changed
+
+- The skill's stop marker moves from step 4 to step 5, and the "When not to
+  use" note narrows from "Does not push or create PRs" to "Does not create PRs
+   — use pr-agent for that. Never pushes without the Step 5 approval."
+
+### Unchanged
+
+- **`agent-commit` still never pushes.** A background subagent has no user to
+  ask, and the dispatch authorizes a commit, not a remote write — the same
+  reasoning that kept `agent-merge` from inheriting `merge`'s approval prompt.
+  Background flows that should reach the remote use `agent-pr` or `agent-ship`.
+
+
 ## v4.9.0 — 2026-07-30 — Prune ordering reminders, keep every irreversibility guard
 
 ### Changed

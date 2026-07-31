@@ -1,16 +1,16 @@
 ---
 name: commit-agent
-description: "Stages all changes and creates a conventional commit message. Analyzes the diff and writes a descriptive, scope-correct commit. Use when the user asks to commit or save work to git."
-allowed-tools: Bash(git *), ToolSearch, ExitPlanMode
+description: "Stages all changes and creates a conventional commit message. Analyzes the diff, writes a scope-correct commit, then asks whether to push. Use when the user asks to commit or save work to git."
+allowed-tools: Bash(git *), AskUserQuestion, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 model: haiku
 ---
 
-Stage all changes and create a conventional commit message. Follow these steps in strict order. **STOP immediately after step 4.**
+Stage all changes, create a conventional commit message, then ask whether to push. Follow these steps in strict order. **STOP immediately after step 5.**
 
 ## When not to use
 
-Does not push or create PRs — use pr-agent for that.
+Does not create PRs — use pr-agent for that. Never pushes without the Step 5 approval.
 
 ## Step 0: Exit Plan Mode
 
@@ -66,6 +66,27 @@ After a successful commit, output one line:
 
 > To undo: `git reset HEAD~1`
 
+## Step 5: Ask Whether to Push
+
+Always ask — never push on your own initiative, and never skip the question because the commit looked routine.
+
+Use **AskUserQuestion** with the header `Push`, the question "Commit created. Push `<branch>` to the remote?", and two options:
+
+- **Push** — push this commit to the remote now
+- **Don't push** — leave the commit local
+
+**If the answer is "Don't push"** (or the question is dismissed), output "Commit left local." and **STOP**.
+
+**If the answer is "Push"**, run:
+```
+git rev-parse --abbrev-ref --symbolic-full-name @{u}
+```
+
+- Exits non-zero (no upstream tracking ref) → `git push -u origin <current-branch>`
+- Exits zero (upstream exists) → `git push`
+
+Report the push result. **If the push fails** (rejected, no remote, auth failure, pre-push hook), report the error verbatim and **STOP**. Do not retry. Do not force.
+
 ---
 
-**STOP here. Do not run tests, analyze coverage, check for issues, push, create PRs, or take any further action.**
+**STOP here. Do not run tests, analyze coverage, check for issues, create PRs, or take any further action.**
