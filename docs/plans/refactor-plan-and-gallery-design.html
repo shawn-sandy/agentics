@@ -1,0 +1,2170 @@
+<!DOCTYPE html>
+<html lang="en" data-status="todo" data-effort="high">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="plan-status" content="todo">
+<meta name="plan-effort" content="high">
+<meta name="plan-type" content="refactor">
+<meta name="plan-created" content="2026-07-31">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="refactor-plan-and-gallery-design.html">
+<meta name="plan-path" content="docs/plans/refactor-plan-and-gallery-design.html">
+<meta name="plan-md" content="docs/plans/refactor-plan-and-gallery-design.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/refactor-plan-and-gallery-design.md — Rebuild the plan document and gallery design. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/refactor-plan-and-gallery-design.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Rebuild the plan document and gallery design. The plan at docs/plans/refactor-plan-and-gallery-design.md describes one approach — use it as reference, but optimize for the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/refactor-plan-and-gallery-design.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-issue" content="https://github.com/shawn-sandy/agentics/issues/500">
+<title>Plan: Rebuild the plan document and gallery design</title>
+<style>
+/* ── Design tokens ─────────────────────────────────────────────── */
+  :root {
+    --bg:         #ffffff;
+    --surface:    #ffffff;
+    --border:     #e5e7eb;
+    --border-mid: #d1d5db;
+    --text:       #111827;
+    --muted:      #6b7280;
+    --subtle:     #9ca3af;
+    --accent:     #2563eb;
+    --accent-bg:  #eff6ff;
+    --green:      #16a34a;
+    --green-bg:   #f0fdf4;
+    --green-border:#bbf7d0;
+    --amber:      #d97706;
+    --amber-bg:   #fffbeb;
+    --amber-border:#fde68a;
+    --red:        #dc2626;
+    --red-bg:     #fef2f2;
+    --red-border: #fecaca;
+    --purple:     #a21caf;
+    --purple-bg:  #fdf4ff;
+    --purple-border:#f0abfc;
+    --grey-bg:    #f9fafb;
+    --wish-bg:    #fdf8ff;
+    --wish-border:#d8b4fe;
+    --radius:     4px;
+    --shadow:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+
+  /* ── Reset & base ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+  }
+  a { color: var(--accent); }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .875em;
+  }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  code.md {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: .08em .35em;
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--text); }
+  em.md { font-style: italic; }
+  pre {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .75rem 1rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── SVG icon helper ────────────────────────────────────────────── */
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* ── Skip link ─────────────────────────────────────────────────── */
+  .skip-link {
+    position: absolute;
+    left: -9999px; top: auto;
+    width: 1px; height: 1px;
+    overflow: hidden;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem; top: 1rem;
+    width: auto; height: auto;
+    overflow: visible;
+    background: var(--accent);
+    color: #fff;
+    padding: .5rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    z-index: 9999;
+    text-decoration: none;
+  }
+
+  /* ── Header — document cover ────────────────────────────────────── */
+  .plan-header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+  }
+  .plan-header::before {
+    content: "";
+    display: block;
+    height: 3px;
+    background: var(--accent);
+  }
+  .plan-header-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 1.5rem;
+  }
+  .plan-doc-type {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .6rem;
+  }
+  .plan-header-top {
+    display: block;
+  }
+  .plan-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-top: .75rem;
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .status-badge::before {
+    content: "";
+    display: inline-block;
+    width: .45em;
+    height: .45em;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  [data-status="todo"]        .status-badge { background: #6b7280; }
+  [data-status="in-progress"] .status-badge { background: #d97706; }
+  [data-status="completed"]   .status-badge { background: #16a34a; }
+
+  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
+  .effort-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .effort-badge::before { content: "Effort "; opacity: .7; }
+  [data-effort="low"]    .effort-badge { background: #16a34a; }
+  [data-effort="medium"] .effort-badge { background: #d97706; }
+  [data-effort="high"]   .effort-badge { background: #dc2626; }
+
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  [data-status="in-progress"] .status-badge::before {
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-status="in-progress"] .status-badge::before { animation: none; }
+  }
+
+  /* Save as PDF button */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+
+  /* Meta row */
+  .plan-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: .8rem;
+    color: var(--muted);
+  }
+  .plan-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+  }
+  .plan-meta .icon { opacity: .55; }
+
+  /* ── Layout ────────────────────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 3rem;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
+  }
+
+  /* ── Sidebar — table of contents ───────────────────────────────── */
+  .plan-nav {
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+    overflow: hidden;
+  }
+  @media (max-width: 720px) {
+    .plan-nav {
+      position: static;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+  }
+  .nav-heading {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--subtle);
+    padding: 0 1rem .6rem;
+    margin-bottom: .25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .scroll-rail {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .scroll-rail::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: calc(var(--scroll-pct, 0) * 1%);
+    background: var(--accent);
+    transition: height .1s linear;
+  }
+  @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
+  .plan-nav ul { list-style: none; padding: 0; margin: 0; }
+  .plan-nav li a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: .125rem 1rem .125rem 1.25rem;
+    font-size: .825rem;
+    color: var(--muted);
+    text-decoration: none;
+    gap: .5rem;
+    border-left: 2px solid transparent;
+    transition: color .12s, border-color .12s;
+  }
+  .plan-nav li a:hover { color: var(--text); border-left-color: var(--border-mid); }
+  .plan-nav li a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav li a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .5; }
+  .plan-nav li a.active .icon,
+  .plan-nav li a:hover .icon { opacity: .8; }
+
+  /* ── Objective card — executive summary ────────────────────────── */
+  .objective-card {
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #1e3a5f;
+    line-height: 1.6;
+  }
+  .objective-card .section-label,
+  .plan-glance-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .5rem;
+  }
+
+  /* ── At a glance — plain-language summary (sibling of #objective) ── */
+  .plan-glance {
+    background: var(--grey-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.5rem;
+    margin: -1.5rem 0 1.5rem;
+    line-height: 1.7;
+  }
+  .plan-glance-label { color: var(--muted); }
+  .plan-glance p { margin: 0; color: var(--text); font-size: .95rem; }
+
+  /* ── Progress bar ──────────────────────────────────────────────── */
+  .progress-wrap {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .6rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .progress-bar-bg { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), #60a5fa, var(--accent));
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+  .progress-bar-fill.has-progress { animation: none; background: var(--accent); }
+  @media (prefers-reduced-motion: reduce) {
+    .progress-bar-fill { animation: none; transition: none; }
+  }
+
+  /* ── Document sections ─────────────────────────────────────────── */
+  .section-card {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    padding: 2rem 0 1.25rem;
+    margin-bottom: 0;
+    box-shadow: none;
+  }
+  .section-card:first-of-type { border-top: none; }
+  .section-card h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+  }
+  .section-card h2 .icon { opacity: .6; }
+  .section-card .section-intro {
+    font-size: .875rem;
+    color: var(--muted);
+    margin: -1rem 0 1.25rem;
+  }
+  .section-card p { margin-bottom: .75rem; color: var(--text); }
+  .section-card p:last-child { margin-bottom: 0; }
+  .section-card ul, .section-card ol {
+    padding-left: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+
+  /* ── Step timeline ──────────────────────────────────────────────── */
+  .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    position: relative;
+  }
+  .steps-list::before {
+    content: "";
+    position: absolute;
+    left: .9rem;
+    top: 1.75rem;
+    bottom: 1.75rem;
+    width: 1px;
+    background: var(--border);
+  }
+
+  /* ── Step cards ────────────────────────────────────────────────── */
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    margin-left: 2.25rem;
+    transition: border-color .15s;
+  }
+  .step-card:hover { border-color: var(--border-mid); }
+  @media (prefers-reduced-motion: reduce) { .step-card { transition: none; } }
+  .step-card::before {
+    content: "";
+    position: absolute;
+    left: -1.6rem; top: 1.1rem;
+    width: .75rem; height: .75rem;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+    transition: background .15s;
+  }
+  .step-card.completed::before { background: var(--green); }
+  @media (prefers-reduced-motion: reduce) { .step-card::before { transition: none; } }
+
+  .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
+  .step-number {
+    flex-shrink: 0;
+    width: 1.75rem; height: 1.75rem;
+    background: var(--grey-bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    margin-top: .1rem;
+  }
+  .step-card.completed .step-number { background: var(--green-bg); color: var(--green); border-color: #bbf7d0; }
+  .step-body { flex: 1; min-width: 0; }
+  .step-action {
+    font-weight: 600;
+    margin-bottom: .3rem;
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    flex-wrap: wrap;
+    color: var(--text);
+  }
+  .step-chip {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .1em .5em;
+    border-radius: 999px;
+    background: var(--grey-bg);
+    color: var(--subtle);
+    border: 1px solid var(--border);
+    vertical-align: middle;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .step-card.completed .step-chip {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .step-chip-text { flex: 1; }
+  .step-why { font-size: .875rem; color: var(--muted); margin-bottom: .4rem; }
+  .step-why::before { content: "Why this matters: "; font-weight: 600; color: var(--text); }
+  .step-verify-toggle {
+    margin-top: .5rem;
+    border: 0;
+    border-top: 1px solid var(--border);
+    padding-top: .4rem;
+  }
+  .step-verify-toggle summary {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    user-select: none;
+  }
+  .step-verify-toggle summary::before { content: "▶"; font-size: .55em; transition: transform .2s; }
+  .step-verify-toggle[open] summary::before { transform: rotate(90deg); }
+  .step-verify-toggle .verify-body {
+    font-size: .875rem;
+    color: var(--text);
+    margin-top: .4rem;
+    padding-left: .5rem;
+    border-left: 2px solid var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce) { .step-verify-toggle summary::before { transition: none; } }
+
+  /* ── Acceptance criteria ───────────────────────────────────────── */
+  .criteria-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .criteria-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .criteria-list li:has(input:checked) { background: var(--grey-bg); }
+  .criteria-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+  .criteria-list label { cursor: pointer; font-size: .9rem; }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+
+  /* ── Completion checklist ────────────────────────────────────── */
+  .completion-checklist {
+    background: var(--surface);
+    border: 2px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1rem;
+  }
+  .completion-checklist.all-complete { border-color: var(--green); }
+  .completion-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+  .completion-badge {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: var(--amber);
+    border: 1px solid #fde68a;
+  }
+  .completion-checklist.all-complete .completion-badge {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+  }
+  .completion-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .completion-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: background .12s;
+  }
+  .completion-list li:has(input:checked) { background: var(--grey-bg); }
+  .completion-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--green);
+  }
+  .completion-list label { font-size: .9rem; }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) {
+    .completion-list li { transition: none; }
+  }
+
+  /* ── Completion report ─────────────────────────────────────── */
+  .completion-report {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .report-heading {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .75rem;
+  }
+  .report-empty {
+    font-style: italic;
+    color: var(--subtle);
+    font-size: .875rem;
+  }
+  .report-list { margin: 0; padding: 0; }
+  .report-list dt {
+    font-weight: 600;
+    color: var(--text);
+    font-size: .875rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .75rem;
+  }
+  .report-list dt:first-child { margin-top: 0; }
+  .report-list dt::before {
+    content: "";
+    display: inline-block;
+    width: .5rem; height: .5rem;
+    border-radius: 50%;
+    background: #dc2626;
+    flex-shrink: 0;
+  }
+  .report-list dd {
+    color: var(--muted);
+    font-size: .85rem;
+    margin-left: .9rem;
+    margin-top: .2rem;
+    margin-bottom: 0;
+  }
+
+  /* ── Next steps ────────────────────────────────────────────────── */
+  .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
+  .next-step-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .next-step-item summary {
+    font-weight: 600;
+    font-size: .9rem;
+    padding: .75rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--surface);
+    user-select: none;
+    min-height: 44px;
+  }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .next-step-item[open] summary::before { transform: rotate(90deg); }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--grey-bg); border-top: 1px solid var(--border); }
+  .next-step-prompt p { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .next-step-prompt pre { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
+
+  /* ── Copy prompt button ─────────────────────────────────────── */
+  .copy-prompt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-top: .6rem;
+    padding: .3rem .75rem;
+    font-size: .775rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+  .copy-prompt-btn:hover { background: #dbeafe; border-color: var(--accent); }
+  .copy-prompt-btn:active { background: #bfdbfe; }
+  .copy-prompt-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-prompt-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
+
+  /* Wish list variant */
+  .wish-list-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #7c3aed;
+    margin: 1.5rem 0 .75rem;
+  }
+  .wish-list-header::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--wish-border);
+    opacity: .5;
+  }
+  .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
+  .wish-item summary { background: var(--wish-bg) !important; color: #6d28d9; }
+  .wish-badge {
+    font-size: .6rem;
+    background: #f3e8ff;
+    color: #6d28d9;
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-left: auto;
+    border: 1px solid #ddd6fe;
+  }
+
+  /* ── Collapsible optional sections ─────────────────────────────── */
+  .optional-section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 1.5rem;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .optional-section > summary {
+    padding: .875rem 1.25rem;
+    font-weight: 600;
+    font-size: .9rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .optional-section > summary::before,
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--subtle); transition: transform .2s; }
+  .optional-section[open] > summary::before,
+  .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
+  .unresolved-prompt { margin-top: .5rem; }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before, .plan-more-ways > summary::before { transition: none; } }
+
+  /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
+  .plan-more-ways {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+    overflow: hidden;
+  }
+  .plan-more-ways > summary {
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--muted); }
+  .plan-more-ways-body {
+    padding: .75rem 1rem 1rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  @media print { .plan-more-ways { display: none !important; } }
+
+  /* ── Implement prompt ─────────────────────────────────────────── */
+  .plan-implement {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-bottom: 1.5rem;
+    padding: .45rem .75rem;
+    background: var(--green-bg);
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-implement-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--green);
+    flex-shrink: 0;
+    margin-top: .1rem;
+  }
+  .plan-implement code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-cmd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-cmd-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-cmd-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .copy-cmd-btn { display: none; }
+  @media print { .plan-implement { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
+
+  /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: 0;
+    padding: .55rem .75rem;
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-src-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+
+  /* ── Workflow prompt row (conditional — remove row when empty; lives in the drawer) ── */
+  .plan-workflow {
+    margin: 0;
+    font-size: .8rem;
+  }
+  .plan-workflow-label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding: .1rem 0;
+  }
+  .plan-workflow-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--accent-bg);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius);
+  }
+  .plan-workflow code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-workflow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-workflow-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-workflow-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
+  @media print { .plan-workflow { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
+
+  /* ── Goal prompt row (outcome-driven — always present; lives in the drawer) ── */
+  .plan-goal {
+    margin: 0;
+    font-size: .8rem;
+  }
+  .plan-goal-label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--purple);
+    padding: .1rem 0;
+  }
+  .plan-goal-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--purple-bg);
+    border: 1px solid var(--purple-border);
+    border-radius: var(--radius);
+  }
+  .plan-goal code {
+    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-size: .82rem;
+    color: var(--text);
+    flex: 1;
+    word-break: break-all;
+  }
+  .copy-goal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-goal-btn:hover { background: var(--accent-bg); color: var(--accent); border-color: #bfdbfe; }
+  .copy-goal-btn.copied { color: var(--green); background: var(--green-bg); border-color: #bbf7d0; }
+  .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
+  @media print { .plan-goal { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
+
+  /* ── Tests section ──────────────────────────────────────────────── */
+  .test-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .test-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .test-card-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .5rem;
+    flex-wrap: wrap;
+  }
+  .test-badge {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .15em .55em;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .test-badge-unit        { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .test-badge-integration { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-border); }
+  .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
+  .test-badge-objective   { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .test-card-title {
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--text);
+    flex: 1;
+  }
+  .test-card-body { font-size: .875rem; color: var(--muted); }
+  .test-card-body p { margin-bottom: .4rem; }
+  .test-card-body p:last-child { margin-bottom: 0; }
+  .test-card-body code { font-size: .85em; }
+  .test-card-body strong { color: var(--text); font-weight: 600; }
+  .test-tier-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .75rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .test-tier-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .objective-test-card {
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-left: 4px solid var(--green);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .objective-test-card .test-card-header { margin-bottom: .6rem; }
+  .objective-test-card .test-card-title { color: #14532d; }
+  .objective-test-card .test-card-body { color: #166534; }
+  .objective-test-card .test-card-body strong { color: #14532d; }
+  /* ── Footer ────────────────────────────────────────────────────── */
+  .plan-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    font-size: .75rem;
+    color: var(--subtle);
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .plan-footer .icon { opacity: .35; }
+
+  /* ── Focus styles ───────────────────────────────────────────────── */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Print styles ───────────────────────────────────────────────── */
+  @media print {
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn { display: none !important; }
+    .layout { display: block !important; }
+    .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
+    .step-chip { display: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     OPT-IN VISUAL COMPONENTS
+     Pure-CSS / token-driven — no CDN, no external script. These rules
+     are always present (harmless when unused); the matching <body>
+     section blocks are kept only when a plan needs them and deleted
+     otherwise. See SKILL.md → "Visual Components".
+     ═════════════════════════════════════════════════════════════════ */
+
+  /* ── Files file-tree ────────────────────────────────────────────── */
+  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
+  .file-tree-root { font-weight: 700; color: var(--text); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--border); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--muted); }
+  .file-list li.file-dir { color: var(--text); font-weight: 600; }
+  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
+  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
+  .file-badge-new       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .file-badge-modified  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+  .file-badge-generated { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .file-note { font-size: .75rem; color: var(--subtle); font-style: italic; font-family: system-ui, sans-serif; }
+
+  /* ── Flow / pipeline diagram ────────────────────────────────────── */
+  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
+  .pipeline-node { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--surface); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--text); }
+  .pipeline-sub { font-size: .74rem; color: var(--muted); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--subtle); padding: .25rem 0; }
+
+  /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
+  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
+  .compare-col-add     .compare-header { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .compare-col-neutral .compare-header { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--surface); }
+  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--muted); padding: .15rem 0; }
+
+  /* ── Bar chart (value via inline --val) ─────────────────────────── */
+  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
+  .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
+  @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
+  .bar-label { font-size: .82rem; color: var(--text); }
+  .bar-track { background: var(--border); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
+  .bar-fill.full { background: var(--green); }
+  .bar-fill.zero { background: var(--subtle); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; text-align: right; }
+
+  /* ── Data table ─────────────────────────────────────────────────── */
+  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--subtle); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--border); vertical-align: top; }
+  .plan-table thead th { background: var(--grey-bg); font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--grey-bg); }
+  .plan-table code { font-size: .8em; }
+
+  /* Shared sub-heading used inside visual sections */
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.75rem 0 .75rem; }
+
+  /* ── Resources (images, screenshots & reference links) ──────────── */
+  .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .resource-figure { margin: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+  .resource-figure > a { display: block; line-height: 0; }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--grey-bg); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--muted); padding: .5rem .75rem; border-top: 1px solid var(--border); }
+  .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--border); }
+  .resource-links li:last-child { border-bottom: none; }
+  .resource-links a { font-weight: 600; word-break: break-word; }
+  .resource-note { font-size: .78rem; color: var(--subtle); font-style: italic; }
+
+  .plan-back-nav { margin-bottom: .5rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+</style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+  </symbol>
+  <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+  </symbol>
+  <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+  </symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+  </symbol>
+  <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
+  <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-magnifying-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+  </symbol>
+  <symbol id="ic-arrow-right-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+  </symbol>
+  <symbol id="ic-code-bracket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>
+  </symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/>
+    <path d="M6 6h.008v.008H6V6Z"/>
+  </symbol>
+  <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
+  </symbol>
+  <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+  </symbol>
+  <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
+  </symbol>
+  <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
+  </symbol>
+  <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
+</svg>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="plan-header">
+  <div class="plan-header-inner">
+    <div class="plan-back-nav">
+      <a href="./index.html" class="plan-back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Plans
+      </a>
+    </div>
+    <div class="plan-doc-type">Implementation Plan</div>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Rebuild the plan document and gallery design</h1>
+      <div class="plan-header-actions">
+        <button class="save-pdf-btn" type="button" onclick="savePDF()"
+                aria-label="Save this plan as PDF">Save as PDF</button>
+        <span class="effort-badge" aria-label="Effort level">High</span>
+        <a class="issue-link" href="https://github.com/shawn-sandy/agentics/issues/500"
+           aria-label="View the tracking issue for this plan">Issue #500</a>
+        <span class="status-badge">todo</span>
+      </div>
+    </div>
+    <div class="plan-meta">
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-07-31</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> refactor</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> High effort</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="scroll-rail" aria-hidden="true"></div>
+    <div class="nav-heading">On this page</div>
+    <ul>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
+      <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
+      <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
+    </ul>
+  </nav>
+
+  <main id="main">
+
+    <div class="objective-card" id="objective">
+      <div class="section-label">Objective</div>
+      <p>Rebuild the presentation layer of generated plan pages and the gallery index — design tokens with a persisted dark theme, a mono-and-serif type system, one merged goal panel, an always-visible Verify line, a sidebar step rail that absorbs the progress bar, and gallery controls that surface in-flight work first — without changing the DOM contract that <code class="md">extractSections</code> and the gallery generator read.</p>
+    </div>
+
+    <section class="plan-glance" aria-labelledby="plan-glance-label">
+      <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
+      <p>Generated plan pages are hard to scan — two stacked summaries, every section in an identical bordered box, the Verify line hidden behind a disclosure, three competing progress devices, no dark mode, and a tertiary text colour that fails WCAG at 2.5:1. This rebuilds the presentation shell around a mono-chrome-plus-serif-prose type system, a single step rail that replaces the progress bar and the table of contents, and a gallery that leads with the plans actually in flight. Done when a rendered plan passes contrast in both themes, the extractor round-trips every committed plan unchanged, and the three gallery indexes regenerate with in-flight cards first.</p>
+    </section>
+
+    <div class="plan-implement">
+      <span class="plan-implement-label">Implement</span>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/refactor-plan-and-gallery-design.md — Rebuild the plan document and gallery design. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/refactor-plan-and-gallery-design.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+      <button class="copy-cmd-btn" type="button"
+              onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
+    </div>
+
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
+
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Rebuild the plan document and gallery design. The plan at docs/plans/refactor-plan-and-gallery-design.md describes one approach — use it as reference, but optimize for the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/refactor-plan-and-gallery-design.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">refactor-plan-and-gallery-design.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/refactor-plan-and-gallery-design.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/refactor-plan-and-gallery-design.md</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
+          </div>
+        </div>
+
+      </div>
+    </details>
+
+    <div class="progress-wrap" id="progress">
+      <div class="progress-header">
+        <span>Definition of done</span>
+        <span id="progress-label">0 / 24 done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar"
+             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <section class="section-card card-context" id="context" aria-labelledby="h-context">
+      <h2 id="h-context">
+        <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
+        Context
+      </h2>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
+      <p>Every generated plan is styled by one 1930-line module, <code class="md">scripts/lib/plan-shell.mjs</code>, whose <code class="md">CSS</code> export has drifted into a generic default: <code class="md">system-ui</code> at 15px, <code class="md">#2563eb</code> blue, <code class="md">4px</code> radius, and a <code class="md">1px solid #e5e7eb</code> border on every container. A visual audit of a rendered plan, the 88-card gallery at <code class="md">docs/plans/index.html</code>, and the hub at <code class="md">docs/index.html</code> found six concrete failures, and two prototypes at <code class="md">docs/prototypes/plan-document-redesign.html</code> and <code class="md">docs/prototypes/plans-site-redesign.html</code> were built and verified against them.</p>
+      <p>The failures are structural, not cosmetic. <code class="md">objectiveCard</code> and <code class="md">glanceBlock</code> render as siblings, so a reader hits two abstracts before any content and cannot tell which is authoritative — <code class="md">plan-shell.mjs</code> line 376 even carries a <code class="md">margin: -1.5rem 0 1.5rem</code> hack to pull the second up against the first. <code class="md">stepCard</code> buries the <code class="md">Verify:</code> text in a <code class="md">&lt;details class=&quot;step-verify-toggle&quot;&gt;</code>, which is the one line a reader needs while executing. Three separate devices report progress — the shimmer bar at <code class="md">progressBlock</code>, the icon nav from <code class="md">nav()</code>, and the <code class="md">.steps-list::before</code> timeline — and none of them says which step you are on, because <code class="md">NAV_ENTRIES</code> has a single <code class="md">steps</code> entry rather than one per step. <code class="md">--subtle: #9ca3af</code> on <code class="md">#ffffff</code> measures 2.5:1 and is used for nav icons and step chips, so the page fails WCAG AA today. There is no dark mode at all.</p>
+      <p>Three test gates constrain how this can be done, and they shaped the step order.</p>
+      <p>The first is the nav regex at <code class="md">tests/plugins/test-build-plan-html.mjs:635</code>: <code class="md">[...html.matchAll(/&lt;a href=&quot;#([a-z-]+)&quot;&gt;/g)]</code> requires each section anchor&#39;s <code class="md">href</code> to be its only attribute. Step links are therefore emitted with a leading <code class="md">class</code> attribute and ids containing digits (<code class="md">#step-1</code>), both of which that regex skips — the section-link <code class="md">deepEqual</code> keeps passing without being loosened.</p>
+      <p>The second is the back-compat guard at <code class="md">tests/plugins/test-build-plan-html.mjs:928</code>. It renders the sample spec through the renderer at <code class="md">origin/main</code> and through the working copy, blanks the three prompt payloads and the <code class="md">&lt;style&gt;</code> block, and asserts the two documents are byte-identical. Its stated purpose in the comment above it is narrower than what it does: presentation is expected to evolve, and what the guard protects is &quot;the DOM contract the extractor and the gallery read&quot;. As written it fails on <em class="md">any</em> intentional markup change, and the inline <code class="md">&lt;script&gt;</code> is not blanked either, so it also fails on the theme-toggle and scroll-spy edits. It is narrowed in step 2, before the first markup change lands, rather than left red across the whole PR.</p>
+      <p>The third is the byte-identical mirror at <code class="md">tests/plugins/test-build-plan-html.mjs:951</code>, which asserts the three files under <code class="md">kit/plugins/plan-agent/scripts/</code> match their repo-root counterparts under <code class="md">scripts/</code>. <code class="md">lib/plan-spec.mjs</code> is not edited by this plan, so only two files are re-copied.</p>
+      <p>Two hazards were designed around rather than accepted. <code class="md">scripts/merge-plans-index.mjs</code> is the git merge driver for the generated gallery indexes; it splices the union of <code class="md">&lt;a class=&quot;gallery-card&quot;&gt;</code> blocks over the region between the first and last card, so anything sitting <em class="md">between</em> cards — a static month heading, for instance — is destroyed by a merge and stays destroyed until the next regeneration. Month grouping is therefore rendered client-side from a <code class="md">data-month</code> attribute on each card rather than baked into the generated markup: the driver never sees a group header, <code class="md">CARD_RE</code> is untouched, <code class="md">tests/plugins/test-merge-gallery-index.sh</code> is untouched, and a filtered view re-groups correctly instead of leaving empty headings behind. The same technique carries the In-flight band, which is a client-side separator over cards the generator sorts first.</p>
+      <p>The second hazard is the theme toggle. <code class="md">plan-shell.mjs</code> already selects on <code class="md">[data-status=&quot;…&quot;]</code> set on <code class="md">&lt;html&gt;</code>, so the theme attribute is a second attribute on the same element (<code class="md">data-theme</code>) rather than a class, and the two compose without either winning. The stored preference is read by a small inline script in <code class="md">&lt;head&gt;</code> before first paint, because a plan opened from <code class="md">file://</code> has no server to set a class for it and a flash of the wrong theme on every page load is worse than no dark mode.</p>
+      <p>One redundancy is knowingly left in place. The prototype folds the progress bar into the sidebar rail so the page carries a single progress device; this plan does not, because relocating <code class="md">progressBlock</code> would drop <code class="md">progress</code> from <code class="md">NAV_ENTRIES</code> and invalidate both nav <code class="md">deepEqual</code> arrays for a purely cosmetic gain. The bar keeps its position and its ids, loses its shimmer animation in step 1, and the rail is a step index rather than a second progress readout. Merging the two is a follow-up, not a prerequisite.</p>
+      <p>Phases are deliberately not in scope. The step rail groups nothing today because <code class="md">parseSpecMarkdown</code> returns steps as a flat <code class="md">{ action, why, verify }</code> list with no phase concept anywhere in the parser, the digest, the renderer, or the extractor — see <code class="md">docs/plans/add-plan-phase-checkpoints.md</code>, which adds all four. That plan already edits <code class="md">nav()</code>&#39;s neighbours, so phase grouping is added there once the rail exists, rather than building a grouping hook here for data that does not exist yet.</p>
+      <p><code class="md">workflow: never</code> is set deliberately. Steps 1 through 6 are ordered edits to the same two files, <code class="md">scripts/lib/plan-shell.mjs</code> and <code class="md">scripts/build-plan-html.mjs</code>, so subagents fanning out would conflict on them. The renderer&#39;s own heuristic counts files and top-level directories and would otherwise license fan-out this plan cannot use.</p>
+    </section>
+
+    <section class="section-card card-files" id="files" aria-labelledby="h-files">
+      <h2 id="h-files">
+        <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+        Files that change
+      </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
+      <div class="file-tree">
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
+        <ul class="file-list">
+          <li><code>scripts/lib/plan-shell.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">tokens, dark palette, type roles, theme toggle, objective and step markup, step rail, scroll-spy fix</span></li>
+          <li><code>scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">nest the glance, pass steps to <code class="md">nav()</code>, relocate the progress block, drop <code class="md">progress</code> from the nav id list</span></li>
+          <li><code>kit/plugins/plan-agent/scripts/lib/plan-shell.mjs</code> <span class="file-badge file-badge-generated">generated</span> <span class="file-note">re-copied from the repo-root source</span></li>
+          <li><code>kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-generated">generated</span> <span class="file-note">re-copied from the repo-root source</span></li>
+          <li><code>kit/plugins/plan-agent/templates/plans-gallery.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">search plus status segmented control, type and effort disclosure, client-side In-flight and month grouping</span></li>
+          <li><code>kit/plugins/plan-agent/hooks/build-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note"><code class="md">data-month</code> attribute and in-progress-first sort</span></li>
+          <li><code>scripts/build-plans-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same edit, kept byte-identical</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> docs/plans/
+            <ul class="file-list">
+            <li><code>build-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same edit, kept byte-identical</span></li>
+            <li><code>index.html</code> <span class="file-badge file-badge-generated">generated</span> <span class="file-note">regenerated by the build script</span></li>
+            </ul>
+          </li>
+          <li><code>docs/artifacts/index.html</code> <span class="file-badge file-badge-generated">generated</span> <span class="file-note">regenerated by the build script</span></li>
+          <li><code>docs/prototypes/index.html</code> <span class="file-badge file-badge-generated">generated</span> <span class="file-note">regenerated by the build script</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> tests/plugins/
+            <ul class="file-list">
+            <li><code>test-build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">narrow the back-compat guard; the two nav id arrays stay as they are</span></li>
+            <li><code>test-plan-redesign.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective-verification smoke test</span></li>
+            </ul>
+          </li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 7.4.4 to 7.5.0</span></li>
+          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">7.5.0 entry</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
+      <h2 id="h-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
+        Steps
+      </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
+      <div class="steps-list">
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Replace the <code class="md">:root</code> token block in <code class="md">plan-shell.mjs</code>&#39;s <code class="md">CSS</code> export with the prototype&#39;s palette and font stacks — <code class="md">--paper</code>, <code class="md">--panel</code>, <code class="md">--sunk</code>, <code class="md">--ink</code>, <code class="md">--ink-2</code>, <code class="md">--ink-3</code>, <code class="md">--rule</code>, <code class="md">--rule-soft</code>, <code class="md">--accent</code>, <code class="md">--accent-soft</code>, <code class="md">--accent-line</code>, <code class="md">--moss</code>, <code class="md">--signal</code>, plus <code class="md">--mono</code>, <code class="md">--ui</code>, <code class="md">--prose</code> — keeping every existing token name as an alias pointing at its replacement so no downstream selector breaks, then add the dark palette under both <code class="md">:root[data-theme=&quot;dark&quot;]</code> and <code class="md">@media (prefers-color-scheme: dark) { :root:not([data-theme=&quot;light&quot;]) }</code>, and retarget the existing chrome selectors (<code class="md">.plan-title</code>, <code class="md">.plan-doc-type</code>, <code class="md">.nav-heading</code>, <code class="md">.plan-meta</code>, <code class="md">.section-card h2</code>, <code class="md">.step-number</code>, <code class="md">.step-chip</code>) to <code class="md">--mono</code>, <code class="md">.section-card p</code> to <code class="md">--prose</code>, and <code class="md">.progress-bar-fill</code> to a flat accent with the <code class="md">shimmer</code> animation dropped.</span>
+              </div>
+              <div class="step-why">this is the whole visual refresh with zero DOM risk, because the back-compat guard blanks the <code class="md">&lt;style&gt;</code> block, and it retires <code class="md">--subtle: #9ca3af</code>, which measures 2.5:1 on white and is the page&#39;s current WCAG failure; aliasing rather than repointing keeps steps 1 through 5 safe against the old names, and step 6 removes both in one sweep.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">render a committed plan and confirm <code class="md">git diff</code> touches no markup, that computed <code class="md">color</code> on <code class="md">.plan-nav li a</code> and <code class="md">.step-chip</code> clears 4.5:1 against the page background in both themes, and that the literal string <code class="md">html { scroll-behavior: auto; }</code> still appears verbatim.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Narrow the back-compat guard at <code class="md">tests/plugins/test-build-plan-html.mjs:883</code> from a whole-document <code class="md">assert.equal(stripVolatile(after), stripVolatile(before))</code> to <code class="md">assert.deepEqual(extractSections(after), extractSections(before))</code> plus explicit assertions that the no-prototype render carries no <code class="md">plan-prototype</code> meta tag and no prototype header link.</span>
+              </div>
+              <div class="step-why">the guard&#39;s own comment says it protects &quot;the DOM contract the extractor and the gallery read&quot; while presentation evolves, but the byte-diff also fails on every intentional markup and inline-script change, so leaving it would make steps 3 through 6 indistinguishable from an accidental regression.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">the narrowed assertion passes against the unchanged renderer, and re-running it after deliberately renaming <code class="md">class=&quot;verify-body&quot;</code> in a scratch copy fails with the extractor contract named.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add the theme toggle — a <code class="md">data-theme</code>-reading inline script at the top of <code class="md">&lt;head&gt;</code> in <code class="md">page()</code>, a labelled toggle button in <code class="md">header()</code> beside the Save-as-PDF button with <code class="md">aria-pressed</code> and a 44×44px hit area, and a handler in the <code class="md">SCRIPT</code> block that flips <code class="md">documentElement.dataset.theme</code> and writes the choice to <code class="md">localStorage</code>.</span>
+              </div>
+              <div class="step-why">the palette from step 1 is inert without a way to reach it on a machine whose OS is set the other way, and the read has to happen in <code class="md">&lt;head&gt;</code> before first paint because a plan opened from <code class="md">file://</code> has no server to stamp the attribute and a wrong-theme flash on every load is worse than no toggle.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">toggling flips both the rendered colours and <code class="md">aria-pressed</code>, the choice survives a reload, a first visit with no stored value follows <code class="md">prefers-color-scheme</code>, and the button is absent from the print stylesheet output.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Nest the At-a-glance block inside the objective card — change <code class="md">objectiveCard(objective)</code> to <code class="md">objectiveCard(objective, glanceHtml = &#39;&#39;)</code> emitting the existing <code class="md">&lt;section class=&quot;plan-glance&quot;&gt;</code> inside the <code class="md">&lt;div id=&quot;objective&quot;&gt;</code>, drop the separate <code class="md">main.push(shell.glanceBlock(…))</code> at <code class="md">build-plan-html.mjs:338</code>, and replace <code class="md">stepCard</code>&#39;s <code class="md">&lt;details class=&quot;step-verify-toggle&quot;&gt;&lt;summary&gt;</code> wrapper with a plain labelled block that keeps <code class="md">&lt;div class=&quot;verify-body&quot;&gt;</code> intact.</span>
+              </div>
+              <div class="step-why">two sibling abstracts leave the reader unable to tell which is authoritative, and <code class="md">Verify:</code> is the line someone needs while executing a step rather than one they should have to open; both are safe because <code class="md">extractSections</code> at <code class="md">plan-spec.mjs:219</code> already strips a nested <code class="md">.plan-glance</code> and reads the verify text from <code class="md">class=&quot;verify-body&quot;</code> regardless of its wrapper.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body"><code class="md">extractSections</code> on the re-rendered sample returns an objective with no glance text in it, the glance still renders once, and the <code class="md">.plan-glance</code> negative-margin rule is gone from the stylesheet.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add the step rail to the sidebar — give each <code class="md">.step-card</code> an <code class="md">id=&quot;step-N&quot;</code> while keeping <code class="md">class=&quot;step-card completed&quot;</code> as a literal substring, and change <code class="md">nav(ids)</code> to <code class="md">nav(ids, steps)</code> so it emits the existing section links unchanged (<code class="md">&lt;a href=&quot;#step-id&quot;&gt;</code>, no other attributes) plus a <code class="md">&lt;ul class=&quot;rail-steps&quot;&gt;</code> of <code class="md">&lt;a class=&quot;rail-step&quot; href=&quot;#step-N&quot;&gt;</code> links, each carrying the step&#39;s action text and a visually-hidden state span reading <code class="md">step N of M, done</code> or <code class="md">step N of M</code>. Below 900px the rail&#39;s step list moves inside a closed <code class="md">&lt;details&gt;</code> rather than being hidden, so a mobile reader keeps the jump targets. The <code class="md">progressBlock</code> output and the <code class="md">NAV_ENTRIES</code> id list are left exactly where they are.</span>
+              </div>
+              <div class="step-why">the plan&#39;s steps are its actual structure and the sidebar currently collapses all of them into one <code class="md">steps</code> entry, so a reader can neither see how far along the work is nor jump to a step; leaving the progress block and the nav id list untouched keeps the progress JavaScript at <code class="md">plan-shell.mjs:1438-1456</code>, its two assertions, and both nav <code class="md">deepEqual</code> arrays green, so this step adds markup without invalidating any existing test.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">the section-link <code class="md">deepEqual</code> at test line 635 returns the unchanged id list, every <code class="md">#step-N</code> anchor resolves to a card, each rail link exposes its state to an accessibility-tree dump, and at 375px wide the step list is reachable through the disclosure.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Fix the scroll-spy so it clears the active link when nothing intersects — the observer at <code class="md">plan-shell.mjs:1534-1545</code> only reacts to <code class="md">isIntersecting</code> entries, so the last matched link stays highlighted forever — then delete the rules the redesign supersedes (<code class="md">.steps-list::before</code>, <code class="md">.step-verify-toggle</code>, and the <code class="md">.plan-glance</code> sibling margin), remove the step 1 token aliases, and repoint every selector still naming an old token.</span>
+              </div>
+              <div class="step-why">with one nav entry the stale highlight was invisible, but with a link per step a wrong &quot;you are here&quot; marker is worse than none; and carrying two names for every colour past the point where all callers have moved is how the stylesheet became generic in the first place.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">scrolling past the last section clears every <code class="md">.active</code> class, scrolling back restores exactly one, grepping the stylesheet for the three deleted selectors and for each retired token name returns nothing, and the rendered page is visually unchanged from the end of step 5.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">7</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Re-copy <code class="md">scripts/build-plan-html.mjs</code> and <code class="md">scripts/lib/plan-shell.mjs</code> over their counterparts under <code class="md">kit/plugins/plan-agent/scripts/</code>, after steps 1 through 6 and before any test run.</span>
+              </div>
+              <div class="step-why"><code class="md">tests/plugins/test-build-plan-html.mjs:951</code> asserts the bundled copies are byte-identical to the repo-root sources, so editing only one side both fails an existing test and ships the old design to anyone who installs the plugin.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body"><code class="md">diff scripts/build-plan-html.mjs kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> and the same for <code class="md">lib/plan-shell.mjs</code> each report no differences.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">8</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Rebuild the controls in <code class="md">kit/plugins/plan-agent/templates/plans-gallery.html</code> — replace the three filter-chip rows with a search field, a status segmented control carrying per-status counts, and a <code class="md">&lt;details&gt;</code> holding the type and effort chips, then extend the existing inline <code class="md">applyFilters()</code> to insert an &quot;In flight&quot; separator before the in-progress run and a month separator between <code class="md">data-month</code> values, rebuilding those separators on every filter change.</span>
+              </div>
+              <div class="step-why">88 uniform cards behind twenty filter targets buries the four plans actually in flight, and generating the separators client-side keeps them out of the markup <code class="md">scripts/merge-plans-index.mjs</code> splices, so neither the merge driver nor <code class="md">tests/plugins/test-merge-gallery-index.sh</code> has to learn about non-card content.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body">load the regenerated index and confirm the counts match the cards, filtering to one status leaves no empty separators, the search still matches <code class="md">data-title</code>, and the status control hides itself on the artifacts gallery, whose cards carry no status.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">9</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Emit <code class="md">data-month</code> on each card and sort in-progress plans ahead of the date order in all three byte-identical copies of the build script — <code class="md">kit/plugins/plan-agent/hooks/build-index.sh</code>, <code class="md">scripts/build-plans-index.sh</code>, and <code class="md">docs/plans/build-index.sh</code> — then regenerate <code class="md">docs/plans/index.html</code>, <code class="md">docs/artifacts/index.html</code>, and <code class="md">docs/prototypes/index.html</code>.</span>
+              </div>
+              <div class="step-why">the client-side grouping from step 8 has nothing to group without the attribute, the three copies are kept identical only by convention with no test guarding them, and the committed indexes are what the GitHub Pages site actually serves.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body"><code class="md">md5sum</code> of the three scripts match, every <code class="md">&lt;a class=&quot;gallery-card&quot;</code> in the regenerated plans index carries a <code class="md">data-month</code>, in-progress cards appear first, and the <code class="md">&lt;p&gt;N items&lt;/p&gt;</code> and <code class="md">&lt;span&gt;N items&lt;/span&gt;</code> strings the merge driver patches are unchanged.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">10</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Add <code class="md">tests/plugins/test-plan-redesign.mjs</code> asserting the objective end to end.</span>
+              </div>
+              <div class="step-why">every other check in this plan is a prose assertion, and without a runnable test the contrast fix, the merged goal panel, and the extractor round trip all regress silently the next time the stylesheet is touched.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body"><code class="md">node tests/plugins/test-plan-redesign.mjs</code> exits 0, and <code class="md">node tests/plugins/test-build-plan-html.mjs</code> and <code class="md">node tests/plugins/test-extract-plan-spec.mjs</code> both exit 0 with their nav id arrays unedited.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-number">11</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Bump plan-agent from 7.4.4 to 7.5.0 in <code class="md">.claude-plugin/marketplace.json</code> and add the matching <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> entry covering the token set, the theme toggle, the merged goal panel, the step rail, and the gallery controls.</span>
+              </div>
+              <div class="step-why">repo convention requires any change under <code class="md">kit/plugins/</code> to ship a version exceeding the value on main, and a reworked presentation shell with a new user-facing control is a minor bump rather than a patch.</div>
+              <details class="step-verify-toggle">
+                <summary>How to check this worked</summary>
+                <div class="verify-body"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0.</div>
+              </details>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
+      <h2 id="h-tests">
+        <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
+        Tests
+      </h2>
+      <p class="section-intro">The tests that prove the change does what it promises.</p>
+      <div class="test-tier-label">Tier 1 — This plan changes application code</div>
+      <div class="objective-test-card">Objective: a rendered plan carries the new design in both themes without breaking the extractor contract. File: tests/plugins/test-plan-redesign.mjs; Type: smoke; Asserts: the rendered sample contains a <code class="md">[data-theme]</code> dark rule and a theme-toggle button, every text token in the stylesheet clears 4.5:1 against its background in both palettes, the glance renders inside <code class="md">id=&quot;objective&quot;</code> while <code class="md">extractSections</code> returns an objective free of glance text, <code class="md">verify-body</code> appears outside any <code class="md">&lt;details&gt;</code>, one <code class="md">id=&quot;step-N&quot;</code> anchor exists per step with a matching <code class="md">a.rail-step</code> link, and <code class="md">extractSections(renderPlanHtml(spec))</code> deep-equals the parsed spec sections; Run: node tests/plugins/test-plan-redesign.mjs</div>
+      <div class="test-list">
+        <div class="test-card">Unit: nav emission with and without step links. File: tests/plugins/test-build-plan-html.mjs; Targets: shell.nav, NAV_ENTRIES; Key cases: section anchors keep a bare <code class="md">href</code> attribute, the id list is unchanged from before this plan, a spec with one step, a spec with twelve steps, step link ids matching the card ids, the visually-hidden state span present on every rail link</div>
+        <div class="test-card">Unit: objective and step markup. File: tests/plugins/test-build-plan-html.mjs; Targets: objectiveCard, stepCard; Key cases: glance present, glance absent, completed step keeps <code class="md">class=&quot;step-card completed&quot;</code> as a literal substring, verify text preserved through the round trip</div>
+        <div class="test-card">Integration: gallery generation and grouping. File: tests/plugins/test-build-plan-html.mjs; Targets: build-index.sh, applyFilters; Key cases: every card carries <code class="md">data-month</code>, in-progress cards sort first, the count strings the merge driver patches are unchanged, a gallery whose cards carry no status hides the status control</div>
+      </div>
+    </section>
+
+    <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
+      <h2 id="h-criteria">
+        <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
+        Definition of done
+      </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
+      <ul class="criteria-list" id="criteria-list">
+        <li>
+          <input type="checkbox" id="ac1">
+          <label for="ac1">Every text token in the stylesheet measures at least 4.5:1 against its background in both the light and dark palettes</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac2">
+          <label for="ac2"><code class="md">--subtle: #9ca3af</code> no longer appears in <code class="md">scripts/lib/plan-shell.mjs</code></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac3">
+          <label for="ac3">The literal string <code class="md">html { scroll-behavior: auto; }</code> still appears in the rendered stylesheet</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4">
+          <label for="ac4">The rendered stylesheet contains no literal <code class="md">{lowercase-word}</code> sequence that the unfilled-token check at test line 630 would flag</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5">
+          <label for="ac5">A first visit with no stored preference follows <code class="md">prefers-color-scheme</code>, and a toggled choice survives a reload</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6">
+          <label for="ac6">The theme toggle button is hidden by the print stylesheet</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac7">
+          <label for="ac7">The At-a-glance block renders inside <code class="md">&lt;div id=&quot;objective&quot;&gt;</code> and <code class="md">extractSections</code> returns an objective containing none of its text</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac8">
+          <label for="ac8">Step <code class="md">Verify:</code> text renders visible, outside any <code class="md">&lt;details&gt;</code>, and still inside <code class="md">&lt;div class=&quot;verify-body&quot;&gt;</code></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9">Each step card carries <code class="md">id=&quot;step-N&quot;</code> and keeps <code class="md">class=&quot;step-card completed&quot;</code> as a literal substring when done</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac10">
+          <label for="ac10">Every <code class="md">a.rail-step</code> href resolves to a step card in the same document, and each carries a visually-hidden state span</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac11">
+          <label for="ac11">At 375px wide the step list is reachable through a disclosure rather than removed from the page</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac12">
+          <label for="ac12">Section anchors in the sidebar still match <code class="md">/&lt;a href=&quot;#([a-z-]+)&quot;&gt;/</code> with no other attribute</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac13">
+          <label for="ac13">The two nav id arrays at <code class="md">tests/plugins/test-build-plan-html.mjs:636</code> and <code class="md">:639</code> pass unedited, and <code class="md">id=&quot;progress-bar&quot;</code> and <code class="md">id=&quot;progress-label&quot;</code> still exist exactly once each</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac14">
+          <label for="ac14">Scrolling past the last section leaves no <code class="md">.active</code> class set</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac15">
+          <label for="ac15"><code class="md">.steps-list::before</code>, <code class="md">.step-verify-toggle</code>, and the <code class="md">.plan-glance</code> negative-margin rule are absent from the stylesheet</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac16">
+          <label for="ac16">No retired token name — including <code class="md">--subtle</code>, <code class="md">--grey-bg</code>, and <code class="md">--border-mid</code> — remains in the stylesheet after step 6, and no selector references one</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac17">
+          <label for="ac17"><code class="md">diff</code> reports no differences between <code class="md">scripts/build-plan-html.mjs</code> and <code class="md">kit/plugins/plan-agent/scripts/build-plan-html.mjs</code>, and the same for <code class="md">lib/plan-shell.mjs</code></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac18">
+          <label for="ac18">The three <code class="md">build-index.sh</code> copies have identical checksums</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac19">
+          <label for="ac19">Every <code class="md">&lt;a class=&quot;gallery-card&quot;</code> in the regenerated plans index carries <code class="md">data-month</code>, and in-progress cards precede the rest</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac20">
+          <label for="ac20"><code class="md">&lt;a class=&quot;gallery-card&quot;</code> remains the leading attribute pair on every card, and the <code class="md">&lt;p&gt;N items&lt;/p&gt;</code> and <code class="md">&lt;span&gt;N items&lt;/span&gt;</code> strings are unchanged</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac21">
+          <label for="ac21">Filtering the gallery to a single status leaves no separator with zero cards under it</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac22">
+          <label for="ac22"><code class="md">node tests/plugins/test-plan-redesign.mjs</code> exits 0</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac23">
+          <label for="ac23"><code class="md">node tests/plugins/test-build-plan-html.mjs</code>, <code class="md">node tests/plugins/test-extract-plan-spec.mjs</code>, <code class="md">node tests/plugins/test-index-card-count.mjs</code>, and <code class="md">bash tests/plugins/test-merge-gallery-index.sh</code> all exit 0</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac24">
+          <label for="ac24"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 with plan-agent at 7.5.0</label>
+        </li>
+      </ul>
+      <span id="criteria-status" aria-live="polite" aria-atomic="true"
+            style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+    </section>
+
+    <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
+      <h2 id="h-verification">
+        <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
+        Final check
+      </h2>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
+      <p>Render a committed plan end to end: <code class="md">node scripts/build-plan-html.mjs docs/plans/add-plan-phase-checkpoints.md -o /tmp/check.html</code> and confirm exit 0. Open it and check the four things this plan is for — one goal panel rather than two stacked summaries, a visible Verify line under every step, a sidebar listing all twelve steps as jump targets, and a theme toggle that flips the page and survives a reload. Narrow the window to 375px and confirm the step list is still reachable through its disclosure, then dump the accessibility tree for the rail and confirm each link announces its step number and done state rather than relying on the tick glyph. Then measure rather than eyeball: read the computed <code class="md">color</code> and <code class="md">background-color</code> of <code class="md">.plan-nav li a</code>, <code class="md">.step-chip</code>, <code class="md">.plan-meta</code>, and <code class="md">.section-card p</code> in both themes and confirm each pair clears 4.5:1, since the current <code class="md">--subtle</code> fails at 2.5:1 and a screenshot cannot show that.</p>
+      <p>Prove the DOM contract survived. Run <code class="md">node scripts/extract-plan-spec.mjs /tmp/check.html</code> — the extractor ships only at the repo root, not in the plugin bundle — and confirm the printed spec matches <code class="md">docs/plans/add-plan-phase-checkpoints.md</code> section for section, with the glance absent from the objective. Re-render that extracted spec and diff the two HTML files to confirm the cycle is stable. The real-corpus round trip inside <code class="md">tests/plugins/test-build-plan-html.mjs</code> re-renders at least ten committed plans and is the broader version of this check.</p>
+      <p>Exercise the gallery. Run <code class="md">bash docs/plans/build-index.sh</code> and open <code class="md">docs/plans/index.html</code>: confirm the four in-flight plans appear above the month-grouped remainder, that the header and footer counts agree with the number of cards, that filtering to <code class="md">completed</code> leaves no empty separator, and that search still matches on title. Open <code class="md">docs/artifacts/index.html</code> and confirm the status control is hidden there, since those cards carry no status. Then confirm the merge driver is unaffected by running <code class="md">bash tests/plugins/test-merge-gallery-index.sh</code> and <code class="md">node tests/plugins/test-index-card-count.mjs</code>.</p>
+      <p>Finally run the full gate: <code class="md">node tests/plugins/test-plan-redesign.mjs</code>, <code class="md">node tests/plugins/test-build-plan-html.mjs</code>, <code class="md">node tests/plugins/test-extract-plan-spec.mjs</code>, <code class="md">node tests/plugins/test-backfill-digest.mjs</code>, and <code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code>.</p>
+    </section>
+
+    <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
+      <h2 id="h-completion">
+        <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
+        Wrapping up
+      </h2>
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
+      <div class="completion-checklist" id="completion-checklist">
+        <div class="completion-header">
+          <span class="completion-badge" id="completion-badge">Required</span>
+        </div>
+        <ul class="completion-list" id="completion-list">
+          <li>
+            <input type="checkbox" id="cc1" disabled>
+            <label for="cc1">All step TODOs marked as done</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc2" disabled>
+            <label for="cc2">All acceptance criteria verified and checked off</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc3" disabled>
+            <label for="cc3">Plan status updated to completed</label>
+          </li>
+        </ul>
+        <div class="completion-report" id="completion-report">
+          <h3 class="report-heading">Completion Report</h3>
+          <p class="report-empty">No items to report — all requirements met.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
+      <h2 id="h-next-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
+        Next steps
+      </h2>
+      <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
+      <div class="next-steps-list">
+        <details class="next-step-item">
+          <summary>Fold the progress bar into the step rail</summary>
+          <div class="next-step-prompt">
+            <p>Left out deliberately: relocating it costs an edit to both nav id arrays for a cosmetic gain, so it is worth doing on its own.</p>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>In the agentics repo, move the progressBlock output from the main column into the sidebar
+rail in scripts/lib/plan-shell.mjs, directly above the rail-steps list, keeping
+id=&quot;progress-bar&quot; and id=&quot;progress-label&quot; so the progress JavaScript and its assertions
+still resolve. Drop &#39;progress&#39; from NAV_ENTRIES and update the two nav id arrays at
+tests/plugins/test-build-plan-html.mjs:636 and :639 to match. Re-copy the edited sources
+into kit/plugins/plan-agent/scripts/. Bump the plan-agent minor version in
+.claude-plugin/marketplace.json and add a CHANGELOG entry. Verify by rendering a committed
+plan and confirming the page shows one progress device, the label still reads &quot;N / M done&quot;
+after ticking a criterion, and node tests/plugins/test-build-plan-html.mjs exits 0.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Give the docs hub the same shell and an activity band</summary>
+          <div class="next-step-prompt">
+            <p>The hub at docs/index.html is still four static cards with no data; the prototype replaces it with an In-flight band plus per-collection counts and recent items.</p>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>In the agentics repo, redesign docs/index.html to match the shell in
+docs/prototypes/plans-site-redesign.html: the same sticky top bar with per-collection
+counts, an &quot;In flight&quot; band listing in-progress plans with their step progress, and a
+collections list showing each gallery&#39;s count and three most recent items. The hub is
+hand-maintained today — add a generator under scripts/ that reads the four gallery
+indexes and writes docs/index.html, and wire it into kit/plugins/plan-agent/hooks/dispatch.py
+beside the existing index builders. Bump the plan-agent minor version in
+.claude-plugin/marketplace.json and add a CHANGELOG entry. Verify by running the
+generator and confirming docs/index.html shows counts matching the four index.html files.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Group the step rail by phase once phases land</summary>
+          <div class="next-step-prompt">
+            <p>Depends on docs/plans/add-plan-phase-checkpoints.md, which adds the phase concept to the parser, digest, renderer, and extractor.</p>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>In the agentics repo, once ### Phase: headings are parsed into sections.phases by
+scripts/lib/plan-spec.mjs, group the sidebar step rail in scripts/lib/plan-shell.mjs by
+phase: emit a phase header above each phase&#39;s run of a.rail-step links, mark the current
+phase, and fall back to the existing flat list when a spec declares no phases. Re-copy the
+edited sources into kit/plugins/plan-agent/scripts/. Bump the plan-agent minor version in
+.claude-plugin/marketplace.json and add a CHANGELOG entry. Verify by rendering a phased
+fixture and an unphased one, confirming the phased rail shows headers in document order and
+the unphased rail is byte-identical to its output before the change.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+
+        <details class="next-step-item">
+          <summary>Wish list: a per-plan reading-time and step-cost estimate in the rail</summary>
+          <div class="next-step-prompt">
+            <p>Blue sky — no data source exists for it yet.</p>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>In the agentics repo, explore whether the step rail in scripts/lib/plan-shell.mjs can show
+an estimated effort per step rather than only done/not-done. Investigate what signal is
+available from the spec today — step count, file count, the effort: frontmatter key — and
+report whether a per-step estimate is derivable without new authoring burden, or whether it
+would require a new spec field. Recommend one option with its cost. Do not implement.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <footer class="plan-footer">
+      <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+      Generated by plan-agent · 2026-07-31 · agentics
+    </footer>
+
+  </main>
+</div><!-- /.layout -->
+
+<script>
+/* ── Save as PDF (native browser print dialog) ──────────────── */
+function savePDF() {
+  window.print();
+}
+
+/* ── Build rich implementation prompt from DOM ──────────────── */
+function buildImplementPrompt() {
+  var cmdEl = document.getElementById('implement-cmd');
+  var status = document.documentElement.getAttribute('data-status') || 'todo';
+  var stepCards = Array.prototype.slice.call(document.querySelectorAll('.step-card'));
+  var criteriaItems = Array.prototype.slice.call(document.querySelectorAll('#criteria-list li'));
+
+  var totalSteps = stepCards.length;
+  var doneSteps = stepCards.filter(function(c) { return c.classList.contains('completed'); }).length;
+  var totalCriteria = criteriaItems.length;
+  var checkedCriteria = criteriaItems.filter(function(li) {
+    var cb = li.querySelector('input[type="checkbox"]');
+    return cb && cb.checked;
+  }).length;
+
+  var planPathMeta = document.querySelector('meta[name="plan-path"]');
+  var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\.html$/, '.md');
+
+  var lines = [];
+  lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
+  lines.push('');
+  lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
+  lines.push('');
+  lines.push('Instructions:');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Run the objective test\'s Run command from the plan\'s Tests section, then walk the Verification section end-to-end and confirm the stated objective actually works — on failure, fix and re-verify before continuing; never mark the plan done on a failing check.');
+  lines.push('5. Set "status: completed" in the spec frontmatter only once every step is marked, every criterion is checked, and verification passes.');
+  lines.push('6. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
+
+  return lines.join('\n');
+}
+
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
+      btn._copyTimer = null;
+    }, delay);
+  }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash(); else fail();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
+function copyWorkflow(btn) {
+  var code = document.getElementById('workflow-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy goal prompt ──────────────────────────────────────── */
+function copyGoal(btn) {
+  var code = document.getElementById('goal-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
+}
+
+/* ── Copy prompt button (global — required by inline onclick) ── */
+function copyPrompt(btn) {
+  var pre = btn.previousElementSibling;
+  if (!pre || pre.tagName !== 'PRE') {
+    pre = btn.parentElement && btn.parentElement.querySelector('pre');
+  }
+  if (!pre) return;
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
+}
+
+(function () {
+  'use strict';
+
+  /* ── Progress bar — state from HTML attributes ──────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load. Toggling a box syncs the attribute so   */
+  /* the live DOM (and any saved copy of this file) stays the single   */
+  /* portable source of truth — no browser-only storage layer.         */
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
+      updateProgress();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  updateProgress();
+
+  /* ── Completion checklist auto-update ──────────────────────── */
+  var ccCheckboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#completion-list input[type="checkbox"]')
+  );
+  var completionCard = document.getElementById('completion-checklist');
+
+  function updateCompletion() {
+    var stepCards = document.querySelectorAll('.step-card');
+    var allStepsDone = stepCards.length > 0 &&
+      Array.prototype.slice.call(stepCards).every(function(c) {
+        return c.classList.contains('completed');
+      });
+    if (ccCheckboxes[0]) ccCheckboxes[0].checked = allStepsDone;
+
+    var allCriteriaChecked = total > 0 &&
+      checkboxes.every(function(cb) { return cb.checked; });
+    if (ccCheckboxes[1]) ccCheckboxes[1].checked = allCriteriaChecked;
+
+    var metaStatus = document.querySelector('meta[name="plan-status"]');
+    var statusIsCompleted =
+      document.documentElement.getAttribute('data-status') === 'completed' &&
+      (!metaStatus || metaStatus.getAttribute('content') === 'completed');
+    if (ccCheckboxes[2]) ccCheckboxes[2].checked = statusIsCompleted;
+
+    var allComplete = allStepsDone && allCriteriaChecked && statusIsCompleted;
+    if (completionCard) {
+      if (allComplete) completionCard.classList.add('all-complete');
+      else completionCard.classList.remove('all-complete');
+    }
+  }
+
+  updateCompletion();
+
+  checkboxes.forEach(function(cb) {
+    cb.addEventListener('change', updateCompletion);
+  });
+
+  if ('MutationObserver' in window) {
+    new MutationObserver(updateCompletion).observe(
+      document.documentElement, { attributes: true, attributeFilter: ['data-status'] }
+    );
+  }
+
+  /* ── Scroll rail ─────────────────────────────────────────────── */
+  var rail = document.querySelector('.scroll-rail');
+  if (rail) {
+    function updateRail() {
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      var pct  = maxY > 0 ? (window.scrollY / maxY * 100).toFixed(1) : 0;
+      rail.style.setProperty('--scroll-pct', pct);
+    }
+    window.addEventListener('scroll', updateRail, { passive: true });
+    updateRail();
+  }
+
+  /* ── Scroll spy ──────────────────────────────────────────────── */
+  var navLinks = Array.prototype.slice.call(
+    document.querySelectorAll('.plan-nav a[href^="#"]')
+  );
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var sectionIds = navLinks.map(function (a) { return a.getAttribute('href').slice(1); });
+    var sections   = sectionIds.map(function (id) { return document.getElementById(id); })
+                               .filter(Boolean);
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = entry.target.id;
+        navLinks.forEach(function (a) {
+          var isActive = a.getAttribute('href') === '#' + id;
+          a.classList.toggle('active', isActive);
+          if (isActive) a.setAttribute('aria-current', 'true');
+          else          a.removeAttribute('aria-current');
+        });
+      });
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(function (el) { observer.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>

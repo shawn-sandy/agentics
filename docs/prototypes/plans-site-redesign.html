@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redesign proposal — Site shell and Plans library</title>
+<style>
+/* Same token set as plan-document-redesign.html — one shell across the site. */
+:root {
+  --paper:#FCFCFA; --panel:#FFFFFF; --sunk:#F5F4F1;
+  --ink:#16151C; --ink-2:#4B4858; --ink-3:#6E6A80;
+  --rule:#E6E3EC; --rule-soft:#F0EEF4;
+  --accent:#4A2FE0; --accent-soft:#EFEBFE; --accent-line:#C9BEFB;
+  --moss:#2F6B45; --moss-soft:#EDF5EF;
+  --signal:#A8420C; --signal-soft:#FBF0E9;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:#121118; --panel:#1A1922; --sunk:#201F29;
+    --ink:#EDEBF3; --ink-2:#B3AFC4; --ink-3:#8B87A0;
+    --rule:#2C2A38; --rule-soft:#24232E;
+    --accent:#A594FF; --accent-soft:#221F36; --accent-line:#4A4270;
+    --moss:#7BC098; --moss-soft:#1B2A21;
+    --signal:#E8A278; --signal-soft:#2B2019;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--paper); color: var(--ink); font-family: var(--ui); font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+.lbl { font-family: var(--mono); font-size: .625rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); }
+.wrap { max-width: 64rem; margin: 0 auto; padding: 0 1.5rem; }
+
+/* ══ Shared shell ═══════════════════════════════════════════════════ */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  border-bottom: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(12px);
+}
+.topbar-in { max-width: 64rem; margin: 0 auto; padding: 0 1.5rem; display: flex; align-items: center; gap: 1.5rem; height: 48px; }
+.mark { font-family: var(--mono); font-size: .78rem; font-weight: 600; letter-spacing: -.02em; text-decoration: none; }
+.mark::before { content: "▚ "; color: var(--accent); }
+.tabs { display: flex; gap: .25rem; margin-left: auto; }
+.tabs a {
+  font-family: var(--mono); font-size: .7rem; letter-spacing: .04em;
+  padding: .3rem .6rem; border-radius: 3px; text-decoration: none; color: var(--ink-3);
+}
+.tabs a:hover { color: var(--ink); background: var(--sunk); }
+.tabs a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+.tabs a .n { color: var(--ink-3); opacity: .75; margin-left: .3rem; }
+
+/* ══ Page head ══════════════════════════════════════════════════════ */
+.head { padding: 3rem 0 1.5rem; }
+h1 { font-family: var(--mono); font-size: clamp(1.6rem, 4vw, 2.15rem); font-weight: 600; letter-spacing: -.035em; line-height: 1.15; }
+.head .sub { font-family: var(--prose); font-size: 1.0625rem; color: var(--ink-2); margin-top: .7rem; max-width: 52ch; line-height: 1.6; }
+
+/* ══ In flight — the band that answers "what am I on?" ══════════════ */
+.flight { margin-top: 2rem; border-top: 2px solid var(--ink); padding-top: .9rem; }
+.flight-head { display: flex; align-items: baseline; gap: .6rem; margin-bottom: .5rem; }
+.flight-head .n { font-family: var(--mono); font-size: .625rem; color: var(--ink-3); margin-left: auto; }
+.flight-list { list-style: none; }
+.flight-list a {
+  display: grid; grid-template-columns: minmax(0,1fr) 7.5rem 6.5rem;
+  gap: 1rem; align-items: center;
+  padding: .8rem .75rem .8rem 1rem; text-decoration: none;
+  border-bottom: 1px solid var(--rule-soft);
+  border-left: 2px solid var(--signal);
+}
+.flight-list a:hover { background: var(--sunk); }
+.flight-title { font-weight: 600; font-size: .95rem; line-height: 1.4; }
+.flight-phase { font-family: var(--mono); font-size: .65rem; color: var(--ink-3); margin-top: .2rem; }
+.bar { display: flex; gap: 2px; }
+.bar i { flex: 1; height: 4px; border-radius: 1px; background: var(--rule); }
+.bar i.on { background: var(--accent); }
+.flight-count { font-family: var(--mono); font-size: .65rem; color: var(--ink-3); margin-top: .3rem; display: block; }
+.flight-meta { font-family: var(--mono); font-size: .65rem; color: var(--ink-3); text-align: right; }
+@media (max-width: 700px) {
+  .flight-list a { grid-template-columns: 1fr; gap: .5rem; }
+  .flight-meta { text-align: left; }
+}
+
+/* ══ Hub: collections ═══════════════════════════════════════════════ */
+.collections { list-style: none; margin-top: 3rem; }
+.collections > li { border-top: 1px solid var(--rule); padding: 1.4rem 0; }
+.coll-head { display: flex; align-items: baseline; gap: .75rem; }
+.coll-head h2 { font-family: var(--mono); font-size: 1rem; font-weight: 600; letter-spacing: -.02em; }
+.coll-head h2 a { text-decoration: none; }
+.coll-head h2 a:hover { color: var(--accent); }
+.coll-head .count { font-family: var(--mono); font-size: .65rem; color: var(--ink-3); }
+.coll-head .go { margin-left: auto; font-family: var(--mono); font-size: .68rem; color: var(--accent); text-decoration: none; }
+.coll-desc { font-family: var(--prose); font-size: .975rem; color: var(--ink-2); margin-top: .35rem; max-width: 58ch; line-height: 1.6; }
+.coll-recent { list-style: none; display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .8rem; }
+.coll-recent a {
+  font-size: .8rem; text-decoration: none; color: var(--ink-2);
+  padding: .25rem .6rem; border: 1px solid var(--rule); border-radius: 999px;
+  white-space: nowrap; max-width: 22rem; overflow: hidden; text-overflow: ellipsis;
+}
+.coll-recent a:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ══ Plans library controls ═════════════════════════════════════════ */
+.controls { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin: 2rem 0 .5rem; }
+.search {
+  flex: 1 1 16rem; min-width: 0;
+  font-family: var(--mono); font-size: .8rem;
+  padding: .5rem .75rem; border: 1px solid var(--rule); border-radius: 3px;
+  background: var(--panel); color: var(--ink);
+}
+.search::placeholder { color: var(--ink-3); }
+.seg { display: flex; border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; background: var(--panel); }
+.seg button {
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase;
+  padding: .5rem .7rem; border: 0; border-left: 1px solid var(--rule);
+  background: transparent; color: var(--ink-3); cursor: pointer;
+}
+.seg button:first-child { border-left: 0; }
+.seg button .n { opacity: .6; margin-left: .3rem; }
+.seg button:hover { color: var(--ink); background: var(--sunk); }
+.seg button[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
+.more { font-family: var(--mono); font-size: .68rem; color: var(--ink-3); }
+.more summary { cursor: pointer; padding: .5rem .2rem; list-style: none; }
+.more summary::before { content: "+ "; color: var(--accent); }
+.more[open] summary::before { content: "− "; }
+.more-body { display: flex; flex-wrap: wrap; gap: .35rem; padding: .5rem 0 0; }
+.chip { font-family: var(--mono); font-size: .65rem; padding: .25rem .6rem; border: 1px solid var(--rule); border-radius: 999px; background: var(--panel); color: var(--ink-3); cursor: pointer; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ══ Plans library rows ═════════════════════════════════════════════ */
+.month {
+  display: flex; align-items: center; gap: .75rem;
+  margin: 2.25rem 0 .25rem;
+  font-family: var(--mono); font-size: .625rem; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3);
+}
+.month .rule { flex: 1; height: 1px; background: var(--rule); }
+.rows { list-style: none; }
+.rows a {
+  display: grid; grid-template-columns: 1.25rem minmax(0,1fr) 9rem 3.5rem;
+  gap: .9rem; align-items: baseline;
+  padding: .65rem .5rem; text-decoration: none;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.rows a:hover { background: var(--sunk); }
+/* Status is a glyph, not a coloured pill — the row stays quiet and the
+   one accent keeps its meaning. */
+.glyph { font-family: var(--mono); font-size: .8rem; text-align: center; }
+.s-completed .glyph { color: var(--moss); }
+.s-in-progress .glyph { color: var(--signal); }
+.s-todo .glyph { color: var(--ink-3); opacity: .5; }
+.r-title { font-size: .95rem; line-height: 1.4; }
+.s-completed .r-title { color: var(--ink-2); }
+.s-in-progress .r-title { font-weight: 600; }
+.r-meta { font-family: var(--mono); font-size: .65rem; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.r-meta .hi { color: var(--signal); }
+.r-date { font-family: var(--mono); font-size: .65rem; color: var(--ink-3); text-align: right; }
+@media (max-width: 700px) {
+  .rows a { grid-template-columns: 1.25rem minmax(0,1fr) 3.5rem; }
+  .r-meta { grid-column: 2 / -1; }
+}
+
+.view { display: none; }
+.view.on { display: block; }
+footer.foot { border-top: 1px solid var(--rule); margin-top: 4rem; padding: 1.5rem 0 4rem; font-family: var(--mono); font-size: .68rem; color: var(--ink-3); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="mark" href="#hub" data-go="hub">agentics</a>
+    <nav class="tabs">
+      <a href="#hub"   data-go="hub">Home</a>
+      <a href="#plans" data-go="plans" aria-current="page">Plans<span class="n">88</span></a>
+      <a href="#">Prototypes<span class="n">2</span></a>
+      <a href="#">Artifacts<span class="n">17</span></a>
+      <a href="#">Social<span class="n">37</span></a>
+    </nav>
+  </div>
+</header>
+
+<!-- ══════════ HUB ══════════ -->
+<div class="view" id="hub">
+  <div class="wrap">
+    <div class="head">
+      <p class="lbl">Claude Code plugin marketplace</p>
+      <h1>agentics</h1>
+      <p class="sub">Everything this repo has written down: the plans behind each change, the prototypes that tested them, and the recaps published from them.</p>
+    </div>
+
+    <section class="flight">
+      <div class="flight-head"><span class="lbl">In flight</span><span class="n">4 plans</span></div>
+      <ul class="flight-list">
+        <li><a href="plan-document-redesign.html">
+          <div>
+            <p class="flight-title">Teach the plan-mode guard once, keep it everywhere</p>
+            <p class="flight-phase">Phase 2 of 3 — Renderer</p>
+          </div>
+          <div><div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div><span class="flight-count">7 / 11 steps</span></div>
+          <p class="flight-meta">refactor<br>2026-07-27</p>
+        </a></li>
+        <li><a href="plan-document-redesign.html">
+          <div>
+            <p class="flight-title">Stop paying 9,758 words to run one git command</p>
+            <p class="flight-phase">Phase 1 of 2 — Audit</p>
+          </div>
+          <div><div class="bar"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="flight-count">2 / 8 steps</span></div>
+          <p class="flight-meta">refactor<br>2026-07-27</p>
+        </a></li>
+        <li><a href="plan-document-redesign.html">
+          <div>
+            <p class="flight-title">Phase checkpoints and a Decisions ledger for plan specs</p>
+            <p class="flight-phase">Phase 2 of 3 — Renderer</p>
+          </div>
+          <div><div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="flight-count">4 / 12 steps</span></div>
+          <p class="flight-meta">feature<br>2026-07-30</p>
+        </a></li>
+        <li><a href="plan-document-redesign.html">
+          <div>
+            <p class="flight-title">Link plans to their tracking tickets end to end</p>
+            <p class="flight-phase">Phase 3 of 3 — Ship</p>
+          </div>
+          <div><div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div><span class="flight-count">6 / 7 steps</span></div>
+          <p class="flight-meta">feature<br>2026-07-26</p>
+        </a></li>
+      </ul>
+    </section>
+
+    <ul class="collections">
+      <li>
+        <div class="coll-head">
+          <h2><a href="#plans" data-go="plans">Plans</a></h2>
+          <span class="count">88 · 56 shipped · 4 in flight · 28 queued</span>
+          <a class="go" href="#plans" data-go="plans">Browse →</a>
+        </div>
+        <p class="coll-desc">The implementation plan behind every change to this marketplace — objective, steps, decisions, and the criteria that closed it.</p>
+        <ul class="coll-recent">
+          <li><a href="plan-document-redesign.html">Phase checkpoints and a Decisions ledger</a></li>
+          <li><a href="plan-document-redesign.html">Give engineers a recap written for them</a></li>
+          <li><a href="plan-document-redesign.html">Preserve out-of-scope sections in HTML plans</a></li>
+        </ul>
+      </li>
+      <li>
+        <div class="coll-head">
+          <h2><a href="#">Prototypes</a></h2><span class="count">2</span>
+          <a class="go" href="#">Browse →</a>
+        </div>
+        <p class="coll-desc">Clickable proofs — runnable static HTML that pressure-tests a design before it is built for real.</p>
+        <ul class="coll-recent">
+          <li><a href="plan-document-redesign.html">Plan document redesign</a></li>
+          <li><a href="#">Site shell and Plans library</a></li>
+        </ul>
+      </li>
+      <li>
+        <div class="coll-head">
+          <h2><a href="#">Artifacts</a></h2><span class="count">17</span>
+          <a class="go" href="#">Browse →</a>
+        </div>
+        <p class="coll-desc">Self-contained pages published from a working session — engineering recaps, reports, and reference documents.</p>
+        <ul class="coll-recent">
+          <li><a href="#">Engineering recap — 2026-07-30</a></li>
+          <li><a href="#">Lint gate team recap</a></li>
+          <li><a href="#">PR 470 recap</a></li>
+        </ul>
+      </li>
+      <li>
+        <div class="coll-head">
+          <h2><a href="#">Social</a></h2><span class="count">37</span>
+          <a class="go" href="#">Browse →</a>
+        </div>
+        <p class="coll-desc">Cards and posts generated from code changes, releases, and project highlights.</p>
+        <ul class="coll-recent">
+          <li><a href="#">Merge driver for gallery indexes</a></li>
+          <li><a href="#">Ship autonomous 4.1.0</a></li>
+        </ul>
+      </li>
+    </ul>
+
+    <footer class="foot">agentics — Claude Code plugin marketplace · redesign proposal</footer>
+  </div>
+</div>
+
+<!-- ══════════ PLANS LIBRARY ══════════ -->
+<div class="view on" id="plans">
+  <div class="wrap">
+    <div class="head">
+      <p class="lbl">Library</p>
+      <h1>Plans</h1>
+      <p class="sub">88 implementation plans, newest first. Search matches titles and objectives.</p>
+    </div>
+
+    <div class="controls">
+      <input class="search" type="search" placeholder="Search plans…" aria-label="Search plans">
+      <div class="seg" role="group" aria-label="Filter by status">
+        <button type="button" aria-pressed="true">All<span class="n">88</span></button>
+        <button type="button" aria-pressed="false">In flight<span class="n">4</span></button>
+        <button type="button" aria-pressed="false">Queued<span class="n">28</span></button>
+        <button type="button" aria-pressed="false">Shipped<span class="n">56</span></button>
+      </div>
+      <details class="more">
+        <summary>Type &amp; effort</summary>
+        <div class="more-body">
+          <button class="chip" type="button">feature</button>
+          <button class="chip" type="button">fix</button>
+          <button class="chip" type="button">refactor</button>
+          <button class="chip" type="button">docs</button>
+          <button class="chip" type="button">chore</button>
+          <button class="chip" type="button">low effort</button>
+          <button class="chip" type="button">medium effort</button>
+          <button class="chip" type="button">high effort</button>
+        </div>
+      </details>
+    </div>
+
+    <section class="flight">
+      <div class="flight-head"><span class="lbl">In flight</span><span class="n">4 plans</span></div>
+      <ul class="flight-list">
+        <li><a href="plan-document-redesign.html">
+          <div>
+            <p class="flight-title">Phase checkpoints and a Decisions ledger for plan specs</p>
+            <p class="flight-phase">Phase 2 of 3 — Renderer</p>
+          </div>
+          <div><div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="flight-count">4 / 12 steps</span></div>
+          <p class="flight-meta">feature · high<br>2026-07-30</p>
+        </a></li>
+        <li><a href="plan-document-redesign.html">
+          <div>
+            <p class="flight-title">Teach the plan-mode guard once, keep it everywhere</p>
+            <p class="flight-phase">Phase 2 of 3 — Renderer</p>
+          </div>
+          <div><div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div><span class="flight-count">7 / 11 steps</span></div>
+          <p class="flight-meta">refactor · high<br>2026-07-27</p>
+        </a></li>
+        <li><a href="plan-document-redesign.html">
+          <div>
+            <p class="flight-title">Stop paying 9,758 words to run one git command</p>
+            <p class="flight-phase">Phase 1 of 2 — Audit</p>
+          </div>
+          <div><div class="bar"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="flight-count">2 / 8 steps</span></div>
+          <p class="flight-meta">refactor · high<br>2026-07-27</p>
+        </a></li>
+        <li><a href="plan-document-redesign.html">
+          <div>
+            <p class="flight-title">Link plans to their tracking tickets end to end</p>
+            <p class="flight-phase">Phase 3 of 3 — Ship</p>
+          </div>
+          <div><div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div><span class="flight-count">6 / 7 steps</span></div>
+          <p class="flight-meta">feature · medium<br>2026-07-26</p>
+        </a></li>
+      </ul>
+    </section>
+
+    <div class="month"><span>July 2026</span><span class="rule"></span><span>31 plans</span></div>
+    <ul class="rows">
+      <li><a class="s-todo" href="plan-document-redesign.html">
+        <span class="glyph" aria-hidden="true">○</span>
+        <span class="r-title">Say the recap workflow once, not three times</span>
+        <span class="r-meta">refactor · <span>medium</span></span>
+        <span class="r-date">07-27</span>
+      </a></li>
+      <li><a class="s-completed" href="plan-document-redesign.html">
+        <span class="glyph" aria-hidden="true">✓</span>
+        <span class="r-title">Give engineers a recap written for them</span>
+        <span class="r-meta">feature · <span class="hi">high</span></span>
+        <span class="r-date">07-27</span>
+      </a></li>
+      <li><a class="s-completed" href="plan-document-redesign.html">
+        <span class="glyph" aria-hidden="true">✓</span>
+        <span class="r-title">Let <code>build</code> author a plan when none is specified</span>
+        <span class="r-meta">feature · <span class="hi">high</span></span>
+        <span class="r-date">07-27</span>
+      </a></li>
+      <li><a class="s-todo" href="plan-document-redesign.html">
+        <span class="glyph" aria-hidden="true">○</span>
+        <span class="r-title">Earn every NEVER — baseline first, then prune</span>
+        <span class="r-meta">refactor · <span class="hi">high</span></span>
+        <span class="r-date">07-27</span>
+      </a></li>
+      <li><a class="s-completed" href="plan-document-redesign.html">
+        <span class="glyph" aria-hidden="true">✓</span>
+        <span class="r-title">Make build-proposal converge on a saved prompt</span>
+        <span class="r-meta">refactor · <span class="hi">high</span></span>
+        <span class="r-date">07-27</span>
+      </a></li>
+      <li><a class="s-completed" href="plan-document-redesign.html">
+        <span class="glyph" aria-hidden="true">✓</span>
+        <span class="r-title">Stop paying for a plugin catalog in every session</span>
+        <span class="r-meta">docs · <span>low</span></span>
+        <span class="r-date">07-27</span>
+      </a></li>
+      <li><a class="s-completed" href="plan-document-redesign.html">
+        <span class="glyph" aria-hidden="true">✓</span>
+        <span class="r-title">Preserve out-of-scope sections in HTML plans</span>
+        <span class="r-meta">fix · <span>medium</span></span>
+        <span class="r-date">07-26</span>
+      </a></li>
+      <li><a class="s-todo" href="plan-document-redesign.html">
+        <span class="glyph" aria-hidden="true">○</span>
+        <span class="r-title">Plan a publish-preview skill for public mid-work plan links</span>
+        <span class="r-meta">feature · <span>medium</span></span>
+        <span class="r-date">07-26</span>
+      </a></li>
+    </ul>
+
+    <div class="month"><span>June 2026</span><span class="rule"></span><span>24 plans</span></div>
+    <ul class="rows">
+      <li><a class="s-completed" href="plan-document-redesign.html">
+        <span class="glyph" aria-hidden="true">✓</span>
+        <span class="r-title">Rebuild the plans and social gallery HTML</span>
+        <span class="r-meta">fix · <span>low</span></span>
+        <span class="r-date">06-04</span>
+      </a></li>
+      <li><a class="s-completed" href="plan-document-redesign.html">
+        <span class="glyph" aria-hidden="true">✓</span>
+        <span class="r-title">Add serve-docs tooling and a launch config</span>
+        <span class="r-meta">chore · <span>low</span></span>
+        <span class="r-date">06-07</span>
+      </a></li>
+    </ul>
+
+    <footer class="foot">agentics — Claude Code plugin marketplace · redesign proposal</footer>
+  </div>
+</div>
+
+<script>
+/* Two views, one shell — demonstrates the shared chrome across the site. */
+(function () {
+  const show = id => {
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === id));
+    document.querySelectorAll('.tabs a').forEach(a =>
+      a.dataset.go === id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+    window.scrollTo(0, 0);
+  };
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-go]');
+    if (!t) return;
+    e.preventDefault();
+    show(t.dataset.go);
+  });
+
+  /* Status segmented control */
+  document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+})();
+</script>
+</body>
+</html>

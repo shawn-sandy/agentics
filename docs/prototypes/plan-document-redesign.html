@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en" data-status="in-progress">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redesign proposal — Plan document</title>
+<style>
+/* ══ Tokens ══════════════════════════════════════════════════════════
+   Palette: indigo-violet lead on a warm-neutral paper. Status is carried
+   by FORM (fill / outline / weight) not by a second colour scale, so the
+   one accent stays the only thing shouting. */
+:root {
+  --paper:       #FCFCFA;
+  --panel:       #FFFFFF;
+  --sunk:        #F5F4F1;
+  --ink:         #16151C;
+  --ink-2:       #4B4858;
+  --ink-3:       #6E6A80;
+  --rule:        #E6E3EC;
+  --rule-soft:   #F0EEF4;
+  --accent:      #4A2FE0;
+  --accent-soft: #EFEBFE;
+  --accent-line: #C9BEFB;
+  --moss:        #2F6B45;
+  --moss-soft:   #EDF5EF;
+  --signal:      #A8420C;
+  --signal-soft: #FBF0E9;
+
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+
+  --rail: 15rem;
+  --measure: 66ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #121118; --panel: #1A1922; --sunk: #201F29;
+    --ink: #EDEBF3; --ink-2: #B3AFC4; --ink-3: #8B87A0;
+    --rule: #2C2A38; --rule-soft: #24232E;
+    --accent: #A594FF; --accent-soft: #221F36; --accent-line: #4A4270;
+    --moss: #7BC098; --moss-soft: #1B2A21;
+    --signal: #E8A278; --signal-soft: #2B2019;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--ui);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+/* Prose only — never labels, never lists of paths. */
+.prose { font-family: var(--prose); font-size: 1.0625rem; line-height: 1.7; color: var(--ink-2); }
+.prose p + p { margin-top: .9em; }
+.prose strong { color: var(--ink); font-weight: 700; }
+
+/* Every structural label speaks in mono. */
+.lbl {
+  font-family: var(--mono);
+  font-size: .625rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+code { font-family: var(--mono); font-size: .84em; }
+.prose code, .step-why code, .step-verify code {
+  background: var(--sunk);
+  border-radius: 3px;
+  padding: .1em .32em;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+}
+
+.skip { position: absolute; left: -9999px; }
+.skip:focus { position: fixed; left: 1rem; top: 1rem; z-index: 99; background: var(--accent); color: #fff; padding: .6rem 1rem; border-radius: 4px; font-family: var(--mono); font-size: .8rem; }
+
+/* ══ Top bar — persistent across every page of the site ══════════════ */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0 1.25rem; height: 44px;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono); font-size: .7rem;
+}
+.crumbs { display: flex; align-items: center; gap: .4rem; color: var(--ink-3); min-width: 0; }
+.crumbs a { color: var(--ink-3); text-decoration: none; }
+.crumbs a:hover { color: var(--accent); }
+.crumbs b { color: var(--ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crumbs .sep { color: var(--rule); }
+.topbar .spacer { flex: 1; }
+
+.pill {
+  display: inline-flex; align-items: center; gap: .38rem;
+  font-family: var(--mono); font-size: .65rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: .25rem .55rem; border-radius: 3px;
+  border: 1px solid var(--rule); color: var(--ink-3); background: var(--panel);
+  white-space: nowrap;
+}
+.pill::before { content: ""; width: .4rem; height: .4rem; border-radius: 50%; background: currentColor; }
+[data-status="todo"]        .pill.status { color: var(--ink-3); }
+[data-status="in-progress"] .pill.status { color: var(--signal); border-color: color-mix(in srgb, var(--signal) 35%, var(--rule)); background: var(--signal-soft); }
+[data-status="completed"]   .pill.status { color: var(--moss); border-color: color-mix(in srgb, var(--moss) 35%, var(--rule)); background: var(--moss-soft); }
+@keyframes breathe { 0%,100% { opacity: 1 } 50% { opacity: .25 } }
+[data-status="in-progress"] .pill.status::before { animation: breathe 2s ease-in-out infinite; }
+
+.btn {
+  font-family: var(--mono); font-size: .68rem; font-weight: 600;
+  letter-spacing: .06em;
+  padding: .3rem .7rem; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--rule); background: var(--panel); color: var(--ink-2);
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ══ Cover ═══════════════════════════════════════════════════════════ */
+.cover { max-width: 78rem; margin: 0 auto; padding: 3.25rem 1.5rem 2rem; }
+.cover .eyebrow { color: var(--accent); margin-bottom: 1rem; }
+h1 {
+  font-family: var(--mono);
+  font-size: clamp(1.7rem, 4.2vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: -.035em;
+  line-height: 1.12;
+  max-width: 24ch;
+  text-wrap: balance;
+}
+.cover-meta {
+  display: flex; flex-wrap: wrap; gap: .5rem .9rem;
+  margin-top: 1.1rem;
+  font-family: var(--mono); font-size: .7rem; color: var(--ink-3);
+}
+.cover-meta .dot { color: var(--rule); }
+.cover-meta .hi { color: var(--signal); }
+
+/* ══ Layout ══════════════════════════════════════════════════════════ */
+.layout {
+  max-width: 78rem; margin: 0 auto;
+  padding: 0 1.5rem 8rem;
+  display: grid; grid-template-columns: var(--rail) minmax(0, 1fr);
+  gap: 4rem; align-items: start;
+}
+
+/* ══ SIGNATURE: the phase spine ══════════════════════════════════════
+   One device replaces three — table of contents, progress bar, and the
+   step timeline. A plan genuinely is a sequence, so the numbering and
+   the rail encode real structure rather than decorating it. */
+.spine { position: sticky; top: 60px; font-size: .8rem; }
+@media (max-width: 900px) { .spine { position: static; } }
+
+.spine-stat { padding-bottom: .9rem; border-bottom: 1px solid var(--rule); }
+.spine-count {
+  font-family: var(--mono); font-size: 1.55rem; font-weight: 600;
+  letter-spacing: -.04em; color: var(--ink); line-height: 1;
+}
+.spine-count small { font-size: .95rem; color: var(--ink-3); font-weight: 400; }
+.spine-where { margin-top: .4rem; }
+.track { display: flex; gap: 2px; margin-top: .75rem; }
+.track i {
+  flex: 1; height: 4px; border-radius: 1px;
+  background: var(--rule);
+}
+.track i.done { background: var(--moss); }
+.track i.now  { background: var(--accent); }
+
+.spine-nav { list-style: none; margin-top: 1rem; }
+.phase-head {
+  display: flex; align-items: baseline; gap: .5rem;
+  padding: 1rem 0 .45rem;
+  font-family: var(--mono); font-size: .625rem; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+}
+.phase-head em { font-style: normal; color: var(--rule); }
+.phase-head.current { color: var(--accent); }
+.phase-head.current em { color: var(--accent-line); }
+
+.spine-nav a {
+  display: grid; grid-template-columns: 1.5rem 1fr; align-items: baseline;
+  gap: .1rem;
+  padding: .3rem .5rem .3rem 0;
+  color: var(--ink-3); text-decoration: none;
+  border-left: 2px solid var(--rule-soft); padding-left: .75rem;
+  overflow: hidden;
+}
+.spine-nav a > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spine-nav a > i { font-family: var(--mono); font-size: .7rem; font-style: normal; }
+.spine-nav a:hover { color: var(--ink); border-left-color: var(--rule); }
+.spine-nav a.done  { color: var(--ink-3); }
+.spine-nav a.done > i { color: var(--moss); }
+.spine-nav a.active {
+  color: var(--ink); font-weight: 600;
+  border-left-color: var(--accent);
+  background: linear-gradient(90deg, var(--accent-soft), transparent 70%);
+}
+.spine-nav a.active > i { color: var(--accent); }
+
+.spine-rest { list-style: none; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+.spine-rest a {
+  display: block; padding: .35rem 0 .35rem .75rem;
+  color: var(--ink-3); text-decoration: none;
+  border-left: 2px solid transparent;
+}
+.spine-rest a:hover { color: var(--ink); }
+.spine-rest a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+
+/* ══ Content ═════════════════════════════════════════════════════════ */
+.doc { min-width: 0; max-width: var(--measure); }
+
+/* Box #1 of exactly three. The goal, stated once, in two registers. */
+.goal {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 1.35rem 1.5rem;
+  border-radius: 0 4px 4px 0;
+}
+.goal .lbl { color: var(--accent); }
+.goal-plain {
+  font-family: var(--prose); font-size: 1.15rem; line-height: 1.55;
+  color: var(--ink); margin-top: .7rem;
+}
+.goal-exact {
+  margin-top: 1rem; padding-top: .9rem;
+  border-top: 1px solid var(--accent-line);
+  font-size: .9rem; line-height: 1.65; color: var(--ink-2);
+}
+.goal-exact .lbl { display: block; margin-bottom: .35rem; color: var(--accent); opacity: .8; }
+.goal-exact code { background: color-mix(in srgb, var(--accent) 9%, transparent); padding: .1em .3em; border-radius: 3px; }
+
+section.block { padding-top: 3.25rem; }
+section.block > h2 { display: flex; align-items: center; gap: .7rem; margin-bottom: 1.1rem; }
+section.block > h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+
+/* ── Steps: records, not cards ────────────────────────────────────── */
+.phase-band {
+  display: flex; align-items: center; gap: .75rem;
+  margin: 2.25rem 0 1.1rem;
+  font-family: var(--mono); font-size: .68rem; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.phase-band:first-child { margin-top: 0; }
+.phase-band .no { color: var(--accent); }
+.phase-band .nm { color: var(--ink); }
+.phase-band .rule { flex: 1; height: 1px; background: var(--rule); }
+.phase-band .tag {
+  font-size: .58rem; letter-spacing: .1em; padding: .16rem .5rem;
+  border-radius: 999px; border: 1px solid var(--rule); color: var(--ink-3);
+}
+.phase-band.done .tag { color: var(--moss); border-color: color-mix(in srgb, var(--moss) 35%, var(--rule)); background: var(--moss-soft); }
+.phase-band.now  .tag { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+
+.step {
+  display: grid; grid-template-columns: 2.25rem minmax(0, 1fr);
+  padding: 1.05rem 0;
+  border-top: 1px solid var(--rule-soft);
+}
+.step:first-of-type { border-top: 0; }
+.step-no {
+  font-family: var(--mono); font-size: .8rem; font-weight: 600;
+  color: var(--ink-3); padding-top: .12rem;
+}
+.step.is-done .step-no { color: var(--moss); }
+.step.is-now  .step-no { color: var(--accent); }
+.step.is-now { background: linear-gradient(90deg, var(--accent-soft), transparent 55%); box-shadow: -1rem 0 0 var(--accent-soft), inset 2px 0 0 var(--accent); }
+.step-do { font-weight: 600; line-height: 1.5; color: var(--ink); }
+.step.is-done .step-do { color: var(--ink-2); font-weight: 500; }
+
+/* Why + verify are always visible. Verify is what you need mid-execution;
+   burying it behind a disclosure was the single worst call in the old page. */
+.step-note {
+  display: grid; grid-template-columns: 4rem minmax(0, 1fr);
+  gap: .1rem .75rem; margin-top: .55rem;
+  font-size: .875rem; line-height: 1.6; color: var(--ink-2);
+}
+.step-note > .lbl { padding-top: .2rem; }
+.step-verify > .lbl { color: var(--accent); }
+.step-verify { border-left: 0; }
+.step-verify > div { color: var(--ink-2); }
+@media (max-width: 560px) {
+  .step-note { grid-template-columns: 1fr; gap: .15rem; }
+}
+
+/* ── Decisions ledger — box #2. A distinct artifact, so it looks it. ── */
+.ledger { background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+/* Block + hanging marker, not grid: inline <code> in the text would each
+   become their own grid item and shatter the line. */
+.ledger li {
+  list-style: none; position: relative;
+  padding: .8rem 1.1rem .8rem 3.4rem;
+  border-top: 1px solid var(--rule-soft);
+  font-size: .925rem; line-height: 1.6; color: var(--ink-2);
+}
+.ledger li:first-child { border-top: 0; }
+.ledger li::before {
+  content: "D" counter(dec, decimal-leading-zero); counter-increment: dec;
+  position: absolute; left: 1.1rem; top: .95rem;
+  font-family: var(--mono); font-size: .65rem; font-weight: 600;
+  color: var(--accent);
+}
+.ledger { counter-reset: dec; }
+
+/* ── Definition of done — box #3. The contract. ─────────────────────── */
+.contract { border: 1px solid var(--rule); border-radius: 4px; background: var(--panel); }
+.contract-head {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .85rem 1.1rem; border-bottom: 1px solid var(--rule);
+  background: var(--sunk);
+}
+.contract-head .lbl { flex: 1; }
+.contract-head .n { font-family: var(--mono); font-size: .68rem; color: var(--ink-3); }
+.contract ul { list-style: none; }
+.contract li { border-top: 1px solid var(--rule-soft); }
+.contract li:first-child { border-top: 0; }
+.contract label {
+  display: grid; grid-template-columns: 1rem 1fr; gap: .7rem;
+  padding: .7rem 1.1rem; cursor: pointer;
+  font-size: .9rem; line-height: 1.55; color: var(--ink-2);
+  align-items: start;
+}
+.contract input { margin-top: .3rem; accent-color: var(--moss); width: 1rem; height: 1rem; }
+.contract input:checked ~ span { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--rule); }
+
+/* ── Files touched ──────────────────────────────────────────────────── */
+.files { list-style: none; font-family: var(--mono); font-size: .8rem; }
+.files li { display: flex; flex-wrap: wrap; gap: .5rem; padding: .42rem 0; border-top: 1px solid var(--rule-soft); align-items: baseline; }
+.files li:first-child { border-top: 0; }
+.files .path { color: var(--ink); overflow-wrap: anywhere; }
+.files .k { font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; padding: .1rem .4rem; border-radius: 2px; border: 1px solid var(--rule); color: var(--ink-3); }
+.files .k.new { color: var(--moss); border-color: color-mix(in srgb, var(--moss) 35%, var(--rule)); }
+.files .note { color: var(--ink-3); font-family: var(--ui); font-size: .8rem; }
+
+.foot { max-width: 78rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: .68rem; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 1rem; }
+.foot .spacer { flex: 1; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; gap: 2rem; }
+  .spine { border-bottom: 1px solid var(--rule); padding-bottom: 1.25rem; }
+  .spine-stat { border-bottom: 0; padding-bottom: 0; }
+  .spine-nav, .spine-rest { display: none; }
+}
+/* Keep the file name — it is the only crumb that identifies the page. */
+@media (max-width: 560px) {
+  .crumbs a, .crumbs .sep { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation: none !important; transition: none !important; }
+}
+@media print {
+  .topbar, .spine, .btn { display: none !important; }
+  .layout { display: block; }
+  .doc { max-width: none; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#doc">Skip to plan</a>
+
+<header class="topbar">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="#">agentics</a><span class="sep">/</span>
+    <a href="#">plans</a><span class="sep">/</span>
+    <b>add-plan-phase-checkpoints</b>
+  </nav>
+  <span class="spacer"></span>
+  <span class="pill status">in progress</span>
+  <button class="btn" type="button">Save PDF</button>
+</header>
+
+<div class="cover">
+  <p class="lbl eyebrow">Implementation plan</p>
+  <h1>Phase checkpoints and a Decisions ledger for plan specs</h1>
+  <p class="cover-meta">
+    <span>feature</span><span class="dot">·</span>
+    <span class="hi">high effort</span><span class="dot">·</span>
+    <span>12 steps</span><span class="dot">·</span>
+    <span>2026-07-30</span><span class="dot">·</span>
+    <span>agentics</span>
+  </p>
+</div>
+
+<div class="layout">
+
+  <!-- ══ The spine ══ -->
+  <aside class="spine" aria-label="Plan progress and contents">
+    <div class="spine-stat">
+      <p class="spine-count">4<small>/12</small></p>
+      <p class="lbl spine-where">Steps done · phase 2 of 3</p>
+      <div class="track" aria-hidden="true">
+        <i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i>
+        <i class="now"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+    </div>
+
+    <nav>
+      <ul class="spine-nav">
+        <li class="phase-head">01 <em>—</em> Spec format</li>
+        <li><a class="done" href="#s1"><i>✓</i><span>Phase-aware step splitting</span></a></li>
+        <li><a class="done" href="#s2"><i>✓</i><span>Emit phases from buildDigest</span></a></li>
+        <li><a class="done" href="#s3"><i>✓</i><span>Read phases out of HTML</span></a></li>
+        <li class="phase-head current">02 <em>—</em> Renderer</li>
+        <li><a class="done" href="#s4"><i>✓</i><span>Render phase groups</span></a></li>
+        <li><a class="active" href="#s5"><i>05</i><span>Decisions section end to end</span></a></li>
+        <li><a href="#s6"><i>06</i><span>Re-copy renderer sources</span></a></li>
+        <li class="phase-head">03 <em>—</em> Skills &amp; ship</li>
+        <li><a href="#s7"><i>07</i><span>Checkpoint loop in build</span></a></li>
+        <li><a href="#s8"><i>08</i><span>Phase boundary offer</span></a></li>
+        <li><a href="#s9"><i>09</i><span>Teach finalize-plan phases</span></a></li>
+        <li><a href="#s10"><i>10</i><span>Document both sections</span></a></li>
+        <li><a href="#s11"><i>11</i><span>Phase and Decisions tests</span></a></li>
+        <li><a href="#s12"><i>12</i><span>Bump to 7.1.0</span></a></li>
+      </ul>
+      <ul class="spine-rest">
+        <li><a href="#context">Context</a></li>
+        <li><a href="#decisions">Decisions</a></li>
+        <li><a href="#files">Files that change</a></li>
+        <li><a href="#done">Definition of done</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- ══ Document ══ -->
+  <main class="doc" id="doc">
+
+    <div class="goal">
+      <p class="lbl">The goal</p>
+      <p class="goal-plain">Long plans have to be implemented in one sitting, because nothing marks a safe stopping point and nothing records the decisions an earlier session already made. Phases add declared checkpoints and a ledger, so a plan can be picked up cold in a fresh context window.</p>
+      <div class="goal-exact">
+        <span class="lbl">In precise terms</span>
+        Add an optional <code>### Phase: &lt;name&gt;</code> grouping over <code>## Steps</code> and an optional <code>## Decisions</code> section, and turn <code>build</code>'s resume-from-first-unmarked-step behaviour into a designed checkpoint loop.
+      </div>
+    </div>
+
+    <section class="block" id="context">
+      <h2 class="lbl">Context</h2>
+      <div class="prose">
+        <p>Implementation plans that exceed roughly ten steps consume more context than one session can hold. The repo already reaches this conclusion — <code>guidelines/right-sizing.md</code> tells the author that a plan needing more than ten steps "is probably two plans — split it", then offers no mechanism to split with.</p>
+        <p>Two capabilities are missing, and only one is about parallelism. The <code>workflow</code> prompt already fans out across subagents, which helps when slices are independent. Context exhaustion bites hardest on long <strong>sequential</strong> plans, where step seven depends on decisions made in step two — and there, fan-out does nothing. The fix for that shape is checkpointing.</p>
+        <p>One hazard is already latent. <code>parseSpecMarkdown</code> folds each step to a single line, so a <code>### Phase:</code> heading placed between steps two and three is appended to <strong>step two's Verify text</strong> with no parse error at all. Phases are unsafe to author until step 1 lands.</p>
+      </div>
+    </section>
+
+    <section class="block" id="steps">
+      <h2 class="lbl">Steps</h2>
+
+      <div class="phase-band done">
+        <span class="no">01</span><span class="nm">Spec format</span>
+        <span class="rule"></span><span class="tag">3 of 3 done</span>
+      </div>
+
+      <article class="step is-done" id="s1">
+        <p class="step-no">✓</p>
+        <div>
+          <p class="step-do">Make <code>parseSpecMarkdown</code> phase-aware by splitting the Steps chunk on <code>^###\s+Phase:</code> before the numbered-item split.</p>
+          <div class="step-note"><span class="lbl">Why</span><div>The current splitter folds a heading between two steps into the preceding step's <code>Verify:</code> text with no error raised.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div>Parse a two-phase fixture; both phase names come back in order and no step's verify string contains a <code>#</code>.</div></div>
+        </div>
+      </article>
+
+      <article class="step is-done" id="s2">
+        <p class="step-no">✓</p>
+        <div>
+          <p class="step-do">Emit phases from <code>buildDigest</code> as a <code>### Phase: &lt;name&gt;</code> line above the first step of each phase, keeping flat numbering unchanged.</p>
+          <div class="step-note"><span class="lbl">Why</span><div><code>buildDigest</code> is the exact inverse of <code>parseSpecMarkdown</code>, so a phase it does not emit disappears whenever a spec is reconstructed from HTML.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div><code>parseSpecMarkdown(buildDigest(parsed)).phases</code> is deep-equal to <code>parsed.phases</code>.</div></div>
+        </div>
+      </article>
+
+      <article class="step is-done" id="s3">
+        <p class="step-no">✓</p>
+        <div>
+          <p class="step-do">Read phases back out of rendered HTML in <code>extractSections</code> by matching <code>data-phase</code>, and extend <code>stripHeading</code> to remove the phase <code>&lt;h3&gt;</code>.</p>
+          <div class="step-note"><span class="lbl">Why</span><div>An unstripped <code>&lt;h3&gt;</code> would leak the phase name into the first step's extracted action text.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div>Phase names come back in document order with no step action containing a phase name.</div></div>
+        </div>
+      </article>
+
+      <div class="phase-band now">
+        <span class="no">02</span><span class="nm">Renderer</span>
+        <span class="rule"></span><span class="tag">in progress</span>
+      </div>
+
+      <article class="step is-done" id="s4">
+        <p class="step-no">✓</p>
+        <div>
+          <p class="step-do">Add a <code>phaseHeader</code> helper emitting <code>&lt;div class="phase-group" data-phase="…"&gt;</code>, and group step cards under it in flat document order.</p>
+          <div class="step-note"><span class="lbl">Why</span><div>The progress JavaScript counts <code>.step-card</code> with <code>querySelectorAll</code>, so nesting that breaks the selector would silently zero the progress bar.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div>Progress total equals the step count, each phase heading precedes its own steps, no heading level skipped.</div></div>
+        </div>
+      </article>
+
+      <article class="step is-now" id="s5">
+        <p class="step-no">05</p>
+        <div>
+          <p class="step-do">Add the <code>## Decisions</code> section end to end — parse, re-emit, extract, add a <code>SECTION_CHROME</code> key, and render it after Context.</p>
+          <div class="step-note"><span class="lbl">Why</span><div>A resumed session that cannot see settled choices re-litigates them, and <code>## Completion Report</code> records gaps rather than decisions.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div>Three Decisions bullets render a card, gain a nav entry, and survive the parse-digest-parse round trip.</div></div>
+        </div>
+      </article>
+
+      <article class="step" id="s6">
+        <p class="step-no">06</p>
+        <div>
+          <p class="step-do">Re-copy the three edited renderer sources over their counterparts under <code>kit/plugins/plan-agent/scripts/</code>, after steps 1–5 and before any test run.</p>
+          <div class="step-note"><span class="lbl">Why</span><div>A test asserts the bundled copies are byte-identical to the repo-root sources, so editing one side ships a phase-blind renderer.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div><code>diff</code> reports no differences for all three files.</div></div>
+        </div>
+      </article>
+
+      <div class="phase-band">
+        <span class="no">03</span><span class="nm">Skills &amp; ship</span>
+        <span class="rule"></span><span class="tag">6 steps</span>
+      </div>
+
+      <article class="step" id="s7">
+        <p class="step-no">07</p>
+        <div>
+          <p class="step-do">Rewrite Step 2 of <code>skills/build/SKILL.md</code> as a phase checkpoint loop, with a <code>--continue</code> flag that pushes straight through.</p>
+          <div class="step-note"><span class="lbl">Why</span><div>Bounding context is the objective, and stopping is correct by default because the skill's headless contract already stops and reports rather than choosing.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div>Grep for <code>--continue</code> and the resume line; the unphased path still reads as one uninterrupted walk.</div></div>
+        </div>
+      </article>
+
+      <article class="step" id="s8">
+        <p class="step-no">08</p>
+        <div>
+          <p class="step-do">Add the phase boundary offer — compact and continue, stop here, or continue without compacting — printing the <code>/compact</code> command with focus instructions.</p>
+          <div class="step-note"><span class="lbl">Why</span><div><code>/compact</code> is a user-typed CLI built-in rather than a callable tool, so the skill can only recommend it.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div>All three options and the printed <code>/compact</code> line appear; the headless path reports rather than chooses.</div></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="block" id="decisions">
+      <h2 class="lbl">Decisions</h2>
+      <p class="lbl" style="margin:-.5rem 0 1rem;color:var(--ink-3);letter-spacing:.04em;text-transform:none;font-size:.85rem;font-family:var(--ui)">Settled choices a resumed session must not re-litigate.</p>
+      <ul class="ledger">
+        <li>Phase boundaries are <code>### Phase:</code> headings rather than a <code>phases:</code> frontmatter range list — headings survive step insertion and reordering, which range lists do not.</li>
+        <li><code>build</code> stops at a phase boundary by default and takes <code>--continue</code> to push through, matching the skill's existing headless contract.</li>
+        <li>Compaction is safe mid-plan only because durable state lives in the spec — step markers, <code>status:</code>, and the ledger — so a lossy summary costs nothing the next phase needs.</li>
+        <li>Phases are pure grouping over the same flat numbering, so adding them to an in-progress plan keeps every existing <code>[x]</code> marker valid.</li>
+        <li>Parent and child plan files are out of scope; phase boundaries are shaped so they can be extracted into child files later.</li>
+      </ul>
+    </section>
+
+    <section class="block" id="files">
+      <h2 class="lbl">Files that change</h2>
+      <ul class="files">
+        <li><span class="path">scripts/lib/plan-spec.mjs</span> <span class="k">mod</span> <span class="note">phase-aware splitting, Decisions parsing, digest re-emission</span></li>
+        <li><span class="path">scripts/build-plan-html.mjs</span> <span class="k">mod</span> <span class="note">group step cards by phase</span></li>
+        <li><span class="path">scripts/lib/plan-shell.mjs</span> <span class="k">mod</span> <span class="note">phase header helper, chrome entry, phase CSS</span></li>
+        <li><span class="path">tests/plugins/test-plan-phases.mjs</span> <span class="k new">new</span> <span class="note">objective-verification smoke test</span></li>
+        <li><span class="path">.claude-plugin/marketplace.json</span> <span class="k">mod</span> <span class="note">plan-agent 7.0.1 → 7.1.0</span></li>
+      </ul>
+    </section>
+
+    <section class="block" id="done">
+      <h2 class="lbl">Definition of done</h2>
+      <div class="contract">
+        <div class="contract-head"><span class="lbl">Acceptance criteria</span><span class="n">3 / 15</span></div>
+        <ul>
+          <li><label><input type="checkbox" checked><span>A spec with two <code>### Phase:</code> headings parses with every step's Verify text free of heading markup</span></label></li>
+          <li><label><input type="checkbox" checked><span><code>parseSpecMarkdown(buildDigest(parsed))</code> returns phases deep-equal to the original</span></label></li>
+          <li><label><input type="checkbox" checked><span><code>extractSections</code> returns phase names in document order, with no name leaking into a step's action</span></label></li>
+          <li><label><input type="checkbox"><span>The rendered progress total equals the step count for a phased plan</span></label></li>
+          <li><label><input type="checkbox"><span>A phased spec whose first phase is fully <code>[x]</code> resumes at the first unmarked step of the next phase</span></label></li>
+          <li><label><input type="checkbox"><span><code>finalize-plan</code> leaves a plan with an unfinished phase at <code>in-progress</code> and names it in the report</span></label></li>
+          <li><label><input type="checkbox"><span>An unphased spec renders byte-identically to its output before this change</span></label></li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer class="foot">
+  <span>docs/plans/add-plan-phase-checkpoints.md</span>
+  <span class="spacer"></span>
+  <span>Redesign proposal — not a live plan</span>
+</footer>
+
+<script>
+/* Scroll-spy: the only motion in the page. The spine tracks where you are. */
+(function () {
+  const links = [...document.querySelectorAll('.spine-nav a, .spine-rest a')];
+  const targets = links.map(a => document.getElementById(a.hash.slice(1))).filter(Boolean);
+  if (!targets.length || !('IntersectionObserver' in window)) return;
+
+  const seen = new Map();
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => seen.set(e.target.id, e.intersectionRatio));
+    let best = null, bestRatio = 0;
+    seen.forEach((ratio, id) => { if (ratio > bestRatio) { bestRatio = ratio; best = id; } });
+    if (!best) return;
+    links.forEach(a => a.classList.toggle('active', a.hash === '#' + best));
+  }, { rootMargin: '-15% 0px -60% 0px', threshold: [0, .25, .5, 1] });
+
+  targets.forEach(t => io.observe(t));
+
+  /* Criteria counter reflects what you tick. */
+  const boxes = [...document.querySelectorAll('.contract input')];
+  const n = document.querySelector('.contract-head .n');
+  const tick = () => { n.textContent = boxes.filter(b => b.checked).length + ' / ' + boxes.length; };
+  boxes.forEach(b => b.addEventListener('change', tick));
+  tick();
+})();
+</script>
+</body>
+</html>
