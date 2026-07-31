@@ -184,11 +184,17 @@ support multi-line values. The enumerated keys above (`status`, `type`,
 fails the render naming the key and the valid set, rather than silently
 falling back — `status: complete` used to render as `todo` and
 `workflow: yes` used to mean "no workflow". `workflow: true`/`false` stay
-accepted as the pre-7.0 spelling of `always`/`never`. `glance` must not restate the objective: the
+accepted as the pre-7.0 spelling of `always`/`never`. `issue` is the tracking
+ticket's full URL — the renderer emits it as the `plan-issue` meta tag and a
+header link, so a completed plan still points at the ticket to close. It must
+be `http(s)`; any other scheme is dropped with a warning rather than rendered,
+since escaping leaves a `javascript:` value clickable. Any tracker may be
+linked, but only `github.com` and GitLab URLs can be *closed* on completion —
+those are the two the `gh`/`glab` CLIs can drive; a Jira or Linear link
+renders and is then left alone. `glance` must not restate the objective: the
 objective is the *what*; the glance is *why it matters* and *how we'll know
 it worked*, written for someone who wasn't in the planning session. Unknown
-keys (e.g. `priority`, `issue`) are preserved in the spec but not rendered
-today.
+keys (e.g. `priority`) are preserved in the spec but not rendered today.
 
 ## Markdown-only sections (kept in the spec, skipped by the renderer)
 

@@ -1579,8 +1579,8 @@ const icon = (id) => `<svg class="icon" aria-hidden="true"><use href="#${id}"/><
 
 /* ── Template functions — args are pre-escaped HTML strings ────────── */
 
-/** <head> meta tags. `workflow`/`prototype` may be empty → tag omitted entirely. */
-export function metaTags({ status, effort, type, created, repo, file, path, md, implement, goal, workflow, prototype }) {
+/** <head> meta tags. `workflow`/`prototype`/`issue` may be empty → tag omitted entirely. */
+export function metaTags({ status, effort, type, created, repo, file, path, md, implement, goal, workflow, prototype, issue }) {
   const tags = [
     `<meta name="plan-status" content="${status}">`,
     `<meta name="plan-effort" content="${effort}">`,
@@ -1595,6 +1595,7 @@ export function metaTags({ status, effort, type, created, repo, file, path, md, 
   ];
   if (workflow) tags.push(`<meta name="plan-workflow" content="${workflow}">`);
   if (prototype) tags.push(`<meta name="plan-prototype" content="${prototype}">`);
+  if (issue) tags.push(`<meta name="plan-issue" content="${issue}">`);
   return tags.join('\n');
 }
 
@@ -1607,11 +1608,18 @@ export function metaTags({ status, effort, type, created, repo, file, path, md, 
  * every plan, so a new rule would change the bytes of plans that have no
  * prototype. `a { color: var(--accent) }` and the actions row's flex gap
  * already style it.
+ *
+ * `issueHref` is the tracking ticket's full URL, empty when the spec carries
+ * no `issue:` key — same all-or-nothing anchor, same no-CSS-of-its-own rule.
  */
-export function header({ title, status, effortLabel, created, repo, type, prototypeHref }) {
+export function header({ title, status, effortLabel, created, repo, type, prototypeHref, issueHref, issueLabel }) {
   const prototypeLink = prototypeHref
     ? `\n        <a class="prototype-link" href="${prototypeHref}"
            aria-label="View the interactive prototype for this plan">View prototype</a>`
+    : '';
+  const issueLink = issueHref
+    ? `\n        <a class="issue-link" href="${issueHref}"
+           aria-label="View the tracking issue for this plan">${issueLabel || 'Tracking issue'}</a>`
     : '';
   return `<header class="plan-header">
   <div class="plan-header-inner">
@@ -1627,7 +1635,7 @@ export function header({ title, status, effortLabel, created, repo, type, protot
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
-        <span class="effort-badge" aria-label="Effort level">${effortLabel}</span>${prototypeLink}
+        <span class="effort-badge" aria-label="Effort level">${effortLabel}</span>${prototypeLink}${issueLink}
         <span class="status-badge">${status}</span>
       </div>
     </div>
