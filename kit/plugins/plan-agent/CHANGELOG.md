@@ -1,6 +1,29 @@
 # Changelog
 
 
+## 7.3.0 — tracking issue asked first and rendered onto the plan (2026-07-31)
+
+### Added
+
+- **A spec's `issue:` key now renders.** The renderer emits a `plan-issue` meta
+  tag and a header anchor to the ticket (labelled `Issue #<n>` when the URL ends
+  in a number, `Tracking issue` otherwise). Applies to both paths that set the
+  key: a plan seeded from an issue (Step 0.5) and a tracking issue created at
+  Step 8. Previously the URL sat in the spec frontmatter and never reached the
+  HTML, so a finished plan gave no hint which ticket to close. Plans without an
+  `issue:` key render byte-identically to before. Covered by
+  `tests/plugins/test-plan-issue-link.mjs`.
+
+### Changed
+
+- **`implementation-plan` Step 8 now orders the batched `AskUserQuestion` with
+  the tracking-issue question first and the next-step (`Implement now` /
+  `Run as workflow` / `Review` / `Exit`) question second.** The issue is already
+  created before the next-step choice is acted on, so asking about it first
+  matches the order things actually happen. No change to the options, the
+  skip-when-`issue:`-is-set rule, or the handling of either answer.
+
+
 ## 7.2.0 — process-reminder imperatives pruned behind recorded baselines (2026-07-30)
 
 ### Changed

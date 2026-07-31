@@ -74,7 +74,10 @@ Invoke explicitly via `/plan-agent:implementation-plan <objective>`, or let it a
 
 At Step 8 the skill offers to open a tracking issue for the finished plan,
 delegating to `git-agent:create-issue` with the plan as its source and
-recording the resulting URL as the spec's `issue:` frontmatter key. It is
+recording the resulting URL as the spec's `issue:` frontmatter key. The
+renderer turns that key into a `plan-issue` meta tag and a header link on the
+HTML, so the plan and its ticket stay reachable from each other — including
+when someone comes back to close the ticket. It is
 skipped when the spec already carries `issue:`, and if `git-agent` is not
 installed the skill notes it in one line and continues — issue creation never
 blocks the plan flow.
