@@ -301,17 +301,24 @@ Confirms the *objective* works, not just that criteria are met.
    an output of sub-step 1, not a knob for making sub-step 3 pass.
 5. **Update the linked tracking ticket.** Skip when the spec carries no
    `issue:` key. Write a one-paragraph summary — plan filename, final status,
-   `N/M` criteria checked, every `## Completion Report` bullet verbatim —
-   then:
+   `N/M` criteria checked, every `## Completion Report` bullet verbatim — to a
+   temporary file, and pass that **file** to every command below. Never
+   interpolate the summary into a shell string: a Completion Report bullet
+   routinely contains backticks naming a file or function, and `` `x` ``,
+   `$(x)`, and `$VAR` all expand before the CLI ever sees them — corrupting
+   the comment in the ordinary case and executing plan text in the worst one.
+   Then:
    - Status `completed`: ask via `AskUserQuestion` ("The plan links tracking
      issue `<url>`. Close it?" / `Yes, close it` / `No, leave it open`), and on
-     yes run `gh issue close <url> --comment "<summary>"` for a `github.com`
-     URL or `glab issue note <url> -m "<summary>" && glab issue close <url>`
-     for GitLab. Closing is visible to everyone watching the ticket, so it is
-     never automatic.
+     yes run, for a `github.com` URL,
+     `gh issue comment <url> --body-file <file> && gh issue close <url>`
+     — or, for GitLab,
+     `glab issue note <url> -m "$(cat <file>)" && glab issue close <url>`.
+     Closing is visible to everyone watching the ticket, so it is never
+     automatic.
    - Status `in-progress`: never close — post the summary as a comment
-     (`gh issue comment <url> --body "<summary>"` / `glab issue note <url> -m
-     "<summary>"`) so the ticket shows where the work stopped. No question
+     (`gh issue comment <url> --body-file <file>` / `glab issue note <url> -m
+     "$(cat <file>)"`) so the ticket shows where the work stopped. No question
      needed; a comment does not change the ticket's state.
 
    A missing CLI, a failed auth, or a failed command is a one-line report with

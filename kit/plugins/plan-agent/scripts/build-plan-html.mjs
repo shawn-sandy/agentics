@@ -281,8 +281,15 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   // plan was seeded from an issue, or by Step 8 when one is created for it.
   // Rendered as a header link so the plan and its ticket stay reachable from
   // each other, and as a meta tag so the closing agent can find it.
-  const issue = md.issue || '';
-  const issueLabel = `Issue #${(issue.match(/(\d+)\/?$/) || [, ''])[1]}`.replace(/ #$/, '');
+  // Only http(s) is navigable. Escaping leaves a scheme intact, so a plan
+  // carrying `issue: javascript:...` — imported, or hand-edited — would render
+  // as an ordinary-looking anchor that runs on click. Drop anything else, tag
+  // and link both: an unusable value is worse than an absent one.
+  const issueRaw = (md.issue || '').trim();
+  const issue = /^https?:\/\//i.test(issueRaw) ? issueRaw : '';
+  if (issueRaw && !issue) console.warn(`  ! ${basename(path)}: ignoring non-http(s) issue: ${issueRaw}`);
+  const issueNum = (issue.match(/(\d+)\/?$/) || [, ''])[1];
+  const issueLabel = issueNum ? `Issue #${issueNum}` : 'Tracking issue';
 
   // Every prompt ends with the same gate: verify, then record the outcome in
   // the spec. Without it an agent reports "done" on a plan still marked todo.

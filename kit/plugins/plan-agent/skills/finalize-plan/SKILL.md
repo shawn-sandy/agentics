@@ -109,7 +109,7 @@ If no plans are selected, **STOP**.
 
 ### S4 — Finalize each selected plan
 
-For each selected plan in turn, run **Step 3b**, **Step 3c**, and **Step 5** (all sub-steps, in the plan's edit mode), applying the criteria mode chosen in S3 to every plan — do not re-prompt per plan; the S3 answers replace Step 4's per-plan confirmation. Print a one-line result per plan as you go (final status, criteria checked, objective-test result). Run **Step 5f** once for the whole sweep after the loop, so the linked tickets are confirmed in a single question rather than one per plan.
+For each selected plan in turn, run **Step 3b**, **Step 3c**, and **Step 5** — but *not* Step 5f — (in the plan's edit mode), applying the criteria mode chosen in S3 to every plan — do not re-prompt per plan; the S3 answers replace Step 4's per-plan confirmation. Print a one-line result per plan as you go (final status, criteria checked, objective-test result). **Step 5f is deliberately excluded from the loop** — run it once for the whole sweep after the loop, so the linked tickets are confirmed in a single question rather than one per plan. Running it inside the loop as well would prompt per plan and then act a second time on the same tickets.
 
 ### S5 — Deliver
 
@@ -289,14 +289,20 @@ with `Yes, close it` / `No, leave it open`. In sweep mode ask once, listing
 every plan/ticket pair the sweep would close.
 
 Write a one-paragraph summary first — plan filename, final status, `N/M`
-criteria checked, and every `## Completion Report` bullet verbatim — then:
+criteria checked, and every `## Completion Report` bullet verbatim — to a
+temporary file, and pass that **file** to every command below. Never
+interpolate the summary into a shell string: a Completion Report bullet
+routinely contains backticks naming a file or function, and `` `x` ``, `$(x)`,
+and `$VAR` all expand before the CLI ever sees them — corrupting the comment in
+the ordinary case and executing plan text in the worst one. Then:
 
-- **Final status `completed`** and the user said yes:
-  `gh issue close <url> --comment "<summary>"` for a `github.com` URL,
-  `glab issue note <url> -m "<summary>" && glab issue close <url>` for GitLab.
+- **Final status `completed`** and the user said yes — for a `github.com` URL,
+  `gh issue comment <url> --body-file <file> && gh issue close <url>`;
+  for GitLab,
+  `glab issue note <url> -m "$(cat <file>)" && glab issue close <url>`.
 - **Final status `in-progress`** (the downgrade rule fired): never close.
-  Post the summary as a comment instead — `gh issue comment <url> --body
-  "<summary>"` / `glab issue note <url> -m "<summary>"` — so the ticket shows
+  Post the summary as a comment instead — `gh issue comment <url> --body-file
+  <file>` / `glab issue note <url> -m "$(cat <file>)"` — so the ticket shows
   where the work stopped. This needs no confirmation question; it adds a
   comment rather than changing the ticket's state.
 

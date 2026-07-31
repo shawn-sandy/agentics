@@ -1,6 +1,33 @@
 # Changelog
 
 
+## 7.4.1 — harden the ticket link and the summary handoff (2026-07-31)
+
+### Fixed
+
+- **The `Tracking issue` fallback label never fired.** A ticket URL with no
+  trailing number produced `Issue` rather than the documented fallback, because
+  the label was built by trimming a trailing `#` off `Issue #` — leaving a
+  truthy string that shadowed the template's `|| 'Tracking issue'`. The label
+  is now chosen explicitly, and the test pins the exact string instead of
+  asserting it is merely non-empty (which is what let this ship).
+- **A non-`http(s)` `issue:` value rendered as a clickable anchor.** Escaping
+  leaves a scheme intact, so an imported or hand-edited plan carrying
+  `issue: javascript:...` produced an ordinary-looking tracking link that ran
+  on click. Both the meta tag and the anchor are now emitted only for `http`
+  and `https` values; anything else is dropped with a one-line warning.
+- **The ticket summary was interpolated into a shell string.** Completion
+  Report bullets routinely contain backticks naming a file or function, and
+  `` `x` ``, `$(x)`, and `$VAR` all expand before `gh`/`glab` sees them —
+  corrupting the comment in the ordinary case, and executing plan-supplied text
+  in the worst one. Both skills now write the summary to a file and pass
+  `--body-file` (GitHub) or `-m "$(cat <file>)"` (GitLab).
+- **`finalize-plan --all` ran the ticket step twice.** The sweep loop said to
+  run Step 5 with all sub-steps — which now includes Step 5f — and then to run
+  Step 5f again for the batch, prompting per plan and acting twice on the same
+  tickets. Step 5f is now explicitly excluded from the loop.
+
+
 ## 7.4.0 — completing a plan updates its linked ticket (2026-07-31)
 
 ### Added

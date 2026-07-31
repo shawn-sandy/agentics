@@ -106,15 +106,25 @@ ok('spec with issue: renders the meta tag and a header anchor to the ticket', ()
   assert.ok(anchor.ariaLabel.length > 0, 'anchor has a non-empty aria-label');
 });
 
-ok('a URL with no trailing number still yields text-bearing anchor', () => {
+// Asserting only "non-empty" here is what let the fallback ship broken: the
+// label was `Issue`, the template's `|| 'Tracking issue'` was dead code, and
+// the test passed anyway. Pin the exact documented string.
+ok('a URL with no trailing number falls back to the "Tracking issue" label', () => {
   const anchor = issueAnchor(render('https://example.com/tracker/plan-abc'));
   assert.ok(anchor, 'header issue anchor is present');
-  assert.ok(anchor.text.length > 0, 'anchor falls back to non-empty label');
+  assert.equal(anchor.text, 'Tracking issue', 'anchor uses the documented fallback label');
+});
+
+ok('a non-http(s) issue: value renders neither the meta tag nor the anchor', () => {
+  const html = render('javascript:alert(document.domain)');
+  assert.ok(!html.includes('name="plan-issue"'), 'no plan-issue meta tag for a non-http(s) scheme');
+  assert.equal(issueAnchor(html), null, 'no header anchor for a non-http(s) scheme');
+  assert.ok(!html.includes('javascript:alert'), 'the rejected value is not emitted anywhere');
 });
 
 ok('spec without issue: renders neither the meta tag nor the anchor', () => {
   const html = render(null);
-  assert.ok(!html.includes('plan-issue'), 'no plan-issue meta tag');
+  assert.ok(!html.includes('name="plan-issue"'), 'no plan-issue meta tag');
   assert.equal(issueAnchor(html), null, 'no header issue anchor');
 });
 
