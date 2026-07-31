@@ -38,6 +38,9 @@ a { color: inherit; }
 .topbar {
   position: sticky; top: 0; z-index: 20;
   border-bottom: 1px solid var(--rule);
+  /* Opaque first: where color-mix is unsupported the declaration is dropped,
+     and a transparent sticky bar over scrolled text is unreadable. */
+  background: var(--paper);
   background: color-mix(in srgb, var(--paper) 88%, transparent);
   backdrop-filter: blur(12px);
 }

@@ -89,6 +89,9 @@ code { font-family: var(--mono); font-size: .84em; }
   position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; gap: 1rem;
   padding: 0 1.25rem; height: 44px;
+  /* Opaque first: where color-mix is unsupported the declaration is dropped,
+     and a transparent sticky bar over scrolled text is unreadable. */
+  background: var(--paper);
   background: color-mix(in srgb, var(--paper) 88%, transparent);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--rule);
