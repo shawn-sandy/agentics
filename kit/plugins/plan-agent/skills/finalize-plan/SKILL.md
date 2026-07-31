@@ -109,7 +109,7 @@ If no plans are selected, **STOP**.
 
 ### S4 — Finalize each selected plan
 
-For each selected plan in turn, run **Step 3b**, **Step 3c**, and **Step 5** (all sub-steps, in the plan's edit mode), applying the criteria mode chosen in S3 to every plan — do not re-prompt per plan; the S3 answers replace Step 4's per-plan confirmation. Print a one-line result per plan as you go (final status, criteria checked, objective-test result).
+For each selected plan in turn, run **Step 3b**, **Step 3c**, and **Step 5** — but *not* Step 5f — (in the plan's edit mode), applying the criteria mode chosen in S3 to every plan — do not re-prompt per plan; the S3 answers replace Step 4's per-plan confirmation. Print a one-line result per plan as you go (final status, criteria checked, objective-test result). **Step 5f is deliberately excluded from the loop** — run it once for the whole sweep after the loop, so the linked tickets are confirmed in a single question rather than one per plan. Running it inside the loop as well would prompt per plan and then act a second time on the same tickets.
 
 ### S5 — Deliver
 
@@ -273,6 +273,54 @@ Use `Edit` on the plan HTML file. Read the file once before any edit.
 **5e — Completion report:** if `#completion-report` exists and anything fell short (unverified criteria left unchecked, evidence below 80%, objective test failed), replace the `<p class="report-empty">…</p>` element with a `<dl class="report-list">` of `<dt>` (specific criterion/token/test) + `<dd>` (reason) entries; otherwise leave the report untouched.
 
 Do not remove or alter any surrounding markup.
+
+---
+
+## Step 5f — Update the linked tracking ticket
+
+Applies to both modes. Skip entirely when the plan carries no ticket: the
+spec's `issue:` frontmatter key, or in legacy mode the `plan-issue` meta tag in
+the HTML.
+
+**1. Check the URL before anything else.** The ticket URL is frontmatter — it
+reaches this step unvalidated, and it is about to become a shell argument.
+Proceed only when it starts `https://` **and** its host is `github.com` or a
+GitLab host; report one line and skip the rest of this step otherwise. A Jira
+or Linear URL is a valid thing for a plan to link and still renders as a link
+on the page — there is simply no CLI here to drive it, and guessing GitLab for
+every non-GitHub host would fire `glab` at a host it cannot serve. Always quote
+the URL in the command (`"<url>"`).
+
+**2. Write the summary to a file.** One paragraph — plan filename, final
+status, `N/M` criteria checked, and every `## Completion Report` bullet
+verbatim — and pass that **file** to every command below. Never interpolate the
+summary into a shell string: a Completion Report bullet routinely contains
+backticks naming a file or function, and `` `x` ``, `$(x)`, and `$VAR` all
+expand before the CLI ever sees them — corrupting the comment in the ordinary
+case and executing plan text in the worst one.
+
+**3. Branch on the final status** — the status decides whether a question is
+even asked, so determine it first:
+
+- **Final status `completed`**: closing is visible to everyone watching the
+  ticket, so ask via `AskUserQuestion` — "The plan links tracking issue
+  `<url>`. Close it?" with `Yes, close it` / `No, leave it open`. In sweep
+  mode ask once, listing every plan/ticket pair the sweep would close. On yes,
+  for a `github.com` URL,
+  `gh issue comment "<url>" --body-file <file> && gh issue close "<url>"`;
+  for GitLab,
+  `glab issue note "<url>" -m "$(cat <file>)" && glab issue close "<url>"`.
+  On no, fall through to the comment below.
+- **Final status `in-progress`** (the downgrade rule fired): never close, and
+  **never ask** — there is no closure to confirm, so the question would be
+  noise. Post the summary as a comment instead — `gh issue comment "<url>"
+  --body-file <file>` / `glab issue note "<url>" -m "$(cat <file>)"` — so the
+  ticket shows where the work stopped. A comment does not change the ticket's
+  state.
+
+If the CLI is missing, unauthenticated, or the command fails, report it in one
+line with the ticket URL and continue to Step 6 — an open ticket
+never blocks a plan from being marked completed.
 
 ---
 

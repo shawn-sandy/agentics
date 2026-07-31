@@ -213,7 +213,7 @@ Echo the resolved objective and effective flags after Step 0.
   (`save-pdf-btn`, prints via the browser dialog), copy buttons, meta tags
   (`plan-status`, `plan-effort`, `plan-type`, `plan-created`, `plan-repo`,
   `plan-file`, `plan-path`, `plan-md`, `plan-implement`, `plan-goal`,
-  conditional `plan-workflow`), and HTML escaping.
+  conditional `plan-workflow` and `plan-issue`), and HTML escaping.
 
 ## Workflow
 
@@ -415,8 +415,8 @@ EOF
 8. **Implement, Edit, or Exit** — After Step 7 completes, always ask the
    user what to do next.
 
-   Use `AskUserQuestion` with **two questions batched in one call**: the
-   next-step question below, and a tracking-issue question:
+   Use `AskUserQuestion` with **two questions batched in one call**, the
+   tracking-issue question **first** and the next-step question second:
    - Question: "Create a tracking issue for this plan on GitHub/GitLab?"
    - Options:
      - `Yes — create an issue` — Run the `git-agent:create-issue` skill with this plan.
@@ -451,7 +451,9 @@ EOF
    the markdown spec's repo-relative path. That skill handles host
    detection, drafting, and its own confirmation gate; when it finishes,
    record the created issue URL as an `issue:` frontmatter key in the spec
-   and re-render. If the `git-agent` plugin is not installed (the Skill
+   and re-render — the renderer turns that key into the `plan-issue` meta tag
+   and the header link, so the plan carries its ticket for tracking and for
+   whoever closes it. If the `git-agent` plugin is not installed (the Skill
    call fails to resolve), say so in one line and continue with the
    next-step choice — never block on it.
 

@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 7.2.1 — out-of-scope items no longer vanish from rendered plans (2026-07-31)
+## 7.4.2 — out-of-scope items no longer vanish from rendered plans (2026-07-31)
 
 ### Fixed
 
@@ -26,6 +26,82 @@
   the same character at greater-or-equal length, so a prompt quoting fenced
   code needs a longer outer fence (` ````text `). `buildDigest()` sizes the
   fence it emits to outrun anything inside the prompt.
+## 7.4.1 — harden the ticket link and the summary handoff (2026-07-31)
+
+### Fixed
+
+- **The `Tracking issue` fallback label never fired.** A ticket URL with no
+  trailing number produced `Issue` rather than the documented fallback, because
+  the label was built by trimming a trailing `#` off `Issue #` — leaving a
+  truthy string that shadowed the template's `|| 'Tracking issue'`. The label
+  is now chosen explicitly, and the test pins the exact string instead of
+  asserting it is merely non-empty (which is what let this ship).
+- **A non-`http(s)` `issue:` value rendered as a clickable anchor.** Escaping
+  leaves a scheme intact, so an imported or hand-edited plan carrying
+  `issue: javascript:...` produced an ordinary-looking tracking link that ran
+  on click. Both the meta tag and the anchor are now emitted only for `http`
+  and `https` values; anything else is dropped with a one-line warning.
+- **The ticket summary was interpolated into a shell string.** Completion
+  Report bullets routinely contain backticks naming a file or function, and
+  `` `x` ``, `$(x)`, and `$VAR` all expand before `gh`/`glab` sees them —
+  corrupting the comment in the ordinary case, and executing plan-supplied text
+  in the worst one. Both skills now write the summary to a file and pass
+  `--body-file` (GitHub) or `-m "$(cat <file>)"` (GitLab).
+- **`finalize-plan --all` ran the ticket step twice.** The sweep loop said to
+  run Step 5 with all sub-steps — which now includes Step 5f — and then to run
+  Step 5f again for the batch, prompting per plan and acting twice on the same
+  tickets. Step 5f is now explicitly excluded from the loop.
+- **`finalize-plan` asked "Close it?" before knowing the final status.** The
+  question sat above the status branch, so a plan that landed `in-progress`
+  was still asked about closing and then never closed. Step 5f now determines
+  the status first and only asks in the `completed` branch.
+- **The ticket URL reached the CLI unvalidated and unquoted.** It is
+  frontmatter, like the summary. Both skills now require `https://` and a
+  `github.com`/GitLab host before invoking anything, quote the URL, and skip
+  with a one-line report otherwise — previously any non-GitHub URL was assumed
+  to be GitLab, firing `glab` at hosts it cannot serve. Any tracker may still
+  be *linked*; only these two can be *closed*.
+
+
+## 7.4.0 — completing a plan updates its linked ticket (2026-07-31)
+
+### Added
+
+- **`build` and `finalize-plan` now act on the plan's `issue:` link when they
+  write the completion state.** A plan that lands `completed` offers to close
+  the ticket (`gh issue close` / `glab issue close`) with a summary comment —
+  filename, final status, `N/M` criteria checked, and every Completion Report
+  bullet verbatim. Closure is always behind an explicit `AskUserQuestion`,
+  since it is visible to everyone watching the ticket; `finalize-plan --all`
+  asks once for the whole sweep. A plan that lands `in-progress` via the
+  downgrade rule is never closed — the same summary is posted as a comment so
+  the ticket shows where the work stopped. A missing CLI, failed auth, or
+  failed command is reported in one line and the plan still completes.
+  Covered by `tests/plugins/test-plan-ticket-closure.sh`, which asserts the
+  rule in both skills — landing it in only one is the real failure mode.
+
+
+## 7.3.0 — tracking issue asked first and rendered onto the plan (2026-07-31)
+
+### Added
+
+- **A spec's `issue:` key now renders.** The renderer emits a `plan-issue` meta
+  tag and a header anchor to the ticket (labelled `Issue #<n>` when the URL ends
+  in a number, `Tracking issue` otherwise). Applies to both paths that set the
+  key: a plan seeded from an issue (Step 0.5) and a tracking issue created at
+  Step 8. Previously the URL sat in the spec frontmatter and never reached the
+  HTML, so a finished plan gave no hint which ticket to close. Plans without an
+  `issue:` key render byte-identically to before. Covered by
+  `tests/plugins/test-plan-issue-link.mjs`.
+
+### Changed
+
+- **`implementation-plan` Step 8 now orders the batched `AskUserQuestion` with
+  the tracking-issue question first and the next-step (`Implement now` /
+  `Run as workflow` / `Review` / `Exit`) question second.** The issue is already
+  created before the next-step choice is acted on, so asking about it first
+  matches the order things actually happen. No change to the options, the
+  skip-when-`issue:`-is-set rule, or the handling of either answer.
 
 
 ## 7.2.0 — process-reminder imperatives pruned behind recorded baselines (2026-07-30)
