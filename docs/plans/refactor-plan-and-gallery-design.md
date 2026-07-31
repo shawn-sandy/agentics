@@ -41,7 +41,7 @@ Phases are deliberately not in scope. The step rail groups nothing today because
 ## Files
 
 - scripts/lib/plan-shell.mjs (modified) — tokens, dark palette, type roles, theme toggle, objective and step markup, step rail, scroll-spy fix
-- scripts/build-plan-html.mjs (modified) — nest the glance, pass steps to `nav()`, relocate the progress block, drop `progress` from the nav id list
+- scripts/build-plan-html.mjs (modified) — nest the glance in the objective card and pass the step list to `nav()`; the `progressBlock` call and the `NAV_ENTRIES` id list are left as they are
 - kit/plugins/plan-agent/scripts/lib/plan-shell.mjs (generated) — re-copied from the repo-root source
 - kit/plugins/plan-agent/scripts/build-plan-html.mjs (generated) — re-copied from the repo-root source
 - kit/plugins/plan-agent/templates/plans-gallery.html (modified) — search plus status segmented control, type and effort disclosure, client-side In-flight and month grouping

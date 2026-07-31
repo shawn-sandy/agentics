@@ -342,11 +342,24 @@ section.block > h2::after { content: ""; flex: 1; height: 1px; background: var(-
 .foot { max-width: 78rem; margin: 0 auto; padding: 2rem 1.5rem 4rem; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: .68rem; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 1rem; }
 .foot .spacer { flex: 1; }
 
+/* Below 900px the step list collapses into a disclosure rather than being
+   removed — a mobile reader keeps every jump target and the sense of how
+   long the plan is. */
+.spine-disclosure { border: 0; }
+.spine-disclosure > summary { display: none; }
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; gap: 2rem; }
   .spine { border-bottom: 1px solid var(--rule); padding-bottom: 1.25rem; }
   .spine-stat { border-bottom: 0; padding-bottom: 0; }
-  .spine-nav, .spine-rest { display: none; }
+  .spine-disclosure > summary {
+    display: flex; align-items: center; gap: .5rem;
+    margin-top: 1rem; padding: .6rem 0;
+    min-height: 44px; cursor: pointer; list-style: none;
+    font-family: var(--mono); font-size: .625rem; font-weight: 600;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--accent);
+  }
+  .spine-disclosure > summary::before { content: "+"; font-size: 1rem; line-height: 1; }
+  .spine-disclosure[open] > summary::before { content: "−"; }
 }
 /* Keep the file name — it is the only crumb that identifies the page. */
 @media (max-width: 560px) {
@@ -403,6 +416,8 @@ section.block > h2::after { content: ""; flex: 1; height: 1px; background: var(-
     </div>
 
     <nav>
+      <details class="spine-disclosure" open>
+      <summary>Steps</summary>
       <ul class="spine-nav">
         <li class="phase-head">01 <em>—</em> Spec format</li>
         <li><a class="done" href="#s1"><i>✓</i><span>Phase-aware step splitting</span></a></li>
@@ -420,6 +435,7 @@ section.block > h2::after { content: ""; flex: 1; height: 1px; background: var(-
         <li><a href="#s11"><i>11</i><span>Phase and Decisions tests</span></a></li>
         <li><a href="#s12"><i>12</i><span>Bump to 7.1.0</span></a></li>
       </ul>
+      </details>
       <ul class="spine-rest">
         <li><a href="#context">Context</a></li>
         <li><a href="#decisions">Decisions</a></li>
@@ -537,6 +553,42 @@ section.block > h2::after { content: ""; flex: 1; height: 1px; background: var(-
           <p class="step-do">Add the phase boundary offer — compact and continue, stop here, or continue without compacting — printing the <code>/compact</code> command with focus instructions.</p>
           <div class="step-note"><span class="lbl">Why</span><div><code>/compact</code> is a user-typed CLI built-in rather than a callable tool, so the skill can only recommend it.</div></div>
           <div class="step-note step-verify"><span class="lbl">Verify</span><div>All three options and the printed <code>/compact</code> line appear; the headless path reports rather than chooses.</div></div>
+        </div>
+      </article>
+
+      <article class="step" id="s9">
+        <p class="step-no">09</p>
+        <div>
+          <p class="step-do">Teach <code>skills/finalize-plan/SKILL.md</code> about phases so it refuses to set <code>status: completed</code> while any phase still holds unmarked steps.</p>
+          <div class="step-note"><span class="lbl">Why</span><div><code>build/SKILL.md</code> line 303 requires the two skills' completion rules to stay consistent, so a phase-blind finalize-plan would close out a plan that stopped at its first checkpoint.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div>A phased spec with phase two unmarked stays <code>in-progress</code> with the unfinished phase named in the report.</div></div>
+        </div>
+      </article>
+
+      <article class="step" id="s10">
+        <p class="step-no">10</p>
+        <div>
+          <p class="step-do">Document both sections in <code>guidelines/section-catalog.md</code> and replace the "probably two plans — split it" sentence in <code>guidelines/right-sizing.md</code> with a phase profile.</p>
+          <div class="step-note"><span class="lbl">Why</span><div>Right-sizing currently sends the author to a mechanism that does not exist, which is the specific gap this plan closes.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div>The old sentence is gone and both guideline files show a <code>### Phase:</code> example.</div></div>
+        </div>
+      </article>
+
+      <article class="step" id="s11">
+        <p class="step-no">11</p>
+        <div>
+          <p class="step-do">Extend the two existing test files with phase and Decisions cases, and add <code>tests/plugins/test-plan-phases.mjs</code> asserting the render-extract-re-render cycle preserves both.</p>
+          <div class="step-note"><span class="lbl">Why</span><div>The render-extract-render pair catches a format change applied to one side and missed on the other; the prose-contract grep follows the pattern in <code>test-exitplanmode-guard.sh</code>.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div>All three test files exit 0.</div></div>
+        </div>
+      </article>
+
+      <article class="step" id="s12">
+        <p class="step-no">12</p>
+        <div>
+          <p class="step-do">Bump plan-agent from 7.0.1 to 7.1.0 in <code>.claude-plugin/marketplace.json</code> and add the matching CHANGELOG entry.</p>
+          <div class="step-note"><span class="lbl">Why</span><div>Repo convention requires any change under <code>kit/plugins/</code> to ship a version exceeding the value on main, and a new spec section is a minor bump.</div></div>
+          <div class="step-note step-verify"><span class="lbl">Verify</span><div><code>BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0.</div></div>
         </div>
       </article>
     </section>
