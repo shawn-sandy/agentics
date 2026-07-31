@@ -12,6 +12,12 @@ Stage all changes, create a conventional commit message, then ask whether to pus
 
 Does not create PRs — use pr-agent for that. Never pushes without the Step 6 approval.
 
+## Delegated invocation
+
+Steps 5 and 6 exist for a user who invoked this skill directly. **When another skill or agent invokes this skill as a sub-step, stop after Step 4** — skip the probe and the push question entirely.
+
+The caller owns the push in that case (`ship-autonomous` Step 4 delegates to `pr-agent`; its Step 6d pushes directly), so asking would stall an unattended run, and a "Don't push" answer would not stop the caller from pushing anyway. A prompt that cannot honor its own answer is worse than no prompt.
+
 ## Step 0: Exit Plan Mode
 
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.

@@ -58,7 +58,7 @@ Tests, lint, then browser preview — commands in
 
 ## Step 3: Commit
 
-Invoke the **`git-agent:commit-agent`** skill.
+Invoke the **`git-agent:commit-agent`** skill. This is a delegated invocation — it stops after committing and does not ask about pushing; Step 4 owns the push.
 
 ## Step 4: Open PR
 
@@ -91,8 +91,8 @@ Apply, reply, refute, or escalate per `references/pr-events.md`.
 
 ### 6d: Commit and let the next event drive
 
-Commit via **`git-agent:commit-agent`**, `git push`, then await events or
-resume polling.
+Commit via **`git-agent:commit-agent`** (delegated — no push prompt), `git push`,
+then await events or resume polling.
 
 ## Step 7: Green / Done
 

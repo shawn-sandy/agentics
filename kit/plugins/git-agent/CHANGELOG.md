@@ -22,6 +22,16 @@
   not a step the skill takes on its own to satisfy the approval it was given.
 - `AskUserQuestion` added to the skill's `allowed-tools`.
 
+- **Delegated invocation stops after Step 4.** The push question is for a user
+  who invoked `commit-agent` directly. When another skill or agent invokes it as
+  a sub-step it skips the probe and the prompt entirely, because the caller owns
+  the push: `ship-autonomous` Step 3 commits and then delegates the push to
+  `pr-agent` in Step 4, and its Step 6d commits and pushes directly. Without
+  this carve-out an unattended ship run would block on an interactive question,
+  and answering "Don't push" would not have stopped the caller from pushing a
+  moment later — a prompt that cannot honor its own answer. Both `ship-autonomous`
+  call sites and `references/pr-events.md` state the delegated contract.
+
 ### Changed
 
 - The skill's stop marker moves from step 4 to step 6, and the "When not to
