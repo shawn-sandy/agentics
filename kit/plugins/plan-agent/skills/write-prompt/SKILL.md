@@ -3,9 +3,9 @@ name: write-prompt
 model: opus
 description: "Builds structured AI prompts using Anthropic techniques. Interviews users, classifies prompt type, and delivers a copy-pasteable prompt. Use when the user asks to write, refine, or build a prompt."
 disable-model-invocation: true
-argument-hint: "[intent or topic description]"
+argument-hint: "[system|task|creative|analytical] <intent or topic description>"
 allowed-tools:
-  AskUserQuestion, ToolSearch, Read, Write, Bash(git *), Bash(mkdir *), Bash(awk *), Bash(shasum *)
+  AskUserQuestion, ToolSearch, Read, Write, Glob, Bash(git *), Bash(mkdir *), Bash(awk *), Bash(shasum *)
 ---
 
 # write-prompt
@@ -19,16 +19,36 @@ well-structured AI prompt.
 ## Entry — Read $ARGUMENTS
 
 On invocation via `/plan-agent:write-prompt`, `$ARGUMENTS` contains the user's
-initial intent or topic. If `$ARGUMENTS` is non-empty, use it to seed Phase 1
-(Classify) and skip the "what do you need?" opener. If empty, ask: "What kind of
-prompt do you need help crafting?"
+initial intent or topic, optionally led by a type token (see Phase 1). If
+`$ARGUMENTS` is non-empty, use it to seed Phase 1 (Classify) and skip the "what
+do you need?" opener. If empty, ask: "What kind of prompt do you need help
+crafting?"
 
 ---
 
 ## Phase 1 — Classify
 
-Identify the prompt type from $ARGUMENTS or the user's stated need. Classify
-into one of five types:
+**A leading type token wins.** If the first whitespace-delimited token of
+`$ARGUMENTS` exactly matches one of the five type names below, that **is** the
+type — do not re-infer it, and do not second-guess it against the rest of the
+text. This is how `plan-agent:build-proposal` reaches the `proposal` type
+(`args: "proposal --out … --answers-gathered …"`); the same convention is open
+to the human for the four author-facing types.
+
+**Strip the control flags before reading the intent.** Remove the type token,
+`--out <path>`, and `--answers-gathered` first; only the positional text that
+remains is the intent. Taking "the rest of `$ARGUMENTS`" wholesale drags the
+caller's flags into the prompt body and the `intent` frontmatter, and the
+caller path always passes them.
+
+**A leading `proposal` token counts only alongside `--answers-gathered`.**
+Phase 2 has no `proposal` question set — the caller supplies those answers — so
+the token on its own would settle a type whose interview cannot run. Typed by
+hand without the flag, treat the input as unclassified and use the clarify menu
+below.
+
+Otherwise, identify the prompt type from `$ARGUMENTS` or the user's stated
+need. Classify into one of five types:
 
 | Type           | When to use                                                                     |
 | -------------- | ------------------------------------------------------------------------------- |
@@ -49,14 +69,53 @@ best-practice layers that apply to this type:
 | analytical  | Long-context patterns (`<document>`, `<quote>`), thinking/CoT, self-check, output format              |
 | proposal    | Long-context grounding (`<context>`, `<finding>`, `<decisions>`), comparison tables, positive framing, output format |
 
-If the input does not clearly match any single type, ask the user to clarify via
-`AskUserQuestion` with the four author-facing types as options: "Which best
-describes what you're building?" — then proceed with the chosen type. **Never
-offer `proposal` in that menu.** It is a caller-driven type: reach it only when
-`$ARGUMENTS` names it explicitly, which in practice means `build-proposal`
-invoked this skill.
+### Confirm the type before Phase 2
 
-Announce the classified type and selected technique matrix to the user in one
+The type is not cosmetic: it selects the technique matrix **and** the entire
+question set Phase 2 asks. A wrong type means the wrong interview, and the
+wrong interview is discovered only after the human has answered it. So settle
+the type here, with exactly **one** `AskUserQuestion` — which of the two shapes
+below fires depends on how confident the classification is.
+
+**Skip both** — announce and go straight to Phase 2 — when either holds:
+
+- **The type arrived as a leading token.** Confirming a choice the caller
+  stated outright is friction, not a check.
+- **`$ARGUMENTS` carries `--answers-gathered`.** That is the unattended caller
+  path; a question there stalls a run nobody is watching.
+
+**Unsure — the classification menu.** If the input does not clearly match any
+single type, ask the user to clarify via `AskUserQuestion` with the four
+author-facing types as options: "Which best describes what you're building?" —
+then proceed with the chosen type. **Never offer `proposal` in that menu.** It
+is a caller-driven type: reach it only when `$ARGUMENTS` names it explicitly.
+
+**Confident — the confirmation gate.** Present the classified type and the
+technique matrix it selects, then ask with exactly four options:
+
+- **Looks right** — the classified type; proceed to Phase 2.
+- **The three other author-facing types**, one option each.
+
+Picking one of the three settles the type outright. Do not offer a bare
+"Change the type" that then needs a second question to find out which — that
+would break the one-question rule above, and the three alternatives fit the
+same call.
+
+**Nothing in Phase 2 may start before the type is settled** — not the first
+question, not a provisional draft. Neither shape is satisfied by narration:
+stating a conclusion on the way to acting on it reads as settled, and the
+human's first real chance to object then arrives after a type-specific
+interview they have already sat through.
+
+**When `AskUserQuestion` is unavailable** (a non-interactive session), do not
+block — Phase 2's interview is unavailable for the same reason, so waiting
+would strand the run with nothing to wait for. Proceed, but surface what a
+blocked gate would have caught: state the classified type, and list the Phase 2
+answers you assumed in its place as a table the human can correct in one reply.
+This is the documented degradation, not a workaround — never set
+`--answers-gathered` yourself to reach it.
+
+Announce the settled type and selected technique matrix to the user in one
 short sentence:
 
 > "Classified as **task** prompt — I'll apply: clarity, XML context tags, CoT
@@ -83,43 +142,9 @@ Anthropic's "Add context to improve performance" principle. The key is to
 extract the user's _why_, not just their _what_.
 
 Use **AskUserQuestion** with a batched set of 2–3 essential questions determined
-by the classified type:
-
-**system prompt questions:**
-
-- What is the assistant's persona, name, or role? (feeds Role technique)
-- What tone and boundaries should it have — e.g. formal, concise, never discuss
-  X? (feeds Constraints)
-- _Why_ is this assistant being built — what user need or business problem does
-  it solve? (feeds motivation context)
-
-**task prompt questions:**
-
-- What is the input the model will receive, and what should the output look
-  like? (feeds Clarity + Output Format)
-- Are there edge cases or failure modes the prompt must handle explicitly?
-  (feeds CoT scaffolding)
-- _Why_ is this task being automated — what would a bad output look like? (feeds
-  motivation/context)
-
-**creative prompt questions:**
-
-- What style, voice, or tone should the output have — any reference works?
-  (feeds Role + Tone)
-- Who is the intended audience and what emotional response should the writing
-  evoke? (feeds Context)
-- What length and structure should the output have — a single paragraph,
-  multiple stanzas, a scene? (feeds Output Format)
-- _Why_ this piece — what makes it worth creating right now? (feeds motivation)
-
-**analytical prompt questions:**
-
-- What documents, data sources, or content will be passed to the model? (feeds
-  Long-context patterns)
-- What is the desired analysis depth — surface summary vs. deep comparison?
-  (feeds CoT + Output Format)
-- _Why_ does this analysis matter — what decision or action does it support?
-  (feeds motivation)
+by the classified type. The four question sets are in
+[references/interview-questions.md](references/interview-questions.md) — read
+only the one matching the settled type.
 
 After the first AskUserQuestion batch, ask: "Would you like to go deeper for a
 more refined prompt? I can ask 2–3 follow-up questions." Only run a second
@@ -132,24 +157,14 @@ AskUserQuestion batch if the user confirms.
 Apply the XML structural techniques selected by the technique matrix from Phase
 1 to the gathered interview responses.
 
-Map interview answers to XML layers:
+Map interview answers to XML layers. The seven layers for the four
+author-facing types — role, instructions/constraints, context, examples,
+thinking/CoT, document grounding, self-check — are in
+[references/structuring-and-drafting.md](references/structuring-and-drafting.md).
 
-- **Role assignment** (system + creative types): wrap persona/role answer in
-  `<role>...</role>`
-- **XML structure — instructions/constraints** (system type only): wrap
-  instructions in `<instructions>...</instructions>`, constraints in
-  `<constraints>...</constraints>`
-- **Context block** (task + creative types): wrap background and audience
-  context in `<context>...</context>`
-- **Examples** (task type): prepare `<example>...</example>` slot with
-  placeholder from interview answer
-- **Thinking/CoT** (task + analytical types): add `<thinking>...</thinking>`
-  scaffold before the main instruction
-- **Document grounding** (analytical type): add
-  `<document>{{DOCUMENT_CONTENT}}</document>` wrapper and quote-extraction
-  instruction
-- **Self-check** (analytical type): add a final "Before responding, verify..."
-  clause
+The `proposal` layer stays here, because it is the one that carries evidence
+downstream rather than shaping tone:
+
 - **Proposal grounding** (proposal type): wrap the proposal's sections in their
   matching layers — `<context>`, `<finding>`, `<comparison>`, `<decisions>`,
   `<workstreams>`, `<risks>`, `<open-questions>`, `<roadmap>`, `<appendices>` —
@@ -180,23 +195,9 @@ Template selection by type:
 - proposal →
   `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/proposal-prompt-template.md`
 
-Read the template with the Read tool, resolving the path as
-`${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/<type>-prompt-template.md`.
-If `${CLAUDE_PLUGIN_ROOT}` is unavailable, fall back to a Glob search:
-`Glob("**/plan-agent/skills/write-prompt/references/<type>-prompt-template.md")`.
-
-Substitute all {{PLACEHOLDER}} values in the template with the structured
-content from Phase 3, the interview answers from Phase 2, and the user's intent
-from Phase 1. Remove any placeholder lines where the technique was not selected
-by the matrix (e.g. remove `<thinking>` block for creative prompts).
-
-Apply these writing rules from Anthropic's best practices:
-
-- Use positive framing ("Do X" not "Don't do Y") per "Be direct about the
-  desired output"
-- Lead with the most important instruction
-- Be specific about output format (length, structure, tone)
-- Every instruction should be actionable and unambiguous
+Path resolution (including the `${CLAUDE_PLUGIN_ROOT}` fallback), placeholder
+substitution, and the four writing rules are in
+[references/structuring-and-drafting.md](references/structuring-and-drafting.md).
 
 ---
 
@@ -266,44 +267,11 @@ different directory and a different intent slug, and the caller would then hand
 off, banner, and report a file that was never written. The caller dictates the
 path so the two agree by construction rather than by coincidence.
 
-**Resolve the output directory** (first match wins — `--out` skips this):
-
-1. Read `promptsDirectory` using Claude Code's settings precedence — project-local
-   `.claude/settings.local.json`, then project `.claude/settings.json`, then
-   global `~/.claude/settings.json`. If the key is present and non-empty, strip
-   any trailing slash and use that path as the output directory. All three
-   readers of this key — this skill, `plan-agent:build-proposal`, and
-   `artifact-tools:prompt-artifact` — must walk the same three files in the same
-   order, or a prompt saved here becomes invisible to the gallery that publishes
-   it.
-2. Otherwise, anchor to the repo root: run `git rev-parse --show-toplevel` and
-   join the result with `docs/prompts` (e.g. `$(git rev-parse --show-toplevel)/docs/prompts`).
-   If `git rev-parse` fails (not a git repo), fall back to `docs/prompts` relative to `$PWD`.
-
-**Create the directory** if it does not already exist:
-
-```bash
-mkdir -p "<resolved-directory>"
-```
-
-**Derive the filename:**
-
-Build the filename from three parts joined with hyphens, all lowercase
-kebab-case:
-
-1. The classified prompt type from Phase 1 (e.g. `task`, `system`, `creative`,
-   `analytical`)
-2. A 3–5 word slug derived from the user's core intent (strip stop words;
-   replace spaces with hyphens)
-3. Today's date in `YYYY-MM-DD` format
-
-Pattern: `{type}-{intent-slug}-{YYYY-MM-DD}.md`
-
-Examples:
-
-- `task-refactor-auth-middleware-2026-06-04.md`
-- `system-customer-support-bot-2026-06-04.md`
-- `analytical-compare-pricing-models-2026-06-04.md`
+**Resolve the output directory, then derive the filename** — `--out` skips
+both. The precedence chain (`promptsDirectory` across the three settings files,
+then the git-root `docs/prompts` anchor), the `mkdir -p`, and the
+`{type}-{intent-slug}-{YYYY-MM-DD}.md` pattern are in
+[references/saving-prompts.md](references/saving-prompts.md).
 
 **The `proposal` type omits the date:** `proposal-{slug}.md`. A proposal prompt
 is a living document that deepens over rounds, and a dated name would resolve to

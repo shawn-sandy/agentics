@@ -2,7 +2,7 @@
 name: build-proposal
 model: claude-fable-5
 description: "Turns a vague idea into a decision-complete proposal. Researches web and codebase, separating established facts from open decisions. Use when the user floats an idea or asks should-we."
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, WebSearch, WebFetch, Skill, Agent
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, WebSearch, WebFetch, Skill, Agent, Artifact
 argument-hint: "<idea> [--dir <path>] [--tier 0|1|2]"
 ---
 
@@ -60,7 +60,8 @@ Parse `$ARGUMENTS` (or the conversation-derived text on the model path):
   needed; the triage normally picks the tier and escalates/de-escalates as
   research reveals scope.
 
-Echo the restated idea and the chosen tier after Step 1.
+Echo the restated idea and the chosen tier after Step 1 — then confirm them
+with the human at Step 1b before any research starts.
 
 ## Right-sizing triage (the scale-down gate)
 
@@ -119,32 +120,9 @@ write:
 `planAgent.proposalsDirectory`, falling back to `${PWD}/docs/proposals/`. It is
 never overridden by `--dir`: the flag follows the authoritative artifact.
 
-```bash
-# Resolve both directories via Claude settings precedence
-# (project-local → project → user-global), else the ${PWD} defaults.
-python3 - <<'PY'
-import json, os
-candidates = (
-    os.path.join(".claude", "settings.local.json"),
-    os.path.join(".claude", "settings.json"),
-    os.path.expanduser("~/.claude/settings.json"),
-)
-def resolve(getter, default):
-    for p in candidates:
-        try:
-            v = (getter(json.load(open(p))) or "").strip()
-            if v:
-                return v.rstrip("/")
-        except Exception:
-            continue
-    return os.path.join(os.getcwd(), *default)
-
-# --dir, when given, wins over this for the prompts directory.
-print(resolve(lambda d: d.get("promptsDirectory"), ("docs", "prompts")))
-print(resolve(lambda d: d.get("planAgent", {}).get("proposalsDirectory"),
-              ("docs", "proposals")))
-PY
-```
+The runnable resolver for both is in
+[references/artifact-resolution.md](references/artifact-resolution.md) — read it
+at Step 6, when a directory is actually needed.
 
 ## Workflow
 
@@ -162,6 +140,43 @@ underspecified, ask **2–3 clarifying questions** via `AskUserQuestion` *before
 researching; if it is already clear, proceed. Do not add friction to a
 well-specified idea. If the tier is **0**, answer or route directly and stop —
 do not author a proposal.
+
+**Restate; do not enrich.** The one-liner may compress and it may name the
+surface, but every goal, motive, and success condition in it must be one the
+human actually stated. Adding a plausible downstream purpose they never
+mentioned — a reason the thing is wanted, a decision the result will feed — is
+the failure this step exists to prevent, because the whole loop then researches
+that invention. If a motive seems missing, it is a clarifying question, not a
+blank to fill.
+
+### Step 1b — Confirm the ask (the gate)
+
+**Tier 1 and 2 only.** Tier 0 has already answered and stopped; there is
+nothing to confirm.
+
+Present the framed ask — the one-line objective, the domains, and the tier —
+then call `AskUserQuestion` with two options:
+
+- **Looks right** — proceed to Step 2.
+- **Refine it** — the human corrects the objective, scope, or tier.
+
+On **Refine it**, redraft from their correction and ask again. Bound it at
+**two** refine rounds; if the third pass still misses, use their latest wording
+as the objective **verbatim** and move on — past that point they are faster at
+saying it than you are at guessing it. **Exhausting the bound is a pass, not a
+pending question:** the human's own words are the objective at that point, so
+the gate is settled and Step 2 proceeds. Do not ask a fourth time, and do not
+stall waiting for a "Looks right" the bound has already stood in for.
+
+**Nothing in Step 2 may start before this gate is settled** — by "Looks right,"
+or by the refine bound above resolving to the human's verbatim wording. Never
+put the restatement and the first research tool call in the **same message** —
+the framing then scrolls by as narration while the fan-out is already running.
+Research spends subagents and web fetches against this objective, so a misread
+here is paid in full and surfaces at Step 3 or later.
+
+Announcing the tier is not the gate, and neither is asking whether to proceed.
+Ask whether **the restated objective is what they meant**.
 
 ### Step 2 — Fan out research, in parallel
 
@@ -181,8 +196,20 @@ memory.
 - **Quantify, don't hand-wave** — measure the real surface (counts, file lists,
   call sites) rather than estimating.
 
-Launch the first external fetch and the first codebase agent **together** in a
-single turn so they run concurrently.
+**Get the codebase agent in flight before the first fetch, and never wait on
+it.** Either shape works: batch the `Agent` and the first
+`WebFetch`/`WebSearch`/`deep-research` call as separate tool calls in **one
+message**, or dispatch the `Agent` first and let it run in the background while
+external research proceeds. **Never pass `run_in_background: false` to the
+codebase agent** — a blocking dispatch followed by twenty inline greps and a
+late first fetch is the serial path with a subagent bolted on: full delegation
+cost, no overlap.
+
+"Never wait on it" governs the dispatch, not the result: **collect the agent's
+findings before Step 3 synthesizes.** If the dispatch failed or returned
+nothing, say the internal research is incomplete and drop any claim that rested
+on it — a synthesis that quietly omits the codebase half reads exactly like one
+that covered it.
 
 ### Step 3 — Synthesize the core finding
 
@@ -273,6 +300,28 @@ conversion:
 
 Report the prompt path — the same one passed to `write-prompt` via `--out` in
 Step 6, byte-for-byte. Never report the legacy copy as the deliverable.
+
+**Always offer the artifact.** Before handing off, ask once via
+`AskUserQuestion` whether to publish the converged proposal as a shareable
+claude.ai artifact. On yes, load the `artifact-design` skill first to calibrate
+the page, then build it from the proposal's canonical sections and publish with
+the `Artifact` tool:
+
+```
+Skill(skill: "artifact-design")
+Artifact(file_path: "<the page you wrote>", favicon: ..., description: ...)
+```
+
+Ask on **every** converged run. A blanket "no more questions," "don't ask me
+anything," or `--answers-gathered` covers the *proposal's* decisions, not this
+one, and never suppresses the offer — publishing is the only step here the
+human cannot undo by editing a file. On no, hand off as normal. Never publish
+without an explicit yes.
+
+**A failed publish does not cost the handoff.** Report the error and continue
+to the handoff below — the proposal saved in Step 6 is the deliverable, and the
+page was optional. Do not retry silently, and do not let it swallow the paths
+the human is waiting on.
 
 **Lead with the objective, not a bare `.md` path.** A proposal carries
 Workstreams and a Roadmap, not a `Steps`/`Changes` section, so handing

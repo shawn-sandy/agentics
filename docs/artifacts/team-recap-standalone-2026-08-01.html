@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirmation gates and skill splits in plan-agent</title>
+</head>
+<body>
+<style>
+  :root {
+    --ground: #F6F7F5;
+    --raised: #FFFFFF;
+    --ink: #1C2022;
+    --muted: #5E6A6B;
+    --faint: #667272;
+    --accent: #16605A;
+    --accent-soft: #E4EEEC;
+    --signal: #9C5A1C;
+    --signal-soft: #F6EBDE;
+    --line: rgba(28, 32, 34, 0.13);
+    --line-strong: rgba(28, 32, 34, 0.26);
+
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #15181A;
+      --raised: #1D2124;
+      --ink: #E6EAE7;
+      --muted: #9BA7A6;
+      --faint: #8B9796;
+      --accent: #6FC3B6;
+      --accent-soft: #1B2E2C;
+      --signal: #D79B5B;
+      --signal-soft: #2E2419;
+      --line: rgba(230, 234, 231, 0.15);
+      --line-strong: rgba(230, 234, 231, 0.3);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #15181A;
+    --raised: #1D2124;
+    --ink: #E6EAE7;
+    --muted: #9BA7A6;
+    --faint: #8B9796;
+    --accent: #6FC3B6;
+    --accent-soft: #1B2E2C;
+    --signal: #D79B5B;
+    --signal-soft: #2E2419;
+    --line: rgba(230, 234, 231, 0.15);
+    --line-strong: rgba(230, 234, 231, 0.3);
+  }
+
+  :root[data-theme="light"] {
+    --ground: #F6F7F5;
+    --raised: #FFFFFF;
+    --ink: #1C2022;
+    --muted: #5E6A6B;
+    --faint: #667272;
+    --accent: #16605A;
+    --accent-soft: #E4EEEC;
+    --signal: #9C5A1C;
+    --signal-soft: #F6EBDE;
+    --line: rgba(28, 32, 34, 0.13);
+    --line-strong: rgba(28, 32, 34, 0.26);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 50rem;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+  }
+
+  /* ---- masthead ---- */
+
+  .masthead { display: flex; flex-direction: column; gap: 1rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .masthead h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.1rem, 6vw, 3.1rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 1.12rem;
+    color: var(--muted);
+    max-width: 40ch;
+  }
+
+  .meta {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .meta a { color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor; }
+
+  /* ---- sections ---- */
+
+  section { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .sec-head { display: flex; flex-direction: column; gap: 0.35rem; }
+
+  .sec-head h2 {
+    font-family: var(--serif);
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  .sec-head p { color: var(--muted); max-width: 62ch; }
+
+  p, li { max-width: 68ch; }
+
+  /* ---- stat strip ---- */
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+
+  .stat {
+    background: var(--raised);
+    padding: 1.1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .stat-n {
+    font-family: var(--mono);
+    font-size: 1.85rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .stat-l {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  /* ---- headline measurement ---- */
+
+  .headline-metric {
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    padding: 1.35rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .metric-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metric-before { font-size: 1.5rem; color: var(--signal); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .metric-arrow { color: var(--faint); }
+  .metric-after { font-size: 1.9rem; color: var(--accent); font-weight: 600; }
+  .metric-cap { font-size: 0.93rem; color: var(--muted); max-width: 60ch; }
+
+  /* ---- change cards ---- */
+
+  .cards { display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+
+  .card { background: var(--raised); padding: 1.5rem; display: flex; flex-direction: column; gap: 0.85rem; }
+
+  .card h3 {
+    font-family: var(--serif);
+    font-size: 1.22rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+
+  .chip {
+    align-self: flex-start;
+    font-family: var(--mono);
+    font-size: 0.67rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 0.25rem 0.55rem;
+    border-radius: 2px;
+  }
+
+  .card p { font-size: 0.97rem; }
+
+  blockquote {
+    border-left: 2px solid var(--line-strong);
+    padding-left: 1rem;
+    color: var(--muted);
+    font-style: italic;
+    max-width: 62ch;
+  }
+
+  blockquote strong { color: var(--signal); font-style: normal; }
+
+  /* ---- reach line ---- */
+
+  .reach {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    background: var(--ground);
+    border: 1px solid var(--line);
+    padding: 0.7rem 0.85rem;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* ---- diagrams ---- */
+
+  .mermaid-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: #FBFCFB;
+    border: 1px solid rgba(28, 32, 34, 0.16);
+    padding: 1.5rem 1rem 1.15rem;
+  }
+
+  .mermaid-diagram .mermaid { overflow-x: auto; display: block; }
+  .mermaid-diagram svg { max-width: 100%; height: auto; }
+
+  /* A diagram wider than the column scrolls here rather than scaling down to
+     unreadable type. The scroll stays inside the figure; the page body never
+     moves sideways. */
+  .dia-scroll { overflow-x: auto; max-width: 100%; min-width: 0; }
+  .dia-scroll svg { display: block; margin: 0 auto; }
+
+  .mermaid-diagram figcaption {
+    font-size: 0.87rem;
+    color: #4A5556;
+    font-family: var(--sans);
+    border-top: 1px solid rgba(28, 32, 34, 0.12);
+    padding-top: 0.75rem;
+    max-width: 64ch;
+  }
+
+  /* ---- tables ---- */
+
+  .scroll { overflow-x: auto; border: 1px solid var(--line); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--raised); }
+
+  th, td { text-align: left; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+
+  thead th {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 400;
+    border-bottom: 1px solid var(--line-strong);
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  td.was { color: var(--signal); }
+  td.now { color: var(--accent); }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ---- decisions ---- */
+
+  .decisions { display: flex; flex-direction: column; gap: 1.75rem; }
+
+  .decision { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .decision h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.4;
+    text-wrap: balance;
+  }
+
+  .decision p { font-size: 0.97rem; }
+
+  .rejected {
+    font-size: 0.9rem;
+    color: var(--muted);
+    background: var(--signal-soft);
+    border-left: 2px solid var(--signal);
+    padding: 0.6rem 0.9rem;
+    max-width: 64ch;
+  }
+
+  .rejected b {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--signal);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  /* ---- lists ---- */
+
+  .stack { display: flex; flex-direction: column; gap: 1rem; }
+
+  ul.plain { list-style: none; display: flex; flex-direction: column; gap: 0.9rem; }
+
+  ul.plain > li {
+    padding-left: 1.1rem;
+    position: relative;
+    font-size: 0.97rem;
+  }
+
+  ul.plain > li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 0.42rem;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .files { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .file-group { display: flex; flex-direction: column; gap: 0.7rem; }
+
+  .file-group h3 {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 400;
+  }
+
+  .file { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.94rem; }
+  .file code { font-family: var(--mono); font-size: 0.83rem; color: var(--accent); word-break: break-all; }
+  .file span { color: var(--muted); }
+
+  /* ---- glossary ---- */
+
+  dl.glossary { display: flex; flex-direction: column; gap: 0.9rem; }
+
+  dl.glossary div { display: flex; flex-direction: column; gap: 0.1rem; }
+
+  dl.glossary dt { font-weight: 600; font-size: 0.95rem; }
+  dl.glossary dd { color: var(--muted); font-size: 0.93rem; max-width: 66ch; }
+
+  /* ---- misc ---- */
+
+  code { font-family: var(--mono); font-size: 0.87em; }
+  p code, li code, dd code, td code { color: var(--accent); }
+  strong { font-weight: 600; }
+
+  .note {
+    background: var(--raised);
+    border: 1px solid var(--line);
+    padding: 1.15rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  .note h3 { font-size: 1rem; font-weight: 600; }
+
+  a { color: var(--accent); }
+
+  a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 40rem) {
+    body { font-size: 16px; }
+    .page { padding: 2.5rem 1.1rem 4rem; gap: 3rem; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="eyebrow">Team recap &middot; 1 August 2026</div>
+    <h1>The tool now stops and asks before it spends</h1>
+    <p class="standfirst">Six changes to the <code>plan-agent</code> plugin. Two of them close a class of bug where the tool quietly decided something on your behalf, then spent real time acting on it.</p>
+    <div class="meta">
+      <span>Branch: claude/build-proposal-artifact-76a34c</span>
+      <span><a href="https://github.com/shawn-sandy/agentics/pull/508">Pull request #508</a></span>
+      <span>Version 7.6.0 &rarr; 7.10.2</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <h2>At a glance</h2>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-n">6</div><div class="stat-l">Changes shipped</div></div>
+      <div class="stat"><div class="stat-n">9</div><div class="stat-l">Files touched</div></div>
+      <div class="stat"><div class="stat-n">6</div><div class="stat-l">Decisions recorded</div></div>
+      <div class="stat"><div class="stat-n">7</div><div class="stat-l">Open items</div></div>
+    </div>
+
+    <div class="headline-metric">
+      <div class="metric-row">
+        <span class="metric-before">24&ndash;36</span>
+        <span class="metric-arrow">&rarr;</span>
+        <span class="metric-after">0</span>
+      </div>
+      <p class="metric-cap">Tool calls the proposal builder made before showing you anything, measured on the same request against the same 995-file repository. It used to restate your idea and start researching in one breath; now it stops and waits.</p>
+    </div>
+
+    <p>The session started from one request &mdash; always offer to publish the finished proposal &mdash; and the rest came out of actually running the tool and watching it misbehave. Two separate instructions turned out to be broken in ways that reading them would never have revealed. Alongside the fixes, the plugin's two largest instruction files were cut down so routine work stops paying to load detail it never reads.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>What changed</h2>
+      <p>Six changes, grouped by who notices them.</p>
+    </div>
+
+    <div class="cards">
+
+      <article class="card">
+        <span class="chip">Affects everyone running build-proposal</span>
+        <h3>It confirms your ask before researching it</h3>
+        <p>The bug was real and observed. Given this request:</p>
+        <blockquote>should we add a shared telemetry and usage-analytics layer across all 13 plugins so we can see which skills and commands actually fire in real sessions</blockquote>
+        <p>the tool restated it as the same thing <em>plus</em> a goal nobody had mentioned:</p>
+        <blockquote>&hellip; <strong>and let that data drive keep/merge/cut decisions.</strong></blockquote>
+        <p>It then researched against its own invention &mdash; a dispatched search agent, twenty-odd file searches, all before the human saw a word. Two rules now prevent this. <strong>Restate, do not enrich</strong> forbids adding a motive you never stated: if one seems missing, that is a clarifying question, not a blank to fill. A new checkpoint then presents the objective and waits for <em>Looks right</em> or <em>Refine it</em>, capped at two rounds.</p>
+      </article>
+
+      <article class="card">
+        <span class="chip">Affects everyone finishing a proposal</span>
+        <h3>Publishing is always offered, never assumed</h3>
+        <p>Every finished proposal now gets one question: publish this as a shareable page, yes or no? Nothing goes out without an explicit yes.</p>
+        <p>The subtlety is what <em>cannot</em> turn the question off. A blanket &ldquo;no further questions&rdquo; covers the proposal's own decisions, not this one &mdash; publishing is the only step in the workflow you cannot undo by editing a file, so it keeps its own confirmation.</p>
+      </article>
+
+      <article class="card">
+        <span class="chip">Affects everyone running write-prompt</span>
+        <h3>You can name the prompt type directly</h3>
+        <p>The first word of your request now sets the type, if it is one of <code>system</code>, <code>task</code>, <code>creative</code>, or <code>analytical</code>:</p>
+        <div class="reach">claude "/plan-agent:write-prompt creative a bedtime story about a lighthouse keeper"</div>
+        <p>The convention already existed, but as a private arrangement between two tools, documented for exactly one type. It is now a real feature for all of them, advertised in the command's own argument hint.</p>
+        <p>This matters because the type is not cosmetic &mdash; it picks both the questions you get asked and the techniques applied to the draft. Guess wrong and you answer a batch of wrong questions before the mismatch is visible. When no type is named and the classifier is confident, a new checkpoint asks before any of that starts.</p>
+      </article>
+
+      <article class="card">
+        <span class="chip">Affects deep runs &mdash; you wait less</span>
+        <h3>Research actually runs in parallel now</h3>
+        <p>The instruction said to run the codebase search and the web research together. In practice the tool ran them one after the other, with 21 sequential file searches wedged in between.</p>
+        <p>The old wording prescribed one specific technique. The new wording permits either route to concurrency and instead forbids the single setting that broke it.</p>
+      </article>
+
+      <article class="card">
+        <span class="chip">Affects teammates indirectly</span>
+        <h3>The two biggest instruction files were cut down</h3>
+        <p>An instruction file is paid in full every time its tool runs &mdash; there is no partial load &mdash; and a typical run reads maybe a quarter of it. Both of the plugin's largest files now keep only the rules in the core and push the mechanics into reference files that load on demand.</p>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr><th>File</th><th>Was</th><th>Now</th><th>Plus</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>build-proposal</td><td class="num was">380 lines</td><td class="num now">349 lines</td><td>1 reference</td></tr>
+              <tr><td>write-prompt</td><td class="num was">434 lines</td><td class="num now">343 lines</td><td>3 references</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>How it works now</h2>
+      <p>Three places where the shape of the work actually moved.</p>
+    </div>
+
+    <figure class="mermaid-diagram">
+      <div class="dia-scroll"><svg style="min-width:600px" id="claude-mermaid-0" width="763.4375" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="852" viewBox="0 0 763.4375 852" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-0{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-0 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-0 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-0 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-0 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-0 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-0 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-0 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-0 .marker.cross{stroke:#a8adb8;}#claude-mermaid-0 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;}#claude-mermaid-0 p{margin:0;}#claude-mermaid-0 .label{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#f2f3f5;}#claude-mermaid-0 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-0 .cluster-label span{color:#f2f3f5;}#claude-mermaid-0 .cluster-label span p{background-color:transparent;}#claude-mermaid-0 .label text,#claude-mermaid-0 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node ellipse,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .rough-node .label text,#claude-mermaid-0 .node .label text,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-anchor:middle;}#claude-mermaid-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-0 .rough-node .label,#claude-mermaid-0 .node .label,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-align:center;}#claude-mermaid-0 .node.clickable{cursor:pointer;}#claude-mermaid-0 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-0 .arrowheadPath{fill:#eae7e5;}#claude-mermaid-0 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-0 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-0 .edgeLabel{background-color:rgb(21, 24, 26);text-align:center;}#claude-mermaid-0 .edgeLabel p{background-color:rgb(21, 24, 26);}#claude-mermaid-0 .edgeLabel rect{opacity:0.5;background-color:rgb(21, 24, 26);fill:rgb(21, 24, 26);}#claude-mermaid-0 .labelBkg{background-color:rgba(21, 24, 26, 0.5);}#claude-mermaid-0 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .cluster text{fill:#f2f3f5;}#claude-mermaid-0 .cluster span{color:#f2f3f5;}#claude-mermaid-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-0 rect.text{fill:none;stroke-width:0;}#claude-mermaid-0 .icon-shape,#claude-mermaid-0 .image-shape{background-color:rgb(21, 24, 26);text-align:center;}#claude-mermaid-0 .icon-shape p,#claude-mermaid-0 .image-shape p{background-color:rgb(21, 24, 26);padding:2px;}#claude-mermaid-0 .icon-shape .label rect,#claude-mermaid-0 .image-shape .label rect{opacity:0.5;background-color:rgb(21, 24, 26);fill:rgb(21, 24, 26);}#claude-mermaid-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-0 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-0 [data-look="neo"].node rect,#claude-mermaid-0 [data-look="neo"].cluster rect,#claude-mermaid-0 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node path{stroke:url(#claude-mermaid-0-gradient);stroke-width:1px;}#claude-mermaid-0 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-0 [data-look="neo"].node circle{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-0 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path,#claude-mermaid-0 .cluster rect{stroke-width:2px;}#claude-mermaid-0 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-0_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"></g><g class="edgeLabels"></g><g class="nodes"><g class="root" transform="translate(0, 0)"><g class="clusters"><g class="cluster" id="claude-mermaid-0-AFTER" data-look="classic"><rect style="" x="8" y="8" width="367.4375" height="836"></rect><g class="cluster-label" transform="translate(167.46875, 8)"><foreignObject width="48.5" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>AFTER</p></span></div></foreignObject></g></g></g><g class="edgePaths"><path d="M182,99.5L182,105.75C182,112,182,124.5,182,136.333C182,148.167,182,159.333,182,164.917L182,170.5" id="claude-mermaid-0-L_A2_B2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A2_B2_0" data-points="W3sieCI6MTgyLCJ5Ijo5OS41fSx7IngiOjE4MiwieSI6MTM3fSx7IngiOjE4MiwieSI6MTc0LjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M148.068,252.5L140.89,260.75C133.712,269,119.356,285.5,118.04,308.102C116.725,330.703,128.45,359.406,134.312,373.758L140.175,388.11" id="claude-mermaid-0-L_B2_G2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B2_G2_0" data-points="W3sieCI6MTQ4LjA2Nzc5NjYxMDE2OTUsInkiOjI1Mi41fSx7IngiOjEwNSwieSI6MzAyfSx7IngiOjE0MS42ODczODIyOTc1NTE3OCwieSI6MzkxLjgxMjYxNzcwMjQ0ODJ9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M212.603,382.103L216.373,368.753C220.142,355.402,227.68,328.701,226.832,307.672C225.984,286.643,216.749,271.285,212.131,263.607L207.514,255.928" id="claude-mermaid-0-L_G2_B2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G2_B2_0" data-points="W3sieCI6MjEyLjYwMzM2MTM0NDUzNzgsInkiOjM4Mi4xMDMzNjEzNDQ1Mzc4fSx7IngiOjIzNS4yMTg3NSwieSI6MzAyfSx7IngiOjIwNS40NTIzMzA1MDg0NzQ1NywieSI6MjUyLjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M182,629.5L182,637.75C182,646,182,662.5,182,678.333C182,694.167,182,709.333,182,716.917L182,724.5" id="claude-mermaid-0-L_G2_C2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G2_C2_0" data-points="W3sieCI6MTgyLCJ5Ijo2MjkuNX0seyJ4IjoxODIsInkiOjY3OX0seyJ4IjoxODIsInkiOjcyOC41fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A2_B2_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B2_G2_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(231.75802, 314.25784)"><g class="label" data-id="L_G2_B2_0" transform="translate(-86.4375, -12)"><foreignObject width="172.875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>Refine it - max 2 rounds</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(182, 679)"><g class="label" data-id="L_G2_C2_0" transform="translate(-40.21875, -12)"><foreignObject width="80.4375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>Looks right</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-0-flowchart-A2-6" data-look="classic" transform="translate(182, 72.5)"><rect class="basic label-container" style="" x="-76.0625" y="-27" width="152.125" height="54"></rect><g class="label" style="" transform="translate(-46.0625, -12)"><rect></rect><foreignObject width="92.125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Your request</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-B2-7" data-look="classic" transform="translate(182, 213.5)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Restate the objectiveno invented motives</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-G2-9" data-look="classic" transform="translate(182, 490.5)"><polygon points="139,0 278,-139 139,-278 0,-139" class="label-container" transform="translate(-138.5, 139)"></polygon><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Is this theobjective you meant?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-C2-13" data-look="classic" transform="translate(182, 767.5)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Search agent + web research</p></span></div></foreignObject></g></g></g></g><g class="root" transform="translate(417.4375, 112)"><g class="clusters"><g class="cluster" id="claude-mermaid-0-BEFORE" data-look="classic"><rect style="" x="8" y="8" width="330" height="612"></rect><g class="cluster-label" transform="translate(143.171875, 8)"><foreignObject width="59.65625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>BEFORE</p></span></div></foreignObject></g></g></g><g class="edgePaths"><path d="M173,99.5L173,105.75C173,112,173,124.5,173,136.333C173,148.167,173,159.333,173,164.917L173,170.5" id="claude-mermaid-0-L_A1_B1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A1_B1_0" data-points="W3sieCI6MTczLCJ5Ijo5OS41fSx7IngiOjE3MywieSI6MTM3fSx7IngiOjE3MywieSI6MTc0LjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M173,276.5L173,282.75C173,289,173,301.5,173,313.333C173,325.167,173,336.333,173,341.917L173,347.5" id="claude-mermaid-0-L_B1_C1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B1_C1_0" data-points="W3sieCI6MTczLCJ5IjoyNzYuNX0seyJ4IjoxNzMsInkiOjMxNH0seyJ4IjoxNzMsInkiOjM1MS41fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M173,429.5L173,435.75C173,442,173,454.5,173,466.333C173,478.167,173,489.333,173,494.917L173,500.5" id="claude-mermaid-0-L_C1_D1_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C1_D1_0" data-points="W3sieCI6MTczLCJ5Ijo0MjkuNX0seyJ4IjoxNzMsInkiOjQ2N30seyJ4IjoxNzMsInkiOjUwNC41fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A1_B1_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B1_C1_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_C1_D1_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-0-flowchart-A1-0" data-look="classic" transform="translate(173, 72.5)"><rect class="basic label-container" style="" x="-76.0625" y="-27" width="152.125" height="54"></rect><g class="label" style="" transform="translate(-46.0625, -12)"><rect></rect><foreignObject width="92.125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Your request</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-B1-1" data-look="classic" transform="translate(173, 225.5)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Restate the objectiveand dispatch researchin the same message</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-C1-3" data-look="classic" transform="translate(173, 390.5)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Search agent + 20 file searches</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-D1-5" data-look="classic" transform="translate(173, 543.5)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>First chance to correct it:24-36 tool calls in</p></span></div></foreignObject></g></g></g></g></g></g></g><defs><filter id="claude-mermaid-0-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-0-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-0-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg></div>
+      <figcaption>The checkpoint sits immediately before the most expensive part of the run. Look at where the first tool call happens relative to the first question &mdash; that gap is the whole fix. Quick answers skip the checkpoint entirely, since they research nothing.</figcaption>
+    </figure>
+
+    <figure class="mermaid-diagram">
+      <div class="dia-scroll"><svg style="min-width:600px" id="claude-mermaid-1" width="926.265625" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="338" viewBox="0 0 926.265625 338" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-1{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-1 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-1 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-1 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-1 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-1 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-1 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-1 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-1 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-1 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-1 .marker.cross{stroke:#a8adb8;}#claude-mermaid-1 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;}#claude-mermaid-1 p{margin:0;}#claude-mermaid-1 .label{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#f2f3f5;}#claude-mermaid-1 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-1 .cluster-label span{color:#f2f3f5;}#claude-mermaid-1 .cluster-label span p{background-color:transparent;}#claude-mermaid-1 .label text,#claude-mermaid-1 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-1 .node rect,#claude-mermaid-1 .node circle,#claude-mermaid-1 .node ellipse,#claude-mermaid-1 .node polygon,#claude-mermaid-1 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-1 .rough-node .label text,#claude-mermaid-1 .node .label text,#claude-mermaid-1 .image-shape .label,#claude-mermaid-1 .icon-shape .label{text-anchor:middle;}#claude-mermaid-1 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-1 .rough-node .label,#claude-mermaid-1 .node .label,#claude-mermaid-1 .image-shape .label,#claude-mermaid-1 .icon-shape .label{text-align:center;}#claude-mermaid-1 .node.clickable{cursor:pointer;}#claude-mermaid-1 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-1 .arrowheadPath{fill:#eae7e5;}#claude-mermaid-1 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-1 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-1 .edgeLabel{background-color:rgb(21, 24, 26);text-align:center;}#claude-mermaid-1 .edgeLabel p{background-color:rgb(21, 24, 26);}#claude-mermaid-1 .edgeLabel rect{opacity:0.5;background-color:rgb(21, 24, 26);fill:rgb(21, 24, 26);}#claude-mermaid-1 .labelBkg{background-color:rgba(21, 24, 26, 0.5);}#claude-mermaid-1 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-1 .cluster text{fill:#f2f3f5;}#claude-mermaid-1 .cluster span{color:#f2f3f5;}#claude-mermaid-1 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-1 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-1 rect.text{fill:none;stroke-width:0;}#claude-mermaid-1 .icon-shape,#claude-mermaid-1 .image-shape{background-color:rgb(21, 24, 26);text-align:center;}#claude-mermaid-1 .icon-shape p,#claude-mermaid-1 .image-shape p{background-color:rgb(21, 24, 26);padding:2px;}#claude-mermaid-1 .icon-shape .label rect,#claude-mermaid-1 .image-shape .label rect{opacity:0.5;background-color:rgb(21, 24, 26);fill:rgb(21, 24, 26);}#claude-mermaid-1 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-1 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-1 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-1 [data-look="neo"].node rect,#claude-mermaid-1 [data-look="neo"].cluster rect,#claude-mermaid-1 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node path{stroke:url(#claude-mermaid-1-gradient);stroke-width:1px;}#claude-mermaid-1 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-1 [data-look="neo"].node circle{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-1 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 .node rect,#claude-mermaid-1 .node circle,#claude-mermaid-1 .node polygon,#claude-mermaid-1 .node path,#claude-mermaid-1 .cluster rect{stroke-width:2px;}#claude-mermaid-1 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-1_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-1_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M463.133,132L463.133,136.167C463.133,140.333,463.133,148.667,463.133,157C463.133,165.333,463.133,173.667,463.133,177.833L463.133,182" id="claude-mermaid-1-L_B_A_0" class="edge-thickness-invisible edge-pattern-solid" style=";" data-edge="true" data-et="edge" data-id="L_B_A_0" data-points="W3sieCI6NDYzLjEzMjgxMjUsInkiOjEzMn0seyJ4Ijo0NjMuMTMyODEyNSwieSI6MTU3fSx7IngiOjQ2My4xMzI4MTI1LCJ5IjoxODJ9XQ==" data-look="classic"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_B_A_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="root" transform="translate(120.1328125, 174)"><g class="clusters"><g class="cluster" id="claude-mermaid-1-A" data-look="classic"><rect style="" x="8" y="8" width="670" height="148"></rect><g class="cluster-label" transform="translate(271.2890625, 8)"><foreignObject width="143.421875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>AFTER - concurrent</p></span></div></foreignObject></g></g></g><g class="edgePaths"><path d="M305.5,82L311.75,82C318,82,330.5,82,342.333,82C354.167,82,365.333,82,370.917,82L376.5,82" id="claude-mermaid-1-L_A1_A2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A1_A2_0" data-points="W3sieCI6MzA1LjUsInkiOjgyfSx7IngiOjM0MywieSI6ODJ9LHsieCI6MzgwLjUsInkiOjgyfV0=" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A1_A2_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-1-flowchart-A1-3" data-look="classic" transform="translate(175.5, 82)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>turn 1code sweepbackgrounded</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-A2-4" data-look="classic" transform="translate(510.5, 82)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>turn 6web researchsweep still running</p></span></div></foreignObject></g></g></g></g><g class="root" transform="translate(0, 0)"><g class="clusters"><g class="cluster" id="claude-mermaid-1-B" data-look="classic"><rect style="" x="8" y="8" width="910.265625" height="124"></rect><g class="cluster-label" transform="translate(388.203125, 8)"><foreignObject width="149.859375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5;"><span class="nodeLabel"><p>BEFORE - sequential</p></span></div></foreignObject></g></g></g><g class="edgePaths"><path d="M297.281,70L303.531,70C309.781,70,322.281,70,334.115,70C345.948,70,357.115,70,362.698,70L368.281,70" id="claude-mermaid-1-L_B1_B2_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B1_B2_0" data-points="W3sieCI6Mjk3LjI4MTI1LCJ5Ijo3MH0seyJ4IjozMzQuNzgxMjUsInkiOjcwfSx7IngiOjM3Mi4yODEyNSwieSI6NzB9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M596.578,70L602.828,70C609.078,70,621.578,70,633.411,70C645.245,70,656.411,70,661.995,70L667.578,70" id="claude-mermaid-1-L_B2_B3_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B2_B3_0" data-points="W3sieCI6NTk2LjU3ODEyNSwieSI6NzB9LHsieCI6NjM0LjA3ODEyNSwieSI6NzB9LHsieCI6NjcxLjU3ODEyNSwieSI6NzB9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_B1_B2_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B2_B3_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-1-flowchart-B1-0" data-look="classic" transform="translate(171.390625, 70)"><rect class="basic label-container" style="" x="-125.890625" y="-27" width="251.78125" height="54"></rect><g class="label" style="" transform="translate(-95.890625, -12)"><rect></rect><foreignObject width="191.78125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>turn 5code sweepblocking</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-B2-1" data-look="classic" transform="translate(484.4296875, 70)"><rect class="basic label-container" style="" x="-112.1484375" y="-27" width="224.296875" height="54"></rect><g class="label" style="" transform="translate(-82.1484375, -12)"><rect></rect><foreignObject width="164.296875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>turns 6-2621 searches</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-B3-2" data-look="classic" transform="translate(776.171875, 70)"><rect class="basic label-container" style="" x="-104.59375" y="-27" width="209.1875" height="54"></rect><g class="label" style="" transform="translate(-74.59375, -12)"><rect></rect><foreignObject width="149.1875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>turn 27web research</p></span></div></foreignObject></g></g></g></g></g></g></g><defs><filter id="claude-mermaid-1-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-1-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-1-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg></div>
+      <figcaption>Same request, same repository. Read the turn numbers: the code sweep no longer blocks the web research, and the twenty-one searches that used to sit between them are gone.</figcaption>
+    </figure>
+
+    <figure class="mermaid-diagram">
+      <div class="dia-scroll"><svg style="min-width:600px" id="claude-mermaid-2" width="874.796875" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="943.25" viewBox="0 0 874.796875 943.25" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-2{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-2 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-2 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-2 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-2 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-2 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-2 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-2 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-2 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-2 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-2 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-2 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-2 .marker.cross{stroke:#a8adb8;}#claude-mermaid-2 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;}#claude-mermaid-2 p{margin:0;}#claude-mermaid-2 .label{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#f2f3f5;}#claude-mermaid-2 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-2 .cluster-label span{color:#f2f3f5;}#claude-mermaid-2 .cluster-label span p{background-color:transparent;}#claude-mermaid-2 .label text,#claude-mermaid-2 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-2 .node rect,#claude-mermaid-2 .node circle,#claude-mermaid-2 .node ellipse,#claude-mermaid-2 .node polygon,#claude-mermaid-2 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-2 .rough-node .label text,#claude-mermaid-2 .node .label text,#claude-mermaid-2 .image-shape .label,#claude-mermaid-2 .icon-shape .label{text-anchor:middle;}#claude-mermaid-2 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-2 .rough-node .label,#claude-mermaid-2 .node .label,#claude-mermaid-2 .image-shape .label,#claude-mermaid-2 .icon-shape .label{text-align:center;}#claude-mermaid-2 .node.clickable{cursor:pointer;}#claude-mermaid-2 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-2 .arrowheadPath{fill:#eae7e5;}#claude-mermaid-2 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-2 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-2 .edgeLabel{background-color:rgb(21, 24, 26);text-align:center;}#claude-mermaid-2 .edgeLabel p{background-color:rgb(21, 24, 26);}#claude-mermaid-2 .edgeLabel rect{opacity:0.5;background-color:rgb(21, 24, 26);fill:rgb(21, 24, 26);}#claude-mermaid-2 .labelBkg{background-color:rgba(21, 24, 26, 0.5);}#claude-mermaid-2 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-2 .cluster text{fill:#f2f3f5;}#claude-mermaid-2 .cluster span{color:#f2f3f5;}#claude-mermaid-2 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-2 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-2 rect.text{fill:none;stroke-width:0;}#claude-mermaid-2 .icon-shape,#claude-mermaid-2 .image-shape{background-color:rgb(21, 24, 26);text-align:center;}#claude-mermaid-2 .icon-shape p,#claude-mermaid-2 .image-shape p{background-color:rgb(21, 24, 26);padding:2px;}#claude-mermaid-2 .icon-shape .label rect,#claude-mermaid-2 .image-shape .label rect{opacity:0.5;background-color:rgb(21, 24, 26);fill:rgb(21, 24, 26);}#claude-mermaid-2 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-2 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-2 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-2 [data-look="neo"].node rect,#claude-mermaid-2 [data-look="neo"].cluster rect,#claude-mermaid-2 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-2-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-2 [data-look="neo"].node path{stroke:url(#claude-mermaid-2-gradient);stroke-width:1px;}#claude-mermaid-2 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-2 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-2 [data-look="neo"].node circle{stroke:url(#claude-mermaid-2-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-2 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-2 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-2-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-2 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-2-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-2 .node rect,#claude-mermaid-2 .node circle,#claude-mermaid-2 .node polygon,#claude-mermaid-2 .node path,#claude-mermaid-2 .cluster rect{stroke-width:2px;}#claude-mermaid-2 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-2_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-2_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-2_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-2_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-2_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-2_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-2_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-2_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-2_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-2_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-2_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-2_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M437.398,62L437.398,66.167C437.398,70.333,437.398,78.667,437.398,86.333C437.398,94,437.398,101,437.398,104.5L437.398,108" id="claude-mermaid-2-L_S_T_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S_T_0" data-points="W3sieCI6NDM3LjM5ODQzNzUsInkiOjYyfSx7IngiOjQzNy4zOTg0Mzc1LCJ5Ijo4N30seyJ4Ijo0MzcuMzk4NDM3NSwieSI6MTEyfV0=" data-look="classic" marker-end="url(#claude-mermaid-2_flowchart-v2-pointEnd)"></path><path d="M360.941,266.277L323.784,285.187C286.627,304.096,212.314,341.915,175.157,386.868C138,431.82,138,483.906,138,535.992C138,588.078,138,640.164,138,671.707C138,703.25,138,714.25,138,719.75L138,725.25" id="claude-mermaid-2-L_T_P_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_T_P_0" data-points="W3sieCI6MzYwLjk0MTE5MTE2NTA5MDEsInkiOjI2Ni4yNzcxMjg2NjUwOTAxfSx7IngiOjEzOCwieSI6Mzc5LjczNDM3NX0seyJ4IjoxMzgsInkiOjUzNS45OTIxODc1fSx7IngiOjEzOCwieSI6NjkyLjI1fSx7IngiOjEzOCwieSI6NzI5LjI1fV0=" data-look="classic" marker-end="url(#claude-mermaid-2_flowchart-v2-pointEnd)"></path><path d="M494.573,285.56L509.993,301.256C525.414,316.952,556.256,348.343,571.677,369.539C587.098,390.734,587.098,401.734,587.098,407.234L587.098,412.734" id="claude-mermaid-2-L_T_C_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_T_C_0" data-points="W3sieCI6NDk0LjU3MjU0NzE2ODU5MTM3LCJ5IjoyODUuNTYwMjY1MzMxNDA4NjN9LHsieCI6NTg3LjA5NzY1NjI1LCJ5IjozNzkuNzM0Mzc1fSx7IngiOjU4Ny4wOTc2NTYyNSwieSI6NDE2LjczNDM3NX1d" data-look="classic" marker-end="url(#claude-mermaid-2_flowchart-v2-pointEnd)"></path><path d="M528.747,596.899L513.522,612.791C498.297,628.683,467.848,660.466,452.623,683.858C437.398,707.25,437.398,722.25,437.398,729.75L437.398,737.25" id="claude-mermaid-2-L_C_M_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_M_0" data-points="W3sieCI6NTI4Ljc0Njk3NDQ5NTI5MjEsInkiOjU5Ni44OTkzMTgyNDUyOTIxfSx7IngiOjQzNy4zOTg0Mzc1LCJ5Ijo2OTIuMjV9LHsieCI6NDM3LjM5ODQzNzUsInkiOjc0MS4yNX1d" data-look="classic" marker-end="url(#claude-mermaid-2_flowchart-v2-pointEnd)"></path><path d="M645.448,596.899L660.673,612.791C675.898,628.683,706.347,660.466,721.572,681.858C736.797,703.25,736.797,714.25,736.797,719.75L736.797,725.25" id="claude-mermaid-2-L_C_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_G_0" data-points="W3sieCI6NjQ1LjQ0ODMzODAwNDcwNzksInkiOjU5Ni44OTkzMTgyNDUyOTIxfSx7IngiOjczNi43OTY4NzUsInkiOjY5Mi4yNX0seyJ4Ijo3MzYuNzk2ODc1LCJ5Ijo3MjkuMjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-2_flowchart-v2-pointEnd)"></path><path d="M138,807.25L138,811.417C138,815.583,138,823.917,165.581,833.979C193.162,844.042,248.325,855.833,275.906,861.729L303.487,867.625" id="claude-mermaid-2-L_P_I_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_P_I_0" data-points="W3sieCI6MTM4LCJ5Ijo4MDcuMjV9LHsieCI6MTM4LCJ5Ijo4MzIuMjV9LHsieCI6MzA3LjM5ODQzNzUsInkiOjg2OC40NjA5NDM4MTk2Mzg0fV0=" data-look="classic" marker-end="url(#claude-mermaid-2_flowchart-v2-pointEnd)"></path><path d="M437.398,795.25L437.398,801.417C437.398,807.583,437.398,819.917,437.398,829.583C437.398,839.25,437.398,846.25,437.398,849.75L437.398,853.25" id="claude-mermaid-2-L_M_I_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_M_I_0" data-points="W3sieCI6NDM3LjM5ODQzNzUsInkiOjc5NS4yNX0seyJ4Ijo0MzcuMzk4NDM3NSwieSI6ODMyLjI1fSx7IngiOjQzNy4zOTg0Mzc1LCJ5Ijo4NTcuMjV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-2_flowchart-v2-pointEnd)"></path><path d="M736.797,807.25L736.797,811.417C736.797,815.583,736.797,823.917,709.216,833.979C681.635,844.042,626.472,855.833,598.891,861.729L571.31,867.625" id="claude-mermaid-2-L_G_I_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_I_0" data-points="W3sieCI6NzM2Ljc5Njg3NSwieSI6ODA3LjI1fSx7IngiOjczNi43OTY4NzUsInkiOjgzMi4yNX0seyJ4Ijo1NjcuMzk4NDM3NSwieSI6ODY4LjQ2MDk0MzgxOTYzODR9XQ==" data-look="classic" marker-end="url(#claude-mermaid-2_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_S_T_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(138, 535.9921875)"><g class="label" data-id="L_T_P_0" transform="translate(-12.4765625, -12)"><foreignObject width="24.953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>yes</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(587.09765625, 379.734375)"><g class="label" data-id="L_T_C_0" transform="translate(-9.0859375, -12)"><foreignObject width="18.171875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>no</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(437.3984375, 692.25)"><g class="label" data-id="L_C_M_0" transform="translate(-9.0859375, -12)"><foreignObject width="18.171875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>no</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(736.796875, 692.25)"><g class="label" data-id="L_C_G_0" transform="translate(-38.2578125, -12)"><foreignObject width="76.515625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>yes - NEW</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_P_I_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_M_I_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_G_I_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-2-flowchart-S-0" data-look="classic" transform="translate(437.3984375, 35)"><rect class="basic label-container" style="" x="-88.859375" y="-27" width="177.71875" height="54"></rect><g class="label" style="" transform="translate(-58.859375, -12)"><rect></rect><foreignObject width="117.71875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>/write-prompt ...</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-2-flowchart-T-1" data-look="classic" transform="translate(437.3984375, 227.3671875)"><polygon points="115.3671875,0 230.734375,-115.3671875 115.3671875,-230.734375 0,-115.3671875" class="label-container" transform="translate(-114.8671875, 115.3671875)"></polygon><g class="label" style="" transform="translate(-88.3671875, -12)"><rect></rect><foreignObject width="176.734375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>First word namesa type?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-2-flowchart-P-3" data-look="classic" transform="translate(138, 768.25)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Type is settledno question asked</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-2-flowchart-C-5" data-look="classic" transform="translate(587.09765625, 535.9921875)"><polygon points="119.2578125,0 238.515625,-119.2578125 119.2578125,-238.515625 0,-119.2578125" class="label-container" transform="translate(-118.7578125, 119.2578125)"></polygon><g class="label" style="" transform="translate(-92.2578125, -12)"><rect></rect><foreignObject width="184.515625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Is the classifierconfident?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-2-flowchart-M-7" data-look="classic" transform="translate(437.3984375, 768.25)"><rect class="basic label-container" style="" x="-119.3984375" y="-27" width="238.796875" height="54"></rect><g class="label" style="" transform="translate(-89.3984375, -12)"><rect></rect><foreignObject width="178.796875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Clarify menufour options</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-2-flowchart-G-9" data-look="classic" transform="translate(736.796875, 768.25)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Looks right?Change the type?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-2-flowchart-I-11" data-look="classic" transform="translate(437.3984375, 896.25)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Type-specific interview,then the draft</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="claude-mermaid-2-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-2-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-2-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg></div>
+      <figcaption>Four ways in, one exit. The branch marked NEW is the change: a confident classification used to be announced in passing and acted on. When another tool supplies the answers, every question here is skipped.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Before and after</h2>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Behaviour</th><th>Before</th><th>After</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Restating your objective</td><td class="was">Restated and researched in one message</td><td class="now">Restated, then waits for you</td></tr>
+          <tr><td>Inventing a motive you didn't state</td><td class="was">Happened, unchecked</td><td class="now">Explicitly forbidden</td></tr>
+          <tr><td>Tool calls before the first checkpoint</td><td class="was num">24&ndash;36</td><td class="now num">0</td></tr>
+          <tr><td>Publishing a finished proposal</td><td class="was">Sometimes offered</td><td class="now">Always offered, never assumed</td></tr>
+          <tr><td>Saying &ldquo;no further questions&rdquo;</td><td class="was">Suppressed the publish offer too</td><td class="now">Covers proposal decisions only</td></tr>
+          <tr><td>Naming a prompt type</td><td class="was">Inferred from your prose; explicit for internal use only</td><td class="now">First word sets it, all four public types</td></tr>
+          <tr><td>A confidently wrong type</td><td class="was">Announced in passing, then acted on</td><td class="now">Confirmed before the interview starts</td></tr>
+          <tr><td>Code sweep vs. web research</td><td class="was num">turn 5, then turn 27</td><td class="now num">turn 1 and turn 6</td></tr>
+          <tr><td>Cost of a simple run</td><td class="was">Whole instruction file, every time</td><td class="now">Core only; detail loads on demand</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Decisions</h2>
+      <p>Each with the option that was weighed and rejected, so the next person doesn't re-litigate it.</p>
+    </div>
+
+    <div class="decisions">
+
+      <article class="decision">
+        <h3>Check the output of framing, not whether the input looked vague</h3>
+        <p>The existing rule fired when the <em>input</em> seemed underspecified. The observed failure had perfectly clear input that got confidently embellished, so the rule never fired. Checking the restatement instead catches both cases with one question, and needs no judgment call about how vague is vague enough.</p>
+        <div class="rejected"><b>Rejected</b>Tightening the existing &ldquo;ask if underspecified&rdquo; rule. It would not have fired on the case that actually broke.</div>
+      </article>
+
+      <article class="decision">
+        <h3>The two checkpoints behave differently on purpose</h3>
+        <p>When the interactive question tool is unavailable, one of them blocks and asks in plain text; the other proceeds and states its assumptions as a table you can correct in one reply. This looks inconsistent and is deliberate: whether blocking is right depends on what the <em>next</em> step costs. Blocking before a research sweep saves real money. Blocking before another question just deadlocks, because that question needs the same unavailable tool.</p>
+        <div class="rejected"><b>Rejected</b>One uniform rule for both. It was the first draft, and running it proved it wrong.</div>
+      </article>
+
+      <article class="decision">
+        <h3>Forbid the setting that broke it, rather than prescribe the fix</h3>
+        <p>The parallel-research instruction originally named one technique. The re-run reached concurrency by a different route and still passed. Prescribing only the original route would have been a rule the tool doesn't follow, describing a fix that wasn't the fix.</p>
+      </article>
+
+      <article class="decision">
+        <h3>Publishing keeps its own yes</h3>
+        <p>Everything else in the workflow writes files a person can edit or delete. Publishing sends a page outward. That asymmetry is why one blanket &ldquo;stop asking me things&rdquo; covers the rest of the run but not this.</p>
+      </article>
+
+      <article class="decision">
+        <h3>The test suite set the boundary for what could move</h3>
+        <p>Each test extracts a single step's body and asserts against it &mdash; by design, so that a rule cannot pass by living in the wrong step. Anything a test pins had to stay in the core. This is the existing principle &mdash; guards in the core, mechanics behind links &mdash; encoded as continuous integration, and it is why the directory-resolver script could move out but the precedence rules it implements could not.</p>
+      </article>
+
+      <article class="decision">
+        <h3>One layer stayed in the core against that rule</h3>
+        <p>In <code>write-prompt</code>, the layer that carries a proposal's evidence stays put while its seven siblings moved out. It passes tables and appendices through verbatim rather than shaping tone &mdash; behind a link it is a rule that may never load, and the prompt silently loses the evidence it exists to carry.</p>
+        <div class="rejected"><b>Rejected</b>Moving all eight layers for consistency.</div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Learnings</h2>
+      <p>Running the change caught two real bugs. Reading the diff would have caught neither.</p>
+    </div>
+
+    <div class="stack">
+      <div class="note">
+        <h3>The first publish-offer wording was broken</h3>
+        <p>&ldquo;Ask every run&rdquo; read as an ordinary interview question, so a user saying &ldquo;no further questions&rdquo; suppressed it. The instruction was loaded and read &mdash; it just lost to a blanket directive. Only driving the tool end-to-end surfaced that.</p>
+      </div>
+
+      <div class="note">
+        <h3>The first version of the type checkpoint was unreachable</h3>
+        <p>It said: if the question tool is unavailable, ask in plain text and wait. Two automated runs ignored it and proceeded &mdash; and they were right to. The next step needs the same tool, so blocking would strand the run waiting for something that can never arrive. The instruction now documents the behaviour the runs actually demonstrated.</p>
+      </div>
+
+      <p><strong>An instruction describing behaviour the tool won't take is worse than no instruction.</strong> It reads as a guarantee during review and silently isn't one at runtime.</p>
+
+      <ul class="plain">
+        <li>The file-trimming audit indicted the same session that prompted it &mdash; the two largest files in the plugin were the two this session had just added about 90 lines to.</li>
+        <li>A tool's own tests can be the safest refactoring guide available. Without them, more would have moved and the tools would have been quietly weakened.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Open items</h2>
+      <p>Enough context on each to pick it up cold.</p>
+    </div>
+
+    <ul class="plain">
+      <li><strong>Neither checkpoint's interactive branch has been exercised.</strong> Automated runs cannot answer an interactive question, so <em>Refine it</em>, <em>Change the type</em>, and the two-round refinement bound are all unverified. They need a human-driven session.</li>
+      <li><strong>The publish &ldquo;yes&rdquo; branch is undriven.</strong> Answering yes publishes a real page outward with no dry run, so verification stopped at the question. The routing and permissions are confirmed; the page build itself is unexercised.</li>
+      <li><strong>A deep run has never been observed reaching the publish offer</strong> &mdash; the test run hit a ten-minute ceiling first. The offer is verified at the shallower tier only.</li>
+      <li><strong>Duplicate work after the code sweep returns.</strong> The re-run still made about 15 file searches that partly redid the dispatched agent's work. A separate weakness from the concurrency fix.</li>
+      <li><strong>Two runs on one idea can fork the document.</strong> Two runs picked different filenames for the same idea. Pre-existing, but the filename is the document's identity across rounds.</li>
+      <li><strong>Both files remain above the 57&ndash;95 line targets</strong> set by the earlier splitting pass. The remainder is test-pinned contract; going lower means changing the tests' idea of what a guard is &mdash; a design conversation, not a refactor.</li>
+      <li><strong>The source guidance was read through a summarising fetch</strong>, not the original text. Worth reading directly if a specific rule matters.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Files touched</h2>
+    </div>
+
+    <div class="files">
+
+      <div class="file-group">
+        <h3>Instruction files</h3>
+        <div class="file">
+          <code>kit/plugins/plan-agent/skills/build-proposal/SKILL.md</code>
+          <span>The objective checkpoint, the no-enrichment rule, the publish offer, the concurrency fix. Trimmed 380 &rarr; 349 lines.</span>
+        </div>
+        <div class="file">
+          <code>kit/plugins/plan-agent/skills/write-prompt/SKILL.md</code>
+          <span>Leading type token, type checkpoint, non-interactive fallback. Trimmed 434 &rarr; 343 lines.</span>
+        </div>
+      </div>
+
+      <div class="file-group">
+        <h3>New reference files &mdash; loaded on demand</h3>
+        <div class="file">
+          <code>build-proposal/references/artifact-resolution.md</code>
+          <span>The directory resolver, which runs once and only on runs that write something.</span>
+        </div>
+        <div class="file">
+          <code>write-prompt/references/interview-questions.md</code>
+          <span>The four type-specific question sets.</span>
+        </div>
+        <div class="file">
+          <code>write-prompt/references/structuring-and-drafting.md</code>
+          <span>Seven generic layers and the drafting rules.</span>
+        </div>
+        <div class="file">
+          <code>write-prompt/references/saving-prompts.md</code>
+          <span>Directory precedence and filename derivation.</span>
+        </div>
+      </div>
+
+      <div class="file-group">
+        <h3>Metadata</h3>
+        <div class="file">
+          <code>.claude-plugin/marketplace.json</code>
+          <span>Version 7.6.0 &rarr; 7.10.2.</span>
+        </div>
+        <div class="file">
+          <code>kit/plugins/plan-agent/CHANGELOG.md</code>
+          <span>Six entries, one per change.</span>
+        </div>
+        <div class="file">
+          <code>kit/plugins/plan-agent/README.md</code>
+          <span>Documents the core-plus-references shape.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="note">
+      <h3>Also in this branch: a version collision, resolved</h3>
+      <p>The main branch shipped a gallery redesign mid-session and claimed version 7.7.0, which this branch had also used. The branch's six entries were renumbered to sit above it &mdash; 7.7.0&ndash;7.9.2 became 7.8.0&ndash;7.10.2 &mdash; and the manifest bumped to match. Two different changes sharing one version number is a defect, not a cosmetic clash, so renumbering is the fix rather than picking a winner.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Glossary</h2>
+      <p>Every term on this page a new teammate would otherwise have to ask about.</p>
+    </div>
+
+    <dl class="glossary">
+      <div><dt>Skill</dt><dd>A Markdown instruction file that Claude Code loads to perform a task. The unit being edited throughout this session.</dd></div>
+      <div><dt>SKILL.md</dt><dd>The file itself. Its entire contents load every time the skill runs; there is no partial load.</dd></div>
+      <div><dt>Progressive disclosure</dt><dd>Splitting a skill into a small always-loaded core plus reference files that load only when a given run needs them.</dd></div>
+      <div><dt>Core and references</dt><dd>The two halves of that split.</dd></div>
+      <div><dt>Checkpoint (or gate)</dt><dd>A point where the tool stops and waits for a human answer before continuing.</dd></div>
+      <div><dt>Tier</dt><dd>How deep a proposal run goes. The shallowest answers directly and writes nothing; the deepest is a full research sweep.</dd></div>
+      <div><dt>Fan-out</dt><dd>Dispatching several research tasks at once.</dd></div>
+      <div><dt>Turn</dt><dd>One message in the exchange. Turn numbers are how the concurrency fix was measured.</dd></div>
+      <div><dt>Headless run</dt><dd>Claude Code invoked non-interactively. It cannot answer interactive questions, which is why the fallback paths matter.</dd></div>
+      <div><dt><code>--answers-gathered</code></dt><dd>A flag one tool passes another to say &ldquo;decisions are already made, skip the interview.&rdquo;</dd></div>
+      <div><dt>Merge driver</dt><dd>A script that auto-resolves a specific file's merge conflicts. This repository has one that keeps the higher version number.</dd></div>
+    </dl>
+  </section>
+
+</div>
+</body>
+</html>

@@ -1,6 +1,229 @@
 # Changelog
 
 
+## 7.10.3 — the two gates stop contradicting themselves (2026-08-01)
+
+### Fixed
+
+- **A confident type gate no longer needs a question it is forbidden to ask.**
+  Phase 1 says the type is settled with *exactly one* `AskUserQuestion`, but the
+  gate's **Change the type** branch then had to ask a second one to find out
+  which type. The gate now offers four options — **Looks right** plus the three
+  other author-facing types — so a change settles in the same call. Four
+  author-facing types means the alternatives always fit the remaining three
+  slots; there is nothing to spill into a follow-up.
+- **Exhausting the refine bound is now a pass, not a deadlock.** Step 1b bounds
+  refinement at two rounds and then uses the human's wording verbatim, while the
+  next line forbade Step 2 until the gate returned "Looks right." A third
+  **Refine it** satisfied neither instruction, so the run could prompt past its
+  own advertised bound or stall instead of researching. The bound is now an
+  explicit successful outcome of the gate.
+- **A leading `proposal` token is honoured only with `--answers-gathered`.**
+  Generalising the leading-token rule to all five types in 7.10.0 opened a path
+  where a human types `proposal …` by hand and settles a type whose Phase 2
+  question set does not exist — the caller is supposed to supply those answers.
+  Typed alone it now falls through to the clarify menu. README's two claims that
+  advertised `proposal` as a user-facing token are corrected to match.
+- **Control flags are stripped before the intent is read.** Phase 1 called
+  "the remainder of `$ARGUMENTS`" the intent, so the caller path — which always
+  passes `--out` and `--answers-gathered` — leaked its own flags into the prompt
+  body and the `intent` frontmatter.
+- **`Glob` added to `allowed-tools`.** `references/structuring-and-drafting.md`
+  names a `Glob` fallback for resolving a template when `${CLAUDE_PLUGIN_ROOT}`
+  is unset; the skill could not follow its own instruction without a permission
+  prompt.
+- **A failed artifact publish no longer costs the handoff.** Step 8's publish is
+  optional and runs last; an error there now reports and continues to the
+  handoff, since the proposal saved in Step 6 is the deliverable.
+- **Step 2 says when to collect the codebase agent's result.** "Never wait on
+  it" governs the dispatch; 7.8.1 left it ambiguous whether the finding was ever
+  gathered. Step 3 now collects before synthesizing, and a failed dispatch is
+  reported rather than silently dropped — a synthesis missing the codebase half
+  reads exactly like one that covered it.
+
+## 7.10.2 — write-prompt split into a core plus references (2026-08-01)
+
+### Changed
+
+- **`write-prompt` is now a 343-line core plus three new reference files**,
+  completing the split 7.6.0 applied to `build`, `finalize-plan`,
+  `documenting-plans`, `plan-status`, and `setup-sites`. At 434 lines it had
+  become the largest SKILL.md in the plugin — every line of it paid on every
+  invocation, while a single run reads at most one of the four interview
+  question sets and one of the five templates.
+
+  | Moved | To | Lines |
+  |-------|----|------:|
+  | Phase 2's four type-specific question sets | `references/interview-questions.md` | 36 |
+  | Phase 3's seven generic XML layers, Phase 4's path resolution and writing rules | `references/structuring-and-drafting.md` | 31 |
+  | Phase 7's directory precedence, `mkdir -p`, and filename derivation | `references/saving-prompts.md` | 33 |
+
+  **What stayed is what the tests pin, and they pin per phase** —
+  `tests/plugins/test-write-prompt-proposal-type.sh` slices each phase body out
+  of SKILL.md so "a rule cannot pass by living in the wrong phase." That made
+  the boundary decision rather than taste: the `--out` contract, the
+  living-document rules (`status:`/`modified:`/`generated-sha:`, in-place
+  rewrite, the body-hash command), the proposal framing line, the
+  clarify-menu exclusion, and the `--answers-gathered` bypass all remain in the
+  core. So does Phase 3's **proposal grounding** layer — it carries evidence
+  downstream rather than shaping tone, and a pass-through rule behind a link is
+  a rule that may never load.
+
+  Verified beyond the suite with a live `task`-type run: the core loaded
+  `interview-questions.md`, `structuring-and-drafting.md`,
+  `task-prompt-template.md`, and `saving-prompts.md` — and none of the other
+  four templates.
+
+
+## 7.10.1 — trim build-proposal's always-paid body (2026-08-01)
+
+### Changed
+
+- **The 26-line Python directory resolver moved to
+  `references/artifact-resolution.md`.** It runs once, at Step 6, and only on a
+  run that writes an artifact — but a SKILL.md body is paid in full on every
+  invocation, so a Tier 0 run that answers a question and writes nothing was
+  still carrying it. The precedence rules themselves stay in the core, with
+  every token the resolver contract depends on (`--dir`, `promptsDirectory`,
+  `planAgent.proposalsDirectory`, both `${PWD}` defaults, `mkdir -p`); only the
+  script moved. This follows 7.6.0's split of five other skills into cores plus
+  references, and its rule that a guard behind a link is a guard that may never
+  load.
+
+- **Three blocks added earlier in the 7.7–7.9 line lost their rationale
+  essays** — Step 2's fan-out, Step 1b's gate, and Step 8's artifact offer.
+  Every rule, prohibition, and named failure mode survives verbatim in
+  imperative form; what went was the paragraph after each one re-explaining why
+  it exists. The reasoning is preserved where it belongs, in the changelog
+  entries that introduced them.
+
+  Net: 380 → 349 lines, all 15 checks in `tests/plugins/test-build-proposal.sh`
+  still passing.
+
+
+## 7.10.0 — write-prompt takes an explicit type, and confirms an inferred one (2026-08-01)
+
+### Added
+
+- **A leading type token in `$ARGUMENTS` now pins the prompt type for all five
+  types.** `/plan-agent:write-prompt creative a bedtime story about a
+  lighthouse keeper` classifies as `creative` without inference. The convention
+  already existed but was documented as a private arrangement for exactly one
+  type — `build-proposal` reaches `proposal` by passing it as the first token —
+  so the other four were reachable only by hoping the classifier read your
+  prose correctly. `argument-hint` now advertises it. Bare intent text still
+  works unchanged and still infers.
+
+- **Phase 1 now confirms an inferred type before Phase 2 runs.** The type
+  selects the technique matrix *and* the entire type-specific question set, so
+  a wrong type means the wrong interview — discovered only after the human has
+  answered it. The old design announced the classification in one line on the
+  way to asking those questions, which reads as settled rather than as a
+  checkpoint.
+
+  Exactly one question fires, and which one depends on confidence: the
+  pre-existing four-option menu when the input does not clearly match a type,
+  or a new **Looks right / Change the type** gate when it does. Both are
+  skipped when the type arrived as a leading token (confirming an explicit
+  choice is friction) or when `--answers-gathered` is present (the unattended
+  caller path, where a question stalls a run nobody is watching).
+
+### Changed
+
+- **The no-`AskUserQuestion` path is now documented rather than improvised.**
+  A first attempt at this gate told the skill to ask in plain text and wait.
+  Two headless runs showed why that is wrong here: Phase 2's interview needs
+  the same tool, so blocking strands the run with nothing to wait for. Both
+  runs sensibly ignored the instruction and proceeded. The shipped rule matches
+  what they did — proceed, state the classified type, and list the assumed
+  Phase 2 answers as a correctable table — with the standing prohibition on
+  setting `--answers-gathered` from inside the skill left intact.
+
+  This is deliberately *not* how `build-proposal`'s Step 1b behaves. There,
+  blocking is right: the next step spends subagents and web fetches, and the
+  loop is interactive by nature. Here the next step is itself a question.
+
+
+## 7.9.0 — build-proposal confirms the objective before researching it (2026-08-01)
+
+### Added
+
+- **New Step 1b gate: the restated objective goes back to the human before any
+  research starts.** The framed one-liner, its domains, and the tier are
+  presented and confirmed with an `AskUserQuestion` (**Looks right** / **Refine
+  it**) at Tier 1 and 2. Tier 0 has already answered and skips it. Refining is
+  bounded at two rounds; past that the human's latest wording is used verbatim,
+  because at that point they are faster at saying it than the skill is at
+  guessing it.
+
+  Two Tier 2 runs over a 995-file repo showed why one question here is worth
+  it. Given the objective "add a shared telemetry and usage-analytics layer
+  across all 13 plugins so we can see which skills and commands actually fire,"
+  one run restated it as that *plus* "and let that data drive keep/merge/cut
+  decisions" — a downstream purpose nobody had stated — then researched against
+  it. The other silently widened the domain list and declared "no clarifying
+  questions needed." In both, the restatement shipped in the **same message**
+  that dispatched the `Explore` agent, so there was no point at which it could
+  be corrected: the full fan-out ran against an unreviewed objective.
+
+- **Step 1 now forbids enriching the restatement.** It may compress and it may
+  name the surface, but every goal, motive, and success condition must be one
+  the human actually stated. A missing motive is a clarifying question, not a
+  blank to fill.
+
+  This is deliberately a separate rule from the pre-existing "if the idea is
+  underspecified, ask 2–3 clarifying questions." That one gates on *input*
+  vagueness and so never fired on either observed failure — the input read as
+  clear and was confidently embellished anyway. The gate checks the *output* of
+  framing, which catches both shapes.
+
+
+## 7.8.1 — build-proposal's Step 2 fan-out actually fans out (2026-08-01)
+
+### Fixed
+
+- **`build-proposal` Step 2 now names the mechanism that makes research
+  concurrent, not just the intent.** The old line — "Launch the first external
+  fetch and the first codebase agent together in a single turn so they run
+  concurrently" — stated a goal and left the how implicit. A Tier 2 run over a
+  995-file repo showed what that bought: the skill dispatched `Explore` with
+  `run_in_background: false`, blocked on it, ran 21 sequential inline `Bash`
+  greps, and only reached its first `WebFetch` on turn 27. Fully serial, with a
+  subagent bolted on — paying the delegation cost for none of the overlap.
+
+  The replacement gives both working shapes (batch the `Agent` and the first
+  fetch as separate tool calls in one message, **or** let the agent run in the
+  background while external research proceeds) and forbids the one thing that
+  breaks either: passing `run_in_background: false` to the codebase agent. On
+  the same idea and repo, the re-run dispatched `Explore` on turn 1 as an async
+  agent and reached its first `WebFetch` on turn 6, with the sweep still in
+  flight.
+
+  Wording only — no tool, argument, or step changed, and Tier 0/1 are
+  unaffected (they correctly never spawn the agent at all).
+
+
+## 7.8.0 — build-proposal always offers the artifact (2026-08-01)
+
+### Added
+
+- **`build-proposal` Step 8 now asks, every converged run, whether to publish
+  the proposal as a claude.ai artifact.** The prompt file was already the
+  deliverable; sharing it meant knowing the artifact tooling existed and
+  remembering to run it by hand. On yes the skill loads the bundled
+  `artifact-design` skill to calibrate the page, then publishes with the
+  `Artifact` tool (newly added to `allowed-tools`). On no it hands off to
+  `implementation-plan` exactly as before — nothing is published without an
+  explicit yes, and Tier 0 never reaches the offer since it writes no artifact.
+
+  The offer is explicitly **not** suppressed by a blanket "no more questions"
+  or by `--answers-gathered`. A headless run of the loop showed the first
+  wording losing to exactly that: told "I have no further questions," the skill
+  reached Step 8, recognized the offer, and skipped it — reporting "per your
+  no-further-questions directive I skipped the publish-as-artifact prompt."
+  Those directives cover the *proposal's* decisions; publishing is the one
+  action the human cannot undo by editing a file, so it keeps its own yes.
+
 ## 7.7.0 — the galleries get the row layout and one shell (2026-08-01)
 
 ### Changed
