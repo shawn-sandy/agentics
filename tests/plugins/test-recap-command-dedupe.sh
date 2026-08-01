@@ -22,6 +22,7 @@ ok
 
 python3 - "$PLUGIN" <<'EOF' || exit 1
 import pathlib, re, sys
+from collections import Counter
 
 plugin = pathlib.Path(sys.argv[1])
 core_rel = "references/recap-core.md"
@@ -58,19 +59,25 @@ for name, text in texts.items():
 # 4. Pairwise duplication. Leading whitespace is stripped so an indented copy
 #    of a sibling's block still counts as the duplicate it is, and blank lines
 #    are dropped so whitespace cannot pad the count.
+#
+#    Counted as a multiset, not a set: the cap is on identical *lines*, so a
+#    block pasted into both files six times is six times the duplication, not
+#    one block's worth. Set semantics would collapse those repeats and let real
+#    copy-paste creep back under the cap.
 def lines(text):
-    return {ln.strip() for ln in text.splitlines() if ln.strip()}
+    return Counter(ln.strip() for ln in text.splitlines() if ln.strip())
 
 
-sets = {n: lines(t) for n, t in texts.items()}
-names = sorted(sets)
+bags = {n: lines(t) for n, t in texts.items()}
+names = sorted(bags)
 for i, a in enumerate(names):
     for b in names[i + 1:]:
-        shared = sets[a] & sets[b]
-        if len(shared) >= SHARED_LINE_CAP:
-            sample = "\n    ".join(sorted(shared)[:5])
+        shared = bags[a] & bags[b]          # per-line min count
+        total = sum(shared.values())
+        if total >= SHARED_LINE_CAP:
+            sample = "\n    ".join(sorted(shared.elements())[:5])
             fail(
-                f"{a}.md and {b}.md share {len(shared)} identical lines "
+                f"{a}.md and {b}.md share {total} identical lines "
                 f"(cap {SHARED_LINE_CAP}); the workflow belongs in {core_rel}. "
                 f"First few:\n    {sample}"
             )
