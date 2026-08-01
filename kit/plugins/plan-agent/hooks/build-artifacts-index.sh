@@ -147,6 +147,20 @@ def docs_count(directory):
     except OSError:
         return 0
 
+def plans_count(directory):
+    """The plans collection counted the way the plans gallery counts it: a walk
+    that includes nested plans and skips archive/ and artifacts/. A flat listdir
+    here would print a different Plans total on this page than the Plans page
+    prints on its own, which reads as data loss rather than as the two
+    different counting rules it actually is."""
+    total = 0
+    for dirpath, dirnames, filenames in os.walk(directory):
+        dirnames[:] = [d for d in dirnames
+                       if not d.startswith('.') and d not in ('archive', 'artifacts')]
+        total += sum(1 for f in filenames
+                     if f.endswith('.html') and f != 'index.html')
+    return total
+
 def apply_shell(text, output_dir, active):
     docs = os.path.join(os.getcwd(), 'docs')
     plans_dir = resolve_plans_dir()
@@ -160,7 +174,8 @@ def apply_shell(text, output_dir, active):
     for key, target, collection in collections:
         text = text.replace('{{HREF_%s}}' % key, os.path.relpath(target, output_dir))
         if collection is not None:
-            text = text.replace('{{COUNT_%s}}' % key, str(docs_count(collection)))
+            count = plans_count(collection) if key == 'PLANS' else docs_count(collection)
+            text = text.replace('{{COUNT_%s}}' % key, str(count))
         text = text.replace('{{CUR_%s}}' % key,
                             'aria-current="page"' if key == active else '')
     return text

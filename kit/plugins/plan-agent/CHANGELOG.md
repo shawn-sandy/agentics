@@ -50,6 +50,12 @@
   gallery written to, and counted from, a directory they were not using.
   `render-plan-html.py` and `check-prototype-drift.py` already used local →
   project → global; the index builders now match.
+- **Every page's Plans tab counts plans the way the plans gallery does.** The
+  artifacts and prototypes generators counted the plans directory with a flat
+  `listdir` while the gallery itself walks subdirectories and skips `archive/`
+  and `artifacts/`, so one nested plan made those two pages advertise a lower
+  Plans total than the Plans page showed — two numbers for one collection reads
+  as data loss.
 - **The template-less fallback stylesheet matches the markup it emits.** When
   the plan-agent templates cannot be resolved, `build-index.sh` writes a bare
   page from an inline stylesheet — which still styled the card classes the row
