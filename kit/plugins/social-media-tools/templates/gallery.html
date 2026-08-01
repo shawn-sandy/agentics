@@ -6,21 +6,91 @@
     GALLERY_ENTRIES  — Repeated <a> blocks, one per saved card
     CARD_COUNT       — Total number of cards displayed
     GENERATED_AT     — ISO timestamp of gallery generation
+    HREF_HOME / HREF_PLANS / HREF_PROTOTYPES / HREF_ARTIFACTS / HREF_SOCIAL
+                     — Topbar tab targets, each relative to this page's own
+                       output directory
+    COUNT_PLANS / COUNT_PROTOTYPES / COUNT_ARTIFACTS / COUNT_SOCIAL
+                     — Topbar tab counts, read off disk by the skill
+    CUR_HOME / CUR_PLANS / CUR_PROTOTYPES / CUR_ARTIFACTS / CUR_SOCIAL
+                     — Exactly one is replaced with aria-current="page";
+                       the rest with the empty string
+
+  Token set, theme script, and topbar are the same shell the plan-agent
+  galleries carry — the Social tab is one of the five this bar offers, and a
+  tab that lands on a differently-styled page reads as a broken link. The card
+  grid below is this gallery's own: thumbnails suit a grid in a way rows do not.
 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Media Library</title>
+  <script>
+    /* Before first paint — shares the `plan-theme` key with the other
+       galleries, so a choice made on one carries to all of them. */
+    try {
+      var t = localStorage.getItem('plan-theme');
+      if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+    } catch (e) { /* no storage — prefers-color-scheme decides */ }
+  </script>
   <style>
+    /* ── Design tokens — the same palette the generated plans use ──── */
     :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --border: #30363d;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #388bfd;
-      --accent-hover: #58a6ff;
+      --paper: #fcfcfa;
+      --panel: #ffffff;
+      --sunk: #f5f4f1;
+      --ink: #16151c;
+      --ink-2: #4b4858;
+      --ink-3: #6e6a80;
+      --rule: #e6e3ec;
+      --accent: #4a2fe0;
+      --accent-soft: #efebfe;
+      --accent-line: #c9befb;
+      --radius: 4px;
+      --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+      --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+      color-scheme: light;
+
+      /* This gallery's own names, aliased onto the shared set. var() resolves
+         where it is used, so the dark block below only has to restate the
+         base tokens and every alias follows. */
+      --bg: var(--paper);
+      --surface: var(--panel);
+      --border: var(--rule);
+      --text: var(--ink);
+      --muted: var(--ink-3);
+    }
+    /* Written twice: an explicit choice has to beat the OS preference, and
+       plain CSS cannot share a block between an attribute selector and a
+       media query. Keep the two lists in sync. */
+    :root[data-theme="dark"] {
+      --paper: #121118;
+      --panel: #1a1922;
+      --sunk: #201f29;
+      --ink: #edebf3;
+      --ink-2: #b3afc4;
+      --ink-3: #8b87a0;
+      --rule: #2c2a38;
+      --accent: #a594ff;
+      --accent-soft: #221f36;
+      --accent-line: #4a4270;
+      color-scheme: dark;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --paper: #121118;
+        --panel: #1a1922;
+        --sunk: #201f29;
+        --ink: #edebf3;
+        --ink-2: #b3afc4;
+        --ink-3: #8b87a0;
+        --rule: #2c2a38;
+        --accent: #a594ff;
+        --accent-soft: #221f36;
+        --accent-line: #4a4270;
+        color-scheme: dark;
+      }
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,26 +98,105 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: var(--ui);
       min-height: 100vh;
       padding: 32px;
     }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    /* ── Topbar ──────────────────────────────────────────────────────
+       Full-bleed against the body padding; the negative margins cancel it. */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      margin: -32px -32px 24px;
+      border-bottom: 1px solid var(--rule);
+      /* Opaque first: a browser without color-mix drops the second
+         declaration, and a transparent sticky bar over scrolled text is
+         unreadable. */
+      background: var(--paper);
+      background: color-mix(in srgb, var(--paper) 88%, transparent);
+      backdrop-filter: blur(12px);
+    }
+    .topbar-in {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      min-height: 48px;
+      flex-wrap: wrap;
+    }
+    .mark {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      color: var(--ink);
+    }
+    .mark::before { content: "\25A4 "; color: var(--accent); }
+    .tabs { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-left: auto; }
+    .tabs a {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+      padding: 0.4rem 0.6rem;
+      border-radius: 3px;
+      text-decoration: none;
+      color: var(--ink-2);
+    }
+    .tabs a:hover { color: var(--ink); background: var(--sunk); }
+    .tabs a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+    .tabs a .n { color: var(--ink-3); margin-left: 0.3rem; }
+    /* --ink-3 on the current tab's accent-soft chip measures 4.46:1, just
+       under AA — the count takes the tab's own colour there instead. */
+    .tabs a[aria-current="page"] .n { color: var(--accent); }
 
     .gallery-header {
       max-width: 1200px;
       margin: 0 auto 24px;
+      display: flex;
+      align-items: flex-end;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .gallery-header h1 {
+      font-family: var(--mono);
       font-size: 24px;
       font-weight: 600;
-      margin-bottom: 6px;
+      letter-spacing: -0.035em;
     }
 
     .gallery-header p {
-      font-size: 13px;
-      color: var(--muted);
+      font-family: var(--prose);
+      font-size: 1.0625rem;
+      color: var(--ink-2);
+      max-width: 52ch;
+      line-height: 1.6;
+      margin-top: 0.5rem;
     }
+
+    .theme-toggle {
+      margin-left: auto;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0.4rem 0.9rem;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      background: var(--panel);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+    .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
 
     .toolbar {
       max-width: 1200px;
@@ -58,6 +207,10 @@
       gap: 10px;
     }
 
+    /* No colour transitions anywhere below: every colour here is a var(), and
+       Chrome keeps painting the pre-toggle value when only a custom property
+       changes — the theme toggle left the chips and the "View image" links
+       stuck in the light palette at 3.6:1 and 2.5:1. */
     .search-box {
       flex: 1;
       min-width: 200px;
@@ -69,7 +222,6 @@
       color: var(--text);
       font-size: 13px;
       outline: none;
-      transition: border-color 0.15s;
     }
 
     .search-box:focus {
@@ -97,7 +249,6 @@
       text-transform: uppercase;
       letter-spacing: 0.4px;
       cursor: pointer;
-      transition: all 0.15s;
       white-space: nowrap;
     }
 
@@ -107,34 +258,9 @@
     }
 
     .filter-chip.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
-
-    .view-toggle {
-      margin-left: auto;
-      display: flex;
-      gap: 4px;
-    }
-
-    .view-btn {
-      padding: 6px 10px;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.15s;
-    }
-
-    .view-btn:first-child { border-radius: 6px 0 0 6px; }
-    .view-btn:last-child { border-radius: 0 6px 6px 0; }
-
-    .view-btn.active {
-      background: var(--surface);
-      border-color: var(--accent);
-      color: var(--text);
+      background: var(--accent-soft);
+      border-color: var(--accent-line);
+      color: var(--accent);
     }
 
     .visible-count {
@@ -160,7 +286,6 @@
       overflow: hidden;
       text-decoration: none;
       color: inherit;
-      transition: border-color 0.15s, box-shadow 0.15s;
       display: flex;
       flex-direction: column;
     }
@@ -187,10 +312,12 @@
       object-fit: cover;
     }
 
+    /* Shown when a card has no screenshot — it names the card's type, so it
+       is content, not chrome, and reads at --ink-3 rather than rule grey. */
     .thumb-fallback {
       font-size: 28px;
       font-weight: 700;
-      color: var(--border);
+      color: var(--ink-3);
       text-transform: uppercase;
       letter-spacing: 2px;
     }
@@ -221,14 +348,16 @@
       white-space: nowrap;
     }
 
-    .type-diff     { background: #f8514933; color: #f85149; }
-    .type-feature  { background: #3fb95033; color: #3fb950; }
-    .type-quote    { background: #d2a8ff33; color: #d2a8ff; }
-    .type-blog     { background: #388bfd33; color: #388bfd; }
-    .type-snippet  { background: #79c0ff33; color: #79c0ff; }
-    .type-video    { background: #ff7b7233; color: #ff7b72; }
-    .type-project  { background: #ffa65733; color: #ffa657; }
-    .type-session  { background: #7ee78733; color: #7ee787; }
+    /* One neutral badge rather than eight hues: the old palette was fixed to a
+       dark background and half of it fell under 4.5:1 the moment this gallery
+       gained a light theme. Type is already filterable above — the badge only
+       has to be readable. */
+    .type-badge {
+      font-family: var(--mono);
+      background: var(--sunk);
+      border: 1px solid var(--rule);
+      color: var(--ink-2);
+    }
 
     .card-date {
       font-size: 12px;
@@ -250,53 +379,6 @@
       word-break: break-all;
     }
 
-    /* List view */
-    .gallery-grid.list-view {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .list-view .gallery-card {
-      flex-direction: row;
-      align-items: center;
-      border-radius: 6px;
-    }
-
-    .list-view .thumb-container {
-      width: 120px;
-      min-width: 120px;
-      aspect-ratio: 16 / 10;
-      border-bottom: none;
-      border-right: 1px solid var(--border);
-    }
-
-    .list-view .card-info {
-      flex-direction: row;
-      align-items: center;
-      gap: 16px;
-      padding: 12px 16px;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .list-view .card-info-top {
-      gap: 12px;
-      flex-shrink: 0;
-    }
-
-    .list-view .card-topic {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .list-view .card-file {
-      flex-shrink: 0;
-    }
-
     .gallery-card-wrap {
       display: flex;
       flex-direction: column;
@@ -309,7 +391,6 @@
       text-align: center;
       padding: 4px 0 8px;
       text-decoration: none;
-      transition: color 0.15s;
       background: none;
       border: 0;
       cursor: pointer;
@@ -318,7 +399,7 @@
     }
 
     .open-img-link:hover {
-      color: var(--accent-hover);
+      color: var(--accent);
       text-decoration: underline;
     }
 
@@ -363,7 +444,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s;
     }
 
     #imgDialog .dialog-close:hover {
@@ -403,18 +483,41 @@
 
     @media (max-width: 640px) {
       body { padding: 16px; }
+      .topbar { margin: -16px -16px 24px; }
+      .topbar-in { padding: 0 1rem; }
       .toolbar { gap: 8px; }
       .search-box { max-width: none; }
-      .list-view .thumb-container { display: none; }
-      .list-view .card-info { flex-wrap: wrap; gap: 8px; }
-      .list-view .card-topic { white-space: normal; }
     }
   </style>
 </head>
 <body>
+  <header class="topbar">
+    <div class="topbar-in">
+      <a class="mark" href="{{HREF_HOME}}">agentics</a>
+      <nav class="tabs" aria-label="Collections">
+        <a href="{{HREF_HOME}}" {{CUR_HOME}}>Home</a>
+        <a href="{{HREF_PLANS}}" {{CUR_PLANS}}>Plans<span class="n">{{COUNT_PLANS}}</span></a>
+        <a href="{{HREF_PROTOTYPES}}" {{CUR_PROTOTYPES}}>Prototypes<span class="n">{{COUNT_PROTOTYPES}}</span></a>
+        <a href="{{HREF_ARTIFACTS}}" {{CUR_ARTIFACTS}}>Artifacts<span class="n">{{COUNT_ARTIFACTS}}</span></a>
+        <a href="{{HREF_SOCIAL}}" {{CUR_SOCIAL}}>Social<span class="n">{{COUNT_SOCIAL}}</span></a>
+      </nav>
+    </div>
+  </header>
+
   <div class="gallery-header">
-    <h1>Media Library</h1>
-    <p>{{CARD_COUNT}} saved cards &mdash; click any card to view it</p>
+    <div>
+      <h1>Media Library</h1>
+      <p>{{CARD_COUNT}} saved cards &mdash; click any card to view it.</p>
+    </div>
+    <button
+      class="theme-toggle"
+      type="button"
+      id="themeToggle"
+      aria-pressed="false"
+      aria-label="Use dark theme"
+    >
+      Dark
+    </button>
   </div>
 
   <div class="toolbar">
@@ -429,10 +532,6 @@
       <button class="filter-chip" data-type="video" aria-pressed="false">Video</button>
       <button class="filter-chip" data-type="project" aria-pressed="false">Project</button>
       <button class="filter-chip" data-type="session" aria-pressed="false">Session</button>
-    </div>
-    <div class="view-toggle">
-      <button class="view-btn active" id="gridBtn" title="Grid view" aria-label="Grid view" aria-pressed="true">&#9638;</button>
-      <button class="view-btn" id="listBtn" title="List view" aria-label="List view" aria-pressed="false">&#9776;</button>
     </div>
   </div>
 
@@ -537,24 +636,28 @@
       applyFilters();
     });
 
-    var gridBtn = document.getElementById('gridBtn');
-    var listBtn = document.getElementById('listBtn');
-
-    gridBtn.addEventListener('click', function() {
-      grid.classList.remove('list-view');
-      gridBtn.classList.add('active');
-      gridBtn.setAttribute('aria-pressed', 'true');
-      listBtn.classList.remove('active');
-      listBtn.setAttribute('aria-pressed', 'false');
+    var themeBtn = document.getElementById('themeToggle');
+    function resolvedTheme() {
+      var set = document.documentElement.getAttribute('data-theme');
+      if (set === 'dark' || set === 'light') return set;
+      return window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+    }
+    function syncThemeButton() {
+      var dark = resolvedTheme() === 'dark';
+      themeBtn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+      themeBtn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+      themeBtn.textContent = dark ? 'Light' : 'Dark';
+    }
+    themeBtn.addEventListener('click', function() {
+      var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+      syncThemeButton();
     });
-
-    listBtn.addEventListener('click', function() {
-      grid.classList.add('list-view');
-      listBtn.classList.add('active');
-      listBtn.setAttribute('aria-pressed', 'true');
-      gridBtn.classList.remove('active');
-      gridBtn.setAttribute('aria-pressed', 'false');
-    });
+    syncThemeButton();
   </script>
 </body>
 </html>

@@ -34,7 +34,7 @@ PROJECT_ROOT="${1:-$(pwd)}"
 # `|| true` guarantees the hook never exits non-zero (and never blocks a write)
 # even if the embedded Python raises on chdir, template I/O, or output writes.
 python3 - "$PROJECT_ROOT" <<'EOF' || true
-import os, re, sys, html
+import json, os, re, sys, html
 from datetime import datetime
 
 project_root = sys.argv[1]
@@ -88,7 +88,10 @@ def get_meta(content, name, fallback=''):
 
 def get_title(content, fname):
     m = re.search(r'<title>([^<]+)</title>', content, re.IGNORECASE)
-    return m.group(1).strip() if m else os.path.basename(fname)
+    # Unescape here so titles are plain text; e() escapes exactly once at
+    # render, keeping regeneration idempotent (no &amp;amp; drift) and the
+    # visible row text in step with data-title, which the search filter reads.
+    return html.unescape(m.group(1).strip()) if m else os.path.basename(fname)
 
 def created_sort_key(path):
     """Newest-first by proto-created; files without it sort last by filename."""
@@ -119,20 +122,80 @@ for f in proto_files:
     source  = get_meta(content, 'proto-source', '')
     rel     = os.path.basename(f)
 
-    date_span   = f'<span class="card-date">{e(created)}</span>' if created else ''
-    source_span = f'<span class="card-source">from {e(source)}</span>' if source else ''
+    # Row shape, matching the plans gallery. No status glyph: prototypes carry
+    # no status, so the row leads with its title.
+    meta = f'from {e(source)}' if source else e(rel)
 
     cards.append(f'''<a class="gallery-card" href="{e(rel)}"
-   data-month="{e(created[:7] if created else '')}" data-title="{e(html.unescape(title).lower())}">
-  <div class="card-title">{e(title)}</div>
-  <div class="card-meta">
-    {date_span}
-    {source_span}
-    <span class="card-file">{e(rel)}</span>
-  </div>
+   data-month="{e(created[:7] if created else '')}" data-title="{e(title.lower())}">
+  <span class="r-title">{e(title)}</span>
+  <span class="r-meta">{meta}</span>
+  <span class="r-date">{e(created)}</span>
 </a>''')
 
 gallery_entries = '\n'.join(cards)
+
+# ── Topbar ─────────────────────────────────────────────────────────────────────
+# Counts come off the filesystem, not out of the sibling index.html files: the
+# four gallery generators run in arbitrary order, so a parse would report
+# whichever index happened to be stale. Hrefs are relative to this page's own
+# output directory, and the plans collection follows plansDirectory rather than
+# assuming docs/plans.
+def resolve_plans_dir():
+    # Claude settings precedence: project-local → project → user-global.
+    for path in (
+        os.path.join(os.getcwd(), '.claude', 'settings.local.json'),
+        os.path.join(os.getcwd(), '.claude', 'settings.json'),
+        os.path.join(os.path.expanduser('~'), '.claude', 'settings.json'),
+    ):
+        try:
+            v = json.load(open(path)).get('plansDirectory', '').strip()
+            if v:
+                return v if os.path.isabs(v) else os.path.join(os.getcwd(), v)
+        except Exception:
+            pass
+    return os.path.join(os.getcwd(), 'docs', 'plans')
+
+def docs_count(directory):
+    try:
+        return sum(1 for n in os.listdir(directory)
+                   if n.endswith('.html') and n != 'index.html')
+    except OSError:
+        return 0
+
+def plans_count(directory):
+    """The plans collection counted the way the plans gallery counts it: a walk
+    that includes nested plans and skips archive/ and artifacts/. A flat listdir
+    here would print a different Plans total on this page than the Plans page
+    prints on its own, which reads as data loss rather than as the two
+    different counting rules it actually is."""
+    total = 0
+    for dirpath, dirnames, filenames in os.walk(directory):
+        dirnames[:] = [d for d in dirnames
+                       if not d.startswith('.') and d not in ('archive', 'artifacts')]
+        total += sum(1 for f in filenames
+                     if f.endswith('.html') and f != 'index.html')
+    return total
+
+def apply_shell(text, output_dir, active):
+    docs = os.path.join(os.getcwd(), 'docs')
+    plans_dir = resolve_plans_dir()
+    collections = (
+        ('HOME',       os.path.join(docs, 'index.html'), None),
+        ('PLANS',      os.path.join(plans_dir, 'index.html'), plans_dir),
+        ('PROTOTYPES', os.path.join(docs, 'prototypes', 'index.html'), os.path.join(docs, 'prototypes')),
+        ('ARTIFACTS',  os.path.join(docs, 'artifacts', 'index.html'), os.path.join(docs, 'artifacts')),
+        ('SOCIAL',     os.path.join(docs, 'media', 'social', 'index.html'), os.path.join(docs, 'media', 'social')),
+    )
+    for key, target, collection in collections:
+        text = text.replace('{{HREF_%s}}' % key, os.path.relpath(target, output_dir))
+        if collection is not None:
+            count = plans_count(collection) if key == 'PLANS' else docs_count(collection)
+            text = text.replace('{{COUNT_%s}}' % key, str(count))
+        text = text.replace('{{CUR_%s}}' % key,
+                            'aria-current="page"' if key == active else '')
+    return text
+
 proto_count = len(cards)
 generated_at = datetime.now().strftime('%Y-%m-%d %H:%M')
 
@@ -145,6 +208,7 @@ if template_path and os.path.isfile(template_path):
     out = out.replace('{{GALLERY_ENTRIES}}', gallery_entries)
     out = out.replace('{{PROTO_COUNT}}', str(proto_count))
     out = out.replace('{{GENERATED_AT}}', generated_at)
+    out = apply_shell(out, protos_dir, 'PROTOTYPES')
 else:
     out = f"""<!DOCTYPE html>
 <html lang="en">

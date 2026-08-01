@@ -335,7 +335,6 @@ export const CSS = `/* ── Design tokens ────────────
     border: 1px solid var(--accent);
     border-radius: 4px;
     cursor: pointer;
-    font-family: inherit;
     line-height: 1.4;
     white-space: nowrap;
     flex-shrink: 0;

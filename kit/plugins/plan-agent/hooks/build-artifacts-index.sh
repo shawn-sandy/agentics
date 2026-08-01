@@ -11,7 +11,7 @@ set -eu
 PROJECT_ROOT="${1:-$(pwd)}"
 
 python3 - "$PROJECT_ROOT" <<'EOF' || true
-import os, re, sys, html, shutil
+import json, os, re, sys, html, shutil
 from datetime import datetime
 
 # Best-effort + observable: the shell `|| true` guarantees a zero exit, but a
@@ -106,20 +106,79 @@ for name in artifacts:
         continue
     title   = get_title(content, name)
     created = _artifact_created(name)
-    date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
+    # Row shape, same as the plans gallery it shares a template with — but with
+    # no status glyph. Every artifact card carries data-status="", and the
+    # stylesheet collapses the glyph column for those rather than rendering an
+    # empty one.
     cards.append(f'''<a class="gallery-card" href="{e(name)}"
    data-status="" data-type="artifact" data-effort="" data-month="{e(created[:7] if created else '')}" data-title="{e(title.lower())}">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">{e(title)}</div>
-  <div class="card-meta">
-    {date_span}
-    <span class="card-file">{e(name)}</span>
-  </div>
+  <span class="r-title">{e(title)}</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">{e(created)}</span>
 </a>''')
 
 gallery_entries = '\n'.join(cards)
+
+# ── Topbar ─────────────────────────────────────────────────────────────────────
+# Counts come off the filesystem, not out of the sibling index.html files: the
+# four gallery generators run in arbitrary order, so a parse would report
+# whichever index happened to be stale. Hrefs are relative to this page's own
+# output directory, and the plans collection follows plansDirectory rather than
+# assuming docs/plans.
+def resolve_plans_dir():
+    # Claude settings precedence: project-local → project → user-global.
+    for path in (
+        os.path.join(os.getcwd(), '.claude', 'settings.local.json'),
+        os.path.join(os.getcwd(), '.claude', 'settings.json'),
+        os.path.join(os.path.expanduser('~'), '.claude', 'settings.json'),
+    ):
+        try:
+            v = json.load(open(path)).get('plansDirectory', '').strip()
+            if v:
+                return v if os.path.isabs(v) else os.path.join(os.getcwd(), v)
+        except Exception:
+            pass
+    return os.path.join(os.getcwd(), 'docs', 'plans')
+
+def docs_count(directory):
+    try:
+        return sum(1 for n in os.listdir(directory)
+                   if n.endswith('.html') and n != 'index.html')
+    except OSError:
+        return 0
+
+def plans_count(directory):
+    """The plans collection counted the way the plans gallery counts it: a walk
+    that includes nested plans and skips archive/ and artifacts/. A flat listdir
+    here would print a different Plans total on this page than the Plans page
+    prints on its own, which reads as data loss rather than as the two
+    different counting rules it actually is."""
+    total = 0
+    for dirpath, dirnames, filenames in os.walk(directory):
+        dirnames[:] = [d for d in dirnames
+                       if not d.startswith('.') and d not in ('archive', 'artifacts')]
+        total += sum(1 for f in filenames
+                     if f.endswith('.html') and f != 'index.html')
+    return total
+
+def apply_shell(text, output_dir, active):
+    docs = os.path.join(os.getcwd(), 'docs')
+    plans_dir = resolve_plans_dir()
+    collections = (
+        ('HOME',       os.path.join(docs, 'index.html'), None),
+        ('PLANS',      os.path.join(plans_dir, 'index.html'), plans_dir),
+        ('PROTOTYPES', os.path.join(docs, 'prototypes', 'index.html'), os.path.join(docs, 'prototypes')),
+        ('ARTIFACTS',  os.path.join(docs, 'artifacts', 'index.html'), os.path.join(docs, 'artifacts')),
+        ('SOCIAL',     os.path.join(docs, 'media', 'social', 'index.html'), os.path.join(docs, 'media', 'social')),
+    )
+    for key, target, collection in collections:
+        text = text.replace('{{HREF_%s}}' % key, os.path.relpath(target, output_dir))
+        if collection is not None:
+            count = plans_count(collection) if key == 'PLANS' else docs_count(collection)
+            text = text.replace('{{COUNT_%s}}' % key, str(count))
+        text = text.replace('{{CUR_%s}}' % key,
+                            'aria-current="page"' if key == active else '')
+    return text
 
 # ── Render index.html from the shared template ─────────────────────────────────
 template_path = os.path.join(templates_dir, 'plans-gallery.html') if templates_dir else ''
@@ -129,9 +188,12 @@ if template_path and os.path.isfile(template_path):
     with open(template_path, encoding='utf-8') as fh:
         content = fh.read()
     content = content.replace('{{GALLERY_TITLE}}',   'Artifacts')
+    content = content.replace('{{GALLERY_SUB}}',
+                              '&mdash; pages published from a working session, newest first.')
     content = content.replace('{{GALLERY_ENTRIES}}', gallery_entries)
     content = content.replace('{{PLAN_COUNT}}',      str(count))
     content = content.replace('{{GENERATED_AT}}',    generated_at)
+    content = apply_shell(content, output_dir, 'ARTIFACTS')
 else:
     content = f"""<!DOCTYPE html>
 <html lang="en">
