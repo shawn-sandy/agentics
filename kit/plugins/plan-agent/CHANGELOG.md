@@ -1,6 +1,32 @@
 # Changelog
 
 
+## 7.9.1 — trim build-proposal's always-paid body (2026-08-01)
+
+### Changed
+
+- **The 26-line Python directory resolver moved to
+  `references/artifact-resolution.md`.** It runs once, at Step 6, and only on a
+  run that writes an artifact — but a SKILL.md body is paid in full on every
+  invocation, so a Tier 0 run that answers a question and writes nothing was
+  still carrying it. The precedence rules themselves stay in the core, with
+  every token the resolver contract depends on (`--dir`, `promptsDirectory`,
+  `planAgent.proposalsDirectory`, both `${PWD}` defaults, `mkdir -p`); only the
+  script moved. This follows 7.6.0's split of five other skills into cores plus
+  references, and its rule that a guard behind a link is a guard that may never
+  load.
+
+- **Three blocks added earlier in the 7.7–7.9 line lost their rationale
+  essays** — Step 2's fan-out, Step 1b's gate, and Step 8's artifact offer.
+  Every rule, prohibition, and named failure mode survives verbatim in
+  imperative form; what went was the paragraph after each one re-explaining why
+  it exists. The reasoning is preserved where it belongs, in the changelog
+  entries that introduced them.
+
+  Net: 380 → 349 lines, all 15 checks in `tests/plugins/test-build-proposal.sh`
+  still passing.
+
+
 ## 7.9.0 — write-prompt takes an explicit type, and confirms an inferred one (2026-08-01)
 
 ### Added

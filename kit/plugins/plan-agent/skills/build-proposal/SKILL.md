@@ -120,32 +120,9 @@ write:
 `planAgent.proposalsDirectory`, falling back to `${PWD}/docs/proposals/`. It is
 never overridden by `--dir`: the flag follows the authoritative artifact.
 
-```bash
-# Resolve both directories via Claude settings precedence
-# (project-local → project → user-global), else the ${PWD} defaults.
-python3 - <<'PY'
-import json, os
-candidates = (
-    os.path.join(".claude", "settings.local.json"),
-    os.path.join(".claude", "settings.json"),
-    os.path.expanduser("~/.claude/settings.json"),
-)
-def resolve(getter, default):
-    for p in candidates:
-        try:
-            v = (getter(json.load(open(p))) or "").strip()
-            if v:
-                return v.rstrip("/")
-        except Exception:
-            continue
-    return os.path.join(os.getcwd(), *default)
-
-# --dir, when given, wins over this for the prompts directory.
-print(resolve(lambda d: d.get("promptsDirectory"), ("docs", "prompts")))
-print(resolve(lambda d: d.get("planAgent", {}).get("proposalsDirectory"),
-              ("docs", "proposals")))
-PY
-```
+The runnable resolver for both is in
+[references/artifact-resolution.md](references/artifact-resolution.md) — read it
+at Step 6, when a directory is actually needed.
 
 ## Workflow
 
@@ -188,13 +165,11 @@ On **Refine it**, redraft from their correction and ask again. Bound it at
 as the objective **verbatim** and move on — past that point they are faster at
 saying it than you are at guessing it.
 
-**Nothing in Step 2 may start before this gate returns "Looks right."** The
-specific failure to avoid: putting the restatement and the first research tool
-call in the **same message**, so the framing scrolls by as narration and the
-fan-out is already running by the time the human reads it. The gate is one
-question placed immediately before the most expensive part of the skill —
-research fans out to subagents and web fetches against this objective, so a
-misread here is paid for in full and discovered at Step 3 or later.
+**Nothing in Step 2 may start before this gate returns "Looks right."** Never
+put the restatement and the first research tool call in the **same message** —
+the framing then scrolls by as narration while the fan-out is already running.
+Research spends subagents and web fetches against this objective, so a misread
+here is paid in full and surfaces at Step 3 or later.
 
 Announcing the tier is not the gate, and neither is asking whether to proceed.
 Ask whether **the restated objective is what they meant**.
@@ -218,19 +193,13 @@ memory.
   call sites) rather than estimating.
 
 **Get the codebase agent in flight before the first fetch, and never wait on
-it.** Two ways to do that, either is fine: batch the `Agent` and the first
+it.** Either shape works: batch the `Agent` and the first
 `WebFetch`/`WebSearch`/`deep-research` call as separate tool calls in **one
 message**, or dispatch the `Agent` first and let it run in the background while
-the external research proceeds. **Do not pass `run_in_background: false` to the
-codebase agent** — that turns the fan-out into a blocking call, which is
-exactly the failure described next.
-
-The failure to avoid is dispatching a blocking `Agent`, waiting on it, grepping
-the codebase inline for twenty turns, and only then fetching the web. That is
-the serial path with a subagent bolted on: it pays the delegation cost, gets
-none of the overlap, and starts the external research last. If the codebase
-sweep is large enough to want its own agent, it is large enough that the web
-fetch should already be in flight beside it.
+external research proceeds. **Never pass `run_in_background: false` to the
+codebase agent** — a blocking dispatch followed by twenty inline greps and a
+late first fetch is the serial path with a subagent bolted on: full delegation
+cost, no overlap.
 
 ### Step 3 — Synthesize the core finding
 
@@ -333,11 +302,11 @@ Skill(skill: "artifact-design")
 Artifact(file_path: "<the page you wrote>", favicon: ..., description: ...)
 ```
 
-Publishing is the one thing in this skill the human cannot undo by editing a
-file, so it needs its own yes. Ask on **every** converged run — a blanket "no
-more questions," "don't ask me anything," or `--answers-gathered` covers the
-*proposal's* decisions, not this one, and never suppresses the offer. On no,
-hand off as normal. Never publish without an explicit yes.
+Ask on **every** converged run. A blanket "no more questions," "don't ask me
+anything," or `--answers-gathered` covers the *proposal's* decisions, not this
+one, and never suppresses the offer — publishing is the only step here the
+human cannot undo by editing a file. On no, hand off as normal. Never publish
+without an explicit yes.
 
 **Lead with the objective, not a bare `.md` path.** A proposal carries
 Workstreams and a Roadmap, not a `Steps`/`Changes` section, so handing
