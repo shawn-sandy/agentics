@@ -126,43 +126,9 @@ Anthropic's "Add context to improve performance" principle. The key is to
 extract the user's _why_, not just their _what_.
 
 Use **AskUserQuestion** with a batched set of 2–3 essential questions determined
-by the classified type:
-
-**system prompt questions:**
-
-- What is the assistant's persona, name, or role? (feeds Role technique)
-- What tone and boundaries should it have — e.g. formal, concise, never discuss
-  X? (feeds Constraints)
-- _Why_ is this assistant being built — what user need or business problem does
-  it solve? (feeds motivation context)
-
-**task prompt questions:**
-
-- What is the input the model will receive, and what should the output look
-  like? (feeds Clarity + Output Format)
-- Are there edge cases or failure modes the prompt must handle explicitly?
-  (feeds CoT scaffolding)
-- _Why_ is this task being automated — what would a bad output look like? (feeds
-  motivation/context)
-
-**creative prompt questions:**
-
-- What style, voice, or tone should the output have — any reference works?
-  (feeds Role + Tone)
-- Who is the intended audience and what emotional response should the writing
-  evoke? (feeds Context)
-- What length and structure should the output have — a single paragraph,
-  multiple stanzas, a scene? (feeds Output Format)
-- _Why_ this piece — what makes it worth creating right now? (feeds motivation)
-
-**analytical prompt questions:**
-
-- What documents, data sources, or content will be passed to the model? (feeds
-  Long-context patterns)
-- What is the desired analysis depth — surface summary vs. deep comparison?
-  (feeds CoT + Output Format)
-- _Why_ does this analysis matter — what decision or action does it support?
-  (feeds motivation)
+by the classified type. The four question sets are in
+[references/interview-questions.md](references/interview-questions.md) — read
+only the one matching the settled type.
 
 After the first AskUserQuestion batch, ask: "Would you like to go deeper for a
 more refined prompt? I can ask 2–3 follow-up questions." Only run a second
@@ -175,24 +141,14 @@ AskUserQuestion batch if the user confirms.
 Apply the XML structural techniques selected by the technique matrix from Phase
 1 to the gathered interview responses.
 
-Map interview answers to XML layers:
+Map interview answers to XML layers. The seven layers for the four
+author-facing types — role, instructions/constraints, context, examples,
+thinking/CoT, document grounding, self-check — are in
+[references/structuring-and-drafting.md](references/structuring-and-drafting.md).
 
-- **Role assignment** (system + creative types): wrap persona/role answer in
-  `<role>...</role>`
-- **XML structure — instructions/constraints** (system type only): wrap
-  instructions in `<instructions>...</instructions>`, constraints in
-  `<constraints>...</constraints>`
-- **Context block** (task + creative types): wrap background and audience
-  context in `<context>...</context>`
-- **Examples** (task type): prepare `<example>...</example>` slot with
-  placeholder from interview answer
-- **Thinking/CoT** (task + analytical types): add `<thinking>...</thinking>`
-  scaffold before the main instruction
-- **Document grounding** (analytical type): add
-  `<document>{{DOCUMENT_CONTENT}}</document>` wrapper and quote-extraction
-  instruction
-- **Self-check** (analytical type): add a final "Before responding, verify..."
-  clause
+The `proposal` layer stays here, because it is the one that carries evidence
+downstream rather than shaping tone:
+
 - **Proposal grounding** (proposal type): wrap the proposal's sections in their
   matching layers — `<context>`, `<finding>`, `<comparison>`, `<decisions>`,
   `<workstreams>`, `<risks>`, `<open-questions>`, `<roadmap>`, `<appendices>` —
@@ -223,23 +179,9 @@ Template selection by type:
 - proposal →
   `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/proposal-prompt-template.md`
 
-Read the template with the Read tool, resolving the path as
-`${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/<type>-prompt-template.md`.
-If `${CLAUDE_PLUGIN_ROOT}` is unavailable, fall back to a Glob search:
-`Glob("**/plan-agent/skills/write-prompt/references/<type>-prompt-template.md")`.
-
-Substitute all {{PLACEHOLDER}} values in the template with the structured
-content from Phase 3, the interview answers from Phase 2, and the user's intent
-from Phase 1. Remove any placeholder lines where the technique was not selected
-by the matrix (e.g. remove `<thinking>` block for creative prompts).
-
-Apply these writing rules from Anthropic's best practices:
-
-- Use positive framing ("Do X" not "Don't do Y") per "Be direct about the
-  desired output"
-- Lead with the most important instruction
-- Be specific about output format (length, structure, tone)
-- Every instruction should be actionable and unambiguous
+Path resolution (including the `${CLAUDE_PLUGIN_ROOT}` fallback), placeholder
+substitution, and the four writing rules are in
+[references/structuring-and-drafting.md](references/structuring-and-drafting.md).
 
 ---
 
@@ -309,44 +251,11 @@ different directory and a different intent slug, and the caller would then hand
 off, banner, and report a file that was never written. The caller dictates the
 path so the two agree by construction rather than by coincidence.
 
-**Resolve the output directory** (first match wins — `--out` skips this):
-
-1. Read `promptsDirectory` using Claude Code's settings precedence — project-local
-   `.claude/settings.local.json`, then project `.claude/settings.json`, then
-   global `~/.claude/settings.json`. If the key is present and non-empty, strip
-   any trailing slash and use that path as the output directory. All three
-   readers of this key — this skill, `plan-agent:build-proposal`, and
-   `artifact-tools:prompt-artifact` — must walk the same three files in the same
-   order, or a prompt saved here becomes invisible to the gallery that publishes
-   it.
-2. Otherwise, anchor to the repo root: run `git rev-parse --show-toplevel` and
-   join the result with `docs/prompts` (e.g. `$(git rev-parse --show-toplevel)/docs/prompts`).
-   If `git rev-parse` fails (not a git repo), fall back to `docs/prompts` relative to `$PWD`.
-
-**Create the directory** if it does not already exist:
-
-```bash
-mkdir -p "<resolved-directory>"
-```
-
-**Derive the filename:**
-
-Build the filename from three parts joined with hyphens, all lowercase
-kebab-case:
-
-1. The classified prompt type from Phase 1 (e.g. `task`, `system`, `creative`,
-   `analytical`)
-2. A 3–5 word slug derived from the user's core intent (strip stop words;
-   replace spaces with hyphens)
-3. Today's date in `YYYY-MM-DD` format
-
-Pattern: `{type}-{intent-slug}-{YYYY-MM-DD}.md`
-
-Examples:
-
-- `task-refactor-auth-middleware-2026-06-04.md`
-- `system-customer-support-bot-2026-06-04.md`
-- `analytical-compare-pricing-models-2026-06-04.md`
+**Resolve the output directory, then derive the filename** — `--out` skips
+both. The precedence chain (`promptsDirectory` across the three settings files,
+then the git-root `docs/prompts` anchor), the `mkdir -p`, and the
+`{type}-{intent-slug}-{YYYY-MM-DD}.md` pattern are in
+[references/saving-prompts.md](references/saving-prompts.md).
 
 **The `proposal` type omits the date:** `proposal-{slug}.md`. A proposal prompt
 is a living document that deepens over rounds, and a dated name would resolve to

@@ -1,6 +1,40 @@
 # Changelog
 
 
+## 7.9.2 — write-prompt split into a core plus references (2026-08-01)
+
+### Changed
+
+- **`write-prompt` is now a 343-line core plus three new reference files**,
+  completing the split 7.6.0 applied to `build`, `finalize-plan`,
+  `documenting-plans`, `plan-status`, and `setup-sites`. At 434 lines it had
+  become the largest SKILL.md in the plugin — every line of it paid on every
+  invocation, while a single run reads at most one of the four interview
+  question sets and one of the five templates.
+
+  | Moved | To | Lines |
+  |-------|----|------:|
+  | Phase 2's four type-specific question sets | `references/interview-questions.md` | 36 |
+  | Phase 3's seven generic XML layers, Phase 4's path resolution and writing rules | `references/structuring-and-drafting.md` | 31 |
+  | Phase 7's directory precedence, `mkdir -p`, and filename derivation | `references/saving-prompts.md` | 33 |
+
+  **What stayed is what the tests pin, and they pin per phase** —
+  `tests/plugins/test-write-prompt-proposal-type.sh` slices each phase body out
+  of SKILL.md so "a rule cannot pass by living in the wrong phase." That made
+  the boundary decision rather than taste: the `--out` contract, the
+  living-document rules (`status:`/`modified:`/`generated-sha:`, in-place
+  rewrite, the body-hash command), the proposal framing line, the
+  clarify-menu exclusion, and the `--answers-gathered` bypass all remain in the
+  core. So does Phase 3's **proposal grounding** layer — it carries evidence
+  downstream rather than shaping tone, and a pass-through rule behind a link is
+  a rule that may never load.
+
+  Verified beyond the suite with a live `task`-type run: the core loaded
+  `interview-questions.md`, `structuring-and-drafting.md`,
+  `task-prompt-template.md`, and `saving-prompts.md` — and none of the other
+  four templates.
+
+
 ## 7.9.1 — trim build-proposal's always-paid body (2026-08-01)
 
 ### Changed
