@@ -21,7 +21,11 @@ TEMPLATE="$PA/skills/write-prompt/references/proposal-prompt-template.md"
 BP_DIR="$PA/skills/build-proposal"
 BP="$BP_DIR/SKILL.md"
 SHAPE="$BP_DIR/references/artifact-shape.md"
-BUILD="$PA/skills/build/SKILL.md"
+# build is split core-plus-references too: the Step 1b chain that consumes the
+# proposal prompt lives in references/author-plan-chain.md. Checks 6 and 7 assert
+# on what the skill ships, so they read the core plus every reference — the core
+# alone would go green on a chain that had quietly lost its prompt handoff.
+BUILD_FILES=("$PA/skills/build/SKILL.md" "$PA"/skills/build/references/*.md)
 GALLERY="$ROOT/kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md"
 # prompt-artifact is split core-plus-references: the library gallery's card and
 # filter rules live in references/prompt-page.md, the tolerant-frontmatter rule in
@@ -113,7 +117,7 @@ printf '%s' "$STEP8" | grep -qF 'prompts-dir>/proposal-<slug>.md' || M="$M hando
 printf '%s' "$STEP8F" | grep -qi 'author an execution plan from the proposal prompt at' || M="$M no-objective-lead"
 if printf '%s' "$STEP8" | grep -qE 'implementation-plan +[^ ]+\.md'; then M="$M bare-md-token"; fi
 # The chain reads whatever Step 8 reports, so build/ must expect a prompt too.
-printf '%s' "$(cat "$BUILD" | flat)" | grep -qi 'proposal prompt at <prompt path>' || M="$M chain-not-updated"
+printf '%s' "$(cat "${BUILD_FILES[@]}" | flat)" | grep -qi 'proposal prompt at <prompt path>' || M="$M chain-not-updated"
 [ -z "$M" ] && echo "  PASS" || fail "Step 8 handoff:$M"
 
 echo "7. Tier behaviour survives: Tier 0 writes nothing, Tier 1 omits unpopulated slots..."
@@ -124,7 +128,7 @@ BPF="$(cat "$BP" | flat)"
 M=""
 printf '%s' "$BPF" | grep -qi 'Tier 0 writes no artifact of either kind' || M="$M tier0-writes-nothing"
 printf '%s' "$BPF" | grep -qi 'omits the unpopulated slots rather than emitting them empty' || M="$M tier1-no-empty-slots"
-printf '%s' "$(cat "$BUILD" | flat)" | grep -qi 'No proposal written' || M="$M fallthrough-lost"
+printf '%s' "$(cat "${BUILD_FILES[@]}" | flat)" | grep -qi 'No proposal written' || M="$M fallthrough-lost"
 for s in '{{CONTEXT}}' '{{CORE_FINDING}}' '{{OPEN_QUESTIONS}}' '{{CORE_INSTRUCTION}}'; do
   printf '%s' "$BPF" | grep -qF "$s" || M="$M tier1-subset:$s"
 done

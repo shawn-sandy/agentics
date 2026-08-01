@@ -28,6 +28,13 @@ jobs:
       # morning after the merge rather than at review time.
       - name: Test build skill ships and owns the implementation gates
         run: bash tests/plugins/test-build-skill.sh
+      # The five plan-agent cores are the largest bodies the plugin ships, and a
+      # SKILL.md is paid in full on every trigger. A core that creeps back over
+      # its ceiling — or a reference link that goes dangling or orphaned — shows
+      # up in no diff review of a single file, so re-monolithization is
+      # invisible without a gate that reads all five together.
+      - name: Test skill progressive disclosure
+        run: bash tests/plugins/test-progressive-disclosure.sh
       # Same rationale: the merge? hook fires on every prompt and the merge
       # skill ends in an irreversible squash-merge, so its trigger boundary and
       # safety gates are checked at review time, not the next morning.

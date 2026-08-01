@@ -14,10 +14,29 @@ SKILLS=(
 )
 
 fail=0
+
+# A skill may be split into a small SKILL.md plus references/*.md. The rule has
+# to be present in the skill, not in one particular file of it, so search every
+# markdown file the skill ships.
+skill_files() { # skill_files <path-to-SKILL.md>
+  printf '%s\n' "$1"
+  local refs; refs="$(dirname "$1")/references"
+  [ -d "$refs" ] && find "$refs" -type f -name '*.md' | sort
+  return 0
+}
+
+skill_has() { # skill_has <path-to-SKILL.md> <literal>
+  local f
+  while IFS= read -r f; do
+    [ -n "$f" ] && grep -qF -- "$2" "$f" && return 0
+  done < <(skill_files "$1")
+  return 1
+}
+
 both() { # both <description> <grep-pattern>
   local desc="$1" pat="$2" missing=""
   for f in "${SKILLS[@]}"; do
-    grep -qF -- "$pat" "$f" || missing="$missing $f"
+    skill_has "$f" "$pat" || missing="$missing $f"
   done
   if [ -z "$missing" ]; then echo "ok: $desc"; else echo "FAIL: $desc —missing in$missing"; fail=1; fi
 }
@@ -44,7 +63,7 @@ both "quotes the ticket URL in the command" '"<url>"'
 both "never asks about closing a plan that landed in-progress" 'never ask'
 unsafe=""
 for f in "${SKILLS[@]}"; do
-  if grep -qF -- '--comment "<summary>"' "$f" || grep -qF -- '--body "<summary>"' "$f"; then
+  if skill_has "$f" '--comment "<summary>"' || skill_has "$f" '--body "<summary>"'; then
     unsafe="$unsafe $f"
   fi
 done
