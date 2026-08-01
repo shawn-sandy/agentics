@@ -9,7 +9,10 @@
     GALLERY_ENTRIES  — Repeated <a> blocks, one per item
     PLAN_COUNT       — Total number of items displayed
     GENERATED_AT     — Date and time of gallery generation
-    DOCS_ROOT        — Relative prefix from this page to docs/ (e.g. "../")
+    HREF_HOME / HREF_PLANS / HREF_PROTOTYPES / HREF_ARTIFACTS / HREF_SOCIAL
+                     — Topbar tab targets, each computed relative to THIS page's
+                       own output directory (the plans gallery is not always at
+                       docs/plans — plansDirectory is configurable)
     COUNT_PLANS / COUNT_PROTOTYPES / COUNT_ARTIFACTS / COUNT_SOCIAL
                      — Topbar tab counts, read off disk by the generator
     CUR_HOME / CUR_PLANS / CUR_PROTOTYPES / CUR_ARTIFACTS / CUR_SOCIAL
@@ -548,7 +551,7 @@
         <a class="mark" href="../index.html">agentics</a>
         <nav class="tabs" aria-label="Collections">
           <a href="../index.html" >Home</a>
-          <a href="../plans/index.html" aria-current="page">Plans<span class="n">98</span></a>
+          <a href="index.html" aria-current="page">Plans<span class="n">98</span></a>
           <a href="../prototypes/index.html" >Prototypes<span class="n">2</span></a>
           <a href="../artifacts/index.html" >Artifacts<span class="n">16</span></a>
           <a href="../media/social/index.html" >Social<span class="n">36</span></a>
@@ -732,8 +735,8 @@
   <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="split-plan-agent-skills.html"
-   data-status="todo" data-type="refactor" data-effort="high" data-month="2026-07" data-title="stop paying 10,776 words for guidance nobody reads yet" data-steps-done="0" data-steps-total="9">
-  <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
+   data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="stop paying 10,776 words for guidance nobody reads yet" data-steps-done="9" data-steps-total="9">
+  <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Stop paying 10,776 words for guidance nobody reads yet</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-27</span>
@@ -1324,7 +1327,7 @@
 
     <div class="gallery-footer">
       <span>98 items</span>
-      <span>Generated 2026-08-01 08:48</span>
+      <span>Generated 2026-08-01 09:04</span>
     </div>
 
     <script>

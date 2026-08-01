@@ -6,7 +6,10 @@
     GALLERY_ENTRIES  — Repeated <a> blocks, one per prototype file
     PROTO_COUNT      — Total number of prototypes displayed
     GENERATED_AT     — Date and time of gallery generation
-    DOCS_ROOT        — Relative prefix from this page to docs/ (e.g. "../")
+    HREF_HOME / HREF_PLANS / HREF_PROTOTYPES / HREF_ARTIFACTS / HREF_SOCIAL
+                     — Topbar tab targets, each computed relative to THIS page's
+                       own output directory (the plans gallery is not always at
+                       docs/plans — plansDirectory is configurable)
     COUNT_PLANS / COUNT_PROTOTYPES / COUNT_ARTIFACTS / COUNT_SOCIAL
                      — Topbar tab counts, read off disk by the generator
     CUR_HOME / CUR_PLANS / CUR_PROTOTYPES / CUR_ARTIFACTS / CUR_SOCIAL
@@ -277,13 +280,13 @@
 
   <header class="topbar">
     <div class="topbar-in">
-      <a class="mark" href="{{DOCS_ROOT}}index.html">agentics</a>
+      <a class="mark" href="{{HREF_HOME}}">agentics</a>
       <nav class="tabs" aria-label="Collections">
-        <a href="{{DOCS_ROOT}}index.html" {{CUR_HOME}}>Home</a>
-        <a href="{{DOCS_ROOT}}plans/index.html" {{CUR_PLANS}}>Plans<span class="n">{{COUNT_PLANS}}</span></a>
-        <a href="{{DOCS_ROOT}}prototypes/index.html" {{CUR_PROTOTYPES}}>Prototypes<span class="n">{{COUNT_PROTOTYPES}}</span></a>
-        <a href="{{DOCS_ROOT}}artifacts/index.html" {{CUR_ARTIFACTS}}>Artifacts<span class="n">{{COUNT_ARTIFACTS}}</span></a>
-        <a href="{{DOCS_ROOT}}media/social/index.html" {{CUR_SOCIAL}}>Social<span class="n">{{COUNT_SOCIAL}}</span></a>
+        <a href="{{HREF_HOME}}" {{CUR_HOME}}>Home</a>
+        <a href="{{HREF_PLANS}}" {{CUR_PLANS}}>Plans<span class="n">{{COUNT_PLANS}}</span></a>
+        <a href="{{HREF_PROTOTYPES}}" {{CUR_PROTOTYPES}}>Prototypes<span class="n">{{COUNT_PROTOTYPES}}</span></a>
+        <a href="{{HREF_ARTIFACTS}}" {{CUR_ARTIFACTS}}>Artifacts<span class="n">{{COUNT_ARTIFACTS}}</span></a>
+        <a href="{{HREF_SOCIAL}}" {{CUR_SOCIAL}}>Social<span class="n">{{COUNT_SOCIAL}}</span></a>
       </nav>
     </div>
   </header>

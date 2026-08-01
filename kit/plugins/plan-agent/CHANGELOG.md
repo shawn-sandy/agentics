@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 7.6.0 — the galleries get the row layout and one shell (2026-08-01)
+## 7.7.0 — the galleries get the row layout and one shell (2026-08-01)
 
 ### Changed
 
@@ -29,6 +29,11 @@
   declares an opaque `background` before its `color-mix` value — a browser
   without `color-mix` drops the second declaration, and a transparent sticky
   bar over scrolled text is unreadable.
+- **Topbar counts and hrefs follow the resolved `plansDirectory`.** Each tab
+  target is `os.path.relpath(target, output_dir)` rather than a fixed prefix,
+  and the plans collection is read from the configured directory rather than
+  an assumed `docs/plans` — a project that moves it used to get a wrong Plans
+  count and tab links that resolved from the wrong depth.
 - **The prototypes gallery moved onto the shared token set** — same palette,
   dark theme, pre-paint theme script, theme toggle, and row layout. It was
   still on the pre-7.5.0 palette including `--subtle: #9ca3af`, which measures
@@ -36,6 +41,13 @@
 - **The artifacts gallery renders rows without a glyph column.** Its cards
   carry `data-status=""`, and the stylesheet collapses the first column for
   those rather than rendering an empty one.
+
+### Fixed
+
+- **`.save-pdf-btn` no longer overrides its own font.** The rule set
+  `font-family: var(--mono)` and then `font-family: inherit` six lines later,
+  so the button rendered in the UI font while its twin, the theme toggle,
+  rendered in mono. Takes effect for each plan on its next render.
 
 ### Removed
 
@@ -66,6 +78,56 @@
 - `tests/plugins/test-build-index-parity.mjs` — asserts the three byte-identical
   `build-index.sh` copies still hash the same. They were kept in sync by
   convention with nothing enforcing it.
+
+## 7.6.0 — five skills split into cores plus references (2026-08-01)
+
+### Changed
+
+- **`build`, `finalize-plan`, `documenting-plans`, `plan-status`, and
+  `setup-sites` are now a small core plus `references/*.md`.** A SKILL.md body
+  is paid in **full** every time the skill fires — there is no partial load —
+  and an ordinary run reads maybe a quarter of it. `build`'s Step 1b was ~60
+  lines of delegation contract charged to every invocation that named a plan
+  and read by none of them. The mechanics moved behind links the core names;
+  the trigger, the arguments, and every step heading stayed.
+
+  | Skill | Before | After | Reference files |
+  |-------|-------:|------:|----------------:|
+  | `build` | 3,254 | 590 | 4 |
+  | `finalize-plan` | 3,239 | 460 | 4 |
+  | `documenting-plans` | 1,897 | 447 | 3 |
+  | `plan-status` | 1,681 | 457 | 3 |
+  | `setup-sites` | 1,498 | 461 | 3 |
+  | **Total** | **11,569** | **2,415** | **17** |
+
+  Section text moved verbatim, so no rule was reworded on the way out: every
+  non-blank line of all five originals is still present in its skill
+  directory. All seven guard phrases `keep-phrases.txt` pins to `build`
+  stayed in the **core** — a guard behind a link is a guard that may never
+  load. `build`'s re-render subroutine also stayed in the core, deliberately:
+  every step calls it, so pulling it out would trade one always-paid block for
+  five on-demand fetches of the same four lines.
+
+### Removed
+
+- The hand-maintained `## Table of Contents` in `documenting-plans` and
+  `plan-status`. The linked step list in each core says the same thing once.
+
+### Added
+
+- **`tests/plugins/test-progressive-disclosure.sh`** — asserts each of the five
+  cores is under 600 words, ships a `references/` dir, names no reference that
+  does not exist, and leaves no reference on disk unnamed. Both link
+  directions, because either one alone passes a split that is broken in the
+  other. Wired into `check-plugin-versions.yml`.
+
+### Fixed
+
+- `test-build-skill.sh`, `test-finalize-all-flag.sh`, `test-setup-sites.sh`,
+  `test-plan-ticket-closure.sh`, and `test-proposal-prompt-pipeline.sh` now
+  resolve each pinned literal from whichever file in the skill directory
+  carries it. Only the lookup changed — no assertion was deleted, weakened, or
+  reworded, and `build` still has all 18 checks.
 
 
 ## 7.5.0 — rebuilt plan document and gallery design (2026-07-31)

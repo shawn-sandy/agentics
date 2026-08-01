@@ -15,6 +15,9 @@
 - **The same sticky topbar as the other three galleries**, with `Social`
   marked `aria-current="page"` and per-collection counts substituted from disk.
   `media-library` gained the corresponding substitution step.
+- **Tab hrefs are computed per page, and the Plans count follows the resolved
+  `plansDirectory`** rather than assuming `docs/plans` — a project that moves
+  it would otherwise see a wrong count and links resolving from the wrong depth.
 - **The card grid stays.** Thumbnails suit a grid in a way rows do not; only
   the shell around them changed.
 

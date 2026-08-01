@@ -11,7 +11,7 @@ set -eu
 PROJECT_ROOT="${1:-$(pwd)}"
 
 python3 - "$PROJECT_ROOT" <<'EOF' || true
-import os, re, sys, html, shutil
+import json, os, re, sys, html, shutil
 from datetime import datetime
 
 # Best-effort + observable: the shell `|| true` guarantees a zero exit, but a
@@ -120,22 +120,44 @@ for name in artifacts:
 gallery_entries = '\n'.join(cards)
 
 # ── Topbar ─────────────────────────────────────────────────────────────────────
-# Counted off disk, not parsed out of the sibling indexes: the four gallery
-# generators run in arbitrary order and a parse would read a stale one.
-def docs_count(*parts):
-    d = os.path.join(os.getcwd(), 'docs', *parts)
+# Counts come off the filesystem, not out of the sibling index.html files: the
+# four gallery generators run in arbitrary order, so a parse would report
+# whichever index happened to be stale. Hrefs are relative to this page's own
+# output directory, and the plans collection follows plansDirectory rather than
+# assuming docs/plans.
+def resolve_plans_dir():
+    for path in (
+        os.path.join(os.getcwd(), '.claude', 'settings.json'),
+        os.path.join(os.path.expanduser('~'), '.claude', 'settings.json'),
+    ):
+        try:
+            v = json.load(open(path)).get('plansDirectory', '').strip()
+            if v:
+                return v if os.path.isabs(v) else os.path.join(os.getcwd(), v)
+        except Exception:
+            pass
+    return os.path.join(os.getcwd(), 'docs', 'plans')
+
+def docs_count(directory):
     try:
-        return sum(1 for n in os.listdir(d) if n.endswith('.html') and n != 'index.html')
+        return sum(1 for n in os.listdir(directory)
+                   if n.endswith('.html') and n != 'index.html')
     except OSError:
         return 0
 
-def apply_shell(text, docs_root, active):
-    text = text.replace('{{DOCS_ROOT}}', docs_root)
-    text = text.replace('{{COUNT_PLANS}}',      str(docs_count('plans')))
-    text = text.replace('{{COUNT_PROTOTYPES}}', str(docs_count('prototypes')))
-    text = text.replace('{{COUNT_ARTIFACTS}}',  str(docs_count('artifacts')))
-    text = text.replace('{{COUNT_SOCIAL}}',     str(docs_count('media', 'social')))
-    for key in ('HOME', 'PLANS', 'PROTOTYPES', 'ARTIFACTS', 'SOCIAL'):
+def apply_shell(text, output_dir, active):
+    docs = os.path.join(os.getcwd(), 'docs')
+    collections = (
+        ('HOME',       os.path.join(docs, 'index.html'), None),
+        ('PLANS',      os.path.join(resolve_plans_dir(), 'index.html'), resolve_plans_dir()),
+        ('PROTOTYPES', os.path.join(docs, 'prototypes', 'index.html'), os.path.join(docs, 'prototypes')),
+        ('ARTIFACTS',  os.path.join(docs, 'artifacts', 'index.html'), os.path.join(docs, 'artifacts')),
+        ('SOCIAL',     os.path.join(docs, 'media', 'social', 'index.html'), os.path.join(docs, 'media', 'social')),
+    )
+    for key, target, collection in collections:
+        text = text.replace('{{HREF_%s}}' % key, os.path.relpath(target, output_dir))
+        if collection is not None:
+            text = text.replace('{{COUNT_%s}}' % key, str(docs_count(collection)))
         text = text.replace('{{CUR_%s}}' % key,
                             'aria-current="page"' if key == active else '')
     return text
@@ -153,7 +175,7 @@ if template_path and os.path.isfile(template_path):
     content = content.replace('{{GALLERY_ENTRIES}}', gallery_entries)
     content = content.replace('{{PLAN_COUNT}}',      str(count))
     content = content.replace('{{GENERATED_AT}}',    generated_at)
-    content = apply_shell(content, '../', 'ARTIFACTS')
+    content = apply_shell(content, output_dir, 'ARTIFACTS')
 else:
     content = f"""<!DOCTYPE html>
 <html lang="en">

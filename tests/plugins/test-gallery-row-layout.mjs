@@ -88,7 +88,13 @@ const SIBLINGS = {
   'media/social': 3,
 };
 
-const plansDir = join(TMP, 'docs', 'plans');
+// A NON-DEFAULT plansDirectory on purpose: plansDirectory is configurable, and
+// a topbar that hard-codes docs/plans reports the wrong Plans count and links
+// from the wrong depth for every project that moves it.
+const plansDir = join(TMP, 'docs', 'notes', 'plans');
+mkdirSync(join(TMP, '.claude'), { recursive: true });
+writeFileSync(join(TMP, '.claude', 'settings.json'),
+  JSON.stringify({ plansDirectory: 'docs/notes/plans' }));
 mkdirSync(plansDir, { recursive: true });
 for (const p of PLANS) writeFileSync(join(plansDir, p.file), plan(p));
 // An index.html already on disk must not be counted as a plan.
@@ -195,6 +201,13 @@ for (const [rel, n] of Object.entries(SIBLINGS)) {
   const label = { prototypes: 'Prototypes', artifacts: 'Artifacts', 'media/social': 'Social' }[rel];
   check(`${label} tab counts ${n} (index.html excluded)`, tabCount(label) === n, String(tabCount(label)));
 }
+const href = (label) => topbar.match(new RegExp(`<a href="([^"]+)"[^>]*>${label}`))?.[1];
+check('the Plans tab links to this page', href('Plans') === 'index.html', href('Plans'));
+for (const [label, expected] of [['Home', '../../index.html'], ['Prototypes', '../../prototypes/index.html'],
+                                 ['Artifacts', '../../artifacts/index.html'], ['Social', '../../media/social/index.html']]) {
+  check(`the ${label} tab href resolves from docs/notes/plans`, href(label) === expected, href(label));
+}
+
 check(
   'the topbar declares an opaque background before its color-mix value',
   index.indexOf('background: var(--paper);\n        background: color-mix') !== -1,

@@ -6,7 +6,10 @@
     GALLERY_ENTRIES  — Repeated <a> blocks, one per prototype file
     PROTO_COUNT      — Total number of prototypes displayed
     GENERATED_AT     — Date and time of gallery generation
-    DOCS_ROOT        — Relative prefix from this page to docs/ (e.g. "../")
+    HREF_HOME / HREF_PLANS / HREF_PROTOTYPES / HREF_ARTIFACTS / HREF_SOCIAL
+                     — Topbar tab targets, each computed relative to THIS page's
+                       own output directory (the plans gallery is not always at
+                       docs/plans — plansDirectory is configurable)
     COUNT_PLANS / COUNT_PROTOTYPES / COUNT_ARTIFACTS / COUNT_SOCIAL
                      — Topbar tab counts, read off disk by the generator
     CUR_HOME / CUR_PLANS / CUR_PROTOTYPES / CUR_ARTIFACTS / CUR_SOCIAL
@@ -281,7 +284,7 @@
       <nav class="tabs" aria-label="Collections">
         <a href="../index.html" >Home</a>
         <a href="../plans/index.html" >Plans<span class="n">98</span></a>
-        <a href="../prototypes/index.html" aria-current="page">Prototypes<span class="n">2</span></a>
+        <a href="index.html" aria-current="page">Prototypes<span class="n">2</span></a>
         <a href="../artifacts/index.html" >Artifacts<span class="n">16</span></a>
         <a href="../media/social/index.html" >Social<span class="n">36</span></a>
       </nav>
@@ -326,7 +329,7 @@
 
   <div class="gallery-footer">
     <span>2 prototypes</span>
-    <span>Generated 2026-08-01 08:34</span>
+    <span>Generated 2026-08-01 09:02</span>
   </div>
 
   <script>

@@ -95,11 +95,11 @@ If no directory is found: output "Templates not found. Install the plugin or loa
    - `{{GALLERY_ENTRIES}}` → the concatenated `<a>` blocks
    - `{{CARD_COUNT}}` → total number of cards
    - `{{GENERATED_AT}}` → current date and time (e.g., `2026-05-27 14:30`)
-   - `{{DOCS_ROOT}}` → `../../` (this gallery is written to `docs/media/social/`, two levels below `docs/`)
-   - `{{COUNT_PLANS}}`, `{{COUNT_PROTOTYPES}}`, `{{COUNT_ARTIFACTS}}`, `{{COUNT_SOCIAL}}` → the number of `*.html` files other than `index.html` in `docs/plans`, `docs/prototypes`, `docs/artifacts`, and `docs/media/social`. Count them on disk rather than reading the sibling `index.html` files — the four galleries are generated independently and any of them may be stale. A missing directory counts 0
+   - `{{HREF_HOME}}`, `{{HREF_PLANS}}`, `{{HREF_PROTOTYPES}}`, `{{HREF_ARTIFACTS}}`, `{{HREF_SOCIAL}}` → each tab's target index, relative to `docs/media/social/` (this gallery's own output directory): `../../index.html`, `../../plans/index.html`, `../../prototypes/index.html`, `../../artifacts/index.html`, and `index.html`. If the project sets `plansDirectory` to something other than `docs/plans`, point the Plans tab at that directory's `index.html` instead — the other three collections are fixed
+   - `{{COUNT_PLANS}}`, `{{COUNT_PROTOTYPES}}`, `{{COUNT_ARTIFACTS}}`, `{{COUNT_SOCIAL}}` → the number of `*.html` files other than `index.html` in the plans directory (the resolved `plansDirectory`, default `docs/plans`), `docs/prototypes`, `docs/artifacts`, and `docs/media/social`. Count them on disk rather than reading the sibling `index.html` files — the four galleries are generated independently and any of them may be stale. A missing directory counts 0
    - `{{CUR_SOCIAL}}` → `aria-current="page"`; `{{CUR_HOME}}`, `{{CUR_PLANS}}`, `{{CUR_PROTOTYPES}}`, `{{CUR_ARTIFACTS}}` → the empty string. Exactly one tab is marked current
 
-   These last three feed the topbar this gallery shares with the plan-agent galleries. Leaving a `{{...}}` placeholder unsubstituted renders it as literal text in the nav.
+   The href, count, and current-tab groups feed the topbar this gallery shares with the plan-agent galleries. Leaving a `{{...}}` placeholder unsubstituted renders it as literal text in the nav.
 
 4. **Write** the populated HTML to `docs/media/social/index.html`.
 
