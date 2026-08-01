@@ -105,6 +105,10 @@ print(json.dumps({
     'effort':  meta('plan-effort', '').lower(),
     'created': meta('plan-created', ''),
     'title':   get_title(),
+    # One class="step-card" per step, plus " completed" on each finished one.
+    # The lookahead keeps step-card-header out of the total.
+    'steps_total': len(re.findall(r'class="step-card(?=[" ])', content)),
+    'steps_done':  len(re.findall(r'class="step-card completed"', content)),
 }))
 EOF
 done <<< "$PLAN_FILES"
@@ -114,29 +118,31 @@ Parse the JSON output with `json.loads()` into a list of entries. **Sort the lis
 
 ```html
 <a class="gallery-card" href="{HREF}"
-   data-status="{STATUS}" data-type="{TYPE}" data-effort="{EFFORT}" data-title="{TITLE_LOWER}">
-  <div class="card-badges">
-    <span class="status-chip status-{STATUS}">{STATUS_DISPLAY}</span>
-    <span class="type-chip type-{TYPE}">{TYPE}</span>
-    <span class="effort-chip effort-{EFFORT}">{EFFORT}</span>
-  </div>
-  <div class="card-title">{TITLE}</div>
-  <div class="card-meta">
-    <span class="card-date">{CREATED}</span>
-    <span class="card-file">{BASENAME}</span>
-  </div>
+   data-status="{STATUS}" data-type="{TYPE}" data-effort="{EFFORT}" data-month="{MONTH}" data-title="{TITLE_LOWER}" data-steps-done="{STEPS_DONE}" data-steps-total="{STEPS_TOTAL}">
+  <span class="glyph" aria-hidden="true">{GLYPH}</span><span class="sr-only">{STATUS_DISPLAY}</span>
+  <span class="r-title">{TITLE}</span>
+  <span class="r-meta">{TYPE}{EFFORT_TEXT}{PROTO_TEXT}</span>
+  <span class="r-date">{CREATED}</span>
+  <span class="r-steps">{STEPS_DONE} / {STEPS_TOTAL} steps</span>
 </a>
 ```
+
+Three constraints on this markup come from `scripts/merge-plans-index.mjs`, the merge driver for the generated index: keep `<a class="gallery-card"` as the leading attribute pair with nothing else in that class attribute, emit no nested `<a>`, and wrap the rows in no `<li>` or container of any kind. The driver splices over everything between the first and last card, so anything sitting between them is destroyed by the first concurrent merge.
 
 Where:
 - `{BASENAME}` = filename without path (e.g. `add-dark-mode-toggle.html`), used directly as the link target
 - `{STATUS}` = `plan-status` value, lowercased (e.g. `todo`, `in-progress`, `completed`)
-- `{STATUS_DISPLAY}` = `{STATUS}` with hyphens replaced by spaces (e.g. `in progress`)
+- `{STATUS_DISPLAY}` = `{STATUS}` with hyphens replaced by spaces (e.g. `in progress`); `unstatused` when empty. This is the visually-hidden text that carries the status the glyph shows visually — never drop it, and never replace it with an `aria-label` on the anchor, which would override the row's own visible text
+- `{GLYPH}` = `&#10003;` when `{STATUS}` is `completed`, `&#9675;` otherwise
+- `{MONTH}` = first 7 characters of `{CREATED}` (`YYYY-MM`), or `""` — the gallery script builds month headings from it at load time
 - `{TYPE}` = `plan-type` value, lowercased (e.g. `feature`, `fix`)
-- `{EFFORT}` = `plan-effort` value, lowercased (`low` | `medium` | `high`). When empty (no `plan-effort` tag), set `data-effort=""` **and omit the entire `<span class="effort-chip …">` element** — a no-effort plan shows no badge and passes every effort filter
+- `{EFFORT}` = `plan-effort` value, lowercased (`low` | `medium` | `high`). When empty (no `plan-effort` tag), set `data-effort=""` — a no-effort plan passes every effort filter
+- `{EFFORT_TEXT}` = `" &middot; <span class=\"hi\">high</span>"` when `{EFFORT}` is `high`, `" &middot; {EFFORT}"` for any other non-empty effort, and `""` when empty
+- `{PROTO_TEXT}` = `" &middot; <span class=\"proto-chip\">proto</span>"` when the plan carries a `plan-prototype` meta tag, `""` otherwise. A span, never an `<a>` — the row is already one anchor
 - `{TITLE_LOWER}` = title lowercased (used by search filter)
 - `{TITLE}` = title text (strip a leading `"Plan: "` prefix if present)
-- `{CREATED}` = `plan-created` value (e.g. `2026-05-30`); omit the `<span class="card-date">` if empty
+- `{CREATED}` = `plan-created` value (e.g. `2026-05-30`); emit an empty `<span class="r-date">` if absent so the row keeps its columns
+- `{STEPS_TOTAL}` / `{STEPS_DONE}` = number of `class="step-card"` and `class="step-card completed"` occurrences in the plan's own HTML. Match `class="step-card` followed by a quote or a space so `step-card-header` is not counted as a step. Emit the whole `<span class="r-steps">` line **only** when `{STATUS}` is `in-progress` and `{STEPS_TOTAL}` is non-zero; the gallery script draws the progress bar beside this text from the two data attributes, and the text itself is what survives with JavaScript off
 
 **HTML-escape** all values before inserting: replace `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`, `"` → `&quot;`, `'` → `&#39;`.
 
@@ -154,9 +160,13 @@ GENERATED_AT=$(date '+%Y-%m-%d %H:%M')
 
 3. **Substitute** in the template:
    - `{{GALLERY_TITLE}}` → `Plans` (the shared template also serves the Artifacts gallery, which substitutes `Artifacts`)
+   - `{{GALLERY_SUB}}` → `&mdash; in flight first, then newest. Search matches titles.`
    - `{{GALLERY_ENTRIES}}` → concatenated `<a>` blocks from Step 4
    - `{{PLAN_COUNT}}` → total number of plan cards rendered
    - `{{GENERATED_AT}}` → value of `$GENERATED_AT`
+   - `{{DOCS_ROOT}}` → `../` (the topbar links are relative to `docs/`)
+   - `{{COUNT_PLANS}}`, `{{COUNT_PROTOTYPES}}`, `{{COUNT_ARTIFACTS}}`, `{{COUNT_SOCIAL}}` → the number of `*.html` files other than `index.html` in `docs/plans`, `docs/prototypes`, `docs/artifacts`, and `docs/media/social`. Count them on disk rather than reading the sibling `index.html` files — the four galleries are generated independently and any of them may be stale. A missing directory counts 0
+   - `{{CUR_PLANS}}` → `aria-current="page"`; `{{CUR_HOME}}`, `{{CUR_PROTOTYPES}}`, `{{CUR_ARTIFACTS}}`, `{{CUR_SOCIAL}}` → the empty string. Exactly one tab is marked current
 
 4. **Write** the result to `$PLANS_DIR/index.html`.
 

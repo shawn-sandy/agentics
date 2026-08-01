@@ -1,6 +1,73 @@
 # Changelog
 
 
+## 7.6.0 — the galleries get the row layout and one shell (2026-08-01)
+
+### Changed
+
+- **The plans gallery is a row list, not a card grid.** 7.5.0 gave the gallery
+  the prototype's palette but kept its 2-up cards, so the shipped page still
+  did not look like the design that was signed off. Each plan is now one dense
+  row — status glyph, title, `type · effort`, date — laid out as a grid on the
+  anchor itself. Rows are bare anchors directly inside `#galleryGrid` with no
+  `<li>` and no wrapper, because the merge driver splices over everything
+  between the first and last card. Status is selected off `[data-status]`
+  rather than the prototype's `.s-*` classes for the same reason: the driver
+  matches the class attribute with its closing quote, so a second class in
+  there would make every card invisible to a merge.
+- **In-flight plans show real step progress.** Each card carries
+  `data-steps-done` / `data-steps-total`, counted from the `step-card` markup
+  in the plan's own rendered HTML — no new spec field. The `N / M steps` text
+  is server-rendered and survives with JavaScript off; the segmented bar beside
+  it is drawn at load time, so the generated markup stays two attributes and a
+  span instead of a dozen `<i>` tags per card. The prototype's phase line is
+  deliberately absent — phases do not exist yet.
+- **One sticky topbar across all four galleries.** Home, Plans, Prototypes,
+  Artifacts, and Social, each with a count read off disk (the four generators
+  run in arbitrary order, so parsing a sibling index would report whichever one
+  was stale), and `aria-current="page"` on the tab being generated. The bar
+  declares an opaque `background` before its `color-mix` value — a browser
+  without `color-mix` drops the second declaration, and a transparent sticky
+  bar over scrolled text is unreadable.
+- **The prototypes gallery moved onto the shared token set** — same palette,
+  dark theme, pre-paint theme script, theme toggle, and row layout. It was
+  still on the pre-7.5.0 palette including `--subtle: #9ca3af`, which measures
+  2.5:1 and was a live WCAG AA failure, not a cosmetic gap.
+- **The artifacts gallery renders rows without a glyph column.** Its cards
+  carry `data-status=""`, and the stylesheet collapses the first column for
+  those rather than rendering an empty one.
+
+### Removed
+
+- **The grid/list view toggle.** It predates the redesign, appears in neither
+  the prototype nor the plan, and was a second layout to style and keep
+  accessible for a preference nobody asked for.
+
+### Accessibility
+
+- Each row's status glyph is `aria-hidden` with a visually-hidden text sibling,
+  so a row announces `completed` / `in progress` / `todo` before its title. An
+  `aria-label` on the anchor was rejected: it would override the row's own text
+  and make the announced content diverge from the visible content.
+- Every text token in the gallery stylesheets was measured against its own
+  background in both themes; all clear 4.5:1. Two changes came out of that —
+  the queued glyph dropped the prototype's `.5` opacity, and the current tab's
+  count takes the accent colour (`--ink-3` on `--accent-soft` measured 4.46:1).
+- The status segmented control wraps below 700px; its fourth button used to be
+  clipped at 375px.
+
+### Testing
+
+- `tests/plugins/test-gallery-row-layout.mjs` — builds an index over a fixture
+  plans directory and asserts the row markup, the step-count derivation
+  (including that `step-card-header` is not counted), the announced status, the
+  topbar, and every constraint the merge driver depends on, using `CARD_RE` and
+  `COUNT_RE` read out of the driver's own source.
+- `tests/plugins/test-build-index-parity.mjs` — asserts the three byte-identical
+  `build-index.sh` copies still hash the same. They were kept in sync by
+  convention with nothing enforcing it.
+
+
 ## 7.5.0 — rebuilt plan document and gallery design (2026-07-31)
 
 ### Added

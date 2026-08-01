@@ -153,29 +153,69 @@ for f in plan_files:
     # would survive a merge-driver splice.
     month = created[:7] if re.match(r'^\d{4}-\d{2}', created) else ''
 
-    status_display = status.replace('-', ' ')
-    date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
-    # A text-bearing span, never an <a> — the whole card is already an anchor,
-    # and a nested <a> is invalid HTML that browsers silently unnest.
-    proto_span = ('<span class="proto-chip" title="This plan has a prototype — '
-                  'open the plan and follow its View prototype link">prototype</span>') if prototype else ''
-    # Empty status/effort → omit the badge; empty data-* passes every filter.
-    status_badge = f'<span class="status-chip status-{e(status)}">{e(status_display)}</span>' if status else ''
-    effort_badge = f'\n    <span class="effort-chip effort-{e(effort)}">{e(effort)}</span>' if effort else ''
+    # Step progress, counted out of the rendered plan HTML this loop already
+    # read. Every step is one `class="step-card"`, a finished one adds
+    # ` completed`; the lookahead keeps `step-card-header` (one per step) and
+    # the stylesheet's own `.step-card` rule out of the total.
+    steps_total = len(re.findall(r'class="step-card(?=[" ])', content))
+    steps_done  = len(re.findall(r'class="step-card completed"', content))
 
+    status_display = status.replace('-', ' ') if status else 'unstatused'
+    # aria-hidden glyph + visually-hidden text: the card layout this replaced
+    # carried a readable status pill, and a bare glyph would drop that for
+    # anyone not looking at the page.
+    glyph = '&#10003;' if status == 'completed' else '&#9675;'
+    # High effort is the one meta value worth colouring — it is the signal
+    # someone scanning for "what will this cost me" is looking for.
+    effort_txt = ''
+    if effort:
+        effort_txt = (f' &middot; <span class="hi">{e(effort)}</span>'
+                      if effort == 'high' else f' &middot; {e(effort)}')
+    # Kept as its own span rather than folded into the meta text: a plan with a
+    # prototype is worth spotting in a scan, and tests/plugins/
+    # test-prototype-plan-link.mjs asserts the marker is a text-bearing span
+    # with no nested anchor (the row is already one).
+    proto_txt = (' &middot; <span class="proto-chip" title="This plan has a prototype — '
+                 'open the plan and follow its View prototype link">proto</span>') if prototype else ''
+    # Server-rendered so the progress survives with JavaScript off; the
+    # gallery script draws the bar beside it from the two data attributes.
+    steps_span = (f'\n  <span class="r-steps">{steps_done} / {steps_total} steps</span>'
+                  if status == 'in-progress' and steps_total else '')
+
+    # Row, not card: bare anchor, no nested <a>, no <li>, and
+    # `<a class="gallery-card"` kept as the leading attribute pair — all three
+    # are what scripts/merge-plans-index.mjs splices on.
     cards.append(f'''<a class="gallery-card" href="{e(rel_path)}"
-   data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-month="{e(month)}" data-title="{e(title.lower())}">
-  <div class="card-badges">
-    {status_badge}<span class="type-chip type-{e(ptype)}">{e(ptype)}</span>{effort_badge}
-  </div>
-  <div class="card-title">{e(title)}</div>
-  <div class="card-meta">
-    {date_span}{proto_span}
-    <span class="card-file">{e(rel_path)}</span>
-  </div>
+   data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-month="{e(month)}" data-title="{e(title.lower())}" data-steps-done="{steps_done}" data-steps-total="{steps_total}">
+  <span class="glyph" aria-hidden="true">{glyph}</span><span class="sr-only">{e(status_display)}</span>
+  <span class="r-title">{e(title)}</span>
+  <span class="r-meta">{e(ptype)}{effort_txt}{proto_txt}</span>
+  <span class="r-date">{e(created)}</span>{steps_span}
 </a>''')
 
 gallery_entries = '\n'.join(cards)
+
+# ── Topbar ─────────────────────────────────────────────────────────────────────
+# Tab counts come off the filesystem, not out of the sibling index.html files:
+# the four gallery generators run in arbitrary order, so parsing a sibling index
+# would report whichever one happened to be stale.
+def docs_count(*parts):
+    d = os.path.join(os.getcwd(), 'docs', *parts)
+    try:
+        return sum(1 for n in os.listdir(d) if n.endswith('.html') and n != 'index.html')
+    except OSError:
+        return 0
+
+def apply_shell(text, docs_root, active):
+    text = text.replace('{{DOCS_ROOT}}', docs_root)
+    text = text.replace('{{COUNT_PLANS}}',      str(docs_count('plans')))
+    text = text.replace('{{COUNT_PROTOTYPES}}', str(docs_count('prototypes')))
+    text = text.replace('{{COUNT_ARTIFACTS}}',  str(docs_count('artifacts')))
+    text = text.replace('{{COUNT_SOCIAL}}',     str(docs_count('media', 'social')))
+    for key in ('HOME', 'PLANS', 'PROTOTYPES', 'ARTIFACTS', 'SOCIAL'):
+        text = text.replace('{{CUR_%s}}' % key,
+                            'aria-current="page"' if key == active else '')
+    return text
 
 # ── Build index.html ───────────────────────────────────────────────────────────
 template_path = os.path.join(templates_dir, 'plans-gallery.html') if templates_dir else ''
@@ -185,9 +225,12 @@ if template_path and os.path.isfile(template_path):
     with open(template_path, encoding='utf-8') as fh:
         content = fh.read()
     content = content.replace('{{GALLERY_TITLE}}',   'Plans')
+    content = content.replace('{{GALLERY_SUB}}',
+                              '&mdash; in flight first, then newest. Search matches titles.')
     content = content.replace('{{GALLERY_ENTRIES}}', gallery_entries)
     content = content.replace('{{PLAN_COUNT}}',      str(plan_count))
     content = content.replace('{{GENERATED_AT}}',    generated_at)
+    content = apply_shell(content, '../', 'PLANS')
 else:
     content = f"""<!DOCTYPE html>
 <html lang="en">

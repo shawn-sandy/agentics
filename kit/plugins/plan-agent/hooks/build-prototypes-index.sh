@@ -119,20 +119,39 @@ for f in proto_files:
     source  = get_meta(content, 'proto-source', '')
     rel     = os.path.basename(f)
 
-    date_span   = f'<span class="card-date">{e(created)}</span>' if created else ''
-    source_span = f'<span class="card-source">from {e(source)}</span>' if source else ''
+    # Row shape, matching the plans gallery. No status glyph: prototypes carry
+    # no status, so the row leads with its title.
+    meta = f'from {e(source)}' if source else e(rel)
 
     cards.append(f'''<a class="gallery-card" href="{e(rel)}"
    data-month="{e(created[:7] if created else '')}" data-title="{e(html.unescape(title).lower())}">
-  <div class="card-title">{e(title)}</div>
-  <div class="card-meta">
-    {date_span}
-    {source_span}
-    <span class="card-file">{e(rel)}</span>
-  </div>
+  <span class="r-title">{e(title)}</span>
+  <span class="r-meta">{meta}</span>
+  <span class="r-date">{e(created)}</span>
 </a>''')
 
 gallery_entries = '\n'.join(cards)
+
+# ── Topbar ─────────────────────────────────────────────────────────────────────
+# Counted off disk, not parsed out of the sibling indexes: the four gallery
+# generators run in arbitrary order and a parse would read a stale one.
+def docs_count(*parts):
+    d = os.path.join(os.getcwd(), 'docs', *parts)
+    try:
+        return sum(1 for n in os.listdir(d) if n.endswith('.html') and n != 'index.html')
+    except OSError:
+        return 0
+
+def apply_shell(text, docs_root, active):
+    text = text.replace('{{DOCS_ROOT}}', docs_root)
+    text = text.replace('{{COUNT_PLANS}}',      str(docs_count('plans')))
+    text = text.replace('{{COUNT_PROTOTYPES}}', str(docs_count('prototypes')))
+    text = text.replace('{{COUNT_ARTIFACTS}}',  str(docs_count('artifacts')))
+    text = text.replace('{{COUNT_SOCIAL}}',     str(docs_count('media', 'social')))
+    for key in ('HOME', 'PLANS', 'PROTOTYPES', 'ARTIFACTS', 'SOCIAL'):
+        text = text.replace('{{CUR_%s}}' % key,
+                            'aria-current="page"' if key == active else '')
+    return text
 proto_count = len(cards)
 generated_at = datetime.now().strftime('%Y-%m-%d %H:%M')
 
@@ -145,6 +164,7 @@ if template_path and os.path.isfile(template_path):
     out = out.replace('{{GALLERY_ENTRIES}}', gallery_entries)
     out = out.replace('{{PROTO_COUNT}}', str(proto_count))
     out = out.replace('{{GENERATED_AT}}', generated_at)
+    out = apply_shell(out, '../', 'PROTOTYPES')
 else:
     out = f"""<!DOCTYPE html>
 <html lang="en">

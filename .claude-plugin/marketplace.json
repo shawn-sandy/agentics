@@ -196,7 +196,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.20.1",
+      "version": "2.21.0",
       "description": "Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack, plus a write-guide skill that writes long-form internal developer explainer guides to docs/",
       "category": "productivity",
       "tags": [
@@ -241,7 +241,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "7.5.0",
+      "version": "7.6.0",
       "description": "Plan creation, review, follow-through, and maintenance. Author a Markdown plan spec rendered as self-contained interactive HTML (implementation-plan), implement it end-to-end through the acceptance and completion gates (build), which authors a plan first when the command names none, and review it with a seven-reviewer Agent Team (review-plan) before marking it done (finalize-plan). Also ships build-proposal, deep-grill, write-prompt, prototype, documenting-plans, markdown-to-html, plan-status, plan-maintenance, setup-sites, plans-library, and plans-open. Accepts issue URLs and .md plans as input; hooks enforce filenames and rebuild the plan gallery. Full detail in the plugin README.",
       "category": "productivity",
       "tags": [

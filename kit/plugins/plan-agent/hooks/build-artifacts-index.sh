@@ -106,20 +106,39 @@ for name in artifacts:
         continue
     title   = get_title(content, name)
     created = _artifact_created(name)
-    date_span = f'<span class="card-date">{e(created)}</span>' if created else ''
+    # Row shape, same as the plans gallery it shares a template with — but with
+    # no status glyph. Every artifact card carries data-status="", and the
+    # stylesheet collapses the glyph column for those rather than rendering an
+    # empty one.
     cards.append(f'''<a class="gallery-card" href="{e(name)}"
    data-status="" data-type="artifact" data-effort="" data-month="{e(created[:7] if created else '')}" data-title="{e(title.lower())}">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">{e(title)}</div>
-  <div class="card-meta">
-    {date_span}
-    <span class="card-file">{e(name)}</span>
-  </div>
+  <span class="r-title">{e(title)}</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">{e(created)}</span>
 </a>''')
 
 gallery_entries = '\n'.join(cards)
+
+# ── Topbar ─────────────────────────────────────────────────────────────────────
+# Counted off disk, not parsed out of the sibling indexes: the four gallery
+# generators run in arbitrary order and a parse would read a stale one.
+def docs_count(*parts):
+    d = os.path.join(os.getcwd(), 'docs', *parts)
+    try:
+        return sum(1 for n in os.listdir(d) if n.endswith('.html') and n != 'index.html')
+    except OSError:
+        return 0
+
+def apply_shell(text, docs_root, active):
+    text = text.replace('{{DOCS_ROOT}}', docs_root)
+    text = text.replace('{{COUNT_PLANS}}',      str(docs_count('plans')))
+    text = text.replace('{{COUNT_PROTOTYPES}}', str(docs_count('prototypes')))
+    text = text.replace('{{COUNT_ARTIFACTS}}',  str(docs_count('artifacts')))
+    text = text.replace('{{COUNT_SOCIAL}}',     str(docs_count('media', 'social')))
+    for key in ('HOME', 'PLANS', 'PROTOTYPES', 'ARTIFACTS', 'SOCIAL'):
+        text = text.replace('{{CUR_%s}}' % key,
+                            'aria-current="page"' if key == active else '')
+    return text
 
 # ── Render index.html from the shared template ─────────────────────────────────
 template_path = os.path.join(templates_dir, 'plans-gallery.html') if templates_dir else ''
@@ -129,9 +148,12 @@ if template_path and os.path.isfile(template_path):
     with open(template_path, encoding='utf-8') as fh:
         content = fh.read()
     content = content.replace('{{GALLERY_TITLE}}',   'Artifacts')
+    content = content.replace('{{GALLERY_SUB}}',
+                              '&mdash; pages published from a working session, newest first.')
     content = content.replace('{{GALLERY_ENTRIES}}', gallery_entries)
     content = content.replace('{{PLAN_COUNT}}',      str(count))
     content = content.replace('{{GENERATED_AT}}',    generated_at)
+    content = apply_shell(content, '../', 'ARTIFACTS')
 else:
     content = f"""<!DOCTYPE html>
 <html lang="en">

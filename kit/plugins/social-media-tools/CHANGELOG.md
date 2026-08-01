@@ -1,5 +1,40 @@
 # Changelog — social-media-tools
 
+## v2.21.0 — 2026-08-01 — The media library joins the shared site shell
+
+### Changed
+
+- **The media gallery is no longer a dark-only page.** It carried a hardcoded
+  GitHub palette with no light theme and no toggle, which stopped being
+  survivable once the plan-agent galleries grew a topbar whose Social tab lands
+  here — a nav bar that vanishes into a differently-styled page when you click
+  one of its own tabs is a defect, not a deferral. It now uses the shared token
+  set with light and dark blocks, the pre-paint theme script, and the same
+  toggle, reading the same `plan-theme` key: a choice made on the plans gallery
+  carries here.
+- **The same sticky topbar as the other three galleries**, with `Social`
+  marked `aria-current="page"` and per-collection counts substituted from disk.
+  `media-library` gained the corresponding substitution step.
+- **The card grid stays.** Thumbnails suit a grid in a way rows do not; only
+  the shell around them changed.
+
+### Removed
+
+- **The grid/list view toggle**, matching the other galleries — a second layout
+  to keep styled and accessible for a preference nobody asked for.
+
+### Fixed
+
+- **The theme toggle left half the page in the old palette.** Chrome keeps
+  painting a transitioned colour's pre-change value when only a custom property
+  underneath it changed, so the filter chips and the "View image" links stayed
+  light-on-dark at 3.6:1 and 2.5:1 after a switch. The decorative colour
+  transitions are gone; measured after the fix, both clear 4.5:1 in both themes.
+- **The eight per-type badge colours are one neutral badge.** They were fixed
+  to a dark background and half of them fell under 4.5:1 the moment this
+  gallery gained a light theme. Type is filterable in the toolbar above; the
+  badge only has to be readable.
+
 ## v2.20.1 — 2026-07-30 — Fix share-selection's reuse check running under the wrong prefix
 
 ### Fixed
