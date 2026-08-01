@@ -163,9 +163,13 @@ then call `AskUserQuestion` with two options:
 On **Refine it**, redraft from their correction and ask again. Bound it at
 **two** refine rounds; if the third pass still misses, use their latest wording
 as the objective **verbatim** and move on — past that point they are faster at
-saying it than you are at guessing it.
+saying it than you are at guessing it. **Exhausting the bound is a pass, not a
+pending question:** the human's own words are the objective at that point, so
+the gate is settled and Step 2 proceeds. Do not ask a fourth time, and do not
+stall waiting for a "Looks right" the bound has already stood in for.
 
-**Nothing in Step 2 may start before this gate returns "Looks right."** Never
+**Nothing in Step 2 may start before this gate is settled** — by "Looks right,"
+or by the refine bound above resolving to the human's verbatim wording. Never
 put the restatement and the first research tool call in the **same message** —
 the framing then scrolls by as narration while the fan-out is already running.
 Research spends subagents and web fetches against this objective, so a misread
@@ -200,6 +204,12 @@ external research proceeds. **Never pass `run_in_background: false` to the
 codebase agent** — a blocking dispatch followed by twenty inline greps and a
 late first fetch is the serial path with a subagent bolted on: full delegation
 cost, no overlap.
+
+"Never wait on it" governs the dispatch, not the result: **collect the agent's
+findings before Step 3 synthesizes.** If the dispatch failed or returned
+nothing, say the internal research is incomplete and drop any claim that rested
+on it — a synthesis that quietly omits the codebase half reads exactly like one
+that covered it.
 
 ### Step 3 — Synthesize the core finding
 

@@ -5,7 +5,7 @@ description: "Builds structured AI prompts using Anthropic techniques. Interview
 disable-model-invocation: true
 argument-hint: "[system|task|creative|analytical] <intent or topic description>"
 allowed-tools:
-  AskUserQuestion, ToolSearch, Read, Write, Bash(git *), Bash(mkdir *), Bash(awk *), Bash(shasum *)
+  AskUserQuestion, ToolSearch, Read, Write, Glob, Bash(git *), Bash(mkdir *), Bash(awk *), Bash(shasum *)
 ---
 
 # write-prompt
@@ -31,10 +31,21 @@ crafting?"
 **A leading type token wins.** If the first whitespace-delimited token of
 `$ARGUMENTS` exactly matches one of the five type names below, that **is** the
 type — do not re-infer it, and do not second-guess it against the rest of the
-text. The remainder of `$ARGUMENTS` is the intent. This is how
-`plan-agent:build-proposal` reaches the `proposal` type
+text. This is how `plan-agent:build-proposal` reaches the `proposal` type
 (`args: "proposal --out … --answers-gathered …"`); the same convention is open
 to the human for the four author-facing types.
+
+**Strip the control flags before reading the intent.** Remove the type token,
+`--out <path>`, and `--answers-gathered` first; only the positional text that
+remains is the intent. Taking "the rest of `$ARGUMENTS`" wholesale drags the
+caller's flags into the prompt body and the `intent` frontmatter, and the
+caller path always passes them.
+
+**A leading `proposal` token counts only alongside `--answers-gathered`.**
+Phase 2 has no `proposal` question set — the caller supplies those answers — so
+the token on its own would settle a type whose interview cannot run. Typed by
+hand without the flag, treat the input as unclassified and use the clarify menu
+below.
 
 Otherwise, identify the prompt type from `$ARGUMENTS` or the user's stated
 need. Classify into one of five types:
@@ -80,10 +91,15 @@ then proceed with the chosen type. **Never offer `proposal` in that menu.** It
 is a caller-driven type: reach it only when `$ARGUMENTS` names it explicitly.
 
 **Confident — the confirmation gate.** Present the classified type and the
-technique matrix it selects, then ask with two options:
+technique matrix it selects, then ask with exactly four options:
 
-- **Looks right** — proceed to Phase 2.
-- **Change the type** — offer the four author-facing types and take the answer.
+- **Looks right** — the classified type; proceed to Phase 2.
+- **The three other author-facing types**, one option each.
+
+Picking one of the three settles the type outright. Do not offer a bare
+"Change the type" that then needs a second question to find out which — that
+would break the one-question rule above, and the three alternatives fit the
+same call.
 
 **Nothing in Phase 2 may start before the type is settled** — not the first
 question, not a provisional draft. Neither shape is satisfied by narration:

@@ -1,6 +1,43 @@
 # Changelog
 
 
+## 7.10.3 — the two gates stop contradicting themselves (2026-08-01)
+
+### Fixed
+
+- **A confident type gate no longer needs a question it is forbidden to ask.**
+  Phase 1 says the type is settled with *exactly one* `AskUserQuestion`, but the
+  gate's **Change the type** branch then had to ask a second one to find out
+  which type. The gate now offers four options — **Looks right** plus the three
+  other author-facing types — so a change settles in the same call. Four
+  author-facing types means the alternatives always fit the remaining three
+  slots; there is nothing to spill into a follow-up.
+- **Exhausting the refine bound is now a pass, not a deadlock.** Step 1b bounds
+  refinement at two rounds and then uses the human's wording verbatim, while the
+  next line forbade Step 2 until the gate returned "Looks right." A third
+  **Refine it** satisfied neither instruction, so the run could prompt past its
+  own advertised bound or stall instead of researching. The bound is now an
+  explicit successful outcome of the gate.
+- **A leading `proposal` token is honoured only with `--answers-gathered`.**
+  Generalising the leading-token rule to all five types in 7.10.0 opened a path
+  where a human types `proposal …` by hand and settles a type whose Phase 2
+  question set does not exist — the caller is supposed to supply those answers.
+  Typed alone it now falls through to the clarify menu. README's two claims that
+  advertised `proposal` as a user-facing token are corrected to match.
+- **Control flags are stripped before the intent is read.** Phase 1 called
+  "the remainder of `$ARGUMENTS`" the intent, so the caller path — which always
+  passes `--out` and `--answers-gathered` — leaked its own flags into the prompt
+  body and the `intent` frontmatter.
+- **`Glob` added to `allowed-tools`.** `references/structuring-and-drafting.md`
+  names a `Glob` fallback for resolving a template when `${CLAUDE_PLUGIN_ROOT}`
+  is unset; the skill could not follow its own instruction without a permission
+  prompt.
+- **Step 2 says when to collect the codebase agent's result.** "Never wait on
+  it" governs the dispatch; 7.8.1 left it ambiguous whether the finding was ever
+  gathered. Step 3 now collects before synthesizing, and a failed dispatch is
+  reported rather than silently dropped — a synthesis missing the codebase half
+  reads exactly like one that covered it.
+
 ## 7.10.2 — write-prompt split into a core plus references (2026-08-01)
 
 ### Changed
