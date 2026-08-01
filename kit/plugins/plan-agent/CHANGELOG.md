@@ -1,6 +1,49 @@
 # Changelog
 
 
+## 7.9.0 — write-prompt takes an explicit type, and confirms an inferred one (2026-08-01)
+
+### Added
+
+- **A leading type token in `$ARGUMENTS` now pins the prompt type for all five
+  types.** `/plan-agent:write-prompt creative a bedtime story about a
+  lighthouse keeper` classifies as `creative` without inference. The convention
+  already existed but was documented as a private arrangement for exactly one
+  type — `build-proposal` reaches `proposal` by passing it as the first token —
+  so the other four were reachable only by hoping the classifier read your
+  prose correctly. `argument-hint` now advertises it. Bare intent text still
+  works unchanged and still infers.
+
+- **Phase 1 now confirms an inferred type before Phase 2 runs.** The type
+  selects the technique matrix *and* the entire type-specific question set, so
+  a wrong type means the wrong interview — discovered only after the human has
+  answered it. The old design announced the classification in one line on the
+  way to asking those questions, which reads as settled rather than as a
+  checkpoint.
+
+  Exactly one question fires, and which one depends on confidence: the
+  pre-existing four-option menu when the input does not clearly match a type,
+  or a new **Looks right / Change the type** gate when it does. Both are
+  skipped when the type arrived as a leading token (confirming an explicit
+  choice is friction) or when `--answers-gathered` is present (the unattended
+  caller path, where a question stalls a run nobody is watching).
+
+### Changed
+
+- **The no-`AskUserQuestion` path is now documented rather than improvised.**
+  A first attempt at this gate told the skill to ask in plain text and wait.
+  Two headless runs showed why that is wrong here: Phase 2's interview needs
+  the same tool, so blocking strands the run with nothing to wait for. Both
+  runs sensibly ignored the instruction and proceeded. The shipped rule matches
+  what they did — proceed, state the classified type, and list the assumed
+  Phase 2 answers as a correctable table — with the standing prohibition on
+  setting `--answers-gathered` from inside the skill left intact.
+
+  This is deliberately *not* how `build-proposal`'s Step 1b behaves. There,
+  blocking is right: the next step spends subagents and web fetches, and the
+  loop is interactive by nature. Here the next step is itself a question.
+
+
 ## 7.8.0 — build-proposal confirms the objective before researching it (2026-08-01)
 
 ### Added

@@ -26,7 +26,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html] [--all]` |
-| `write-prompt` | Skill (`disable-model-invocation`) + Command | Invoke as `/plan-agent:write-prompt [intent] [--out <path>] [--answers-gathered]`; the command wrapper also makes it reachable from other skills, which the flag alone blocks |
+| `write-prompt` | Skill (`disable-model-invocation`) + Command | Invoke as `/plan-agent:write-prompt [type] [intent] [--out <path>] [--answers-gathered]`; a leading `system`/`task`/`creative`/`analytical`/`proposal` token pins the type. The command wrapper also makes it reachable from other skills, which the flag alone blocks |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `setup-sites` | Skill | Command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent — scaffolds the deploy pipeline into any repo |
@@ -317,6 +317,10 @@ The skill runs a six-phase pipeline:
 | `proposal` | Long-context grounding (`<context>`, `<finding>`, `<decisions>`), comparison tables, positive framing, output format |
 
 Invoke only via `/plan-agent:write-prompt` — auto-activation is disabled because "prompt" is too common a word in coding contexts. `disable-model-invocation: true` blocks *programmatic* `Skill()` invocation too, not merely ambient activation, so a thin `commands/write-prompt.md` wrapper exists to let other skills reach it; the flag stays on. The wrapper **reads `skills/write-prompt/SKILL.md` by path rather than delegating with `Skill(skill: "plan-agent:write-prompt")`**: the command shadows the skill of that name, so delegating would return the wrapper again and none of the seven phases would load.
+
+**A leading type token pins the type.** If the first token of `$ARGUMENTS` exactly matches one of the five type names, that is the type and Phase 1 does not infer — `/plan-agent:write-prompt creative a bedtime story about a lighthouse keeper`. Bare intent text still infers as before.
+
+**An inferred type is confirmed before Phase 2.** The type selects the technique matrix *and* the whole type-specific question set, so a wrong type means the wrong interview, discovered only after it has been answered. Exactly one `AskUserQuestion` fires: the four-option clarify menu when the input does not clearly match a type, or a **Looks right / Change the type** gate when it does. Both are skipped when the type arrived as a leading token, or when `--answers-gathered` is present. In a non-interactive session the skill proceeds rather than blocking — Phase 2's interview needs the same tool — and lists the assumed answers as a correctable table.
 
 **The `proposal` type is caller-driven.** It is never offered in the clarify menu — `plan-agent:build-proposal` names it explicitly, passing the proposal content plus two flags:
 

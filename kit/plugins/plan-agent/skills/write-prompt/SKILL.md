@@ -3,7 +3,7 @@ name: write-prompt
 model: opus
 description: "Builds structured AI prompts using Anthropic techniques. Interviews users, classifies prompt type, and delivers a copy-pasteable prompt. Use when the user asks to write, refine, or build a prompt."
 disable-model-invocation: true
-argument-hint: "[intent or topic description]"
+argument-hint: "[system|task|creative|analytical] <intent or topic description>"
 allowed-tools:
   AskUserQuestion, ToolSearch, Read, Write, Bash(git *), Bash(mkdir *), Bash(awk *), Bash(shasum *)
 ---
@@ -19,16 +19,25 @@ well-structured AI prompt.
 ## Entry — Read $ARGUMENTS
 
 On invocation via `/plan-agent:write-prompt`, `$ARGUMENTS` contains the user's
-initial intent or topic. If `$ARGUMENTS` is non-empty, use it to seed Phase 1
-(Classify) and skip the "what do you need?" opener. If empty, ask: "What kind of
-prompt do you need help crafting?"
+initial intent or topic, optionally led by a type token (see Phase 1). If
+`$ARGUMENTS` is non-empty, use it to seed Phase 1 (Classify) and skip the "what
+do you need?" opener. If empty, ask: "What kind of prompt do you need help
+crafting?"
 
 ---
 
 ## Phase 1 — Classify
 
-Identify the prompt type from $ARGUMENTS or the user's stated need. Classify
-into one of five types:
+**A leading type token wins.** If the first whitespace-delimited token of
+`$ARGUMENTS` exactly matches one of the five type names below, that **is** the
+type — do not re-infer it, and do not second-guess it against the rest of the
+text. The remainder of `$ARGUMENTS` is the intent. This is how
+`plan-agent:build-proposal` reaches the `proposal` type
+(`args: "proposal --out … --answers-gathered …"`); the same convention is open
+to the human for the four author-facing types.
+
+Otherwise, identify the prompt type from `$ARGUMENTS` or the user's stated
+need. Classify into one of five types:
 
 | Type           | When to use                                                                     |
 | -------------- | ------------------------------------------------------------------------------- |
@@ -49,14 +58,48 @@ best-practice layers that apply to this type:
 | analytical  | Long-context patterns (`<document>`, `<quote>`), thinking/CoT, self-check, output format              |
 | proposal    | Long-context grounding (`<context>`, `<finding>`, `<decisions>`), comparison tables, positive framing, output format |
 
-If the input does not clearly match any single type, ask the user to clarify via
-`AskUserQuestion` with the four author-facing types as options: "Which best
-describes what you're building?" — then proceed with the chosen type. **Never
-offer `proposal` in that menu.** It is a caller-driven type: reach it only when
-`$ARGUMENTS` names it explicitly, which in practice means `build-proposal`
-invoked this skill.
+### Confirm the type before Phase 2
 
-Announce the classified type and selected technique matrix to the user in one
+The type is not cosmetic: it selects the technique matrix **and** the entire
+question set Phase 2 asks. A wrong type means the wrong interview, and the
+wrong interview is discovered only after the human has answered it. So settle
+the type here, with exactly **one** `AskUserQuestion` — which of the two shapes
+below fires depends on how confident the classification is.
+
+**Skip both** — announce and go straight to Phase 2 — when either holds:
+
+- **The type arrived as a leading token.** Confirming a choice the caller
+  stated outright is friction, not a check.
+- **`$ARGUMENTS` carries `--answers-gathered`.** That is the unattended caller
+  path; a question there stalls a run nobody is watching.
+
+**Unsure — the classification menu.** If the input does not clearly match any
+single type, ask the user to clarify via `AskUserQuestion` with the four
+author-facing types as options: "Which best describes what you're building?" —
+then proceed with the chosen type. **Never offer `proposal` in that menu.** It
+is a caller-driven type: reach it only when `$ARGUMENTS` names it explicitly.
+
+**Confident — the confirmation gate.** Present the classified type and the
+technique matrix it selects, then ask with two options:
+
+- **Looks right** — proceed to Phase 2.
+- **Change the type** — offer the four author-facing types and take the answer.
+
+**Nothing in Phase 2 may start before the type is settled** — not the first
+question, not a provisional draft. Neither shape is satisfied by narration:
+stating a conclusion on the way to acting on it reads as settled, and the
+human's first real chance to object then arrives after a type-specific
+interview they have already sat through.
+
+**When `AskUserQuestion` is unavailable** (a non-interactive session), do not
+block — Phase 2's interview is unavailable for the same reason, so waiting
+would strand the run with nothing to wait for. Proceed, but surface what a
+blocked gate would have caught: state the classified type, and list the Phase 2
+answers you assumed in its place as a table the human can correct in one reply.
+This is the documented degradation, not a workaround — never set
+`--answers-gathered` yourself to reach it.
+
+Announce the settled type and selected technique matrix to the user in one
 short sentence:
 
 > "Classified as **task** prompt — I'll apply: clarity, XML context tags, CoT
