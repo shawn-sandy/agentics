@@ -1559,7 +1559,7 @@ img, video { max-width: 100%; height: auto; }
       <summary>9 steps</summary>
       <div class="rail-heading">Steps</div>
       <ul class="rail-steps">
-        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">tests/plugins/test-progressive-disclosure.sh</code> covering the five skill directories, asserting each <code class="md">SKILL.md</code> is under 600 words via <code class="md">wc -w</code>, has at least one <code class="md">references/*.md</code>, links every reference file that exists on disk, and mentions no <code class="md">references/*.md</code> path that does not exist.</span><span class="rail-state">step 1 of 9, done</span></a></li>
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">tests/plugins/test-progressive-disclosure.sh</code> covering the five skill directories, asserting each <code class="md">SKILL.md</code> is under 600 words via a Python word count (deliberately not <code class="md">wc -w</code>, whose count of em dashes and arrows drifts by locale — the same ~20-word swing that separates a pass on a dev machine from a fail on a CI runner), has at least one <code class="md">references/*.md</code>, links every reference file that exists on disk, and mentions no <code class="md">references/*.md</code> path that does not exist.</span><span class="rail-state">step 1 of 9, done</span></a></li>
         <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Wire the new test into <code class="md">.github/workflows/check-plugin-versions.yml</code> as a step named &quot;Test skill progressive disclosure&quot;, placed after the existing <code class="md">test-build-skill.sh</code> step, with a comment explaining that a re-monolithized skill is invisible in review otherwise.</span><span class="rail-state">step 2 of 9, done</span></a></li>
         <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Split <code class="md">kit/plugins/plan-agent/skills/build/SKILL.md</code> into a core plus <code class="md">references/invocation.md</code>, <code class="md">references/resolve-plan.md</code>, <code class="md">references/author-plan-chain.md</code>, and <code class="md">references/completion-gates.md</code>, moving section text verbatim, leaving the re-render subroutine in the core, and replacing each moved section with a named step line that links its reference file.</span><span class="rail-state">step 3 of 9, done</span></a></li>
         <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Update <code class="md">tests/plugins/test-build-skill.sh</code> so its <code class="md">flatten</code>/<code class="md">sed</code> section extractors search <code class="md">SKILL.md</code> and every <code class="md">references/*.md</code> in the skill directory for the owning heading, keeping all 18 checks and their exact phrase assertions untouched.</span><span class="rail-state">step 4 of 9, done</span></a></li>
@@ -1567,7 +1567,7 @@ img, video { max-width: 100%; height: auto; }
         <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Split <code class="md">kit/plugins/plan-agent/skills/documenting-plans/SKILL.md</code> into a core plus <code class="md">references/resolve-and-preconditions.md</code>, <code class="md">references/gather-evidence.md</code>, and <code class="md">references/doc-template.md</code>, and delete the now-redundant <code class="md">## Table of Contents</code> section in favor of the linked step list.</span><span class="rail-state">step 6 of 9, done</span></a></li>
         <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Split <code class="md">kit/plugins/plan-agent/skills/plan-status/SKILL.md</code> into a core plus <code class="md">references/single-file-flow.md</code>, <code class="md">references/bulk-mode.md</code>, and <code class="md">references/type-classification.md</code>, dropping its <code class="md">## Table of Contents</code> the same way.</span><span class="rail-state">step 7 of 9, done</span></a></li>
         <li><a class="rail-step done" href="#step-8"><span class="rail-no">✓</span><span class="rail-text">Split <code class="md">kit/plugins/plan-agent/skills/setup-sites/SKILL.md</code> into a core plus <code class="md">references/preflight.md</code>, <code class="md">references/scaffold.md</code>, and <code class="md">references/enable-and-verify.md</code>, moving all four embedded shell/python blocks with their steps, then update <code class="md">tests/plugins/test-setup-sites.sh</code> to resolve across the split.</span><span class="rail-state">step 8 of 9, done</span></a></li>
-        <li><a class="rail-step done" href="#step-9"><span class="rail-no">✓</span><span class="rail-text">Bump <code class="md">plan-agent</code> from <code class="md">5.0.0</code> to <code class="md">5.1.0</code> in <code class="md">.claude-plugin/marketplace.json</code> (never adding a <code class="md">version</code> key to <code class="md">kit/plugins/plan-agent/.claude-plugin/plugin.json</code>) and add a <code class="md">## 5.1.0</code> entry to <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> naming the five split skills, the word counts before and after, and the new test.</span><span class="rail-state">step 9 of 9, done</span></a></li>
+        <li><a class="rail-step done" href="#step-9"><span class="rail-no">✓</span><span class="rail-text">Bump <code class="md">plan-agent</code> from <code class="md">7.5.0</code> to <code class="md">7.6.0</code> in <code class="md">.claude-plugin/marketplace.json</code> (never adding a <code class="md">version</code> key to <code class="md">kit/plugins/plan-agent/.claude-plugin/plugin.json</code>) and add a <code class="md">## 7.6.0</code> entry to <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> naming the five split skills, the word counts before and after, and the new test.</span><span class="rail-state">step 9 of 9, done</span></a></li>
       </ul>
     </details>
   </nav>
@@ -1723,8 +1723,8 @@ img, video { max-width: 100%; height: auto; }
             </ul>
           </li>
           <li><code>.github/workflows/check-plugin-versions.yml</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">new step running <code class="md">tests/plugins/test-progressive-disclosure.sh</code></span></li>
-          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note"><code class="md">plan-agent</code> version 5.0.0 to 5.1.0</span></li>
-          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">5.1.0 entry</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note"><code class="md">plan-agent</code> version 7.5.0 to 7.6.0</span></li>
+          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">7.6.0 entry</span></li>
         </ul>
       </div>
     </section>
@@ -1743,7 +1743,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Write <code class="md">tests/plugins/test-progressive-disclosure.sh</code> covering the five skill directories, asserting each <code class="md">SKILL.md</code> is under 600 words via <code class="md">wc -w</code>, has at least one <code class="md">references/*.md</code>, links every reference file that exists on disk, and mentions no <code class="md">references/*.md</code> path that does not exist.</span>
+                <span class="step-chip-text">Write <code class="md">tests/plugins/test-progressive-disclosure.sh</code> covering the five skill directories, asserting each <code class="md">SKILL.md</code> is under 600 words via a Python word count (deliberately not <code class="md">wc -w</code>, whose count of em dashes and arrows drifts by locale — the same ~20-word swing that separates a pass on a dev machine from a fail on a CI runner), has at least one <code class="md">references/*.md</code>, links every reference file that exists on disk, and mentions no <code class="md">references/*.md</code> path that does not exist.</span>
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
@@ -1903,7 +1903,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Bump <code class="md">plan-agent</code> from <code class="md">5.0.0</code> to <code class="md">5.1.0</code> in <code class="md">.claude-plugin/marketplace.json</code> (never adding a <code class="md">version</code> key to <code class="md">kit/plugins/plan-agent/.claude-plugin/plugin.json</code>) and add a <code class="md">## 5.1.0</code> entry to <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> naming the five split skills, the word counts before and after, and the new test.</span>
+                <span class="step-chip-text">Bump <code class="md">plan-agent</code> from <code class="md">7.5.0</code> to <code class="md">7.6.0</code> in <code class="md">.claude-plugin/marketplace.json</code> (never adding a <code class="md">version</code> key to <code class="md">kit/plugins/plan-agent/.claude-plugin/plugin.json</code>) and add a <code class="md">## 7.6.0</code> entry to <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> naming the five split skills, the word counts before and after, and the new test.</span>
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
@@ -1911,7 +1911,7 @@ img, video { max-width: 100%; height: auto; }
               </div>
               <div class="step-note step-verify">
                 <span class="step-note-label">Verify</span>
-                <div class="verify-body"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 and <code class="md">head -5 kit/plugins/plan-agent/CHANGELOG.md</code> shows the 5.1.0 heading.</div>
+                <div class="verify-body"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 and <code class="md">head -5 kit/plugins/plan-agent/CHANGELOG.md</code> shows the 7.6.0 heading.</div>
               </div>
             </div>
           </div>
@@ -1976,7 +1976,7 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac9" checked>
-          <label for="ac9"><code class="md">.claude-plugin/marketplace.json</code> sets <code class="md">plan-agent</code> to <code class="md">5.1.0</code>, and <code class="md">python3 -c &quot;import json;print(&#39;version&#39; in json.load(open(&#39;kit/plugins/plan-agent/.claude-plugin/plugin.json&#39;)))&quot;</code> prints <code class="md">False</code></label>
+          <label for="ac9"><code class="md">.claude-plugin/marketplace.json</code> sets <code class="md">plan-agent</code> to <code class="md">7.6.0</code>, and <code class="md">python3 -c &quot;import json;print(&#39;version&#39; in json.load(open(&#39;kit/plugins/plan-agent/.claude-plugin/plugin.json&#39;)))&quot;</code> prints <code class="md">False</code></label>
         </li>
         <li>
           <input type="checkbox" id="ac10" checked>
@@ -1984,7 +1984,7 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac11" checked>
-          <label for="ac11"><code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> has a <code class="md">## 5.1.0</code> entry naming all five split skills</label>
+          <label for="ac11"><code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> has a <code class="md">## 7.6.0</code> entry naming all five split skills</label>
         </li>
         <li>
           <input type="checkbox" id="ac12" checked>
