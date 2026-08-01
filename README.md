@@ -807,13 +807,13 @@ claude --plugin-dir ./kit/plugins/team-defaults
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.3.0 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.4.0 | development | 1 command, 4 skills, 1 hook |
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.5.0 | testing | 5 skills |
-| [git-agent](./kit/plugins/git-agent/README.md) | 4.9.0 | development | 5 commands, 7 skills, 5 agents, 2 hooks |
+| [git-agent](./kit/plugins/git-agent/README.md) | 4.10.0 | development | 5 commands, 7 skills, 5 agents, 2 hooks |
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.13 | productivity | 1 command, 1 skill, 7 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.20.1 | productivity | 1 command, 17 skills |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 7.4.1 | productivity | 7 commands, 14 skills, 9 agents, 2 hooks |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.21.0 | productivity | 1 command, 17 skills |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 7.7.0 | productivity | 7 commands, 14 skills, 9 agents, 2 hooks |
 | [team-defaults](./kit/plugins/team-defaults/README.md) | 0.2.0 | productivity | 1 skill, 2 agents |
-| [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.9.0 | development | 3 commands, 4 skills |
+| [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.10.0 | development | 3 commands, 4 skills |
 | [content-tools](./kit/plugins/content-tools/README.md) | 1.1.0 | documentation | 1 skill |
 
 ---
