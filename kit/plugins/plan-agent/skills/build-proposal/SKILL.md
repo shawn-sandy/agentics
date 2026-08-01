@@ -2,7 +2,7 @@
 name: build-proposal
 model: claude-fable-5
 description: "Turns a vague idea into a decision-complete proposal. Researches web and codebase, separating established facts from open decisions. Use when the user floats an idea or asks should-we."
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, WebSearch, WebFetch, Skill, Agent
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, WebSearch, WebFetch, Skill, Agent, Artifact
 argument-hint: "<idea> [--dir <path>] [--tier 0|1|2]"
 ---
 
@@ -273,6 +273,23 @@ conversion:
 
 Report the prompt path — the same one passed to `write-prompt` via `--out` in
 Step 6, byte-for-byte. Never report the legacy copy as the deliverable.
+
+**Always offer the artifact.** Before handing off, ask once via
+`AskUserQuestion` whether to publish the converged proposal as a shareable
+claude.ai artifact. On yes, load the `artifact-design` skill first to calibrate
+the page, then build it from the proposal's canonical sections and publish with
+the `Artifact` tool:
+
+```
+Skill(skill: "artifact-design")
+Artifact(file_path: "<the page you wrote>", favicon: ..., description: ...)
+```
+
+Publishing is the one thing in this skill the human cannot undo by editing a
+file, so it needs its own yes. Ask on **every** converged run — a blanket "no
+more questions," "don't ask me anything," or `--answers-gathered` covers the
+*proposal's* decisions, not this one, and never suppresses the offer. On no,
+hand off as normal. Never publish without an explicit yes.
 
 **Lead with the objective, not a bare `.md` path.** A proposal carries
 Workstreams and a Roadmap, not a `Steps`/`Changes` section, so handing

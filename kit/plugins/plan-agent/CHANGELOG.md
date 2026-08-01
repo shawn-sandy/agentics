@@ -1,6 +1,28 @@
 # Changelog
 
 
+## 7.7.0 — build-proposal always offers the artifact (2026-08-01)
+
+### Added
+
+- **`build-proposal` Step 8 now asks, every converged run, whether to publish
+  the proposal as a claude.ai artifact.** The prompt file was already the
+  deliverable; sharing it meant knowing the artifact tooling existed and
+  remembering to run it by hand. On yes the skill loads the bundled
+  `artifact-design` skill to calibrate the page, then publishes with the
+  `Artifact` tool (newly added to `allowed-tools`). On no it hands off to
+  `implementation-plan` exactly as before — nothing is published without an
+  explicit yes, and Tier 0 never reaches the offer since it writes no artifact.
+
+  The offer is explicitly **not** suppressed by a blanket "no more questions"
+  or by `--answers-gathered`. A headless run of the loop showed the first
+  wording losing to exactly that: told "I have no further questions," the skill
+  reached Step 8, recognized the offer, and skipped it — reporting "per your
+  no-further-questions directive I skipped the publish-as-artifact prompt."
+  Those directives cover the *proposal's* decisions; publishing is the one
+  action the human cannot undo by editing a file, so it keeps its own yes.
+
+
 ## 7.6.0 — five skills split into cores plus references (2026-08-01)
 
 ### Changed
