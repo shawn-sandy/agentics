@@ -88,7 +88,10 @@ def get_meta(content, name, fallback=''):
 
 def get_title(content, fname):
     m = re.search(r'<title>([^<]+)</title>', content, re.IGNORECASE)
-    return m.group(1).strip() if m else os.path.basename(fname)
+    # Unescape here so titles are plain text; e() escapes exactly once at
+    # render, keeping regeneration idempotent (no &amp;amp; drift) and the
+    # visible row text in step with data-title, which the search filter reads.
+    return html.unescape(m.group(1).strip()) if m else os.path.basename(fname)
 
 def created_sort_key(path):
     """Newest-first by proto-created; files without it sort last by filename."""
@@ -124,7 +127,7 @@ for f in proto_files:
     meta = f'from {e(source)}' if source else e(rel)
 
     cards.append(f'''<a class="gallery-card" href="{e(rel)}"
-   data-month="{e(created[:7] if created else '')}" data-title="{e(html.unescape(title).lower())}">
+   data-month="{e(created[:7] if created else '')}" data-title="{e(title.lower())}">
   <span class="r-title">{e(title)}</span>
   <span class="r-meta">{meta}</span>
   <span class="r-date">{e(created)}</span>
@@ -139,7 +142,9 @@ gallery_entries = '\n'.join(cards)
 # output directory, and the plans collection follows plansDirectory rather than
 # assuming docs/plans.
 def resolve_plans_dir():
+    # Claude settings precedence: project-local → project → user-global.
     for path in (
+        os.path.join(os.getcwd(), '.claude', 'settings.local.json'),
         os.path.join(os.getcwd(), '.claude', 'settings.json'),
         os.path.join(os.path.expanduser('~'), '.claude', 'settings.json'),
     ):
@@ -160,9 +165,10 @@ def docs_count(directory):
 
 def apply_shell(text, output_dir, active):
     docs = os.path.join(os.getcwd(), 'docs')
+    plans_dir = resolve_plans_dir()
     collections = (
         ('HOME',       os.path.join(docs, 'index.html'), None),
-        ('PLANS',      os.path.join(resolve_plans_dir(), 'index.html'), resolve_plans_dir()),
+        ('PLANS',      os.path.join(plans_dir, 'index.html'), plans_dir),
         ('PROTOTYPES', os.path.join(docs, 'prototypes', 'index.html'), os.path.join(docs, 'prototypes')),
         ('ARTIFACTS',  os.path.join(docs, 'artifacts', 'index.html'), os.path.join(docs, 'artifacts')),
         ('SOCIAL',     os.path.join(docs, 'media', 'social', 'index.html'), os.path.join(docs, 'media', 'social')),

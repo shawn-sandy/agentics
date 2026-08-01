@@ -113,6 +113,13 @@ const build = spawnSync('bash', [join(ROOT, 'docs/plans/build-index.sh'), TMP], 
   env: { ...process.env, HOME: TMP, CLAUDE_PLUGIN_ROOT: '' },
 });
 check('build-index.sh exits 0 over the fixture', build.status === 0, build.stderr);
+// Every check below reads the index the generator was supposed to write. If it
+// did not run, readFileSync throws ENOENT and buries the real cause under a
+// stack trace — report and stop instead.
+if (build.status !== 0) {
+  console.log(`\n${pass} passed, ${fail} failed`);
+  process.exit(1);
+}
 
 const index = readFileSync(join(plansDir, 'index.html'), 'utf8');
 

@@ -117,13 +117,13 @@ done <<< "$PLAN_FILES"
 Parse the JSON output with `json.loads()` into a list of entries. **Sort the list newest-first by `created` descending** (compare the `YYYY-MM-DD` strings; entries with an empty `created` sort last, then break ties by `title` ascending). Then, from each entry in sorted order, generate one `<a>` block:
 
 ```html
-<a class="gallery-card" href="{HREF}"
+<a class="gallery-card" href="{BASENAME}"
    data-status="{STATUS}" data-type="{TYPE}" data-effort="{EFFORT}" data-month="{MONTH}" data-title="{TITLE_LOWER}" data-steps-done="{STEPS_DONE}" data-steps-total="{STEPS_TOTAL}">
   <span class="glyph" aria-hidden="true">{GLYPH}</span><span class="sr-only">{STATUS_DISPLAY}</span>
   <span class="r-title">{TITLE}</span>
   <span class="r-meta">{TYPE}{EFFORT_TEXT}{PROTO_TEXT}</span>
   <span class="r-date">{CREATED}</span>
-  <span class="r-steps">{STEPS_DONE} / {STEPS_TOTAL} steps</span>
+  <span class="r-steps">{STEPS_DONE} / {STEPS_TOTAL} steps</span>   <!-- in-progress plans with steps ONLY; omit this line entirely otherwise -->
 </a>
 ```
 
@@ -164,8 +164,8 @@ GENERATED_AT=$(date '+%Y-%m-%d %H:%M')
    - `{{GALLERY_ENTRIES}}` → concatenated `<a>` blocks from Step 4
    - `{{PLAN_COUNT}}` → total number of plan cards rendered
    - `{{GENERATED_AT}}` → value of `$GENERATED_AT`
-   - `{{DOCS_ROOT}}` → `../` (the topbar links are relative to `docs/`)
-   - `{{COUNT_PLANS}}`, `{{COUNT_PROTOTYPES}}`, `{{COUNT_ARTIFACTS}}`, `{{COUNT_SOCIAL}}` → the number of `*.html` files other than `index.html` in `docs/plans`, `docs/prototypes`, `docs/artifacts`, and `docs/media/social`. Count them on disk rather than reading the sibling `index.html` files — the four galleries are generated independently and any of them may be stale. A missing directory counts 0
+   - `{{HREF_HOME}}`, `{{HREF_PLANS}}`, `{{HREF_PROTOTYPES}}`, `{{HREF_ARTIFACTS}}`, `{{HREF_SOCIAL}}` → each tab's target index, relative to `$PLANS_DIR` (the directory this index is written to). With the default layout that is `../index.html`, `index.html`, `../prototypes/index.html`, `../artifacts/index.html`, and `../media/social/index.html` — compute them rather than hard-coding, since `plansDirectory` is configurable and the depth moves with it
+   - `{{COUNT_PLANS}}`, `{{COUNT_PROTOTYPES}}`, `{{COUNT_ARTIFACTS}}`, `{{COUNT_SOCIAL}}` → the number of `*.html` files other than `index.html` in `$PLANS_DIR`, `docs/prototypes`, `docs/artifacts`, and `docs/media/social`. `{{COUNT_PLANS}}` is the number of cards this run actually rendered. Count them on disk rather than reading the sibling `index.html` files — the four galleries are generated independently and any of them may be stale. A missing directory counts 0
    - `{{CUR_PLANS}}` → `aria-current="page"`; `{{CUR_HOME}}`, `{{CUR_PROTOTYPES}}`, `{{CUR_ARTIFACTS}}`, `{{CUR_SOCIAL}}` → the empty string. Exactly one tab is marked current
 
 4. **Write** the result to `$PLANS_DIR/index.html`.

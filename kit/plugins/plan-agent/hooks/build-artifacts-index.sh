@@ -126,7 +126,9 @@ gallery_entries = '\n'.join(cards)
 # output directory, and the plans collection follows plansDirectory rather than
 # assuming docs/plans.
 def resolve_plans_dir():
+    # Claude settings precedence: project-local → project → user-global.
     for path in (
+        os.path.join(os.getcwd(), '.claude', 'settings.local.json'),
         os.path.join(os.getcwd(), '.claude', 'settings.json'),
         os.path.join(os.path.expanduser('~'), '.claude', 'settings.json'),
     ):
@@ -147,9 +149,10 @@ def docs_count(directory):
 
 def apply_shell(text, output_dir, active):
     docs = os.path.join(os.getcwd(), 'docs')
+    plans_dir = resolve_plans_dir()
     collections = (
         ('HOME',       os.path.join(docs, 'index.html'), None),
-        ('PLANS',      os.path.join(resolve_plans_dir(), 'index.html'), resolve_plans_dir()),
+        ('PLANS',      os.path.join(plans_dir, 'index.html'), plans_dir),
         ('PROTOTYPES', os.path.join(docs, 'prototypes', 'index.html'), os.path.join(docs, 'prototypes')),
         ('ARTIFACTS',  os.path.join(docs, 'artifacts', 'index.html'), os.path.join(docs, 'artifacts')),
         ('SOCIAL',     os.path.join(docs, 'media', 'social', 'index.html'), os.path.join(docs, 'media', 'social')),

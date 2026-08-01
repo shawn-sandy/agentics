@@ -44,6 +44,22 @@
 
 ### Fixed
 
+- **Every plans-index generator now reads `.claude/settings.local.json` first.**
+  The resolvers checked project then global settings only, so a developer who
+  pointed `plansDirectory` somewhere else in their local settings had the
+  gallery written to, and counted from, a directory they were not using.
+  `render-plan-html.py` and `check-prototype-drift.py` already used local →
+  project → global; the index builders now match.
+- **The template-less fallback stylesheet matches the markup it emits.** When
+  the plan-agent templates cannot be resolved, `build-index.sh` writes a bare
+  page from an inline stylesheet — which still styled the card classes the row
+  layout replaced. Without a `.sr-only` clip rule, every row's visually-hidden
+  status text rendered as loose words beside its glyph.
+- **Prototype titles no longer double-escape.** `get_title` returned the raw
+  `<title>` text and the card escaped it again, so a prototype named
+  `Tabs &amp; panels` rendered as `Tabs &amp;amp; panels` while its
+  `data-title` held the unescaped form — the visible row and the search filter
+  disagreed.
 - **`.save-pdf-btn` no longer overrides its own font.** The rule set
   `font-family: var(--mono)` and then `font-family: inherit` six lines later,
   so the button rendered in the UI font while its twin, the theme toggle,

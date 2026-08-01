@@ -21,7 +21,12 @@ os.chdir(project_root)
 
 # ── Resolve plans directory ────────────────────────────────────────────────────
 def resolve_plans_dir():
+    # Claude settings precedence: project-local → project → user-global. The
+    # local file is first because it is the one a developer uses to point their
+    # own checkout somewhere else; skipping it sends the gallery to a directory
+    # they are not writing to.
     for path in (
+        os.path.join(os.getcwd(), '.claude', 'settings.local.json'),
         os.path.join(os.getcwd(), '.claude', 'settings.json'),
         os.path.join(os.path.expanduser('~'), '.claude', 'settings.json'),
     ):
@@ -257,18 +262,27 @@ else:
   body{{font-family:system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#111}}
   h1{{font-size:1.4rem;margin-bottom:.25rem}}
   .meta{{color:#6b7280;font-size:.85rem;margin-bottom:2rem}}
-  .gallery{{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}}
-  .gallery-card{{display:block;border:1px solid #e5e7eb;border-radius:6px;padding:1rem;text-decoration:none;color:inherit;transition:border-color .15s}}
-  .gallery-card:hover{{border-color:#2563eb}}
-  .card-badges{{display:flex;gap:.4rem;margin-bottom:.5rem;flex-wrap:wrap}}
-  .status-chip,.type-chip{{font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.15rem .5rem;border-radius:999px}}
-  .status-todo{{background:#f3f4f6;color:#6b7280}}
-  .status-in-progress{{background:#fef3c7;color:#d97706}}
-  .status-completed{{background:#f0fdf4;color:#16a34a}}
-  .type-chip{{background:#eff6ff;color:#2563eb}}
-  .card-title{{font-weight:600;margin-bottom:.35rem;font-size:.95rem}}
-  .card-meta{{font-size:.75rem;color:#9ca3af;display:flex;gap:.75rem;flex-wrap:wrap}}
-  .proto-chip{{font-size:.6rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.1rem .45rem;border-radius:999px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}}
+  .gallery{{display:block}}
+  /* The row markup the generator emits, styled just enough to be readable:
+     this branch only runs when the plan-agent template cannot be found, and
+     without a .sr-only clip the hidden status text renders as loose words
+     beside every glyph. */
+  .gallery-card{{display:grid;grid-template-columns:1.25rem minmax(0,1fr) 9rem 3.5rem;gap:.25rem .9rem;align-items:baseline;padding:.6rem .5rem;border-bottom:1px solid #e5e7eb;text-decoration:none;color:inherit}}
+  .gallery-card:hover{{background:#f9fafb}}
+  .gallery-card[data-status=""]{{grid-template-columns:minmax(0,1fr) 9rem 3.5rem}}
+  .sr-only{{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}}
+  .glyph{{font-family:ui-monospace,Consolas,monospace;font-size:.8rem;text-align:center;color:#4b5563}}
+  .gallery-card[data-status="completed"] .glyph{{color:#15803d}}
+  .gallery-card[data-status="in-progress"] .glyph{{color:#b45309}}
+  .r-title{{font-size:.95rem;line-height:1.4}}
+  .gallery-card[data-status="in-progress"] .r-title{{font-weight:600}}
+  .r-meta,.r-date,.r-steps{{font-family:ui-monospace,Consolas,monospace;font-size:.7rem;color:#4b5563}}
+  .r-date{{text-align:right}}
+  .r-steps{{grid-column:2 / -1}}
+  @media (max-width:700px){{
+    .gallery-card{{grid-template-columns:1.25rem minmax(0,1fr) 3.5rem}}
+    .r-meta{{grid-column:2 / -1}}
+  }}
 </style>
 </head>
 <body>
