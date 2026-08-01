@@ -1,7 +1,8 @@
 ---
-status: todo
+status: completed
 type: refactor
 created: 2026-07-27
+modified: 2026-08-01
 effort: medium
 glance: Three artifact-tools recap commands say the same thing three times — eng-recap and team-recap alone share 1,568 identical words. Pulling the shared workflow into one reference file leaves each command as a short framing brief, and we will know it worked when the three commands share fewer than 50 identical lines while each still publishes to its own artifact URL key.
 ---
@@ -62,13 +63,13 @@ changed).
 
 ## Steps
 
-1. Diff the three command files pairwise and write the shared-line inventory to a scratch file, separating lines that are genuinely shared workflow from lines that only look identical (shared section *headings* whose content differs per audience). Why: collapsing a line that reads the same but means something different per audience is how a refactor silently changes behavior. Verify: the scratch file classifies every one of the 68 all-three shared lines as either "shared workflow" or "coincidental match".
-2. Write `kit/plugins/artifact-tools/references/recap-core.md` containing only the Step 1 "shared workflow" lines — PR and session gathering including the 20-file diff cap and `--name-only` fallback, the blocking `security-scrub` gate, page build, publish, local-HTML fallback, and the republish-record protocol parameterised by key name. Why: one file that owns the workflow means a fix to the scrub gate lands in all three commands at once instead of one-third of the time. Verify: `recap-core.md` exists and contains no audience-specific words (`engineer`, `stakeholder`, `glossary`).
-3. Rewrite each of the three commands to state its audience, its section list, its plain-language posture, and its republish key explicitly, then delegate the workflow to `references/recap-core.md`. Why: the differences are the whole reason three commands exist, so they are what the command file should contain. Verify: each command file is under 500 words, names its own republish key, and links `references/recap-core.md`.
-4. Confirm each command still writes its own republish key and still carries the `artifact-url:` prohibition, checking assignments per file rather than counting key names across files. Why: a shared key silently overwrites another command's published artifact, and a command reassigned to `artifact-url:` would clobber the session recap. Verify: run the three per-file greps below — each prints its own key and nothing else — then confirm all three files still match `Never write .artifact-url:`; note that a bare `grep -o ... commands/*.md | sort -u` cannot prove this, because grep prefixes each match with its filename and the prohibition text names keys the command must *not* write (that form returns 9 lines today, not 3).
-5. Bump `artifact-tools` to the next minor version in `.claude-plugin/marketplace.json` and add a `kit/plugins/artifact-tools/CHANGELOG.md` entry describing the extraction. Why: any edit under `kit/plugins/<name>/` requires a version bump higher than main, per repo convention. Verify: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0.
-6. Write `tests/plugins/test-recap-command-dedupe.sh` asserting the three commands share fewer than 50 identical lines, each is under 500 words, `references/recap-core.md` exists, and — per file, not across files — that `eng-recap.md` writes `eng-artifact-url:`, `team-recap.md` writes `team-artifact-url:`, `product-doc.md` writes `product-artifact-url:`, and none of the three assigns `artifact-url:` to itself. Why: without a check, the next feature added to all three commands re-introduces the duplication. Verify: `bash tests/plugins/test-recap-command-dedupe.sh` exits 0; pasting 60 lines of recap-core back into two commands makes it exit 1.
-7. Add the new test to `.github/workflows/check-plugin-versions.yml`. Why: local-only tests stop running. Verify: the workflow names `test-recap-command-dedupe.sh` and parses as valid YAML.
+1. [x] Diff the three command files pairwise and write the shared-line inventory to a scratch file, separating lines that are genuinely shared workflow from lines that only look identical (shared section *headings* whose content differs per audience). Why: collapsing a line that reads the same but means something different per audience is how a refactor silently changes behavior. Verify: the scratch file classifies every one of the 68 all-three shared lines as either "shared workflow" or "coincidental match".
+2. [x] Write `kit/plugins/artifact-tools/references/recap-core.md` containing only the Step 1 "shared workflow" lines — PR and session gathering including the 20-file diff cap and `--name-only` fallback, the blocking `security-scrub` gate, page build, publish, local-HTML fallback, and the republish-record protocol parameterised by key name. Why: one file that owns the workflow means a fix to the scrub gate lands in all three commands at once instead of one-third of the time. Verify: `recap-core.md` exists and contains no audience-specific words (`engineer`, `stakeholder`, `glossary`).
+3. [x] Rewrite each of the three commands to state its audience, its section list, its plain-language posture, and its republish key explicitly, then delegate the workflow to `references/recap-core.md`. Why: the differences are the whole reason three commands exist, so they are what the command file should contain. Verify: each command file is under 500 words, names its own republish key, and links `references/recap-core.md`.
+4. [x] Confirm each command still writes its own republish key and still carries the `artifact-url:` prohibition, checking assignments per file rather than counting key names across files. Why: a shared key silently overwrites another command's published artifact, and a command reassigned to `artifact-url:` would clobber the session recap. Verify: run the three per-file greps below — each prints its own key and nothing else — then confirm all three files still match `Never write .artifact-url:`; note that a bare `grep -o ... commands/*.md | sort -u` cannot prove this, because grep prefixes each match with its filename and the prohibition text names keys the command must *not* write (that form returns 9 lines today, not 3).
+5. [x] Bump `artifact-tools` to the next minor version in `.claude-plugin/marketplace.json` and add a `kit/plugins/artifact-tools/CHANGELOG.md` entry describing the extraction. Why: any edit under `kit/plugins/<name>/` requires a version bump higher than main, per repo convention. Verify: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0.
+6. [x] Write `tests/plugins/test-recap-command-dedupe.sh` asserting the three commands share fewer than 50 identical lines, each is under 500 words, `references/recap-core.md` exists, and — per file, not across files — that `eng-recap.md` writes `eng-artifact-url:`, `team-recap.md` writes `team-artifact-url:`, `product-doc.md` writes `product-artifact-url:`, and none of the three assigns `artifact-url:` to itself. Why: without a check, the next feature added to all three commands re-introduces the duplication. Verify: `bash tests/plugins/test-recap-command-dedupe.sh` exits 0; pasting 60 lines of recap-core back into two commands makes it exit 1.
+7. [x] Add the new test to `.github/workflows/check-plugin-versions.yml`. Why: local-only tests stop running. Verify: the workflow names `test-recap-command-dedupe.sh` and parses as valid YAML.
 
 ## Tests
 
@@ -78,15 +79,23 @@ Tier 1 — This plan changes application code
 
 ## Acceptance Criteria
 
-- [ ] `kit/plugins/artifact-tools/references/recap-core.md` exists and holds the shared workflow
-- [ ] Each of the three command files is under 500 words
-- [ ] Pairwise identical lines between any two commands number fewer than 50
-- [ ] `eng-recap.md` writes `eng-artifact-url:`, `team-recap.md` writes `team-artifact-url:`, and `product-doc.md` writes `product-artifact-url:`
-- [ ] No command assigns `artifact-url:` to itself; all three retain the prohibition naming it as `session-artifact`'s key
-- [ ] Each command still names its audience, its section list, and its republish key
-- [ ] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0
-- [ ] `bash tests/plugins/test-recap-command-dedupe.sh` exits 0
-- [ ] No plugin other than `artifact-tools` is modified
+- [x] `kit/plugins/artifact-tools/references/recap-core.md` exists and holds the shared workflow
+- [x] Each of the three command files is under 500 words
+- [x] Pairwise identical lines between any two commands number fewer than 50
+- [x] `eng-recap.md` writes `eng-artifact-url:`, `team-recap.md` writes `team-artifact-url:`, and `product-doc.md` writes `product-artifact-url:`
+- [x] No command assigns `artifact-url:` to itself; all three retain the prohibition naming it as `session-artifact`'s key
+- [x] Each command still names its audience, its section list, and its republish key
+- [x] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0
+- [x] `bash tests/plugins/test-recap-command-dedupe.sh` exits 0
+- [x] No plugin other than `artifact-tools` is modified
+
+## Completion Report
+
+- Integration test — the behavioral run named in Verification (run all three commands against one merged PR and confirm three artifacts publish) was not performed — it publishes three pages to an external service, which is not something to trigger unprompted. Verified structurally instead: each command names a distinct favicon (🔧 / 🧭 / 📋), a distinct inbox stem, and a distinct republish key; the audience-appropriate sections the Verification section names all survive (eng-recap has Architecture and code paths and no Glossary; team-recap has Glossary and the diagram section; product-doc has Features and Known gaps); and the read-key-before-publishing protocol is intact in `recap-core.md`. Every acceptance criterion was verified directly. This one Verification item was not.
+- `tests/plugins/test-artifact-tools.sh` (modified, not in the plan's Files list) — checks 8, 8b, and 9 asserted the gh preflight, the PR gather block, and the 20-file diff cap lived inside `commands/*.md`, and check 8 required `found >= 3`. Extracting the workflow made all three fail. They now assert the same contracts against `references/recap-core.md` — the file that owns them after this change — and additionally assert that each command loads the core, that none keeps a second gather block, and that exactly one command (`eng-recap`) opts in to the diff budget. Retargeted, not weakened.
+- `tests/plugins/test-remaining-skill-splits.sh` (modified, not in the plan's Files list) — its orphaned-reference check globbed only `skills/*/SKILL.md` as linkers, so `recap-core.md` — the first reference read by commands rather than skills — was reported as orphaned. The check now globs commands too. Confirmed the widened logic still flags a genuinely unlinked reference.
+- `product-doc` gained the page-build requirements and the SVG-inlining destination — it had neither before, because they lived only in the two siblings. Inheriting them from the shared workflow is the extraction working as intended, and it needed a favicon (📋) to publish under, which it also lacked.
+- `kit/plugins/artifact-tools/README.md` (modified, not in the plan's Files list) — one line added to the structure tree for `recap-core.md`. The tree was already stale by the six references added in 1.9.0; that pre-existing gap was left alone as out of scope.
 
 ## Verification
 

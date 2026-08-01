@@ -82,7 +82,8 @@ artifact-tools/
 │   ├── team-recap.md      # whole-team visual framing over session-artifact
 │   └── eng-recap.md       # engineering framing over session-artifact
 ├── references/
-│   └── titles.md          # shared artifact-title rules, read by every skill
+│   ├── titles.md          # shared artifact-title rules, read by every skill
+│   └── recap-core.md      # the recap workflow, read by all three commands
 └── skills/
     ├── diff-artifact/
     │   └── SKILL.md

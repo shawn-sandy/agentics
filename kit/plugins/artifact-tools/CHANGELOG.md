@@ -5,6 +5,38 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-08-01
+
+### Changed
+
+- **The three recap commands say the workflow once instead of three times.**
+  `eng-recap`, `team-recap`, and `product-doc` were three framings of one
+  workflow: `eng-recap` and `team-recap` alone shared 168 identical lines, all
+  three shared 68, and the set ran to 6,190 words. The shared workflow — source
+  modes and PR gathering, the blocking `security-scrub` gate, the diff budget,
+  page build, the SVG-inlining destination, and the republish-record protocol —
+  now lives once in `references/recap-core.md`.
+  - Each command is reduced to what actually differs: audience, section list,
+    favicon, inbox stem, and republish key. They are 496, 496, and 419 words,
+    each under the 500-word framing cap, and any two share at most 16 identical
+    lines, down from 168.
+  - The diff budget is opt-in. `eng-recap` opts in — it is the only recap that
+    reads diff hunks; its two siblings keep reading commit bodies.
+  - `product-doc` gains the page-build requirements (mermaid diagrams,
+    theme-awareness, `overflow-x` containers) and the SVG-inlining destination
+    it never had, because they now come from the shared workflow.
+  - Republish keys are unchanged and still one per command: `eng-artifact-url:`,
+    `team-artifact-url:`, `product-artifact-url:`, with `artifact-url:` still
+    reserved for `session-artifact`. A shared key would silently republish one
+    recap over another's URL, so `tests/plugins/test-recap-command-dedupe.sh`
+    now asserts the assignments per file rather than counting key names across
+    files.
+  - `tests/plugins/test-artifact-tools.sh` checks 8, 8b, and 9 now assert the
+    gh preflight, the PR gather block, and the 20-file diff cap against
+    `references/recap-core.md` — the file that owns them after this change —
+    and additionally assert that every command loads the core and that none
+    keeps a second copy.
+
 ## [1.9.0] - 2026-07-29
 
 ### Changed
