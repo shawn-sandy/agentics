@@ -1,6 +1,6 @@
 # System Prompt Template
 
-Used by `write-prompt` for **system** prompt type.
+Used by `prompt` for **system** prompt type.
 
 Techniques applied: Role assignment · XML structure (`<instructions>`, `<constraints>`) · Output format · Guardrails
 
@@ -28,6 +28,15 @@ When responding:
 - If the user asks about {{OUT_OF_SCOPE_TOPIC}}, respond: "{{REDIRECT_RESPONSE}}"
 </constraints>
 ```
+
+**The `<constraints>` block is optional and its slots are not quotas.** Keep
+only the boundaries the interview raised as genuinely critical — safety, legal,
+irreversible actions, a hard scope edge. Drop `GUARDRAIL_2` when the user named
+one boundary, drop the redirect line when no topic is out of scope, and drop
+the whole block when none of it applies. Per section 0 of
+`best-practices-reference.md`, guardrails invented for worst cases the user
+never raised make the assistant overthink ordinary requests. A role and clear
+instructions carry more behavior than a long `Never` list.
 
 ---
 

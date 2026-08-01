@@ -1,6 +1,6 @@
 # Task Prompt Template
 
-Used by `write-prompt` for **task** prompt type.
+Used by `prompt` for **task** prompt type.
 
 Techniques applied: Clarity/directness · XML context + example tags · Thinking/CoT scaffolding · Output format
 
@@ -32,6 +32,14 @@ Output requirements:
 - Length: {{OUTPUT_LENGTH}}
 - Tone: {{OUTPUT_TONE}}
 ```
+
+**The `<example>` and `<thinking>` blocks are optional.** Include the example
+only when the output requirements cannot express what it shows — a tone, a
+layout, an edge-case judgment; one pair is usually enough. Include the thinking
+block only when the *shape* of the reasoning matters, such as a required order
+of checks. Delete the block rather than fill it with invented reasoning steps:
+per section 0 of `best-practices-reference.md`, scaffolding the model did not
+need is one more thing for it to reconcile.
 
 ---
 

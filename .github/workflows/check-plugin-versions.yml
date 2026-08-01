@@ -89,6 +89,12 @@ jobs:
         run: bash tests/plugins/test-generator-skills-verify-output.sh
       - name: Test every skill description stays within budget
         run: bash tests/plugins/test-description-budget.sh
+      # An unlinked reference file is invisible to review: it lints, it greps,
+      # it reads correctly, and it never loads. best-practices-reference.md
+      # shipped that way for releases. This check fails on the link, not the
+      # prose, so the calibration cannot go orphaned a second time.
+      - name: Test the prompt skill's Claude 5 calibration stays wired
+        run: bash tests/plugins/test-prompt-calibration.sh
       # The plan-mode guard fails silently in both directions: strip it and a
       # skill writes from inside a mode the user deliberately entered; re-expand
       # it and 40 files each re-teach the model something it already knows.

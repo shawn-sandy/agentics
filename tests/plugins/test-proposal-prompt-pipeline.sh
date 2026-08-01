@@ -4,7 +4,7 @@ set -euo pipefail
 # OBJECTIVE-VERIFICATION TEST
 # docs/plans/refactor-build-proposal-to-emit-prompt.md
 #
-# Objective: build-proposal converges on a saved prompt authored by write-prompt.
+# Objective: build-proposal converges on a saved prompt authored by prompt.
 #
 # One run over every seam of the refactor: the command wrapper that unblocks
 # programmatic invocation, the fifth prompt type and its template, the Step 6
@@ -15,9 +15,9 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 PA="$ROOT/kit/plugins/plan-agent"
-WRAPPER="$PA/commands/write-prompt.md"
-WP="$PA/skills/write-prompt/SKILL.md"
-TEMPLATE="$PA/skills/write-prompt/references/proposal-prompt-template.md"
+WRAPPER="$PA/commands/prompt.md"
+WP="$PA/skills/prompt/SKILL.md"
+TEMPLATE="$PA/skills/prompt/references/proposal-prompt-template.md"
 BP_DIR="$PA/skills/build-proposal"
 BP="$BP_DIR/SKILL.md"
 SHAPE="$BP_DIR/references/artifact-shape.md"
@@ -44,24 +44,24 @@ fail() { echo "  FAIL: $1"; FAILURES=$((FAILURES + 1)); }
 
 echo "=== Proposal-to-Prompt Pipeline (objective test) ==="
 
-echo "1. The seam is open: a command wrapper reaches write-prompt despite disable-model-invocation..."
+echo "1. The seam is open: a command wrapper reaches prompt despite disable-model-invocation..."
 # The flag blocks programmatic Skill() invocation, not just ambient activation, so
 # a command wrapper is needed to put the name in the registry at all. But the
 # command SHADOWS the skill of the same name: a wrapper that delegates via
-# Skill(skill: "plan-agent:write-prompt") returns itself, and the seven phases
+# Skill(skill: "plan-agent:prompt") returns itself, and the seven phases
 # never load (probe: 0 "## Phase" headings that way, 7 when loaded by path).
 # The wrapper must therefore Read the skill file, and say why.
 M=""
 [ -f "$WRAPPER" ] || M="$M wrapper-missing"
 if [ -f "$WRAPPER" ]; then
   WF="$(cat "$WRAPPER" | flat)"
-  printf '%s' "$WF" | grep -qF 'skills/write-prompt/SKILL.md' || M="$M wrapper-loads-nothing"
+  printf '%s' "$WF" | grep -qF 'skills/prompt/SKILL.md' || M="$M wrapper-loads-nothing"
   printf '%s' "$WF" | grep -qi 'shadows the skill' || M="$M self-delegation-unguarded"
 fi
 grep -q '^disable-model-invocation: true$' "$WP" || M="$M flag-dropped"
 [ -z "$M" ] && echo "  PASS" || fail "invocation seam:$M"
 
-echo "2. write-prompt declares the proposal type and its template carries all 11 slots..."
+echo "2. prompt declares the proposal type and its template carries all 11 slots..."
 M=""
 grep -qE '^\| \*\*proposal\*\*' "$WP" || M="$M type-table"
 grep -qF 'references/proposal-prompt-template.md' "$WP" || M="$M template-selection"
@@ -74,14 +74,14 @@ if [ -f "$TEMPLATE" ]; then
 fi
 [ -z "$M" ] && echo "  PASS" || fail "fifth type incomplete:$M"
 
-echo "3. build-proposal Step 6 delegates to write-prompt and dictates the path..."
+echo "3. build-proposal Step 6 delegates to prompt and dictates the path..."
 # The caller must pass --out. Skill() returns nothing this skill can read, and
-# write-prompt's own Phase 7 would resolve a different directory and a different
+# prompt's own Phase 7 would resolve a different directory and a different
 # intent slug — so an independently derived path names a file nobody wrote.
 STEP6="$(sed -n '/^### Step 6 —/,/^### Step 7 —/p' "$BP")"
 STEP6F="$(printf '%s' "$STEP6" | flat)"
 M=""
-printf '%s' "$STEP6" | grep -qF 'Skill(skill: "plan-agent:write-prompt"' || M="$M no-delegation"
+printf '%s' "$STEP6" | grep -qF 'Skill(skill: "plan-agent:prompt"' || M="$M no-delegation"
 printf '%s' "$STEP6" | grep -qF -- '--out' || M="$M no-out-path"
 printf '%s' "$STEP6" | grep -qF -- '--answers-gathered' || M="$M no-interview-bypass"
 cat "$WP" | flat | grep -qF -- '--out <path>' || M="$M out-not-honoured"
@@ -164,7 +164,7 @@ done
 
 echo ""
 if [ "$FAILURES" -eq 0 ]; then
-  echo "Objective verified: build-proposal converges on a saved prompt authored by write-prompt."
+  echo "Objective verified: build-proposal converges on a saved prompt authored by prompt."
   exit 0
 else
   echo "$FAILURES check(s) failed."

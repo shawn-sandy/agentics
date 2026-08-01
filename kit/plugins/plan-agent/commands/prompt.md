@@ -5,12 +5,12 @@ allowed-tools:
 argument-hint: "[intent or topic] [--out <path>] [--answers-gathered]"
 ---
 
-# Write Prompt
+# Prompt
 
-`Read` `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/SKILL.md` and follow it end to
+`Read` `${CLAUDE_PLUGIN_ROOT}/skills/prompt/SKILL.md` and follow it end to
 end, treating `$ARGUMENTS` as its `$ARGUMENTS`. If that path does not resolve,
-`Glob("**/plan-agent/skills/write-prompt/SKILL.md")` and read the match.
+`Glob("**/plan-agent/skills/prompt/SKILL.md")` and read the match.
 
-Load the file by path — do **not** call `Skill(skill: "plan-agent:write-prompt")`.
+Load the file by path — do **not** call `Skill(skill: "plan-agent:prompt")`.
 This command shadows the skill of that name, so the call would return this file
 again and the seven phases would never load.

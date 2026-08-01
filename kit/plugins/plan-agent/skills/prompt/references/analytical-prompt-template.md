@@ -1,6 +1,6 @@
 # Analytical Prompt Template
 
-Used by `write-prompt` for **analytical** prompt type.
+Used by `prompt` for **analytical** prompt type.
 
 Techniques applied: Long-context patterns (document grounding) · Thinking/CoT · Self-check · Output format
 

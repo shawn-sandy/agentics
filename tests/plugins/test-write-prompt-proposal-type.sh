@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Unit coverage for write-prompt's fifth `proposal` prompt type
+# Unit coverage for prompt's fifth `proposal` prompt type
 # (docs/plans/refactor-build-proposal-to-emit-prompt.md, steps 3-5).
 # Asserts the type is wired through every phase that branches on type, that the
 # caller-supplied --out contract and the in-place rewrite rule are documented,
@@ -11,9 +11,9 @@ set -euo pipefail
 # the confirmation.
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-SKILL="$ROOT/kit/plugins/plan-agent/skills/write-prompt/SKILL.md"
-TEMPLATE="$ROOT/kit/plugins/plan-agent/skills/write-prompt/references/proposal-prompt-template.md"
-WRAPPER="$ROOT/kit/plugins/plan-agent/commands/write-prompt.md"
+SKILL="$ROOT/kit/plugins/plan-agent/skills/prompt/SKILL.md"
+TEMPLATE="$ROOT/kit/plugins/plan-agent/skills/prompt/references/proposal-prompt-template.md"
+WRAPPER="$ROOT/kit/plugins/plan-agent/commands/prompt.md"
 FAILURES=0
 
 SLOTS="TLDR CONTEXT CORE_FINDING COMPARISON_TABLE LOCKED_DECISIONS WORKSTREAMS RISKS OPEN_QUESTIONS ROADMAP APPENDICES CORE_INSTRUCTION"
@@ -24,12 +24,12 @@ phase() { sed -n "/^## Phase $1 —/,/^## Phase $(( $1 + 1 )) —/p" "$SKILL"; }
 # must run against a flattened copy or it fails on where the line happens to break.
 flat() { tr '\n' ' ' | tr -s ' '; }
 
-echo "=== write-prompt proposal-type Unit Test ==="
+echo "=== prompt proposal-type Unit Test ==="
 
 echo "1. The command wrapper loads the skill body by path, without self-delegating..."
-# The command and the skill share the name `plan-agent:write-prompt`, and the
+# The command and the skill share the name `plan-agent:prompt`, and the
 # COMMAND wins in the Skill namespace. A wrapper that delegates with
-# Skill(skill: "plan-agent:write-prompt") — the shape commands/deep-grill.md uses
+# Skill(skill: "plan-agent:prompt") — the shape commands/deep-grill.md uses
 # — therefore returns itself, and SKILL.md's seven phases never load. Verified by
 # probe: that wrapper yielded 0 "## Phase" headings; loading by path yields 7.
 # So the wrapper must Read the skill file, not call its own name.
@@ -37,8 +37,8 @@ MISSING=""
 [ -f "$WRAPPER" ] || MISSING="$MISSING wrapper-file"
 if [ -f "$WRAPPER" ]; then
   WF="$(cat "$WRAPPER" | flat)"
-  printf '%s' "$WF" | grep -qF 'skills/write-prompt/SKILL.md' || MISSING="$MISSING no-skill-path"
-  printf '%s' "$WF" | grep -qi 'do \*\*not\*\* call `Skill(skill: "plan-agent:write-prompt")`' \
+  printf '%s' "$WF" | grep -qF 'skills/prompt/SKILL.md' || MISSING="$MISSING no-skill-path"
+  printf '%s' "$WF" | grep -qi 'do \*\*not\*\* call `Skill(skill: "plan-agent:prompt")`' \
     || MISSING="$MISSING no-loop-warning"
   printf '%s' "$WF" | grep -qi 'shadows the skill' || MISSING="$MISSING shadowing-unexplained"
   printf '%s' "$WF" | grep -qF 'allowed-tools: Read' || MISSING="$MISSING read-not-allowed"
@@ -282,7 +282,7 @@ fi
 
 echo ""
 if [ "$FAILURES" -eq 0 ]; then
-  echo "All write-prompt proposal-type checks passed."
+  echo "All prompt proposal-type checks passed."
   exit 0
 else
   echo "$FAILURES check(s) failed."

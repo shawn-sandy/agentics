@@ -5,6 +5,17 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1] - 2026-08-01
+
+### Changed
+
+- **`prompt-artifact` points at the renamed skill.** `plan-agent` renamed its
+  `write-prompt` skill to `prompt` in 8.0.0, so the SKILL.md body, the empty-state
+  message, and `references/prompt-resolution.md` now name `/plan-agent:prompt`.
+  Prompt-directory resolution is unchanged — it still has to match that skill's
+  precedence exactly or the two disagree about where prompts live.
+
+
 ## [1.10.0] - 2026-08-01
 
 ### Changed

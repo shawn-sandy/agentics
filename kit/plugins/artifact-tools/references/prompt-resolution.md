@@ -13,7 +13,7 @@ Settle this before touching the filesystem:
 
 ## Step 2 — Resolve the prompts directory
 
-Match `write-prompt`'s resolution exactly, or the two skills disagree about where
+Match `prompt`'s resolution exactly, or the two skills disagree about where
 prompts live and this one publishes a stale or empty set. First match wins:
 
 ```bash
@@ -22,7 +22,7 @@ import json, os, subprocess, sys
 # 1. promptsDirectory via Claude settings precedence: project-local, project,
 #    then user-global. All three files, in this order — dropping the
 #    settings.local.json read is how this skill starts publishing from a
-#    different directory than write-prompt saves to.
+#    different directory than prompt saves to.
 for path in (os.path.join(os.getcwd(), '.claude', 'settings.local.json'),
              os.path.join(os.getcwd(), '.claude', 'settings.json'),
              os.path.join(os.path.expanduser('~'), '.claude', 'settings.json')):
@@ -63,7 +63,7 @@ anything else silently.
 
 **Library mode.** `Glob` `$PROMPTS_DIR/*.md`. If nothing matches, tell the user:
 
-> "No saved prompts found in `<PROMPTS_DIR>`. Run `/plan-agent:write-prompt` to
+> "No saved prompts found in `<PROMPTS_DIR>`. Run `/plan-agent:prompt` to
 > create your first one."
 
 **STOP.** Never publish an empty gallery — a page announcing nothing still costs

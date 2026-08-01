@@ -1,6 +1,59 @@
 # Changelog
 
 
+## 8.1.0 — `prompt` drafts for Claude 5 generation models (2026-08-01)
+
+### Added
+
+- **A Claude 5 generation calibration governs every draft.** `references/best-practices-reference.md`
+  gains a section 0 built from [the new rules of context engineering](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models):
+  the five then→now shifts (rules→judgment, examples→interface design,
+  upfront context→progressive disclosure, repetition→one source,
+  simple specs→rich references) and the four practices a drafted prompt should
+  stop doing. Phase 3 reads it before choosing layers — the matrix still picks
+  *which* layers apply, section 0 decides how much each one earns.
+- **`tests/plugins/test-prompt-calibration.sh`** (objective test, 5 checks) —
+  pins the link from the core, the shift rows and obsolete list, the
+  single-source rule, both templates' optional slots, and the one-hop depth.
+
+### Fixed
+
+- **`references/best-practices-reference.md` was orphaned.** It shipped as the
+  skill's technique catalog but no file in the skill linked it, so it never
+  loaded on any run. Phase 3 now links it, and it is the single authoritative
+  definition of the techniques the Phase 1 matrix names.
+
+### Changed
+
+- **Template slots are no longer quotas.** `system`'s `<constraints>` block and
+  `task`'s `<example>` and `<thinking>` blocks are documented as optional, with
+  an instruction to delete the block rather than fill it with an invented
+  guardrail or filler reasoning step. Every slot still ships — what changed is
+  that a draft no longer has to fill them.
+- **Few-shot and chain-of-thought carry calibration notes.** Examples are for
+  what an output contract cannot express; reasoning scaffolds are for when the
+  *shape* of the reasoning matters, not as a generic "think step by step" at a
+  model that already reasons before answering.
+- **Phase 4 gains a calibration pass** over the assembled draft — cut duplicated
+  instructions, drop scaffolding the interview never asked for, and swap prose
+  for the higher-fidelity artifact where the interview produced one. The rules
+  are stated once, in section 0; `structuring-and-drafting.md` points at them.
+
+
+## 8.0.0 — `write-prompt` is now `prompt` (2026-08-01)
+
+### Changed
+
+- **BREAKING: the `write-prompt` skill and command are renamed to `prompt`.**
+  Invoke as `/plan-agent:prompt` — `/plan-agent:write-prompt` no longer resolves.
+  The skill directory moves to `skills/prompt/`, the wrapper to
+  `commands/prompt.md`, and `build-proposal` Step 6 now delegates with
+  `Skill(skill: "plan-agent:prompt", ...)`. Nothing about the seven phases, the
+  five prompt types, the `--out` contract, or `--answers-gathered` changes; only
+  the name does. The command still shadows the skill of the same name, so the
+  wrapper keeps reading `skills/prompt/SKILL.md` by path rather than delegating.
+
+
 ## 7.10.3 — the two gates stop contradicting themselves (2026-08-01)
 
 ### Fixed

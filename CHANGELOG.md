@@ -34,6 +34,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 
 ### Changed
 
+- **plan-agent 8.1.0** — `prompt` drafts for Claude 5 generation models: a new section 0 in `best-practices-reference.md` carries the five then→now context-engineering shifts and the practices a draft should stop doing, Phase 3 reads it before choosing layers, and Phase 4 runs a calibration pass over the assembled draft. Also fixes the reference having been orphaned — it shipped as the technique catalog with no file linking it, so it never loaded
+- **plan-agent 8.0.0** — BREAKING: renamed the `write-prompt` skill and command to `prompt`; invoke as `/plan-agent:prompt`. Callers delegating with `Skill(skill: "plan-agent:write-prompt")` must switch to `plan-agent:prompt`
 - **plan-agent 4.0.0** — BREAKING: absorbed the `plan-interview` plugin. `documenting-plans`, `markdown-to-html`, `plan-status`, `plan-maintenance`, `deep-grill`, and the ExitPlanMode stress-test nudge now ship under `plan-agent`; invoke them as `/plan-agent:<name>`. `plan-interview` is de-registered from the marketplace and recoverable from git history (#426)
 - **memory-tools 4.0.0** — BREAKING: renamed the `agentic-memory-doctor` skill to `agentic-memory-management`. Update `@import` paths from `skills/agentic-memory-doctor/SKILL.md` to `skills/agentic-memory-management/SKILL.md` (#438)
 - **Plugin scoping** — Reviewer agents scoped, commands collapsed onto their skills, and hooks gated (#422)

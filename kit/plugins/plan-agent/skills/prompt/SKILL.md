@@ -1,5 +1,5 @@
 ---
-name: write-prompt
+name: prompt
 model: opus
 description: "Builds structured AI prompts using Anthropic techniques. Interviews users, classifies prompt type, and delivers a copy-pasteable prompt. Use when the user asks to write, refine, or build a prompt."
 disable-model-invocation: true
@@ -8,7 +8,7 @@ allowed-tools:
   AskUserQuestion, ToolSearch, Read, Write, Glob, Bash(git *), Bash(mkdir *), Bash(awk *), Bash(shasum *)
 ---
 
-# write-prompt
+# prompt
 
 Interview the user about their prompting need, classify the prompt type, apply
 the applicable Anthropic best-practice techniques, and deliver a copy-pasteable,
@@ -18,7 +18,7 @@ well-structured AI prompt.
 
 ## Entry — Read $ARGUMENTS
 
-On invocation via `/plan-agent:write-prompt`, `$ARGUMENTS` contains the user's
+On invocation via `/plan-agent:prompt`, `$ARGUMENTS` contains the user's
 initial intent or topic, optionally led by a type token (see Phase 1). If
 `$ARGUMENTS` is non-empty, use it to seed Phase 1 (Classify) and skip the "what
 do you need?" opener. If empty, ask: "What kind of prompt do you need help
@@ -154,6 +154,15 @@ AskUserQuestion batch if the user confirms.
 
 ## Phase 3 — Structure
 
+**Read section 0 of
+[references/best-practices-reference.md](references/best-practices-reference.md)
+first** — the Claude 5 generation calibration. It is the authoritative
+definition of every technique the Phase 1 matrix names, and section 0 decides
+how much of each layer to write: trust over constraint, one authoritative
+source per instruction, a contract in place of stacked examples, hard
+constraints only where a boundary is genuinely critical. The matrix selects
+*which* layers apply; section 0 governs *how much* each one earns.
+
 Apply the XML structural techniques selected by the technique matrix from Phase
 1 to the gathered interview responses.
 
@@ -185,15 +194,15 @@ template placeholders.
 Template selection by type:
 
 - system →
-  `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/system-prompt-template.md`
+  `${CLAUDE_PLUGIN_ROOT}/skills/prompt/references/system-prompt-template.md`
 - task →
-  `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/task-prompt-template.md`
+  `${CLAUDE_PLUGIN_ROOT}/skills/prompt/references/task-prompt-template.md`
 - creative →
-  `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/creative-prompt-template.md`
+  `${CLAUDE_PLUGIN_ROOT}/skills/prompt/references/creative-prompt-template.md`
 - analytical →
-  `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/analytical-prompt-template.md`
+  `${CLAUDE_PLUGIN_ROOT}/skills/prompt/references/analytical-prompt-template.md`
 - proposal →
-  `${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/proposal-prompt-template.md`
+  `${CLAUDE_PLUGIN_ROOT}/skills/prompt/references/proposal-prompt-template.md`
 
 Path resolution (including the `${CLAUDE_PLUGIN_ROOT}` fallback), placeholder
 substitution, and the four writing rules are in
