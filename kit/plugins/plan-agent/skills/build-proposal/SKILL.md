@@ -60,7 +60,8 @@ Parse `$ARGUMENTS` (or the conversation-derived text on the model path):
   needed; the triage normally picks the tier and escalates/de-escalates as
   research reveals scope.
 
-Echo the restated idea and the chosen tier after Step 1.
+Echo the restated idea and the chosen tier after Step 1 — then confirm them
+with the human at Step 1b before any research starts.
 
 ## Right-sizing triage (the scale-down gate)
 
@@ -162,6 +163,41 @@ underspecified, ask **2–3 clarifying questions** via `AskUserQuestion` *before
 researching; if it is already clear, proceed. Do not add friction to a
 well-specified idea. If the tier is **0**, answer or route directly and stop —
 do not author a proposal.
+
+**Restate; do not enrich.** The one-liner may compress and it may name the
+surface, but every goal, motive, and success condition in it must be one the
+human actually stated. Adding a plausible downstream purpose they never
+mentioned — a reason the thing is wanted, a decision the result will feed — is
+the failure this step exists to prevent, because the whole loop then researches
+that invention. If a motive seems missing, it is a clarifying question, not a
+blank to fill.
+
+### Step 1b — Confirm the ask (the gate)
+
+**Tier 1 and 2 only.** Tier 0 has already answered and stopped; there is
+nothing to confirm.
+
+Present the framed ask — the one-line objective, the domains, and the tier —
+then call `AskUserQuestion` with two options:
+
+- **Looks right** — proceed to Step 2.
+- **Refine it** — the human corrects the objective, scope, or tier.
+
+On **Refine it**, redraft from their correction and ask again. Bound it at
+**two** refine rounds; if the third pass still misses, use their latest wording
+as the objective **verbatim** and move on — past that point they are faster at
+saying it than you are at guessing it.
+
+**Nothing in Step 2 may start before this gate returns "Looks right."** The
+specific failure to avoid: putting the restatement and the first research tool
+call in the **same message**, so the framing scrolls by as narration and the
+fan-out is already running by the time the human reads it. The gate is one
+question placed immediately before the most expensive part of the skill —
+research fans out to subagents and web fetches against this objective, so a
+misread here is paid for in full and discovered at Step 3 or later.
+
+Announcing the tier is not the gate, and neither is asking whether to proceed.
+Ask whether **the restated objective is what they meant**.
 
 ### Step 2 — Fan out research, in parallel
 

@@ -1,6 +1,40 @@
 # Changelog
 
 
+## 7.8.0 — build-proposal confirms the objective before researching it (2026-08-01)
+
+### Added
+
+- **New Step 1b gate: the restated objective goes back to the human before any
+  research starts.** The framed one-liner, its domains, and the tier are
+  presented and confirmed with an `AskUserQuestion` (**Looks right** / **Refine
+  it**) at Tier 1 and 2. Tier 0 has already answered and skips it. Refining is
+  bounded at two rounds; past that the human's latest wording is used verbatim,
+  because at that point they are faster at saying it than the skill is at
+  guessing it.
+
+  Two Tier 2 runs over a 995-file repo showed why one question here is worth
+  it. Given the objective "add a shared telemetry and usage-analytics layer
+  across all 13 plugins so we can see which skills and commands actually fire,"
+  one run restated it as that *plus* "and let that data drive keep/merge/cut
+  decisions" — a downstream purpose nobody had stated — then researched against
+  it. The other silently widened the domain list and declared "no clarifying
+  questions needed." In both, the restatement shipped in the **same message**
+  that dispatched the `Explore` agent, so there was no point at which it could
+  be corrected: the full fan-out ran against an unreviewed objective.
+
+- **Step 1 now forbids enriching the restatement.** It may compress and it may
+  name the surface, but every goal, motive, and success condition must be one
+  the human actually stated. A missing motive is a clarifying question, not a
+  blank to fill.
+
+  This is deliberately a separate rule from the pre-existing "if the idea is
+  underspecified, ask 2–3 clarifying questions." That one gates on *input*
+  vagueness and so never fired on either observed failure — the input read as
+  clear and was confidently embellished anyway. The gate checks the *output* of
+  framing, which catches both shapes.
+
+
 ## 7.7.1 — build-proposal's Step 2 fan-out actually fans out (2026-08-01)
 
 ### Fixed
