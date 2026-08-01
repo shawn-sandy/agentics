@@ -32,6 +32,9 @@
   names a `Glob` fallback for resolving a template when `${CLAUDE_PLUGIN_ROOT}`
   is unset; the skill could not follow its own instruction without a permission
   prompt.
+- **A failed artifact publish no longer costs the handoff.** Step 8's publish is
+  optional and runs last; an error there now reports and continues to the
+  handoff, since the proposal saved in Step 6 is the deliverable.
 - **Step 2 says when to collect the codebase agent's result.** "Never wait on
   it" governs the dispatch; 7.8.1 left it ambiguous whether the finding was ever
   gathered. Step 3 now collects before synthesizing, and a failed dispatch is

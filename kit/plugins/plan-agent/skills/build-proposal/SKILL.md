@@ -318,6 +318,11 @@ one, and never suppresses the offer — publishing is the only step here the
 human cannot undo by editing a file. On no, hand off as normal. Never publish
 without an explicit yes.
 
+**A failed publish does not cost the handoff.** Report the error and continue
+to the handoff below — the proposal saved in Step 6 is the deliverable, and the
+page was optional. Do not retry silently, and do not let it swallow the paths
+the human is waiting on.
+
 **Lead with the objective, not a bare `.md` path.** A proposal carries
 Workstreams and a Roadmap, not a `Steps`/`Changes` section, so handing
 `implementation-plan` a bare `.md` first token would trigger its **conversion
