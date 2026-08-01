@@ -284,7 +284,7 @@ ok
 # pass a command that inlined a *different*, unguarded copy while the core sat
 # unused -- hence both halves.
 python3 - "$PLUGIN" <<'EOF' || fail "the PR-mode workflow calls gh without the preflight guard"
-import pathlib, sys
+import pathlib, re, sys
 root = pathlib.Path(sys.argv[1])
 core_rel = "references/recap-core.md"
 core = root / core_rel
@@ -292,17 +292,42 @@ assert core.is_file(), f"{core_rel} missing -- the shared recap workflow has no 
 text = core.read_text()
 
 assert "gh pr view" in text, f"{core_rel}: no PR gathering, so PR mode has no source"
-assert "gh auth status" in text, f"{core_rel}: calls gh pr view with no auth preflight"
-assert "git remote get-url origin" in text, f"{core_rel}: never checks for a GitHub remote"
-# The remote lookup alone is not the contract -- any remote would pass it.
-# The preflight must filter that URL for github.com, or PR mode fires gh at
-# a GitLab/Bitbucket origin instead of falling back to session mode.
-assert "github" in text[text.index("git remote get-url origin"):text.index("PR_MODE_UNAVAILABLE")], (
-    f"{core_rel}: preflight retrieves the origin but never filters it for github.com"
+
+# Assert executable control flow, not text presence. Every name below appears
+# in this file's prose as well as its code, so a whole-file substring search
+# would pass on a paragraph that merely *describes* a guard that no longer
+# runs. Extract the preflight block and assert against the shell inside it.
+blocks = [m for m in re.finditer(r'```bash\n(.*?)```', text, re.S)]
+preflight = next((m for m in blocks if "PR_MODE_UNAVAILABLE" in m.group(1)), None)
+assert preflight, f"{core_rel}: no runnable preflight block, only prose about one"
+code = "\n".join(
+    ln for ln in preflight.group(1).splitlines() if not ln.strip().startswith("#")
 )
-assert "PR_MODE_UNAVAILABLE" in text, f"{core_rel}: no fallback branch when the preflight fails"
-# The guard must come before the first gh pr view, or it guards nothing.
-assert text.index("gh auth status") < text.index("gh pr view"), (
+
+# The condition is the guard: both probes must gate the same branch. Testing
+# them separately would pass a block that checks auth and then runs gh anyway.
+cond = re.search(r'if\s+(.*?)\bthen\b', code, re.S)
+assert cond, f"{core_rel}: preflight is not a conditional, so it guards nothing"
+cond = cond.group(1)
+assert "gh auth status" in cond, f"{core_rel}: auth probe is not part of the preflight condition"
+remote = [ln for ln in cond.splitlines() if "git remote get-url origin" in ln]
+assert remote, f"{core_rel}: remote lookup is not part of the preflight condition"
+# github.com specifically, on the same pipeline as the lookup. A bare "github"
+# would also match `github` in a hostname like `github.example.com`, or a
+# comment, while the guard no longer filters for the real domain.
+assert re.search(r'github\\?\.com', remote[0]), (
+    f"{core_rel}: preflight retrieves the origin but never filters it for github.com: {remote[0].strip()!r}"
+)
+
+# Both outcomes must be reachable, and failure must land on the fallback
+# sentinel -- a guard whose else-branch is missing degrades into no guard.
+assert re.search(r'echo\s+"PR_MODE_OK"', code), f"{core_rel}: preflight has no success signal"
+assert re.search(r'else\s*\n\s*echo\s+"PR_MODE_UNAVAILABLE"', code), (
+    f"{core_rel}: no else-branch reaching PR_MODE_UNAVAILABLE when the preflight fails"
+)
+
+# The whole guard must close before the first gh pr view, or it guards nothing.
+assert preflight.end() <= text.index("gh pr view"), (
     f"{core_rel}: preflight appears after the first gh pr view"
 )
 
