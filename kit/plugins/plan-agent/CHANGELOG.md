@@ -1,6 +1,57 @@
 # Changelog
 
 
+## 7.6.0 — five skills split into cores plus references (2026-08-01)
+
+### Changed
+
+- **`build`, `finalize-plan`, `documenting-plans`, `plan-status`, and
+  `setup-sites` are now a small core plus `references/*.md`.** A SKILL.md body
+  is paid in **full** every time the skill fires — there is no partial load —
+  and an ordinary run reads maybe a quarter of it. `build`'s Step 1b was ~60
+  lines of delegation contract charged to every invocation that named a plan
+  and read by none of them. The mechanics moved behind links the core names;
+  the trigger, the arguments, and every step heading stayed.
+
+  | Skill | Before | After | Reference files |
+  |-------|-------:|------:|----------------:|
+  | `build` | 3,254 | 590 | 4 |
+  | `finalize-plan` | 3,239 | 460 | 4 |
+  | `documenting-plans` | 1,897 | 447 | 3 |
+  | `plan-status` | 1,681 | 457 | 3 |
+  | `setup-sites` | 1,498 | 461 | 3 |
+  | **Total** | **11,569** | **2,415** | **17** |
+
+  Section text moved verbatim, so no rule was reworded on the way out: every
+  non-blank line of all five originals is still present in its skill
+  directory. All seven guard phrases `keep-phrases.txt` pins to `build`
+  stayed in the **core** — a guard behind a link is a guard that may never
+  load. `build`'s re-render subroutine also stayed in the core, deliberately:
+  every step calls it, so pulling it out would trade one always-paid block for
+  five on-demand fetches of the same four lines.
+
+### Removed
+
+- The hand-maintained `## Table of Contents` in `documenting-plans` and
+  `plan-status`. The linked step list in each core says the same thing once.
+
+### Added
+
+- **`tests/plugins/test-progressive-disclosure.sh`** — asserts each of the five
+  cores is under 600 words, ships a `references/` dir, names no reference that
+  does not exist, and leaves no reference on disk unnamed. Both link
+  directions, because either one alone passes a split that is broken in the
+  other. Wired into `check-plugin-versions.yml`.
+
+### Fixed
+
+- `test-build-skill.sh`, `test-finalize-all-flag.sh`, `test-setup-sites.sh`,
+  `test-plan-ticket-closure.sh`, and `test-proposal-prompt-pipeline.sh` now
+  resolve each pinned literal from whichever file in the skill directory
+  carries it. Only the lookup changed — no assertion was deleted, weakened, or
+  reworded, and `build` still has all 18 checks.
+
+
 ## 7.5.0 — rebuilt plan document and gallery design (2026-07-31)
 
 ### Added

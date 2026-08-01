@@ -16,245 +16,45 @@ Follow these steps exactly.
 
 Does not stress-test, validate, or critique plan content — use review-plan or the built-in interview for that.
 
-## Bulk mode (directory / `--all`)
+## References
 
-When `$ARGUMENTS` names a directory or contains `--all`, process every `*.md`
-plan in that directory in one pass with a summary-first, bulk-approval UX
-(instead of per-file confirmation). Resolve the directory as: explicit argument
-→ `plansDirectory` setting → `${PWD}/docs/plans/`. `--force` re-analyzes files
-that already have a `status`.
-
-Create TodoWrite progress todos, then run:
-
-1. **Discover** — glob `*.md`; announce `"Found N plan files in [dir]"`; stop if zero.
-2. **Triage** — read the first 10 lines of each file and bucket it:
-
-   | Group | Condition | Default action |
-   |-------|-----------|----------------|
-   | A | No frontmatter | Analyze + add frontmatter |
-   | B | Frontmatter, no `status` | Analyze + add `status` |
-   | C | `status: todo`/`in-progress` | Skip unless `--force` |
-   | D | `status: completed` | Skip unless `--force` |
-   | E | `status: draft` | Skip unless `--force` |
-   | F | Non-canonical `status`/`type` | Always process — normalize |
-
-   Group F normalizes legacy values: `implemented`→`completed`, `ready`→`in-progress`,
-   `proposed`→`draft`, `artifact`→`completed`; legacy `type: standard`/`artifact`
-   are re-inferred in step 5. Present a triage summary and get bulk approval via
-   `AskUserQuestion` ("Proceed / Cancel") before touching anything.
-3. **Git dates (batch)** — one shell loop over the processing set applying the
-   same date rules as Step 2 (empty created → today; modified == created → omit).
-4. **Evidence (batch)** — score each file exactly as Step 4, but with a
-   **stricter token filter**: include only paths with project prefixes
-   (`plugins/`, `src/`, `.claude/`, `docs/`, `tests/`) or code extensions, and
-   PascalCase/camelCase identifiers >3 chars; exclude version strings, JSON value
-   fragments, API routes, and git refs. A file with no qualifying tokens gets
-   provisional `todo` flagged `no signals` — do not prompt per file.
-5. **Type (batch)** — classify completed files with the Step 5 rules; always
-   re-infer legacy `type: standard`/`artifact`.
-6. **Summary + approval** — output a results table (file, status, type, tokens,
-   evidence %, dates, flags) plus aggregated stats. Flags: `no signals`,
-   `docs plan` (token scoring may be off), `normalized` (Group F). Ask via
-   `AskUserQuestion`: "Write all" / "Override some, then write" / "Export only"
-   / "Cancel". For overrides, ask one question per group (normalized, type
-   mismatches, review-flagged, no-signals, or specific file numbers), then
-   confirm the final count.
-7. **Write** — only on confirmation, applying the Step 7 field rules. Hybrid
-   write: prepend YAML via a `Bash` loop for files without frontmatter; use
-   `Edit` for files that already have it. Emit progress every 10 files and a
-   final `updated / skipped / errors` summary.
-
-## Table of Contents
-
-- [Step 0 — Create progress todos](#step-0--create-progress-todos)
-- [Step 1 — Resolve plan file](#step-1--resolve-plan-file)
-- [Step 2 — Get file dates from git](#step-2--get-file-dates-from-git)
-- [Step 3 — Read existing frontmatter](#step-3--read-existing-frontmatter)
-- [Step 4 — Analyze codebase for implementation evidence](#step-4--analyze-codebase-for-implementation-evidence)
-- [Step 5 — Type classification](#step-5--type-classification-only-when-status-resolves-to-completed)
-- [Step 6 — Present findings and confirm](#step-6--present-findings-and-confirm)
-- [Step 7 — Update plan file frontmatter](#step-7--update-plan-file-frontmatter)
+- `references/single-file-flow.md` — Steps 0–4, 6, and 7 in full: file resolution, git date commands, existing-frontmatter handling, evidence scoring, the confirmation prompt, and the frontmatter write rules
+- `references/bulk-mode.md` — the whole Bulk mode (directory / `--all`) section: seven-stage flow, triage table, batch date/evidence/type rules, summary approval, hybrid write
+- `references/type-classification.md` — Step 5's signal-to-type table and the keep-existing-type rule
 
 ## Instructions
 
-### Step 0 — Create progress todos
+**Routing:** when `$ARGUMENTS` names a directory or contains `--all`, follow
+`references/bulk-mode.md` instead of the single-file steps below.
 
-Before doing anything else, use `TodoWrite` to create todos for each step:
+Otherwise read `references/single-file-flow.md` and follow every step it covers
+exactly as written there.
 
-- Step 1: Resolve plan file
-- Step 2: Get file dates from git
-- Step 3: Read existing frontmatter
-- Step 4: Analyze codebase for implementation evidence
-- Step 5: Artifact check (if applicable)
-- Step 6: Present findings and confirm
-- Step 7: Update plan file frontmatter
-
-Mark each todo `status: "completed"` as you finish that step.
-
-### Step 1 — Resolve plan file (or route to bulk mode)
-
-**Bulk-mode routing:** If `$ARGUMENTS` names a directory, or contains `--all`,
-follow [Bulk mode](#bulk-mode-directory----all) instead of the single-file
-steps below. Otherwise continue with the single-file priority order.
-
-Use the first match from this priority order:
-
-1. **Argument**: If a file path appears in `$ARGUMENTS` or the user's message,
-   use it directly.
-2. **Currently open file**: If no path was given, check whether a `.md` file is
-   currently open in the IDE. If it looks like a plan (contains headings like
-   `## Implementation`, `## Plan`, `## Steps`, `## Context`, or `## Summary`),
-   use it.
-3. **Settings `plansDirectory`**: Read the `"plansDirectory"` key following
-   Claude Code's settings precedence — project-local `.claude/settings.local.json`,
-   then project `.claude/settings.json`, then global `~/.claude/settings.json`. Use
-   the first that sets it; glob `*.md` files from that path and use the most
-   recently modified file.
-4. **Default fallback**: Glob `${PWD}/docs/plans/*.md`, sort by modification
-   time, use the most recently modified file.
-
-If no file is found via any method, tell the user and stop.
-
-Announce the resolved file: `"Checking plan status: path/to/plan.md"`
-
-### Step 2 — Get file dates from git
-
-Use `Bash` to run git commands. Do not use `stat` — it is not cross-platform.
-
-**Created date** (first in order that succeeds):
-
-```bash
-git log --follow --diff-filter=A --format="%cd" --date=short -- <file> | tail -1
-```
-
-If the command returns empty (file not tracked by git), use today's date as the
-created date.
-
-**Modified date**:
-
-```bash
-git log -1 --format="%cd" --date=short -- <file>
-```
-
-If the modified date equals the created date, treat `modified` as absent (omit
-it from frontmatter).
-
-### Step 3 — Read existing frontmatter
-
-Read the plan file and parse its YAML frontmatter if present.
-
-- If the existing `status` is `artifact` (legacy format), inform the user:
-  _"This plan uses the legacy `artifact` status. It will be normalized to
-  `status: completed`."_ Treat the status as `completed` for the remainder of
-  the flow and continue to Step 5 so the content type is classified.
-- If a `status` field already exists (and is not the legacy `artifact`),
-  surface the current value to the user and
-  ask via `AskUserQuestion`: _"This plan already has status `[value]`. Would
-  you like to re-analyze the codebase or keep the current status?"_
-  - If the user chooses to keep it, skip Steps 4–5 and go directly to Step 6
-    to confirm whether to update the dates.
-  - If the user chooses to re-analyze, continue from Step 4.
-- If no frontmatter or no `status` field exists, continue from Step 4.
-
-**Type**: Type is classified in **Step 5 only**, and only when status resolves
-to `completed`. Do not infer or write `type` during this step.
-
-### Step 4 — Analyze codebase for implementation evidence
-
-**Extract inline backtick tokens only** from the plan body. Do not scan fenced
-code block content (anything between ` ``` ` delimiters). Look for tokens that
-appear to be:
-
-- File paths: contain `/` or end in a known extension (`.ts`, `.tsx`, `.md`,
-  `.json`, `.py`, `.js`, `.css`, `.scss`)
-- Named identifiers: PascalCase or camelCase words, kebab-case names that match
-  command/skill naming patterns
-
-Examples of tokens to extract: `` `plugins/plan-agent/SKILL.md` ``,
-`` `plan-status` ``, `` `FooComponent` ``, `` `commands/plan-status.md` ``
-
-If **no inline backtick tokens** are found in the plan body, skip codebase
-analysis entirely. Instead, ask the user via `AskUserQuestion`:
-
-> "No extractable implementation signals found in this plan (no backtick-quoted
-> file paths or names). Please set the status manually."
-
-Offer options (default: `todo`): `todo`, `in-progress`, `completed`, `draft`. Use the
-user-selected value as the status and proceed to Step 6.
-
-**For each extracted token**, check both:
-
-1. Use `Glob` to test whether it matches an existing file path in the project
-2. Use `Grep` to test whether it appears as an identifier in the codebase (for
-   named identifiers)
-
-**Score the results:**
-
-- 0% of tokens found → status = `todo`
-- 1–79% of tokens found → status = `in-progress`
-- 80%+ of tokens found → status = `completed`
-
-### Step 5 — Type classification _(only when status resolves to `completed`)_
-
-Infer content type from the plan's filename, H1 heading, and first 200 words
-of body text. Apply the first matching rule:
-
-| Signal | Inferred type |
-|--------|---------------|
-| Filename starts with `fix-`, `bugfix-`, or H1/body contains "bug", "fix", "patch", "regression" | `fix` |
-| Filename starts with `refactor-`, `restructure-`, `simplify-`, or H1/body contains "refactor", "restructure", "simplify" | `refactor` |
-| Filename starts with `document-`, `add-docs-`, `update-readme-`, or H1/body contains "documentation", "readme", "guide", "changelog" | `docs` |
-| Filename starts with `bump-`, `rename-`, `update-version-`, `cleanup-`, or H1/body contains "chore", "housekeeping", "version bump", "rename" | `chore` |
-| Default (no strong signal or filename starts with `add-`, `create-`, `implement-`, `build-`) | `feature` |
-
-If the file already has a valid content type (`feature`, `fix`, `refactor`,
-`docs`, `chore`), keep it.
-
-### Step 6 — Present findings and confirm
-
-Output a summary table in the chat:
-
-```text
-| Field    | Value                         |
-|----------|-------------------------------|
-| File     | docs/plans/my-feature.md      |
-| Status   | in-progress                   |
-| Type     | feature                       |
-| Created  | 2026-01-15                    |
-| Modified | 2026-03-26                    |
-| Evidence | 3/5 tokens found in codebase  |
-```
-
-List found tokens (with file or grep match) and missing tokens separately.
-
-Then ask via `AskUserQuestion`:
-
-> "Should I update this plan file's YAML frontmatter with status `[value]`?"
-
-**Do NOT write to the file unless the user confirms.**
-
-### Step 7 — Update plan file frontmatter
-
-Only on user confirmation.
-
-If the file has no existing YAML frontmatter, insert a new block at the very
-top of the file:
-
-```yaml
----
-status: in-progress
-type: feature
-created: 2026-01-15
-modified: 2026-03-26
----
-```
-
-If the file already has YAML frontmatter, update or add only the `status`,
-`type`, `created`, and `modified` fields. Preserve all other existing fields
-exactly as they are. Never rename or remove existing fields.
-
-Rules:
-
-- Omit `modified` if it equals `created`
-- Use `Edit` tool for all file writes
-- After writing, confirm to the user: `"Frontmatter updated in path/to/plan.md"`
+- **Step 0 — Create progress todos** — `TodoWrite` one todo per step before
+  anything else; mark each completed as you finish it. Listed in
+  `references/single-file-flow.md`.
+- **Step 1 — Resolve plan file (or route to bulk mode)** — send directory or
+  `--all` invocations to `references/bulk-mode.md`; otherwise pick the file by
+  the argument → open-file → `plansDirectory` → `docs/plans/` priority order in
+  `references/single-file-flow.md`, then announce it.
+- **Step 2 — Get file dates from git** — `git log` for created and modified
+  dates, never `stat`. Exact commands and fallbacks in
+  `references/single-file-flow.md`.
+- **Step 3 — Read existing frontmatter** — legacy `artifact` normalizes to
+  `completed`; any other existing `status` triggers a re-analyze-or-keep
+  question. Type is never written here. Rules in
+  `references/single-file-flow.md`.
+- **Step 4 — Analyze codebase for implementation evidence** — extract inline
+  backtick tokens only, `Glob`/`Grep` each, and score 0% / 1–79% / 80%+ into
+  `todo` / `in-progress` / `completed`. Token rules and the no-signals prompt
+  are in `references/single-file-flow.md`.
+- **Step 5 — Type classification** — only when status resolves to `completed`,
+  infer `feature`/`fix`/`refactor`/`docs`/`chore` from filename, H1, and the
+  first 200 words. Table in `references/type-classification.md`.
+- **Step 6 — Present findings and confirm** — print the summary table, list
+  found and missing tokens, then ask via `AskUserQuestion`. **Do NOT write to
+  the file unless the user confirms.** Format in
+  `references/single-file-flow.md`.
+- **Step 7 — Update plan file frontmatter** — only on confirmation; insert or
+  update only `status`, `type`, `created`, `modified` and preserve every other
+  field. Exact write rules in `references/single-file-flow.md`.

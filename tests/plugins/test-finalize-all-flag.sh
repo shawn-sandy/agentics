@@ -12,11 +12,25 @@ set -euo pipefail
 # silently diverge.
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-SKILL="$ROOT/kit/plugins/plan-agent/skills/finalize-plan/SKILL.md"
+SKILL_DIR="$ROOT/kit/plugins/plan-agent/skills/finalize-plan"
+SKILL="$SKILL_DIR/SKILL.md"
 README="$ROOT/kit/plugins/plan-agent/README.md"
 CHANGELOG="$ROOT/kit/plugins/plan-agent/CHANGELOG.md"
 MARKETPLACE="$ROOT/.claude-plugin/marketplace.json"
 FAILURES=0
+
+# The skill is a small core plus references/*.md. Checks 1b-5 assert that the
+# contract text exists in the skill, not that it lives in one particular file,
+# so they resolve each literal from whichever file carries it. Check 1 pins
+# frontmatter, which only ever lives in SKILL.md, so it still reads $SKILL.
+SKILL_FILES=("$SKILL")
+while IFS= read -r ref; do
+  [ -n "$ref" ] && SKILL_FILES+=("$ref")
+done < <(find "$SKILL_DIR/references" -type f -name '*.md' 2>/dev/null | sort)
+
+# skill_grep <grep-flags...> <pattern> — matches if ANY file in the skill
+# carries the pattern. Same flags and same patterns as a direct grep.
+skill_grep() { grep -q "$@" "${SKILL_FILES[@]}"; }
 
 echo "=== finalize-plan --all Sweep Smoke Test ==="
 
@@ -29,11 +43,11 @@ else
 fi
 
 echo "1b. Spec mode edits the Markdown and re-renders via build-plan-html.mjs..."
-if grep -q '^### Spec mode' "$SKILL" \
-   && grep -q '^### Legacy mode' "$SKILL" \
-   && grep -q 'status: completed' "$SKILL" \
-   && grep -q 'build-plan-html.mjs' "$SKILL" \
-   && grep -q '## Completion Report' "$SKILL"; then
+if skill_grep '^### Spec mode' \
+   && skill_grep '^### Legacy mode' \
+   && skill_grep 'status: completed' \
+   && skill_grep 'build-plan-html.mjs' \
+   && skill_grep '## Completion Report'; then
   echo "  PASS"
 else
   echo "  FAIL: Step 5 is missing the spec-mode md edits (frontmatter status, checkbox flips, Completion Report, re-render) or the legacy fallback"
@@ -42,7 +56,7 @@ fi
 
 echo "2. Step 1 routes --all to sweep mode..."
 # grep -F: a BRE-escaped backtick (\`) is a GNU buffer anchor, never a match.
-if grep -qF 'If `$ARGUMENTS` contains `--all`' "$SKILL"; then
+if skill_grep -F 'If `$ARGUMENTS` contains `--all`'; then
   echo "  PASS"
 else
   echo "  FAIL: Step 1 has no --all routing clause"
@@ -50,10 +64,10 @@ else
 fi
 
 echo "3. Sweep discovery matches todo/in-progress status tags, excluding index.html and archive/..."
-if grep -Fq '## Sweep mode (`--all`)' "$SKILL" \
-   && grep -Fq "grep -lE 'name=\"plan-status\" content=\"(todo|in-progress)\"'" "$SKILL" \
-   && grep -Fq "| grep -v '/index\\.html\$' || true" "$SKILL" \
-   && grep -Fq 'Never descend into `archive/`' "$SKILL"; then
+if skill_grep -F '## Sweep mode (`--all`)' \
+   && skill_grep -F "grep -lE 'name=\"plan-status\" content=\"(todo|in-progress)\"'" \
+   && skill_grep -F "| grep -v '/index\\.html\$' || true" \
+   && skill_grep -F 'Never descend into `archive/`'; then
   echo "  PASS"
 else
   echo "  FAIL: sweep section is missing the heading, positive status-tag discovery, non-fatal no-match handling, or the index.html/archive exclusions"
@@ -61,8 +75,8 @@ else
 fi
 
 echo "4. Sweep confirms via one multi-select prompt with a batch criteria mode..."
-if grep -q 'multiSelect: true' "$SKILL" \
-   && grep -q 'How should acceptance criteria be checked' "$SKILL"; then
+if skill_grep 'multiSelect: true' \
+   && skill_grep 'How should acceptance criteria be checked'; then
   echo "  PASS"
 else
   echo "  FAIL: batch confirmation (multiSelect + criteria-mode question) not found"
@@ -70,9 +84,9 @@ else
 fi
 
 echo "5. Expensive verification is deferred and sweep scoring is non-interactive..."
-if grep -q 'Do \*\*not\*\* run Step 3b' "$SKILL" \
-   && grep -q 'Sweep scoring is non-interactive' "$SKILL" \
-   && grep -q "skip Step 3a's no-token \`AskUserQuestion\`" "$SKILL"; then
+if skill_grep 'Do \*\*not\*\* run Step 3b' \
+   && skill_grep 'Sweep scoring is non-interactive' \
+   && skill_grep "skip Step 3a's no-token \`AskUserQuestion\`"; then
   echo "  PASS"
 else
   echo "  FAIL: S2 does not defer Step 3b/3c or does not skip the no-token prompt"

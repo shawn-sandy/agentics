@@ -168,8 +168,12 @@ else
 fi
 
 echo "12. Step 2 seeds docs/plans/ when plansDirectory is unset (so the first plan deploys)..."
-if grep -q 'os.makedirs(os.path.join("docs", "plans")' "$SKILL" \
-  && grep -q '"docs", "plans", ".gitkeep"' "$SKILL"; then
+# Step 2's shell block lives in a progressive-disclosure reference file, not the
+# SKILL.md core, so resolve the literals from whichever file in the skill
+# directory carries them. The assertion is unchanged: both must exist somewhere
+# the skill actually loads.
+if grep -rq 'os.makedirs(os.path.join("docs", "plans")' "$SKILL_DIR" \
+  && grep -rq '"docs", "plans", ".gitkeep"' "$SKILL_DIR"; then
   echo "  PASS"
 else
   echo "  FAIL: Step 2 does not seed docs/plans/ for the unset-plansDirectory case"

@@ -19,6 +19,31 @@ if [ ! -f "$SKILL" ]; then
   exit 1
 fi
 
+# The skill is progressively disclosed: SKILL.md is a small core and the moved
+# sections live in references/*.md beside it. Every assertion below is about the
+# skill's contract, not about which file happens to carry it, so the extractors
+# resolve the owning file first. references/ is searched ahead of the core
+# because the core keeps a same-named summary heading pointing at each one — the
+# file that carries the *section* is the reference, and that is what must be
+# checked. Nothing here relaxes what is required: only where it is looked for.
+SKILL_FILES=()
+for f in "$SKILL_DIR"/references/*.md "$SKILL"; do
+  [ -f "$f" ] && SKILL_FILES+=("$f")
+done
+ALLTEXT="$(cat "${SKILL_FILES[@]}")"
+
+owner() { # owner <start-regex> — the file carrying that heading, core as fallback
+  local pat="$1" f
+  for f in "${SKILL_FILES[@]}"; do
+    if grep -qE "$pat" "$f"; then printf '%s' "$f"; return 0; fi
+  done
+  printf '%s' "$SKILL"
+}
+
+section() { # section <start-regex> <end-regex> — extract from the owning file
+  sed -n "/$1/,/$2/p" "$(owner "$1")"
+}
+
 echo "1. SKILL.md exists with name: build..."
 if grep -q "^name: build$" "$SKILL"; then
   echo "  PASS"
@@ -95,8 +120,8 @@ echo "6. Spec-is-source-of-truth rules survived the lift, in their owning sectio
 # Newlines squeezed to spaces: this file is hard-wrapped, so any phrase longer
 # than a few words can straddle a line break and defeat line-based grep.
 flatten() { tr '\n' ' ' | tr -s ' '; }
-SOT="$(sed -n '/^\*\*The markdown spec is the source of truth/,/^## Invocation/p' "$SKILL" | flatten)"
-GATES="$(sed -n '/^## Step 3 —/,/^## Step 6 —/p' "$SKILL" | flatten)"
+SOT="$(section '^\*\*The markdown spec is the source of truth' '^## Invocation' | flatten)"
+GATES="$(section '^## Step 3 —' '^## Step 6 —' | flatten)"
 MISSING=""
 printf '%s' "$GATES" | grep -q 'flip back to `- \[ \]`' || MISSING="$MISSING undo-rule"
 printf '%s' "$SOT" | grep -qi "browser-only persistence" || MISSING="$MISSING browser-persistence-ban"
@@ -111,7 +136,7 @@ else
 fi
 
 echo "7. status: completed is gated behind end-to-end verification, not the criteria gate..."
-if grep -q 'Do not set `status: completed` here' "$SKILL"; then
+if printf '%s' "$ALLTEXT" | grep -q 'Do not set `status: completed` here'; then
   echo "  PASS"
 else
   echo "  FAIL: the criteria gate does not forbid marking completed before Step 4 runs"
@@ -168,9 +193,9 @@ fi
 # scopes its greps to the section that must carry the rule — the same technique
 # check 6 uses, and for the same reason: a file-wide grep passed against a
 # mutation that deleted all five rules it guarded and appended a decoy.
-STEP1="$(sed -n '/^## Step 1 — Resolve the plan/,/^## Step 1b —/p' "$SKILL" | flatten)"
-CHAIN="$(sed -n '/^## Step 1b —/,/^## Step 2 —/p' "$SKILL" | flatten)"
-INVOKE="$(sed -n '/^## Invocation/,/^## Step 0/p' "$SKILL" | flatten)"
+STEP1="$(section '^## Step 1 — Resolve the plan' '^## Step 1b —' | flatten)"
+CHAIN="$(section '^## Step 1b —' '^## Step 2 —' | flatten)"
+INVOKE="$(section '^## Invocation' '^## Step 0' | flatten)"
 
 echo "10. Step 1b carries the chain and delegates to both authoring skills..."
 MISSING=""
@@ -229,9 +254,12 @@ echo "12. The dirty-tree guard runs ahead of resolution and the chain, other pre
 # home — the check-before-writing preconditions — also sits above that heading,
 # so a heading comparison passes with the guard un-hoisted. What must be true is
 # that it fires before a plan is resolved and before any chain stage is invoked.
-GUARD_LN="$(grep -n 'Dirty working tree' "$SKILL" | head -1 | cut -d: -f1 || true)"
-RESOLVE_LN="$(grep -n '^Resolve the plans directory' "$SKILL" | head -1 | cut -d: -f1 || true)"
-PRECOND_LN="$(grep -n '^\*\*Preconditions' "$SKILL" | head -1 | cut -d: -f1 || true)"
+# All three land in whichever file carries Step 1 — the core's summary points at
+# the reference, so the ordering has to be asserted inside that one file.
+STEP1_FILE="$(owner '^## Step 1 — Resolve the plan')"
+GUARD_LN="$(grep -n 'Dirty working tree' "$STEP1_FILE" | head -1 | cut -d: -f1 || true)"
+RESOLVE_LN="$(grep -n '^Resolve the plans directory' "$STEP1_FILE" | head -1 | cut -d: -f1 || true)"
+PRECOND_LN="$(grep -n '^\*\*Preconditions' "$STEP1_FILE" | head -1 | cut -d: -f1 || true)"
 MISSING=""
 if [ -z "$GUARD_LN" ] || [ -z "$RESOLVE_LN" ] || [ "$GUARD_LN" -ge "$RESOLVE_LN" ]; then
   MISSING="$MISSING guard-not-hoisted-above-resolution"
@@ -320,7 +348,7 @@ fi
 echo "17. The chain is command-only and the ambient route-away contract survives..."
 MISSING=""
 printf '%s' "$INVOKE" | grep -qi 'only from the slash command' || MISSING="$MISSING command-only-scoping"
-ROUTE_AWAYS="$(grep -c 'stop and route to' "$SKILL" || true)"
+ROUTE_AWAYS="$(printf '%s\n' "$ALLTEXT" | { grep -c 'stop and route to' || true; })"
 [ "$ROUTE_AWAYS" -eq 1 ] || MISSING="$MISSING route-away-instruction"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
@@ -335,7 +363,7 @@ echo "18. Gates stop rather than self-resolve when AskUserQuestion is unavailabl
 # proposal gate — the same missing tool resolved two opposite ways, because the
 # fallback was undefined. Silent adoption is the exact behaviour the offer exists
 # to remove, so the rule has to be stated, not inferred.
-FLATSKILL="$(flatten < "$SKILL")"
+FLATSKILL="$(printf '%s\n' "$ALLTEXT" | flatten)"
 MISSING=""
 printf '%s' "$FLATSKILL" | grep -qi 'AskUserQuestion` is unavailable' || MISSING="$MISSING unavailable-case-unstated"
 printf '%s' "$FLATSKILL" | grep -qi 'stops and reports the choice' || MISSING="$MISSING no-stop-and-report-rule"
