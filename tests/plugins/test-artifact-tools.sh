@@ -256,7 +256,7 @@ owners = {
     "commands/eng-recap.md": "eng-artifact-url",
 }
 for rel, key in owners.items():
-    text = (root / rel).read_text()
+    text = (root / rel).read_text(encoding="utf-8")
     # 1. The writer declares the key it owns.
     assert f"{key}:" in text, f"{rel}: never declares its republish key {key!r}"
     # 2. Every OTHER writer's key appears only under a don't-write warning. A
@@ -289,7 +289,7 @@ root = pathlib.Path(sys.argv[1])
 core_rel = "references/recap-core.md"
 core = root / core_rel
 assert core.is_file(), f"{core_rel} missing -- the shared recap workflow has no owner"
-text = core.read_text()
+text = core.read_text(encoding="utf-8")
 
 assert "gh pr view" in text, f"{core_rel}: no PR gathering, so PR mode has no source"
 
@@ -335,7 +335,7 @@ assert preflight.end() <= text.index("gh pr view"), (
 # loads the core nor gathers the PR itself has lost PR mode entirely.
 found = 0
 for name in ("eng-recap", "team-recap", "product-doc"):
-    cmd = (root / "commands" / f"{name}.md").read_text()
+    cmd = (root / "commands" / f"{name}.md").read_text(encoding="utf-8")
     assert core_rel in cmd, f"{name}.md: never loads {core_rel}, so it has no guarded PR mode"
     assert "gh pr view" not in cmd, (
         f"{name}.md: inlines its own gh gathering instead of delegating to {core_rel}"
@@ -355,7 +355,7 @@ python3 - "$PLUGIN" <<'EOF' || fail "the PR gather block drifted from its contra
 import pathlib, re, sys
 root = pathlib.Path(sys.argv[1])
 core_rel = "references/recap-core.md"
-text = (root / core_rel).read_text()
+text = (root / core_rel).read_text(encoding="utf-8")
 
 # Assert on the gather block with comment lines stripped. The comments
 # legitimately name `headRefName` and `git fetch` while explaining why they
@@ -395,7 +395,7 @@ assert not re.search(r'\$\(\s*gh repo view', code), (
 )
 # No command may keep a second copy -- that is how the drift started.
 for name in ("eng-recap", "team-recap", "product-doc"):
-    cmd = (root / "commands" / f"{name}.md").read_text()
+    cmd = (root / "commands" / f"{name}.md").read_text(encoding="utf-8")
     assert not re.search(r'```bash\n\s*PR=<number-or-url>', cmd), (
         f"{name}.md: carries its own gather block again; it belongs in {core_rel}"
     )
@@ -413,7 +413,7 @@ python3 - "$PLUGIN" <<'EOF' || fail "the diff read is uncapped, unreported, or u
 import pathlib, re, sys
 root = pathlib.Path(sys.argv[1])
 core_rel = "references/recap-core.md"
-text = (root / core_rel).read_text()
+text = (root / core_rel).read_text(encoding="utf-8")
 
 assert "gh pr diff" in text, f"{core_rel}: never reads the diff, so decision 4 was dropped"
 # A numeric file budget, not just prose about being careful.
@@ -428,7 +428,7 @@ assert cap == EXPECTED_CAP, f"{core_rel}: diff cap is {cap}, README/CHANGELOG pr
 assert re.search(rf'n<={EXPECTED_CAP}\b', text), (
     f"{core_rel}: documents a {cap}-file cap but the awk that implements it uses a different bound"
 )
-readme = (root / "README.md").read_text()
+readme = (root / "README.md").read_text(encoding="utf-8")
 assert re.search(rf'\b{EXPECTED_CAP}[ -]file', readme), (
     f"README does not state the {EXPECTED_CAP}-file diff budget the workflow enforces"
 )
@@ -447,7 +447,7 @@ assert re.search(r'[Rr]eport how many files were summarized', text), (
 opted = [
     name for name in ("eng-recap", "team-recap", "product-doc")
     if re.search(r'\*\*Opt in to the diff budget\*\*',
-                 (root / "commands" / f"{name}.md").read_text())
+                 (root / "commands" / f"{name}.md").read_text(encoding="utf-8"))
 ]
 assert opted == ["eng-recap"], (
     f"expected only eng-recap to opt in to the diff budget, got {opted}"

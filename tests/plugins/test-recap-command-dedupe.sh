@@ -34,7 +34,7 @@ OWNERS = {
 WORD_CAP = 500
 SHARED_LINE_CAP = 50
 
-texts = {n: (plugin / "commands" / f"{n}.md").read_text() for n in OWNERS}
+texts = {n: (plugin / "commands" / f"{n}.md").read_text(encoding="utf-8") for n in OWNERS}
 
 
 def fail(msg):
