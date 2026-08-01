@@ -154,6 +154,15 @@ AskUserQuestion batch if the user confirms.
 
 ## Phase 3 — Structure
 
+**Read section 0 of
+[references/best-practices-reference.md](references/best-practices-reference.md)
+first** — the Claude 5 generation calibration. It is the authoritative
+definition of every technique the Phase 1 matrix names, and section 0 decides
+how much of each layer to write: trust over constraint, one authoritative
+source per instruction, a contract in place of stacked examples, hard
+constraints only where a boundary is genuinely critical. The matrix selects
+*which* layers apply; section 0 governs *how much* each one earns.
+
 Apply the XML structural techniques selected by the technique matrix from Phase
 1 to the gathered interview responses.
 

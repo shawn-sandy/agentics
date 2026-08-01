@@ -811,7 +811,7 @@ claude --plugin-dir ./kit/plugins/team-defaults
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.13 | productivity | 1 command, 1 skill, 7 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.21.0 | productivity | 1 command, 17 skills |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 8.0.0 | productivity | 7 commands, 14 skills, 9 agents, 2 hooks |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 8.1.0 | productivity | 7 commands, 14 skills, 9 agents, 2 hooks |
 | [team-defaults](./kit/plugins/team-defaults/README.md) | 0.2.0 | productivity | 1 skill, 2 agents |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.10.1 | development | 3 commands, 4 skills |
 | [content-tools](./kit/plugins/content-tools/README.md) | 1.1.0 | documentation | 1 skill |

@@ -47,3 +47,21 @@ From Anthropic's best practices:
 - Lead with the most important instruction
 - Be specific about output format: length, structure, tone
 - Every instruction should be actionable and unambiguous
+
+Then run the **calibration pass** from section 0 of
+`best-practices-reference.md` over the assembled draft — the rules live there,
+not here, so there is one copy to keep current. Three of them only bite once
+the whole draft exists, so check them last:
+
+- **Cut every duplicated instruction.** If a rule appears in both
+  `<instructions>` and `<constraints>`, or in a layer and again in the output
+  requirements, delete all but the one whose section owns it. Near-duplicates
+  that disagree cost more than either version alone.
+- **Drop scaffolding the answers never asked for.** A `<thinking>` block with
+  invented reasoning steps, a `<constraints>` line guarding a case the user
+  never raised, a second example that repeats the first — each is padding the
+  reader must reconcile. Remove the layer rather than substitute a filler
+  value into it.
+- **Swap prose for the higher-fidelity artifact where one exists.** If the
+  interview produced a schema, a failing test, a code sample, or a mockup,
+  reference it in place of describing it.
