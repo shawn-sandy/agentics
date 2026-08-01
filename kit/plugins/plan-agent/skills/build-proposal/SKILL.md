@@ -181,8 +181,20 @@ memory.
 - **Quantify, don't hand-wave** — measure the real surface (counts, file lists,
   call sites) rather than estimating.
 
-Launch the first external fetch and the first codebase agent **together** in a
-single turn so they run concurrently.
+**Get the codebase agent in flight before the first fetch, and never wait on
+it.** Two ways to do that, either is fine: batch the `Agent` and the first
+`WebFetch`/`WebSearch`/`deep-research` call as separate tool calls in **one
+message**, or dispatch the `Agent` first and let it run in the background while
+the external research proceeds. **Do not pass `run_in_background: false` to the
+codebase agent** — that turns the fan-out into a blocking call, which is
+exactly the failure described next.
+
+The failure to avoid is dispatching a blocking `Agent`, waiting on it, grepping
+the codebase inline for twenty turns, and only then fetching the web. That is
+the serial path with a subagent bolted on: it pays the delegation cost, gets
+none of the overlap, and starts the external research last. If the codebase
+sweep is large enough to want its own agent, it is large enough that the web
+fetch should already be in flight beside it.
 
 ### Step 3 — Synthesize the core finding
 

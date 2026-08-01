@@ -1,6 +1,31 @@
 # Changelog
 
 
+## 7.7.1 — build-proposal's Step 2 fan-out actually fans out (2026-08-01)
+
+### Fixed
+
+- **`build-proposal` Step 2 now names the mechanism that makes research
+  concurrent, not just the intent.** The old line — "Launch the first external
+  fetch and the first codebase agent together in a single turn so they run
+  concurrently" — stated a goal and left the how implicit. A Tier 2 run over a
+  995-file repo showed what that bought: the skill dispatched `Explore` with
+  `run_in_background: false`, blocked on it, ran 21 sequential inline `Bash`
+  greps, and only reached its first `WebFetch` on turn 27. Fully serial, with a
+  subagent bolted on — paying the delegation cost for none of the overlap.
+
+  The replacement gives both working shapes (batch the `Agent` and the first
+  fetch as separate tool calls in one message, **or** let the agent run in the
+  background while external research proceeds) and forbids the one thing that
+  breaks either: passing `run_in_background: false` to the codebase agent. On
+  the same idea and repo, the re-run dispatched `Explore` on turn 1 as an async
+  agent and reached its first `WebFetch` on turn 6, with the sweep still in
+  flight.
+
+  Wording only — no tool, argument, or step changed, and Tier 0/1 are
+  unaffected (they correctly never spawn the agent at all).
+
+
 ## 7.7.0 — build-proposal always offers the artifact (2026-08-01)
 
 ### Added
