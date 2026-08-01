@@ -13,7 +13,7 @@ decision-complete proposal. It grounds every claim in real sources, keeps a
 hard line between *facts to look up* and *decisions for the human*, drives the
 human decision cadence, and converges on a single living **saved prompt** —
 `docs/prompts/proposal-<slug>.md`, authored by delegating to
-`plan-agent:write-prompt` — that deepens each round and is copy-pasteable into
+`plan-agent:prompt` — that deepens each round and is copy-pasteable into
 the planning layer.
 
 It is a **loop, not a pipeline** — the human steers it with "keep gathering,"
@@ -111,7 +111,7 @@ write:
 1. `--dir <path>` if provided.
 2. `promptsDirectory` via Claude Code's settings precedence — project-local
    `.claude/settings.local.json`, then project `.claude/settings.json`, then
-   global `~/.claude/settings.json`. Same key `write-prompt` and
+   global `~/.claude/settings.json`. Same key `prompt` and
    `artifact-tools:prompt-artifact` read, so all three agree on where prompts
    live.
 3. `${PWD}/docs/prompts/` otherwise.
@@ -242,24 +242,24 @@ Assemble the round's content in the **canonical shape** — see
 order and the section-to-slot mapping. Scale to the tier. Then write **both**
 artifacts, prompt first.
 
-**1. The saved prompt (authoritative).** Delegate to `write-prompt` rather than
+**1. The saved prompt (authoritative).** Delegate to `prompt` rather than
 hand-authoring the file:
 
 ```
-Skill(skill: "plan-agent:write-prompt", args: "proposal --out <prompts-dir>/proposal-<slug>.md --answers-gathered <the assembled proposal content>")
+Skill(skill: "plan-agent:prompt", args: "proposal --out <prompts-dir>/proposal-<slug>.md --answers-gathered <the assembled proposal content>")
 ```
 
 - **`--out` is not optional.** `Skill()` has no documented return value, so this
-  skill cannot read back where the file landed; and `write-prompt`'s own Phase 7
+  skill cannot read back where the file landed; and `prompt`'s own Phase 7
   would otherwise resolve its own directory and derive its own 3–5 word intent
   slug — a different path from the `verb-target` one derived above. Passing the
   path explicitly makes both sides agree by construction, so the path handed off
   in Step 8 is byte-identical to the file actually written. Never derive the path
   independently on both sides and hope they match.
-- **`--answers-gathered`** skips `write-prompt`'s own interview. Step 5 already
+- **`--answers-gathered`** skips `prompt`'s own interview. Step 5 already
   resolved every decision with the human; re-interviewing would ask them again
   for answers this skill is holding.
-- `write-prompt` records `status:` (`gathering` until Step 8 declares
+- `prompt` records `status:` (`gathering` until Step 8 declares
   convergence, then `converged`), `modified:`, and `generated-sha:`, and on
   round two rewrites that same file **in place** — no `-2` variant. It asks
   before overwriting a body that was hand-edited since it last wrote.
@@ -298,7 +298,7 @@ conversion:
 > turn it into an execution plan, run:
 > `/plan-agent:implementation-plan author an execution plan from the proposal prompt at <prompts-dir>/proposal-<slug>.md`
 
-Report the prompt path — the same one passed to `write-prompt` via `--out` in
+Report the prompt path — the same one passed to `prompt` via `--out` in
 Step 6, byte-for-byte. Never report the legacy copy as the deliverable.
 
 **Always offer the artifact.** Before handing off, ask once via

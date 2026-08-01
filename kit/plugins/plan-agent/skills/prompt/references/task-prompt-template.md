@@ -1,6 +1,6 @@
 # Task Prompt Template
 
-Used by `write-prompt` for **task** prompt type.
+Used by `prompt` for **task** prompt type.
 
 Techniques applied: Clarity/directness · XML context + example tags · Thinking/CoT scaffolding · Output format
 

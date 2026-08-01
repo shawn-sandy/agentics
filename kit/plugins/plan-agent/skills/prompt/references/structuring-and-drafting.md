@@ -29,9 +29,9 @@ any layer whose type is not in that matrix.
 ## Phase 4 — resolving the template
 
 Read the template with the Read tool, resolving the path as
-`${CLAUDE_PLUGIN_ROOT}/skills/write-prompt/references/<type>-prompt-template.md`.
+`${CLAUDE_PLUGIN_ROOT}/skills/prompt/references/<type>-prompt-template.md`.
 If `${CLAUDE_PLUGIN_ROOT}` is unavailable, fall back to a Glob search:
-`Glob("**/plan-agent/skills/write-prompt/references/<type>-prompt-template.md")`.
+`Glob("**/plan-agent/skills/prompt/references/<type>-prompt-template.md")`.
 
 Substitute every `{{PLACEHOLDER}}` with the structured content from Phase 3, the
 interview answers from Phase 2, and the intent from Phase 1. Remove placeholder

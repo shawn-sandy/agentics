@@ -8,7 +8,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Skill, Artifact, WebFetch, AskUser
 
 ## Overview
 
-Publish a prompt saved by `plan-agent:write-prompt` to claude.ai: one by default,
+Publish a prompt saved by `plan-agent:prompt` to claude.ai: one by default,
 the whole library with `--library`. The page is built around a copy button
 returning the prompt **verbatim** — no entities, no re-indentation, no smart
 quotes. A copy that pastes back escaped is the skill failing at its only job.
@@ -30,7 +30,7 @@ References, under `${CLAUDE_PLUGIN_ROOT}/references/`: `prompt-resolution.md`
 ## Step 2 — Resolve the prompts directory
 
 Run the `PROMPTS_DIR` resolver in `references/prompt-resolution.md` verbatim: it
-matches `write-prompt`'s precedence, and diverging publishes the wrong directory.
+matches `prompt`'s precedence, and diverging publishes the wrong directory.
 
 ## Step 3 — Resolve the prompt(s)
 
@@ -39,7 +39,7 @@ need, drop unrecognized ones silently.
 
 In library mode, if `Glob` matches nothing, tell the user:
 
-> "No saved prompts found in `<PROMPTS_DIR>`. Run `/plan-agent:write-prompt` to
+> "No saved prompts found in `<PROMPTS_DIR>`. Run `/plan-agent:prompt` to
 > create your first one."
 
 **STOP.** Never publish an empty gallery: a page announcing nothing still costs a

@@ -145,14 +145,14 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "10. Step 6 dual-writes: write-prompt authors the authoritative prompt, legacy copy is bannered..."
-# The 6.0.0 contract: the saved prompt is the deliverable and write-prompt writes
+echo "10. Step 6 dual-writes: prompt authors the authoritative prompt, legacy copy is bannered..."
+# The 6.0.0 contract: the saved prompt is the deliverable and prompt writes
 # it (never hand-authored here), while the legacy docs/proposals/ copy survives
 # one deprecation release carrying a banner that names the prompt as canonical.
 STEP6="$(sed -n '/^### Step 6 —/,/^### Step 7 —/p' "$SKILL")"
 MISSING=""
 [ -f "$GITKEEP" ] || MISSING="$MISSING proposals-gitkeep"
-printf '%s' "$STEP6" | grep -qF 'Skill(skill: "plan-agent:write-prompt"' || MISSING="$MISSING write-prompt-delegation"
+printf '%s' "$STEP6" | grep -qF 'Skill(skill: "plan-agent:prompt"' || MISSING="$MISSING prompt-delegation"
 printf '%s' "$STEP6" | grep -qF -- '--out' || MISSING="$MISSING out-path-contract"
 printf '%s' "$STEP6" | grep -qF -- '--answers-gathered' || MISSING="$MISSING interview-bypass"
 printf '%s' "$STEP6" | grep -qF 'proposal-<slug>.md' || MISSING="$MISSING date-free-prompt-name"

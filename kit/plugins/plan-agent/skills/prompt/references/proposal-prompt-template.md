@@ -1,6 +1,6 @@
 # Proposal Prompt Template
 
-Used by `write-prompt` for the **proposal** prompt type — the artifact
+Used by `prompt` for the **proposal** prompt type — the artifact
 `plan-agent:build-proposal` converges on.
 
 Techniques applied: Long-context grounding · XML structure (`<context>`,

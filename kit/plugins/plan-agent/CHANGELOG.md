@@ -1,6 +1,20 @@
 # Changelog
 
 
+## 8.0.0 — `write-prompt` is now `prompt` (2026-08-01)
+
+### Changed
+
+- **BREAKING: the `write-prompt` skill and command are renamed to `prompt`.**
+  Invoke as `/plan-agent:prompt` — `/plan-agent:write-prompt` no longer resolves.
+  The skill directory moves to `skills/prompt/`, the wrapper to
+  `commands/prompt.md`, and `build-proposal` Step 6 now delegates with
+  `Skill(skill: "plan-agent:prompt", ...)`. Nothing about the seven phases, the
+  five prompt types, the `--out` contract, or `--answers-gathered` changes; only
+  the name does. The command still shadows the skill of the same name, so the
+  wrapper keeps reading `skills/prompt/SKILL.md` by path rather than delegating.
+
+
 ## 7.10.3 — the two gates stop contradicting themselves (2026-08-01)
 
 ### Fixed

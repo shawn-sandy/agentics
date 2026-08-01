@@ -26,7 +26,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html] [--all]` |
-| `write-prompt` | Skill (`disable-model-invocation`) + Command | Invoke as `/plan-agent:write-prompt [type] [intent] [--out <path>] [--answers-gathered]`; a leading `system`/`task`/`creative`/`analytical` token pins the type. A fifth token, `proposal`, is caller-only — it counts just alongside `--answers-gathered`, since Phase 2 has no proposal question set. The command wrapper also makes it reachable from other skills, which the flag alone blocks |
+| `prompt` | Skill (`disable-model-invocation`) + Command | Invoke as `/plan-agent:prompt [type] [intent] [--out <path>] [--answers-gathered]`; a leading `system`/`task`/`creative`/`analytical` token pins the type. A fifth token, `proposal`, is caller-only — it counts just alongside `--answers-gathered`, since Phase 2 has no proposal question set. The command wrapper also makes it reachable from other skills, which the flag alone blocks |
 | `plans-library` | Skill | Auto-activates on "browse plans", "view plan history", "open plans index" intent |
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `setup-sites` | Skill | Command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent — scaffolds the deploy pipeline into any repo |
@@ -256,14 +256,14 @@ When invoked without arguments, prompts for the plan file. The skill:
 
 **Sweep mode (`--all`)** finds plans that are implemented but never marked completed. It scans the plans directory for every plan carrying a `<meta name="plan-status">` tag whose value is `todo` or `in-progress` (non-plan HTML without the tag is ignored), runs the cheap token-evidence scan on each, and presents a candidate table — plans with 80%+ evidence are flagged as "done but not marked". One multi-select prompt picks which plans to finalize (plus a single criteria mode for the whole batch); full per-criterion verification and the objective test then run only on the selected plans before the status writes.
 
-####  `write-prompt` — Manual invoke only
+####  `prompt` — Manual invoke only
 
 Interviews users about their prompting need and generates a copy-pasteable AI prompt grounded in [Anthropic's official Claude Prompting Best Practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices). Applies the right combination of techniques (clarity, XML structure, role assignment, few-shot examples, chain-of-thought scaffolding, and output formatting) based on the classified prompt type.
 
 ```
-/plan-agent:write-prompt
-/plan-agent:write-prompt system prompt for a customer support chatbot
-/plan-agent:write-prompt refactor Python code task prompt
+/plan-agent:prompt
+/plan-agent:prompt system prompt for a customer support chatbot
+/plan-agent:prompt refactor Python code task prompt
 ```
 
 **Before / after** — a vague request in, a structured prompt out:
@@ -316,11 +316,11 @@ The skill runs a six-phase pipeline:
 | `analytical` | Long-context patterns (`<document>`, `<quote>`), thinking/CoT, self-check, output format |
 | `proposal` | Long-context grounding (`<context>`, `<finding>`, `<decisions>`), comparison tables, positive framing, output format |
 
-Invoke only via `/plan-agent:write-prompt` — auto-activation is disabled because "prompt" is too common a word in coding contexts. `disable-model-invocation: true` blocks *programmatic* `Skill()` invocation too, not merely ambient activation, so a thin `commands/write-prompt.md` wrapper exists to let other skills reach it; the flag stays on. The wrapper **reads `skills/write-prompt/SKILL.md` by path rather than delegating with `Skill(skill: "plan-agent:write-prompt")`**: the command shadows the skill of that name, so delegating would return the wrapper again and none of the seven phases would load.
+Invoke only via `/plan-agent:prompt` — auto-activation is disabled because "prompt" is too common a word in coding contexts. `disable-model-invocation: true` blocks *programmatic* `Skill()` invocation too, not merely ambient activation, so a thin `commands/prompt.md` wrapper exists to let other skills reach it; the flag stays on. The wrapper **reads `skills/prompt/SKILL.md` by path rather than delegating with `Skill(skill: "plan-agent:prompt")`**: the command shadows the skill of that name, so delegating would return the wrapper again and none of the seven phases would load.
 
 **Core plus references.** The skill body is a 343-line core; the per-run detail loads on demand from `references/` — `interview-questions.md` (Phase 2's four type-specific question sets), `structuring-and-drafting.md` (Phase 3's seven generic XML layers, Phase 4's path resolution and writing rules), `saving-prompts.md` (Phase 7's directory precedence and filename derivation), plus the five `<type>-prompt-template.md` files. A single run reads one question set and one template. What stays in the core is what `tests/plugins/test-write-prompt-proposal-type.sh` pins per phase: the `--out` contract, the living-document rules, the proposal framing line, the clarify-menu exclusion, the `--answers-gathered` bypass, and Phase 3's proposal-grounding layer.
 
-**A leading type token pins the type.** If the first token of `$ARGUMENTS` exactly matches one of the four author-facing type names, that is the type and Phase 1 does not infer — `/plan-agent:write-prompt creative a bedtime story about a lighthouse keeper`. Bare intent text still infers as before. The fifth name, `proposal`, is honoured only when `--answers-gathered` rides along; typed alone it falls through to the clarify menu, because its interview cannot run without a caller supplying the answers. The type token and both flags are stripped before the remaining text is read as the intent.
+**A leading type token pins the type.** If the first token of `$ARGUMENTS` exactly matches one of the four author-facing type names, that is the type and Phase 1 does not infer — `/plan-agent:prompt creative a bedtime story about a lighthouse keeper`. Bare intent text still infers as before. The fifth name, `proposal`, is honoured only when `--answers-gathered` rides along; typed alone it falls through to the clarify menu, because its interview cannot run without a caller supplying the answers. The type token and both flags are stripped before the remaining text is read as the intent.
 
 **An inferred type is confirmed before Phase 2.** The type selects the technique matrix *and* the whole type-specific question set, so a wrong type means the wrong interview, discovered only after it has been answered. Exactly one `AskUserQuestion` fires: the four-option clarify menu when the input does not clearly match a type, or — when it does — a four-option gate offering **Looks right** plus the three other author-facing types, so changing the type needs no second question. Both are skipped when the type arrived as a leading token, or when `--answers-gathered` is present. In a non-interactive session the skill proceeds rather than blocking — Phase 2's interview needs the same tool — and lists the assumed answers as a correctable table.
 
@@ -510,7 +510,7 @@ plan-agent/
       SKILL.md              — Open existing gallery without rebuild
     setup-sites/
       SKILL.md              — Scaffold the GitHub Pages deploy pipeline into any repo
-    write-prompt/
+    prompt/
       SKILL.md              — 7-phase prompt authoring (classify, interview, structure, draft, save)
       references/
         system-prompt-template.md     — system-type template
@@ -524,7 +524,7 @@ plan-agent/
     agent-review-plan.md    — Background agent for fire-and-forget review
   commands/
     review-plan-bg.md       — Background review dispatcher command
-    write-prompt.md         — Skill wrapper unblocking programmatic invocation
+    prompt.md               — Skill wrapper unblocking programmatic invocation
   templates/
     plans-gallery.html      — Static gallery template (substituted by plans-library)
     pages/
@@ -591,9 +591,9 @@ Command-invocable via `/plan-agent:build-proposal <idea>` and model-invocable on
 - **Right-sizing triage** — Step 1 picks a **Tier**: Tier 0 (answer directly, no loop), Tier 1 (one research pass, short proposal), Tier 2 (full 8-step loop + canonical artifact). The tier escalates or de-escalates as research reveals scope.
 - **8-step loop** — Frame → **Confirm the ask (Step 1b gate)** → Fan out research (parallel) → Synthesize the core finding → Separate facts from decisions → Resolve decisions (recommendation-first) → Author the artifact → Deepen on request → Converge & hand off. Step 0 self-bootstraps out of plan mode.
 - **Step 1b confirms the objective before any research runs** — the restated one-liner, domains, and tier go back to the human as an `AskUserQuestion` (**Looks right** / **Refine it**) at Tier 1 and 2; Tier 0 has already answered and skips it. Refining is bounded at two rounds, after which the human's latest wording is used verbatim. Step 1 also forbids *enriching* the restatement — adding a downstream purpose or success condition the human never stated is the specific drift the gate exists to catch, since the entire fan-out then researches the invention.
-- **Artifact resolution (dual-write, 6.0.0)** — the deliverable is a **saved prompt** at `<prompts-dir>/proposal-<slug>.md`, authored by delegating to `write-prompt`; the legacy `<proposals-dir>/<slug>.md` copy is still written for one deprecation release carrying a banner naming the prompt as authoritative, and is removed in 6.1.0. The prompts directory resolves `--dir` → `promptsDirectory` (settings precedence: project-local `.claude/settings.local.json` → project `.claude/settings.json` → global `~/.claude/settings.json`) → `${PWD}/docs/prompts/` — the same key `write-prompt` and `artifact-tools:prompt-artifact` read. **`--dir` follows the authoritative artifact, so since 6.0.0 it names the prompts directory, not the proposals one**; the deprecated proposals root still resolves from `planAgent.proposalsDirectory` → `${PWD}/docs/proposals/`, seeded by a committed `docs/proposals/.gitkeep`.
+- **Artifact resolution (dual-write, 6.0.0)** — the deliverable is a **saved prompt** at `<prompts-dir>/proposal-<slug>.md`, authored by delegating to `prompt`; the legacy `<proposals-dir>/<slug>.md` copy is still written for one deprecation release carrying a banner naming the prompt as authoritative, and is removed in 6.1.0. The prompts directory resolves `--dir` → `promptsDirectory` (settings precedence: project-local `.claude/settings.local.json` → project `.claude/settings.json` → global `~/.claude/settings.json`) → `${PWD}/docs/prompts/` — the same key `prompt` and `artifact-tools:prompt-artifact` read. **`--dir` follows the authoritative artifact, so since 6.0.0 it names the prompts directory, not the proposals one**; the deprecated proposals root still resolves from `planAgent.proposalsDirectory` → `${PWD}/docs/proposals/`, seeded by a committed `docs/proposals/.gitkeep`.
 - **The prompt filename carries no date** — `proposal-<slug>.md`. It is a living document that deepens over rounds, and a dated name would resolve to a different path the moment a loop crossed midnight, forking it in two. The slug is the identity; `created:` and `modified:` carry the dates, and round two rewrites the same file in place rather than minting a `-2` variant.
-- **The caller dictates the path** — Step 6 passes `--out <path>` (and `--answers-gathered`, so the human is not re-interviewed) to `write-prompt`. `Skill()` has no documented return value, and `write-prompt`'s own Phase 7 would resolve a different directory and a different intent slug, so an independently derived path would name a file that was never written.
+- **The caller dictates the path** — Step 6 passes `--out <path>` (and `--answers-gathered`, so the human is not re-interviewed) to `prompt`. `Skill()` has no documented return value, and `prompt`'s own Phase 7 would resolve a different directory and a different intent slug, so an independently derived path would name a file that was never written.
 - **`deep-research` is optional** — the web-research phase can delegate to the `deep-research` skill when available, falling back to `WebSearch`/`WebFetch` + `Agent` (`Explore`) breadth otherwise. No hard dependency.
 - **References (one level deep)** — `references/artifact-shape.md` (canonical section order + skeleton), `references/operating-principles.md` (ten principles + capability map), `references/artifact-resolution.md` (the runnable directory resolver, read at Step 6), and two trimmed worked exemplars (`example-design-md-spec-alignment.md`, `example-proposal-builder-skill.md`) stamped with source URL + commit SHA/date.
 - **Always offers the artifact** — Step 8 asks once, every converged run, whether to publish the proposal as a shareable claude.ai artifact; on yes it loads the bundled `artifact-design` skill to calibrate the page, then publishes with the `Artifact` tool. The offer is **not** suppressed by a blanket "no more questions" or by `--answers-gathered` — those cover the proposal's decisions, and publishing is the one action a human cannot undo by editing a file. It never publishes without an explicit yes, and Tier 0 never reaches the offer because it writes no artifact at all.

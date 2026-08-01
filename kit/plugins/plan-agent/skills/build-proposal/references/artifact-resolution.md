@@ -42,7 +42,7 @@ PY
 
 ## Why the same key in three places
 
-`write-prompt` (Phase 7) and `artifact-tools:prompt-artifact` (Step 2) read
+`prompt` (Phase 7) and `artifact-tools:prompt-artifact` (Step 2) read
 `promptsDirectory` with this exact precedence. Diverging here would publish, or
 write, to a directory the other two do not agree on — the failure is silent, and
 surfaces only as a prompt that cannot be found later.

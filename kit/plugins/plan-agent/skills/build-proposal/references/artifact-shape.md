@@ -111,7 +111,7 @@ rule binds this reference as much as `SKILL.md`.
 
 ## Section-to-slot mapping
 
-The authoritative artifact is the saved prompt, assembled by `write-prompt` from
+The authoritative artifact is the saved prompt, assembled by `prompt` from
 `references/proposal-prompt-template.md`. Each canonical section above maps onto
 exactly one slot:
 

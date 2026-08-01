@@ -448,7 +448,7 @@ claude --plugin-dir ./kit/plugins/product-plans
 
 #### `plan-agent`
 
-Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with a built-in structured interview; it authors the plan and stops, never writing source files. Implement a plan that already exists with `/plan-agent:build [<plan>]`, which walks the steps, ticks the spec, re-renders, and owns all three completion gates — acceptance criteria, end-to-end verification, and completion checklist. Turn a vague idea into a decision-complete proposal — saved as a copy-pasteable prompt under `docs/prompts/` — with `/plan-agent:build-proposal`, spawn a seven-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:write-prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, or turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. PostToolUse hooks auto-regenerate the plans and prototypes gallery indexes; a filename hook enforces verb-target kebab-case.
+Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with a built-in structured interview; it authors the plan and stops, never writing source files. Implement a plan that already exists with `/plan-agent:build [<plan>]`, which walks the steps, ticks the spec, re-renders, and owns all three completion gates — acceptance criteria, end-to-end verification, and completion checklist. Turn a vague idea into a decision-complete proposal — saved as a copy-pasteable prompt under `docs/prompts/` — with `/plan-agent:build-proposal`, spawn a seven-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, or turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. PostToolUse hooks auto-regenerate the plans and prototypes gallery indexes; a filename hook enforces verb-target kebab-case.
 
 **Commands:**
 
@@ -459,7 +459,7 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | `/plan-agent:plan-status [plan-file-path] [--all]` | Check and update a plan's lifecycle status (todo, in-progress, completed) and type, one file or in bulk |
 | `/plan-agent:documenting-plans [plan-file-path]` | Generate developer-friendly documentation at `docs/<slug>.md` from a completed plan |
 | `/plan-agent:markdown-to-html [file-path] [--theme=…] [--mode=…]` | Convert a markdown file or plan to a rich, self-contained HTML document |
-| `/plan-agent:write-prompt [intent] [--out <path>] [--answers-gathered]` | Build a structured AI prompt and save it to the prompts directory |
+| `/plan-agent:prompt [intent] [--out <path>] [--answers-gathered]` | Build a structured AI prompt and save it to the prompts directory |
 | `/plan-agent:plan-maintenance [--archive] [--index] [--variants] [--all]` | Archive completed plans as HTML, generate a README index, and review variant/duplicate files |
 
 **Skills:**
@@ -468,10 +468,10 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 |-------|------------------------------|
 | `implementation-plan` | Create a plan via `/plan-agent:implementation-plan <objective>` — also auto-activates on plan-document intent |
 | `build` | Implement a plan that already exists via `/plan-agent:build [<plan>]` — walks its steps, ticks the spec, re-renders, and runs the acceptance-criteria, end-to-end-verification, and completion-checklist gates; also auto-activates on "implement the plan at …" intent |
-| `build-proposal` | Turn a vague idea into a decision-complete proposal, saved as a copy-pasteable prompt (`docs/prompts/proposal-<slug>.md`) authored by delegating to `write-prompt` — researches web + codebase, separates facts from decisions, then hands off to `implementation-plan`; also writes the deprecated `docs/proposals/<slug>.md` copy through 6.0.x; auto-activates on idea / "should-we" / compare-and-align intent |
+| `build-proposal` | Turn a vague idea into a decision-complete proposal, saved as a copy-pasteable prompt (`docs/prompts/proposal-<slug>.md`) authored by delegating to `prompt` — researches web + codebase, separates facts from decisions, then hands off to `implementation-plan`; also writes the deprecated `docs/proposals/<slug>.md` copy through 6.0.x; auto-activates on idea / "should-we" / compare-and-align intent |
 | `review-plan` | Spawn a seven-reviewer Agent Team (architecture, completeness, testability, risk, conventions, + UI-conditional UX and accessibility) to review a plan, synthesize findings, and apply improvements in place |
 | `finalize-plan` | Review a plan for completion evidence with per-criterion verification and mark it completed — manual invoke only |
-| `write-prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) across five types (`system`, `task`, `creative`, `analytical`, `proposal`) — command only, with a `commands/write-prompt.md` wrapper so other skills can reach it |
+| `prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) across five types (`system`, `task`, `creative`, `analytical`, `proposal`) — command only, with a `commands/prompt.md` wrapper so other skills can reach it |
 | `setup-sites` | Scaffold the GitHub Pages deploy pipeline (workflow, `.nojekyll`, landing hub, preview script) into any repo so `docs/` HTML publishes to a public URL — command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent |
 | `prototype` | Turn a completed HTML plan or a one-line idea into a runnable, framework-free static-HTML prototype under `docs/prototypes/` (inline JSON seed + per-prototype `localStorage`, escaped output, a11y baked in) — command (`/plan-agent:prototype <plan.html \| idea>`) or auto-activates on "prototype this plan / idea" intent |
 | `plans-library` | Browse plans, view plan history, or open the plans index |
@@ -511,7 +511,7 @@ claude --plugin-dir ./kit/plugins/plan-agent
 # /plan-agent:review-plan docs/plans/add-dark-mode-toggle.html
 # /plan-agent:review-plan-bg docs/plans/add-dark-mode-toggle.html
 # /plan-agent:finalize-plan add-dark-mode-toggle.html
-# /plan-agent:write-prompt
+# /plan-agent:prompt
 # "Browse my plans"
 ```
 
@@ -738,7 +738,7 @@ Publish work as live claude.ai artifacts. Every skill runs a blocking `security-
 |-------|------------------------------|
 | `diff-artifact` | Publish or share a diff — builds an annotated walkthrough (branch, commit range, or PR) with a sticky file sidebar, per-hunk reviewer notes, and severity labels |
 | `plan-artifact` | Publish or share a plan — republishes to the same URL across sessions via `artifact-url:` frontmatter so viewers watch steps check off live |
-| `prompt-artifact` | Publish or share a prompt saved by `plan-agent:write-prompt` — one prompt, or the whole filterable library with `--library` |
+| `prompt-artifact` | Publish or share a prompt saved by `plan-agent:prompt` — one prompt, or the whole filterable library with `--library` |
 | `session-artifact` | Share a session recap — extracts transcript turns into Summary, Decisions, Learnings, and Files touched |
 
 ```bash
@@ -811,9 +811,9 @@ claude --plugin-dir ./kit/plugins/team-defaults
 | [product-plans](./kit/plugins/product-plans/README.md) | 3.4.13 | productivity | 1 command, 1 skill, 7 agents |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.21.0 | productivity | 1 command, 17 skills |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 7.7.0 | productivity | 7 commands, 14 skills, 9 agents, 2 hooks |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 8.0.0 | productivity | 7 commands, 14 skills, 9 agents, 2 hooks |
 | [team-defaults](./kit/plugins/team-defaults/README.md) | 0.2.0 | productivity | 1 skill, 2 agents |
-| [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.10.0 | development | 3 commands, 4 skills |
+| [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.10.1 | development | 3 commands, 4 skills |
 | [content-tools](./kit/plugins/content-tools/README.md) | 1.1.0 | documentation | 1 skill |
 
 ---

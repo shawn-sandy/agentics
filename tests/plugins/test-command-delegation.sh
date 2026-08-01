@@ -53,7 +53,7 @@ failures = []
 # the first place (they had drifted 20, 153, and 383 lines apart).
 #
 # MAX_LINES is 16, matching the longest of the already-converted wrappers
-# (write-prompt.md, not itself in this map since it predates it) — plan-status
+# (prompt.md, not itself in this map since it predates it) — plan-status
 # needs one line more than deep-grill/documenting-plans for its extra
 # `--all`/`--force` argument-hint.
 MAX_LINES = 16
@@ -119,7 +119,7 @@ for rel, skill in DELEGATORS.items():
             if not m:
                 return set()
             # allowed-tools may wrap onto the next line as a bare indented
-            # value (see write-prompt.md); stop at the next top-level key.
+            # value (see prompt.md); stop at the next top-level key.
             block = m.group(1)
             block = re.split(r"\n[a-z][a-z-]*:", block, maxsplit=1)[0]
             return {t.strip() for t in block.replace("\n", " ").split(",") if t.strip()}

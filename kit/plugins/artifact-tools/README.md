@@ -24,7 +24,7 @@ scrub gate.) All four record the returned URL so later sessions republish to the
 | `diff-artifact` | An annotated diff walkthrough — branch, commit range, or PR — with a sticky file sidebar, per-hunk reviewer notes, and severity labels |
 | `session-artifact` | A reviewer-first session recap: Summary, Decisions (with rationale), Learnings, Files touched |
 | `plan-artifact` | A `plan-agent` HTML plan, republished to a stable URL as steps check off |
-| `prompt-artifact` | A prompt saved by `plan-agent:write-prompt` — one prompt, or the whole library with `--library` — behind a verbatim copy button |
+| `prompt-artifact` | A prompt saved by `plan-agent:prompt` — one prompt, or the whole library with `--library` — behind a verbatim copy button |
 
 Skills activate automatically when your request matches — "publish this diff for
 review", "share a recap of this session", "publish this plan", "share this
@@ -237,7 +237,7 @@ the edit. Edit the `.md` spec.
 
 ### prompt-artifact
 
-Publishes prompts saved by `plan-agent:write-prompt`, resolving the prompts
+Publishes prompts saved by `plan-agent:prompt`, resolving the prompts
 directory exactly the way that skill does (`promptsDirectory` from settings, then
 `{git-root}/docs/prompts`, then cwd-relative) — a divergence here would publish
 from the wrong place.
