@@ -150,18 +150,24 @@ for skill, refdir in TARGETS:
         if not any(c.is_file() for c in candidates):
             bad.append(f"{skill} points at references/{name}, which does not exist")
 
-# Reverse: a reference on disk that no core in that plugin names. Cores here
-# means every SKILL.md in the plugin, since plugin-level references are shared
-# (titles.md is read by four skills, not only the two that were split).
+# Reverse: a reference on disk that nothing in that plugin names. Readers here
+# means every SKILL.md *and* every command in the plugin, since plugin-level
+# references are shared (titles.md is read by four skills, not only the two
+# that were split, and recap-core.md is read by three commands and no skill).
+# Globbing skills alone would report a command-only reference as orphaned.
 for refdir in sorted({d for _, d in TARGETS}):
     plugin = pathlib.Path(refdir)
     while plugin.parent.name != "plugins":
         plugin = plugin.parent
-    cores = "\n".join(p.read_text(encoding="utf-8")
-                      for p in sorted(plugin.glob("skills/*/SKILL.md")))
+    readers = "\n".join(
+        p.read_text(encoding="utf-8")
+        for p in sorted([*plugin.glob("skills/*/SKILL.md"), *plugin.glob("commands/*.md")])
+    )
     for ref in sorted(pathlib.Path(refdir).glob("*.md")):
-        if f"references/{ref.name}" not in cores:
-            bad.append(f"{ref} is orphaned — no SKILL.md in {plugin.name} links to it")
+        if f"references/{ref.name}" not in readers:
+            bad.append(
+                f"{ref} is orphaned — no SKILL.md or command in {plugin.name} links to it"
+            )
 
 if bad:
     for b in bad:

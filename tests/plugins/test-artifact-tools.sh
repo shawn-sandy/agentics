@@ -273,124 +273,159 @@ for rel, key in owners.items():
 EOF
 ok
 
-# 8. Every PR-mode command guards its gh calls behind the preflight.
+# 8. The PR-mode workflow guards its gh calls behind the preflight.
 # `gh pr view` on a repo without gh or a GitHub remote spews shell errors into
 # the transcript instead of falling back to session mode, so the guard is what
 # makes the fallback a decision rather than an accident.
-python3 - "$PLUGIN" <<'EOF' || fail "a PR-mode command calls gh without the preflight guard"
+#
+# The three recap commands used to carry this block each; it now lives once in
+# references/recap-core.md, so the guard is asserted there and each command is
+# asserted to load it. Checking the commands for `gh pr view` instead would
+# pass a command that inlined a *different*, unguarded copy while the core sat
+# unused -- hence both halves.
+python3 - "$PLUGIN" <<'EOF' || fail "the PR-mode workflow calls gh without the preflight guard"
 import pathlib, sys
 root = pathlib.Path(sys.argv[1])
-found = 0
-for path in sorted((root / "commands").glob("*.md")):
-    text = path.read_text()
-    if "gh pr view" not in text:
-        continue          # not a PR-mode command; nothing to guard
-    found += 1
-    rel = path.name
-    assert "gh auth status" in text, f"{rel}: calls gh pr view with no auth preflight"
-    assert "git remote get-url origin" in text, f"{rel}: never checks for a GitHub remote"
-    # The remote lookup alone is not the contract -- any remote would pass it.
-    # The preflight must filter that URL for github.com, or PR mode fires gh at
-    # a GitLab/Bitbucket origin instead of falling back to session mode.
-    assert "github" in text[text.index("git remote get-url origin"):text.index("PR_MODE_UNAVAILABLE")], (
-        f"{rel}: preflight retrieves the origin but never filters it for github.com"
-    )
-    assert "PR_MODE_UNAVAILABLE" in text, f"{rel}: no fallback branch when the preflight fails"
-    # The guard must come before the first gh pr view, or it guards nothing.
-    assert text.index("gh auth status") < text.index("gh pr view"), (
-        f"{rel}: preflight appears after the first gh pr view"
-    )
-assert found >= 3, (
-    f"expected product-doc, team-recap and eng-recap to be PR-mode commands, found {found}"
+core_rel = "references/recap-core.md"
+core = root / core_rel
+assert core.is_file(), f"{core_rel} missing -- the shared recap workflow has no owner"
+text = core.read_text()
+
+assert "gh pr view" in text, f"{core_rel}: no PR gathering, so PR mode has no source"
+assert "gh auth status" in text, f"{core_rel}: calls gh pr view with no auth preflight"
+assert "git remote get-url origin" in text, f"{core_rel}: never checks for a GitHub remote"
+# The remote lookup alone is not the contract -- any remote would pass it.
+# The preflight must filter that URL for github.com, or PR mode fires gh at
+# a GitLab/Bitbucket origin instead of falling back to session mode.
+assert "github" in text[text.index("git remote get-url origin"):text.index("PR_MODE_UNAVAILABLE")], (
+    f"{core_rel}: preflight retrieves the origin but never filters it for github.com"
 )
+assert "PR_MODE_UNAVAILABLE" in text, f"{core_rel}: no fallback branch when the preflight fails"
+# The guard must come before the first gh pr view, or it guards nothing.
+assert text.index("gh auth status") < text.index("gh pr view"), (
+    f"{core_rel}: preflight appears after the first gh pr view"
+)
+
+# Each recap command must actually reach that guard. A command that neither
+# loads the core nor gathers the PR itself has lost PR mode entirely.
+found = 0
+for name in ("eng-recap", "team-recap", "product-doc"):
+    cmd = (root / "commands" / f"{name}.md").read_text()
+    assert core_rel in cmd, f"{name}.md: never loads {core_rel}, so it has no guarded PR mode"
+    assert "gh pr view" not in cmd, (
+        f"{name}.md: inlines its own gh gathering instead of delegating to {core_rel}"
+    )
+    found += 1
+assert found == 3, f"expected 3 recap commands delegating to the core, found {found}"
 EOF
 ok
 
-# 8b. The three PR-mode commands must gather the PR the same way. This is the
-# contract that already drifted once: eng-recap was fixed and its two siblings
-# were left fetching a head ref, silently dropping the commit bodies both of
-# them say should lead the recap.
-python3 - "$PLUGIN" <<'EOF' || fail "a PR-mode command's gathering drifted from its siblings"
+# 8b. The one gather block has to stay correct. This is the contract that
+# already drifted once, back when each command carried its own copy: eng-recap
+# was fixed and its two siblings were left fetching a head ref, silently
+# dropping the commit bodies all three say should lead the recap. Extracting the
+# block to references/recap-core.md is what makes that class of drift
+# impossible; these assertions keep the surviving copy honest.
+python3 - "$PLUGIN" <<'EOF' || fail "the PR gather block drifted from its contract"
 import pathlib, re, sys
 root = pathlib.Path(sys.argv[1])
-found = 0
-for path in sorted((root / "commands").glob("*.md")):
-    text = path.read_text()
-    if "gh pr view" not in text:
-        continue
-    found += 1
-    rel = path.name
-    # Assert on the gather block with comment lines stripped. The comments
-    # legitimately name `headRefName` and `git fetch` while explaining why they
-    # are NOT used -- a raw substring check cannot tell an explanation apart
-    # from an instruction, and would pass a file that does both.
-    block = re.search(r'```bash\n\s*(PR=<number-or-url>.*?)```', text, re.S)
-    assert block, f"{rel}: no PR gather block to check"
-    code = "\n".join(
-        ln for ln in block.group(1).splitlines() if not ln.strip().startswith("#")
+core_rel = "references/recap-core.md"
+text = (root / core_rel).read_text()
+
+# Assert on the gather block with comment lines stripped. The comments
+# legitimately name `headRefName` and `git fetch` while explaining why they
+# are NOT used -- a raw substring check cannot tell an explanation apart
+# from an instruction, and would pass a file that does both.
+block = re.search(r'```bash\n\s*(PR=<number-or-url>.*?)```', text, re.S)
+assert block, f"{core_rel}: no PR gather block to check"
+code = "\n".join(
+    ln for ln in block.group(1).splitlines() if not ln.strip().startswith("#")
+)
+# Commit bodies through the API, never through a local ref. `headRefName` is
+# only a branch name, so a fork PR / deleted branch / cross-repo URL has no
+# such ref on this origin and the fetch takes the bodies down with it.
+assert "--json commits" in code, f"{core_rel}: commit bodies not gathered from the API"
+for banned, why in (
+    ("git fetch", "fetches a head ref that need not exist on this origin"),
+    ("git log", "reads commit bodies from a local ref instead of the API"),
+    ("headRefName", "resolves commits through a branch name"),
+):
+    assert banned not in code, f"{core_rel}: {why} (`{banned}`)"
+# Unresolved findings have no other source: `comments` is top-level issue
+# comments and `reviews` carries only each review's own state and body.
+assert "reviewThreads" in code and "isResolved" in code, (
+    f"{core_rel}: no reviewThreads query, so 'unresolved review threads' has no source"
+)
+# Both connections are bounded, so the query must be able to say it was cut
+# short -- otherwise a first page reads as the whole list.
+assert "hasNextPage" in code, f"{core_rel}: reviewThreads query cannot report truncation"
+assert re.search(r'truncated|more_comments', code), (
+    f"{core_rel}: queries pageInfo but never surfaces truncation to the reader"
+)
+# Owner/repo must come from the PR, not the checkout: argument-less
+# `gh repo view` is "view current repo", which pairs a foreign PR number
+# with local owner/name on a cross-repository PR URL.
+assert not re.search(r'\$\(\s*gh repo view', code), (
+    f"{core_rel}: derives owner/repo from the local checkout instead of the PR"
+)
+# No command may keep a second copy -- that is how the drift started.
+for name in ("eng-recap", "team-recap", "product-doc"):
+    cmd = (root / "commands" / f"{name}.md").read_text()
+    assert not re.search(r'```bash\n\s*PR=<number-or-url>', cmd), (
+        f"{name}.md: carries its own gather block again; it belongs in {core_rel}"
     )
-    # Commit bodies through the API, never through a local ref. `headRefName` is
-    # only a branch name, so a fork PR / deleted branch / cross-repo URL has no
-    # such ref on this origin and the fetch takes the bodies down with it.
-    assert "--json commits" in code, f"{rel}: commit bodies not gathered from the API"
-    for banned, why in (
-        ("git fetch", "fetches a head ref that need not exist on this origin"),
-        ("git log", "reads commit bodies from a local ref instead of the API"),
-        ("headRefName", "resolves commits through a branch name"),
-    ):
-        assert banned not in code, f"{rel}: {why} (`{banned}`)"
-    # Unresolved findings have no other source: `comments` is top-level issue
-    # comments and `reviews` carries only each review's own state and body.
-    assert "reviewThreads" in code and "isResolved" in code, (
-        f"{rel}: no reviewThreads query, so 'unresolved review threads' has no source"
-    )
-    # Both connections are bounded, so the query must be able to say it was cut
-    # short -- otherwise a first page reads as the whole list.
-    assert "hasNextPage" in code, f"{rel}: reviewThreads query cannot report truncation"
-    assert re.search(r'truncated|more_comments', code), (
-        f"{rel}: queries pageInfo but never surfaces truncation to the reader"
-    )
-    # Owner/repo must come from the PR, not the checkout: argument-less
-    # `gh repo view` is "view current repo", which pairs a foreign PR number
-    # with local owner/name on a cross-repository PR URL.
-    assert not re.search(r'\$\(\s*gh repo view', code), (
-        f"{rel}: derives owner/repo from the local checkout instead of the PR"
-    )
-assert found >= 3, f"expected 3 PR-mode commands to check, found {found}"
 EOF
 ok
 
-# 9. eng-recap is the only command that reads diff hunks, so it is the only one
+# 9. eng-recap is the only recap that reads diff hunks, so it is the only one
 # that can exhaust context on a large PR. The cap is what makes that read safe,
 # and a cap nobody reports is indistinguishable from a complete read.
-python3 - "$PLUGIN" <<'EOF' || fail "eng-recap's diff read is uncapped or unreported"
+#
+# The core owns the mechanism and eng-recap opts in, so both halves are checked:
+# a cap in a reference nobody opts into protects nothing, and an opt-in with no
+# mechanism behind it is an unbounded read.
+python3 - "$PLUGIN" <<'EOF' || fail "the diff read is uncapped, unreported, or unclaimed"
 import pathlib, re, sys
-text = (pathlib.Path(sys.argv[1]) / "commands" / "eng-recap.md").read_text()
+root = pathlib.Path(sys.argv[1])
+core_rel = "references/recap-core.md"
+text = (root / core_rel).read_text()
 
-assert "gh pr diff" in text, "eng-recap: never reads the diff, so decision 4 was dropped"
+assert "gh pr diff" in text, f"{core_rel}: never reads the diff, so decision 4 was dropped"
 # A numeric file budget, not just prose about being careful.
 budget = re.search(r'at most \*\*(\d+) files\*\*', text)
-assert budget, "eng-recap: reads diff hunks with no numeric file cap"
+assert budget, f"{core_rel}: reads diff hunks with no numeric file cap"
 cap = int(budget.group(1))
-# The cap is a cross-file contract: the command, the README, and the awk that
+# The cap is a cross-file contract: the reference, the README, and the awk that
 # implements it must all name the same number. A range check would let the
-# command drift to 35 while the README still promises 20.
+# reference drift to 35 while the README still promises 20.
 EXPECTED_CAP = 20
-assert cap == EXPECTED_CAP, f"eng-recap: diff cap is {cap}, README/CHANGELOG promise {EXPECTED_CAP}"
+assert cap == EXPECTED_CAP, f"{core_rel}: diff cap is {cap}, README/CHANGELOG promise {EXPECTED_CAP}"
 assert re.search(rf'n<={EXPECTED_CAP}\b', text), (
-    f"eng-recap: documents a {cap}-file cap but the awk that implements it uses a different bound"
+    f"{core_rel}: documents a {cap}-file cap but the awk that implements it uses a different bound"
 )
-readme = (pathlib.Path(sys.argv[1]) / "README.md").read_text()
+readme = (root / "README.md").read_text()
 assert re.search(rf'\b{EXPECTED_CAP}[ -]file', readme), (
-    f"README does not state the {EXPECTED_CAP}-file diff budget the command enforces"
+    f"README does not state the {EXPECTED_CAP}-file diff budget the workflow enforces"
 )
 # The cap needs a defined behaviour past the budget, or it is just a limit that
 # silently drops files.
-assert "--name-only" in text, "eng-recap: no name-only fallback past the cap"
+assert "--name-only" in text, f"{core_rel}: no name-only fallback past the cap"
 # And the truncation has to reach the reader. A partial read presented as
 # complete is the failure this whole check exists to prevent.
 assert re.search(r'[Rr]eport how many files were summarized', text), (
-    "eng-recap: never requires reporting how many files were summarized"
+    f"{core_rel}: never requires reporting how many files were summarized"
+)
+
+# Exactly one recap opts in. The budget section is opt-in precisely so the two
+# summary-level recaps keep reading commit bodies instead of hunks; a silent
+# second opt-in would double the context cost of the cheap commands.
+opted = [
+    name for name in ("eng-recap", "team-recap", "product-doc")
+    if re.search(r'\*\*Opt in to the diff budget\*\*',
+                 (root / "commands" / f"{name}.md").read_text())
+]
+assert opted == ["eng-recap"], (
+    f"expected only eng-recap to opt in to the diff budget, got {opted}"
 )
 EOF
 ok

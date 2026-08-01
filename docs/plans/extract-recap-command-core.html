@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="medium">
+<html lang="en" data-status="completed" data-effort="medium">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +14,7 @@ try {
   if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
 } catch (e) { /* no storage — prefers-color-scheme decides */ }
 </script>
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-effort" content="medium">
 <meta name="plan-type" content="refactor">
 <meta name="plan-created" content="2026-07-27">
@@ -1526,7 +1526,7 @@ img, video { max-width: 100%; height: auto; }
         <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
                 aria-pressed="false" aria-label="Use dark theme">Dark</button>
         <span class="effort-badge" aria-label="Effort level">Medium</span>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1559,13 +1559,13 @@ img, video { max-width: 100%; height: auto; }
       <summary>7 steps</summary>
       <div class="rail-heading">Steps</div>
       <ul class="rail-steps">
-        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Diff the three command files pairwise and write the shared-line inventory to a scratch file, separating lines that are genuinely shared workflow from lines that only look identical (shared section <em class="md">headings</em> whose content differs per audience).</span><span class="rail-state">step 1 of 7</span></a></li>
-        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Write <code class="md">kit/plugins/artifact-tools/references/recap-core.md</code> containing only the Step 1 &quot;shared workflow&quot; lines — PR and session gathering including the 20-file diff cap and <code class="md">--name-only</code> fallback, the blocking <code class="md">security-scrub</code> gate, page build, publish, local-HTML fallback, and the republish-record protocol parameterised by key name.</span><span class="rail-state">step 2 of 7</span></a></li>
-        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Rewrite each of the three commands to state its audience, its section list, its plain-language posture, and its republish key explicitly, then delegate the workflow to <code class="md">references/recap-core.md</code>.</span><span class="rail-state">step 3 of 7</span></a></li>
-        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Confirm each command still writes its own republish key and still carries the <code class="md">artifact-url:</code> prohibition, checking assignments per file rather than counting key names across files.</span><span class="rail-state">step 4 of 7</span></a></li>
-        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Bump <code class="md">artifact-tools</code> to the next minor version in <code class="md">.claude-plugin/marketplace.json</code> and add a <code class="md">kit/plugins/artifact-tools/CHANGELOG.md</code> entry describing the extraction.</span><span class="rail-state">step 5 of 7</span></a></li>
-        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Write <code class="md">tests/plugins/test-recap-command-dedupe.sh</code> asserting the three commands share fewer than 50 identical lines, each is under 500 words, <code class="md">references/recap-core.md</code> exists, and — per file, not across files — that <code class="md">eng-recap.md</code> writes <code class="md">eng-artifact-url:</code>, <code class="md">team-recap.md</code> writes <code class="md">team-artifact-url:</code>, <code class="md">product-doc.md</code> writes <code class="md">product-artifact-url:</code>, and none of the three assigns <code class="md">artifact-url:</code> to itself.</span><span class="rail-state">step 6 of 7</span></a></li>
-        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Add the new test to <code class="md">.github/workflows/check-plugin-versions.yml</code>.</span><span class="rail-state">step 7 of 7</span></a></li>
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Diff the three command files pairwise and write the shared-line inventory to a scratch file, separating lines that are genuinely shared workflow from lines that only look identical (shared section <em class="md">headings</em> whose content differs per audience).</span><span class="rail-state">step 1 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">kit/plugins/artifact-tools/references/recap-core.md</code> containing only the Step 1 &quot;shared workflow&quot; lines — PR and session gathering including the 20-file diff cap and <code class="md">--name-only</code> fallback, the blocking <code class="md">security-scrub</code> gate, page build, publish, local-HTML fallback, and the republish-record protocol parameterised by key name.</span><span class="rail-state">step 2 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Rewrite each of the three commands to state its audience, its section list, its plain-language posture, and its republish key explicitly, then delegate the workflow to <code class="md">references/recap-core.md</code>.</span><span class="rail-state">step 3 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Confirm each command still writes its own republish key and still carries the <code class="md">artifact-url:</code> prohibition, checking assignments per file rather than counting key names across files.</span><span class="rail-state">step 4 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Bump <code class="md">artifact-tools</code> to the next minor version in <code class="md">.claude-plugin/marketplace.json</code> and add a <code class="md">kit/plugins/artifact-tools/CHANGELOG.md</code> entry describing the extraction.</span><span class="rail-state">step 5 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">tests/plugins/test-recap-command-dedupe.sh</code> asserting the three commands share fewer than 50 identical lines, each is under 500 words, <code class="md">references/recap-core.md</code> exists, and — per file, not across files — that <code class="md">eng-recap.md</code> writes <code class="md">eng-artifact-url:</code>, <code class="md">team-recap.md</code> writes <code class="md">team-artifact-url:</code>, <code class="md">product-doc.md</code> writes <code class="md">product-artifact-url:</code>, and none of the three assigns <code class="md">artifact-url:</code> to itself.</span><span class="rail-state">step 6 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Add the new test to <code class="md">.github/workflows/check-plugin-versions.yml</code>.</span><span class="rail-state">step 7 of 7, done</span></a></li>
       </ul>
     </details>
   </nav>
@@ -1637,12 +1637,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 9 done</span>
+        <span id="progress-label">9 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1693,12 +1693,12 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card" id="step-1">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Diff the three command files pairwise and write the shared-line inventory to a scratch file, separating lines that are genuinely shared workflow from lines that only look identical (shared section <em class="md">headings</em> whose content differs per audience).</span>
               </div>
               <div class="step-note step-why-note">
@@ -1713,12 +1713,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-2">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">kit/plugins/artifact-tools/references/recap-core.md</code> containing only the Step 1 &quot;shared workflow&quot; lines — PR and session gathering including the 20-file diff cap and <code class="md">--name-only</code> fallback, the blocking <code class="md">security-scrub</code> gate, page build, publish, local-HTML fallback, and the republish-record protocol parameterised by key name.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1733,12 +1733,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-3">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Rewrite each of the three commands to state its audience, its section list, its plain-language posture, and its republish key explicitly, then delegate the workflow to <code class="md">references/recap-core.md</code>.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1753,12 +1753,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-4">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Confirm each command still writes its own republish key and still carries the <code class="md">artifact-url:</code> prohibition, checking assignments per file rather than counting key names across files.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1773,12 +1773,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-5">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bump <code class="md">artifact-tools</code> to the next minor version in <code class="md">.claude-plugin/marketplace.json</code> and add a <code class="md">kit/plugins/artifact-tools/CHANGELOG.md</code> entry describing the extraction.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1793,12 +1793,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-6">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">tests/plugins/test-recap-command-dedupe.sh</code> asserting the three commands share fewer than 50 identical lines, each is under 500 words, <code class="md">references/recap-core.md</code> exists, and — per file, not across files — that <code class="md">eng-recap.md</code> writes <code class="md">eng-artifact-url:</code>, <code class="md">team-recap.md</code> writes <code class="md">team-artifact-url:</code>, <code class="md">product-doc.md</code> writes <code class="md">product-artifact-url:</code>, and none of the three assigns <code class="md">artifact-url:</code> to itself.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1813,12 +1813,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-7">
+        <div class="step-card completed" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the new test to <code class="md">.github/workflows/check-plugin-versions.yml</code>.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1857,39 +1857,39 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code class="md">kit/plugins/artifact-tools/references/recap-core.md</code> exists and holds the shared workflow</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">Each of the three command files is under 500 words</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">Pairwise identical lines between any two commands number fewer than 50</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4"><code class="md">eng-recap.md</code> writes <code class="md">eng-artifact-url:</code>, <code class="md">team-recap.md</code> writes <code class="md">team-artifact-url:</code>, and <code class="md">product-doc.md</code> writes <code class="md">product-artifact-url:</code></label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">No command assigns <code class="md">artifact-url:</code> to itself; all three retain the prohibition naming it as <code class="md">session-artifact</code>&#39;s key</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">Each command still names its audience, its section list, and its republish key</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code class="md">bash tests/plugins/test-recap-command-dedupe.sh</code> exits 0</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">No plugin other than <code class="md">artifact-tools</code> is modified</label>
         </li>
       </ul>
@@ -1914,27 +1914,38 @@ img, video { max-width: 100%; height: auto; }
         Wrapping up
       </h2>
       <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">No items to report — all requirements met.</p>
+          <dl class="report-list">
+            <dt>Integration test</dt>
+            <dd>the behavioral run named in Verification (run all three commands against one merged PR and confirm three artifacts publish) was not performed — it publishes three pages to an external service, which is not something to trigger unprompted. Verified structurally instead: each command names a distinct favicon (🔧 / 🧭 / 📋), a distinct inbox stem, and a distinct republish key; the audience-appropriate sections the Verification section names all survive (eng-recap has Architecture and code paths and no Glossary; team-recap has Glossary and the diagram section; product-doc has Features and Known gaps); and the read-key-before-publishing protocol is intact in <code class="md">recap-core.md</code>. Every acceptance criterion was verified directly. This one Verification item was not.</dd>
+            <dt><code class="md">tests/plugins/test-artifact-tools.sh</code> (modified, not in the plan&#39;s Files list)</dt>
+            <dd>checks 8, 8b, and 9 asserted the gh preflight, the PR gather block, and the 20-file diff cap lived inside <code class="md">commands/*.md</code>, and check 8 required <code class="md">found &gt;= 3</code>. Extracting the workflow made all three fail. They now assert the same contracts against <code class="md">references/recap-core.md</code> — the file that owns them after this change — and additionally assert that each command loads the core, that none keeps a second gather block, and that exactly one command (<code class="md">eng-recap</code>) opts in to the diff budget. Retargeted, not weakened.</dd>
+            <dt><code class="md">tests/plugins/test-remaining-skill-splits.sh</code> (modified, not in the plan&#39;s Files list)</dt>
+            <dd>its orphaned-reference check globbed only <code class="md">skills/*/SKILL.md</code> as linkers, so <code class="md">recap-core.md</code> — the first reference read by commands rather than skills — was reported as orphaned. The check now globs commands too. Confirmed the widened logic still flags a genuinely unlinked reference.</dd>
+            <dt><code class="md">product-doc</code> gained the page-build requirements and the SVG-inlining destination</dt>
+            <dd>it had neither before, because they lived only in the two siblings. Inheriting them from the shared workflow is the extraction working as intended, and it needed a favicon (📋) to publish under, which it also lacked.</dd>
+            <dt><code class="md">kit/plugins/artifact-tools/README.md</code> (modified, not in the plan&#39;s Files list)</dt>
+            <dd>one line added to the structure tree for <code class="md">recap-core.md</code>. The tree was already stale by the six references added in 1.9.0; that pre-existing gap was left alone as out of scope.</dd>
+          </dl>
         </div>
       </div>
     </section>

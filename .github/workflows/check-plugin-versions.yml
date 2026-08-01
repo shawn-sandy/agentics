@@ -70,6 +70,12 @@ jobs:
         run: bash tests/plugins/test-artifact-tools.sh
       - name: Test artifact-to-post contracts survive the reference split
         run: bash tests/plugins/test-artifact-to-post.sh
+
+      # The three recap commands are three framings of one workflow, and the
+      # duplication came back once already. Nothing stops the next feature from
+      # being pasted into all three except a check that runs before merge.
+      - name: Test the recap commands stay deduplicated
+        run: bash tests/plugins/test-recap-command-dedupe.sh
       - name: Test the memory-tools write guard executes shipped code
         run: bash tests/plugins/test-memory-doctor-guard.sh
       - name: Test generator skills verify their own output
