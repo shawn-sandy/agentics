@@ -328,10 +328,10 @@ def format_output(issues: List[Issue], format: str = 'text') -> str:
 def main():
     """Main entry point."""
     if len(sys.argv) < 2:
-        print("Usage: python check_wcag.py <file1> [file2] ... [--json]")
+        print("Usage: python3 check_wcag.py <file1> [file2] ... [--json]")
         print("\nExample:")
-        print("  python check_wcag.py src/components/Button.tsx")
-        print("  python check_wcag.py src/**/*.tsx --json")
+        print("  python3 check_wcag.py src/components/Button.tsx")
+        print("  python3 check_wcag.py src/**/*.tsx --json")
         sys.exit(1)
     
     files = [arg for arg in sys.argv[1:] if not arg.startswith('--')]

@@ -20,7 +20,7 @@ You review **implementation plans** for security posture. Your scope is authenti
 
 ## How to Review
 
-Read the plan's spec with the extractor — `node scripts/extract-plan-spec.mjs <plan-path>`, which derives the spec from the visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file. The spec carries the whole authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Focus on the **Steps**, **Files to Modify**, and **Verification**. Look for:
+Read the plan's spec with the extractor — `node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" <plan-path>`, which derives the spec from the visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file. The spec carries the whole authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Focus on the **Steps**, **Files to Modify**, and **Verification**. Look for:
 
 1. **New entry points** — Endpoints, file uploads, deserialization, or shell invocation added without a validation step.
 2. **Widened access** — Steps that broaden a permission, scope, or token lifetime without saying why.

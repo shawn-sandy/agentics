@@ -20,7 +20,7 @@ You review **implementation plans** for operational and technical risks. Your sc
 
 ## How to Review
 
-Read the plan's spec with the extractor — `node scripts/extract-plan-spec.mjs <plan-path>`, which derives the spec from the visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file. The spec carries the whole authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Focus on the **Objective**, **Steps**, and **Files to Modify**. Look for:
+Read the plan's spec with the extractor — `node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" <plan-path>`, which derives the spec from the visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file. The spec carries the whole authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Focus on the **Objective**, **Steps**, and **Files to Modify**. Look for:
 
 1. **Silent failures** — Steps that could fail partially without clear recovery.
 2. **Backward compatibility breaks** — API changes without deprecation or versioning.

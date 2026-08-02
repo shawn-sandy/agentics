@@ -43,6 +43,12 @@ const DROP_PATTERNS = [
   { test: (rel) => basename(rel) === '.DS_Store', label: '.DS_Store' },
   { test: (rel) => rel.endsWith('.png'), label: '*.png' },
   { test: (rel) => rel.startsWith('.playwright-mcp/') || rel === '.playwright-mcp', label: '.playwright-mcp/' },
+  // Python bytecode. This builder walks the working tree, not git, so
+  // .gitignore does not filter it and untracking alone does not stop it
+  // shipping — a stale .pyc was published this way. Segment match, because
+  // hooks drop __pycache__ at arbitrary depth inside a plugin.
+  { test: (rel) => rel.split('/').includes('__pycache__'), label: '__pycache__/' },
+  { test: (rel) => rel.endsWith('.pyc'), label: '*.pyc' },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────

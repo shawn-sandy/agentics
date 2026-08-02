@@ -762,12 +762,12 @@ claude --plugin-dir ./kit/plugins/team-defaults
 |--------|---------|----------|------------|
 | [memory-tools](./kit/plugins/memory-tools/README.md) | 4.1.0 | development | 2 skills |
 | [code-review](./kit/plugins/code-review/README.md) | 3.3.3 | development | 1 command, 1 skill, 1 agent |
-| [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.3.0 | security | 1 skill |
+| [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.3.1 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.4.0 | development | 1 command, 4 skills, 1 hook |
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.5.0 | testing | 5 skills |
 | [git-agent](./kit/plugins/git-agent/README.md) | 4.10.0 | development | 5 commands, 7 skills, 5 agents, 2 hooks |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.0.2 | productivity | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.21.0 | productivity | 1 command, 17 skills |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.21.1 | productivity | 1 command, 17 skills |
 | [plan-agent](./kit/plugins/plan-agent/README.md) | 8.2.0 | productivity | 7 commands, 14 skills, 12 agents, 2 hooks |
 | [team-defaults](./kit/plugins/team-defaults/README.md) | 0.2.0 | productivity | 1 skill, 2 agents |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.10.1 | development | 3 commands, 4 skills |

@@ -88,7 +88,7 @@ Create an agent team and spawn:
 
 Brief each with its matching prompt from `role-prompts.md`. Wait for all spawned teammates.
 
-**Lead-vs-reviewer read split:** Reviewers read only the plan's spec — their briefs in `role-prompts.md` run the extractor (`node scripts/extract-plan-spec.mjs <plan>`), which derives the spec from the visible DOM (or an embedded digest on legacy plans) in a few thousand tokens instead of the full styled HTML. The lead (this skill) still reads the **full HTML**: Step 3b keyword scanning and Step 7's CSS-selector edits both need the real markup, not the spec.
+**Lead-vs-reviewer read split:** Reviewers read only the plan's spec — their briefs in `role-prompts.md` run the extractor (`node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" <plan>`), which derives the spec from the visible DOM (or an embedded digest on legacy plans) in a few thousand tokens instead of the full styled HTML. The lead (this skill) still reads the **full HTML**: Step 3b keyword scanning and Step 7's CSS-selector edits both need the real markup, not the spec.
 
 Announce progress: "`Spawned 7 core reviewers`" or "`Spawned 10 reviewers (7 core + 3 UI)`".
 

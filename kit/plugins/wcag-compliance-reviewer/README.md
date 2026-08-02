@@ -312,14 +312,14 @@ Why: Screen readers announce "logo.png" without alt text, which is not meaningfu
 
 ## Bundled Resources
 
-### Scripts (scripts/)
+### Scripts (skills/wcag-compliance-reviewer/scripts/)
 
 **check_wcag.py** - Automated accessibility checker
 
 Static analysis for HTML/CSS/React/TypeScript files:
 
 ```bash
-python scripts/check_wcag.py path/to/component.tsx
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/wcag-compliance-reviewer/scripts/check_wcag.py" path/to/component.tsx
 ```
 
 **Catches ~30% of issues:**

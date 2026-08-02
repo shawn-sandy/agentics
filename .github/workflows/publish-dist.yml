@@ -15,6 +15,7 @@ jobs:
     permissions:
       contents: read
       issues: write
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,6 +23,8 @@ jobs:
           node-version: '20'
       - name: Check README plugin table is in sync
         run: node scripts/build-readme-table.mjs --check
+      - name: Verify no plugin files are git-ignored
+        run: bash tests/publish/test-no-ignored-plugin-files.sh
       - name: Build dist
         run: node scripts/build-dist.mjs
       - name: Verify no leaks
@@ -53,9 +56,34 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           REPO: ${{ github.repository }}
+          TITLE: publish-dist is failing
         run: |
-          gh issue create \
-            --title "publish-dist failed on $(date -u +'%Y-%m-%d')" \
-            --body "The daily publish-dist workflow failed. [View run]($RUN_URL)" \
-            --label "bug" \
-            --repo "$REPO"
+          set -euo pipefail
+          # ponytail: plain list + exact-title filter, not `gh issue list --search` —
+          # the search index lags behind issue creation and would re-open duplicates.
+          issue=$(gh issue list --repo "$REPO" --state open --limit 500 --json number,title \
+            -q "[.[] | select(.title == \"$TITLE\") | .number] | first // empty")
+          failed=$(gh run view "$GITHUB_RUN_ID" --repo "$REPO" --json jobs \
+            -q '[.jobs[].steps[] | select(.conclusion == "failure") | .name] | join(", ")')
+          body="Failed step: \`${failed:-unknown}\` on $(date -u +'%Y-%m-%d %H:%M UTC'). [View run]($RUN_URL)"
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "$body" --repo "$REPO"
+          else
+            gh issue create --title "$TITLE" --body "$body" --label bug --repo "$REPO"
+          fi
+      - name: Close failure issue on success
+        # Bookkeeping after the publish already succeeded — a transient API
+        # error here must not turn a green publish into a red run.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPO: ${{ github.repository }}
+          TITLE: publish-dist is failing
+        run: |
+          set -euo pipefail
+          issue=$(gh issue list --repo "$REPO" --state open --limit 500 --json number,title \
+            -q "[.[] | select(.title == \"$TITLE\") | .number] | first // empty")
+          [ -n "$issue" ] || exit 0
+          gh issue close "$issue" --repo "$REPO" \
+            --comment "Recovered — [run]($RUN_URL) passed all gates."
