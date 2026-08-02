@@ -202,14 +202,33 @@ EXPANSION_RE='(^|[[:space:]`"'"'"'(])(node|python3?|bash|sh|realpath)[[:space:]]
 # say what is NOT guarded — an exclusion that quietly covers more than it names
 # is the same "asserts the description, not the behaviour" failure the rest of
 # this suite exists to catch.
-LEDGERED_RE="$(printf '%s\n' "$KNOWN_BROKEN" | sed 's/:[0-9]*$//; s/\./\\./g' | paste -sd'|' -)"
-EXPANSION="$(grep -rnE "$EXPANSION_RE" \
+# Blank lines are dropped before the join, so every way of writing an empty
+# ledger collapses to an empty LEDGERED_RE and trips the guard below. Without
+# this, `KNOWN_BROKEN=""` spanning two lines yields a lone `|` — non-empty, so
+# the guard would pass it through, and `^(|):` has an empty alternative that
+# fails the same way `^():` does.
+LEDGERED_RE="$(printf '%s\n' "$KNOWN_BROKEN" | sed '/^[[:space:]]*$/d; s/:[0-9]*$//; s/\./\\./g' | paste -sd'|' -)"
+# The exclusion filter is applied only when there is something to exclude, and
+# that guard is load-bearing on the exact transition this check is designed to
+# survive: emptying the ledger. With an empty LEDGERED_RE the filter becomes
+# `grep -vE "^():"` — an empty subexpression, which GNU grep reads as `^:`
+# (harmless) but ugrep, the default `grep` on some machines including this one,
+# rejects outright with "empty (sub)expression" and exit 2. Chained after `||
+# true` that error is swallowed, EXPANSION comes back empty, and check 9 passes
+# vacuously no matter how many new call sites exist. Splitting the pipeline so
+# the filter is conditional removes both readings.
+EXPANSION_RAW="$(grep -rnE "$EXPANSION_RE" \
   "$ROOT/kit/plugins/plan-agent/skills" \
   "$ROOT/kit/plugins/plan-agent/agents" \
   "$ROOT/kit/plugins/plan-agent/commands" \
   --include='*.md' 2>/dev/null \
-  | sed "s|$ROOT/kit/plugins/plan-agent/||" \
-  | grep -vE "^($LEDGERED_RE):" || true)"
+  | sed "s|$ROOT/kit/plugins/plan-agent/||" || true)"
+if [ -n "$LEDGERED_RE" ]; then
+  EXPANSION="$(printf '%s\n' "$EXPANSION_RAW" | grep -vE "^($LEDGERED_RE):" || true)"
+else
+  EXPANSION="$EXPANSION_RAW"
+fi
+EXPANSION="$(printf '%s' "$EXPANSION" | sed '/^$/d')"
 if [ -z "$EXPANSION" ]; then
   pass
 else
