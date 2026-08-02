@@ -62,8 +62,13 @@ cp "$ROOT/kit/plugins/plan-agent/templates/prototypes-gallery.html" "$TMP/kit/pl
 cp "$FIXTURE" "$TMP/docs/prototypes/sample-prototype.html"
 bash "$BUILDER" "$TMP" </dev/null >/dev/null
 OUT="$TMP/docs/prototypes/index.html"
+# The builder unescapes the <title> to plain text, then escapes exactly once at
+# render — so the entity-escaped form is what lands in the gallery. Asserting
+# the double-escaped &amp;lt; would demand the pre-unescape behavior, which
+# renders a literal "&lt;demo&gt;" to the reader. The negative grep keeps the
+# check honest: escaped-once, never raw.
 if [ -f "$OUT" ] && grep -q 'sample-prototype.html' "$OUT" && grep -q 'Workout Log' "$OUT" \
-   && grep -q '&amp;lt;demo&amp;gt;' "$OUT"; then
+   && grep -q '&lt;demo&gt;' "$OUT" && ! grep -q '<demo>' "$OUT"; then
   pass; else fail "fixture not listed, or title not escaped in gallery"; fi
 
 echo ""
