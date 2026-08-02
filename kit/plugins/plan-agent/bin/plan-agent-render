@@ -11,5 +11,14 @@
 # That variable is a config-file substitution (hooks.json, MCP/LSP, monitors)
 # and a valid `Read` tool path; it is never a Bash command.
 #
+# On `$0`: this is a `#!` script, so the kernel execs the interpreter with the
+# pathname that was passed to execve — the absolute path the PATH lookup
+# resolved — as the script argument. `$0` is therefore that absolute path, not
+# the bare word the caller typed, and `dirname "$0"` is this bin/ directory
+# rather than `.`. (A shell builtin or a `-c` string would see argv[0] as typed;
+# a shebang script never does.) Verified identical under bash, zsh, and sh, and
+# check 11 of tests/plugins/test-extractor-wiring.sh runs this file by bare name
+# on a prefixed PATH so the property stays proven rather than assumed.
+#
 # Arguments pass through unchanged. Exit status is the renderer's.
 exec node "$(dirname "$0")/../scripts/build-plan-html.mjs" "$@"

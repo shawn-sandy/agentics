@@ -12,7 +12,10 @@
   path, no `${VAR}`, and no environment dependency. This is the only invocation
   shape a skill can actually run, and it is now the plugin's answer to "how does
   a bundled script get called at all". Each wrapper resolves its target through
-  its own `dirname "$0"`, so it works from any install location.
+  its own `dirname "$0"`, so it works from any install location — for a `#!`
+  script the kernel passes the pathname given to `execve` (the absolute path the
+  `PATH` lookup resolved) as the script argument, so `$0` is that absolute path
+  and never the bare word typed. Verified identical under bash, zsh, and sh.
 
 ### Fixed
 

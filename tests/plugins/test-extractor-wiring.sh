@@ -231,24 +231,37 @@ echo "11. Bundled scripts are reachable by bare name via bin/ on PATH..."
 # and no dependence on CLAUDE_PLUGIN_ROOT, which is a config-file substitution
 # (hooks.json, MCP/LSP, monitors) and is not exported into the Bash tool's env.
 #
-# Asserts the wrapper exists, is executable, and resolves its target through its
-# own `dirname "$0"` — exit 2 is build-plan-html.mjs's documented no-args usage
-# code, reachable only once the relative hop into scripts/ has landed. The
-# prototypes wrapper shares that hop, so it is checked for the exec bit, clean
-# syntax, and a target that exists rather than being run for its side effects.
+# Invoked BY BARE NAME with bin/ prefixed onto PATH, not by explicit file path.
+# Those are different code paths and only the bare-name one is what ships: it
+# exercises the PATH lookup, the exec bit (a non-executable file is skipped by
+# lookup, giving 127), and — the subtle part — what `$0` is under a PATH-resolved
+# `#!` script. Running it as "$BIN_DIR/plan-agent-render" would prove none of
+# that.
+#
+# On `$0`: for a `#!` script the kernel execs the interpreter with the pathname
+# that was passed to execve — the absolute path the PATH lookup resolved — as
+# the script argument, so `$0` is that absolute path, NOT the bare word typed.
+# (argv[0] as typed is what a *builtin* or a `-c` string would see; a shebang
+# script never does.) Verified identical under bash, zsh, and sh. This is why
+# `dirname "$0"` in the wrapper correctly yields the plugin's bin/ rather than
+# `.`, and running the check by bare name is what keeps that true.
+#
+# exit 2 is build-plan-html.mjs's documented no-args usage code, reachable only
+# once the relative hop out of bin/ into scripts/ has landed. The prototypes
+# wrapper shares that hop but rebuilds a gallery as a side effect, so it is
+# proven reachable via `command -v` under the same PATH, plus exec bit, clean
+# syntax, and an existing target.
 BIN_DIR="$ROOT/kit/plugins/plan-agent/bin"
-RENDER_RC=-1
-if [ -x "$BIN_DIR/plan-agent-render" ]; then
-  RENDER_RC=0
-  "$BIN_DIR/plan-agent-render" >/dev/null 2>&1 || RENDER_RC=$?
-fi
+RENDER_RC=0
+PATH="$BIN_DIR:$PATH" plan-agent-render >/dev/null 2>&1 || RENDER_RC=$?
+PROTO_RESOLVED="$(PATH="$BIN_DIR:$PATH" command -v plan-agent-prototypes-index || true)"
 if [ "$RENDER_RC" -eq 2 ] \
-  && [ -x "$BIN_DIR/plan-agent-prototypes-index" ] \
+  && [ "$PROTO_RESOLVED" = "$BIN_DIR/plan-agent-prototypes-index" ] \
   && bash -n "$BIN_DIR/plan-agent-prototypes-index" 2>/dev/null \
   && [ -f "$ROOT/kit/plugins/plan-agent/hooks/build-prototypes-index.sh" ]; then
   pass
 else
-  fail "bin/ wrappers are missing, not executable, or cannot reach their target (plan-agent-render rc=$RENDER_RC, want 2)"
+  fail "bin/ wrappers are not reachable by bare name on PATH, or cannot reach their target (plan-agent-render rc=$RENDER_RC, want 2; prototypes resolved to '${PROTO_RESOLVED:-nothing}')"
 fi
 
 echo "12. bin/ survives the dist build..."
