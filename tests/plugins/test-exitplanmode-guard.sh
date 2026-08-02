@@ -60,7 +60,6 @@ WRITE_HEAVY=(
   plan-agent/skills/prototype/SKILL.md
   plan-agent/skills/review-plan/SKILL.md
   plan-agent/skills/setup-sites/SKILL.md
-  product-plans/skills/plan-review-agents/SKILL.md
   skill-reviewer/skills/optimizing-skill-frontmatter/SKILL.md
   social-media-tools/skills/media-library/SKILL.md
   social-media-tools/skills/save-artifact/SKILL.md
@@ -83,7 +82,6 @@ WRITE_HEAVY=(
 # prevent.
 READ_ONLY=(
   plan-agent/commands/review-plan-bg.md
-  product-plans/commands/product-plans-bg.md
   social-media-tools/commands/digest.md
 )
 

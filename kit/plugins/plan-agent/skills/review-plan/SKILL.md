@@ -7,7 +7,7 @@ allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSea
 
 # Plan Review Team Skill
 
-**Primary purpose: improve and update plans in place.** Orchestrate a seven-reviewer Agent Team — five core plan reviewers (architecture, completeness, testability, risk, conventions) plus two UI-conditional reviewers (UX, accessibility) — to review implementation plans, synthesize findings, and apply concrete improvements directly to the source plan.
+**Primary purpose: improve and update plans in place.** Orchestrate a ten-reviewer Agent Team — seven core plan reviewers (architecture, completeness, testability, risk, conventions, product, security) plus three UI-conditional reviewers (UX, accessibility, frontend) — to review implementation plans, synthesize findings, and apply concrete improvements directly to the source plan.
 
 ## When not to use
 
@@ -71,7 +71,7 @@ Read the resolved plan HTML (excluding `<style>` and `<script>` blocks). Scan fo
 
 **UI signals:** React, Vue, Svelte, Angular, `.tsx`, `.jsx`, `.css`, `.html`, `className`, `style`, Tailwind, button, modal, form, dialog, dropdown, page, component.
 
-If 2+ signals found or UI-specific keywords present, set `ui_signals_present = true`. Announce: "`UI signals detected — running 7 reviewers`" or "`No UI signals — running 5 core reviewers`".
+If 2+ signals found or UI-specific keywords present, set `ui_signals_present = true`. Announce: "`UI signals detected — running 10 reviewers`" or "`No UI signals — running 7 core reviewers`".
 
 ### Step 4 — Spawn the review team
 
@@ -80,17 +80,17 @@ Get absolute path:
 realpath "<path-from-step-1>"
 ```
 
-Read `references/role-prompts.md` to get the seven spawn-prompt templates. Substitute `<ABSOLUTE_PATH>` with the `realpath` output.
+Read `references/role-prompts.md` to get the ten spawn-prompt templates. Substitute `<ABSOLUTE_PATH>` with the `realpath` output.
 
 Create an agent team and spawn:
-- Always: `plan-reviewer-architecture`, `-completeness`, `-testability`, `-risk`, `-conventions`
-- When `ui_signals_present`: also `plan-reviewer-ux`, `-accessibility`
+- Always: `plan-reviewer-architecture`, `-completeness`, `-testability`, `-risk`, `-conventions`, `-product`, `-security`
+- When `ui_signals_present`: also `plan-reviewer-ux`, `-accessibility`, `-frontend`
 
 Brief each with its matching prompt from `role-prompts.md`. Wait for all spawned teammates.
 
 **Lead-vs-reviewer read split:** Reviewers read only the plan's spec — their briefs in `role-prompts.md` run the extractor (`node scripts/extract-plan-spec.mjs <plan>`), which derives the spec from the visible DOM (or an embedded digest on legacy plans) in a few thousand tokens instead of the full styled HTML. The lead (this skill) still reads the **full HTML**: Step 3b keyword scanning and Step 7's CSS-selector edits both need the real markup, not the spec.
 
-Announce progress: "`Spawned 5 core reviewers`" or "`Spawned 7 reviewers (5 core + 2 UI)`".
+Announce progress: "`Spawned 7 core reviewers`" or "`Spawned 10 reviewers (7 core + 3 UI)`".
 
 ### Step 5 — Wait, collect, and handle failures
 

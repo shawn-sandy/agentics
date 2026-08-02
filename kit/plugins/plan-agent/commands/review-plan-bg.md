@@ -6,7 +6,7 @@ allowed-tools: Agent, Bash
 # Background Plan Review
 
 Dispatch the `agent-review-plan` subagent in the background. The user wants
-the full seven-reviewer Agent Team to run while they keep working —
+the full ten-reviewer Agent Team to run while they keep working —
 do not wait for it to finish.
 
 ## Workflow

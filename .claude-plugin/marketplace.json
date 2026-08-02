@@ -145,30 +145,6 @@
       ]
     },
     {
-      "name": "product-plans",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
-        "path": "kit/plugins/product-plans"
-      },
-      "version": "3.4.13",
-      "description": "Improve, optimize, and update product plans, PRDs, and feature proposals using a cross-functional Agent Team (PM, Lead Developer, UX, Frontend, Accessibility, Security) — produces a 15-section consolidated report, applies improvements to the source plan, and appends findings to any existing interview HTML artifact",
-      "category": "productivity",
-      "tags": [
-        "panel-review",
-        "multi-reviewer",
-        "agent-team",
-        "product-plan",
-        "prd",
-        "plan-improvement",
-        "plan-optimization",
-        "ux",
-        "accessibility",
-        "security",
-        "review"
-      ]
-    },
-    {
       "name": "settings-sync",
       "source": {
         "source": "git-subdir",
@@ -241,8 +217,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "8.1.0",
-      "description": "Plan creation, review, follow-through, and maintenance. Author a Markdown plan spec rendered as self-contained interactive HTML (implementation-plan), implement it end-to-end through the acceptance and completion gates (build), which authors a plan first when the command names none, and review it with a seven-reviewer Agent Team (review-plan) before marking it done (finalize-plan). Also ships build-proposal, deep-grill, prompt, prototype, documenting-plans, markdown-to-html, plan-status, plan-maintenance, setup-sites, plans-library, and plans-open. Accepts issue URLs and .md plans as input; hooks enforce filenames and rebuild the plan gallery. Full detail in the plugin README.",
+      "version": "8.2.0",
+      "description": "Plan creation, review, follow-through, and maintenance. Author a Markdown plan spec rendered as self-contained interactive HTML (implementation-plan), implement it end-to-end through the acceptance and completion gates (build), which authors a plan first when the command names none, and review it with a ten-reviewer Agent Team (review-plan) before marking it done (finalize-plan). Also ships build-proposal, deep-grill, prompt, prototype, documenting-plans, markdown-to-html, plan-status, plan-maintenance, setup-sites, plans-library, and plans-open. Accepts issue URLs and .md plans as input; hooks enforce filenames and rebuild the plan gallery. Full detail in the plugin README.",
       "category": "productivity",
       "tags": [
         "planning",
@@ -373,6 +349,12 @@
       "version": "1.0.2",
       "removedDate": "2026-05-29",
       "reason": "Removed from marketplace; source deleted 2026-07-16 (recoverable from git history) — structural analysis covered by code-review"
+    },
+    {
+      "name": "product-plans",
+      "version": "3.4.13",
+      "removedDate": "2026-08-02",
+      "reason": "Folded into plan-agent 8.2.0 — its unique PM, security, and frontend lenses ship as plan-reviewer-product, -security, and -frontend in review-plan; source deleted 2026-08-02, recoverable from git history"
     }
   ]
 }

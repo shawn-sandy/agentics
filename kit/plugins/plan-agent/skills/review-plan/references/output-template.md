@@ -30,6 +30,14 @@ This template is used to structure the team's synthesis of reviewer findings and
 
 <Summarize the Conventions Reviewer's findings: style/naming/organization issues, recommendations, and fit with project patterns.>
 
+### Product Review
+
+<Summarize the Product Reviewer's findings: user problem, scope sizing, success measurability, unstated assumptions, rollout readiness.>
+
+### Security Review
+
+<Summarize the Security Reviewer's findings: authn/authz, data handling, trust boundaries, secrets, dependency risk, and overall exposure level. If the plan has no security surface, state that.>
+
 ### UX Review *(if spawned)*
 
 <Summarize the UX Reviewer's findings: user flow clarity, error handling, interaction design. Include only if UI signals were detected.>
@@ -37,6 +45,10 @@ This template is used to structure the team's synthesis of reviewer findings and
 ### Accessibility Review *(if spawned)*
 
 <Summarize the Accessibility Reviewer's findings: WCAG AA compliance gaps, keyboard/screen reader support, semantic HTML. Include only if UI signals were detected.>
+
+### Frontend Review *(if spawned)*
+
+<Summarize the Frontend Reviewer's findings: component boundaries, state placement, render cost, design-system alignment. Include only if UI signals were detected.>
 
 ---
 
