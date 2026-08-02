@@ -21,6 +21,17 @@ MARKETPLACE="$ROOT/.claude-plugin/marketplace.json"
 RULE="$ROOT/.claude/rules/removed-plugins.md"
 FAILURES=0
 
+# `comm` requires its two inputs sorted under the same collation, and every
+# name here is hyphenated. Under GNU coreutils a UTF-8 locale ignores
+# punctuation at the primary level, so `plan-agent` and `planagent` can order
+# differently than they do byte-wise — which would make the comm checks below
+# disagree with each other rather than fail loudly. macOS BSD sort has no ICU
+# collation, so the divergence is invisible on a dev machine and shows up only
+# on the ubuntu runner. C is POSIX-guaranteed and byte-ordered; pinning it for
+# the whole script means one collation governs every sort, comm, and grep.
+# (test-claude-md-budget.sh pins the same variable for the sibling reason.)
+export LC_ALL=C
+
 echo "=== Removed Plugins Sync Test ==="
 
 for f in "$MARKETPLACE" "$RULE"; do
@@ -30,10 +41,12 @@ for f in "$MARKETPLACE" "$RULE"; do
   fi
 done
 
+# Node emits unsorted; `sort` owns the ordering for all three lists, so no
+# comparison below ever straddles two different sort implementations.
 JSON_REMOVED="$(node -e '
   const m = require(process.argv[1]);
-  console.log((m.removed || []).map(r => r.name).sort().join("\n"));
-' "$MARKETPLACE")"
+  console.log((m.removed || []).map(r => r.name).join("\n"));
+' "$MARKETPLACE" | sort)"
 
 # Table rows only: the `| Plugin | Removed |` header and the |---|---| separator
 # never match, because both lack a backticked plugin name in column one.
@@ -41,8 +54,8 @@ RULE_REMOVED="$(grep -o '^| `[a-z0-9-]*`' "$RULE" | tr -d '|` ' | sort)"
 
 ACTIVE="$(node -e '
   const m = require(process.argv[1]);
-  console.log(m.plugins.map(p => p.name).sort().join("\n"));
-' "$MARKETPLACE")"
+  console.log(m.plugins.map(p => p.name).join("\n"));
+' "$MARKETPLACE" | sort)"
 
 # 1 — a vacuous pass is the failure mode this whole file exists to prevent, so
 # an empty list on either side is an error rather than "nothing to compare".
@@ -88,7 +101,8 @@ if [ -z "$RESURRECTED" ]; then
 else
   while IFS= read -r p; do
     [ -z "$p" ] && continue
-    echo "  FAIL: $p is in marketplace.json's removed list AND its active plugins"
+    echo "  FAIL: $p is listed as removed in marketplace.json, yet is also"
+    echo "        registered in its active plugins array"
   done <<< "$RESURRECTED"
   FAILURES=$((FAILURES + 1))
 fi
