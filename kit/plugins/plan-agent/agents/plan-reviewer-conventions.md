@@ -20,7 +20,7 @@ You review **implementation plans** for consistency with project patterns and co
 
 ## How to Review
 
-Read the plan's spec with the extractor — `node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" <plan-path>`, which derives the spec from the visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file. The spec carries the whole authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Examine the **Files to Create/Modify** and **Steps** sections. Look for:
+Read the plan HTML at `<plan-path>` with the `Read` tool. Its authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification — is what you review; status and progress state are intentionally out of review scope. Examine the **Files to Create/Modify** and **Steps** sections. Look for:
 
 1. **Naming mismatches** — Do proposed names fit the project style?
 2. **Structural inconsistencies** — Are new files placed where similar files live?

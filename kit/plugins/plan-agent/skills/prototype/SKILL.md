@@ -146,7 +146,7 @@ which have no owning plan.
   (`docs/plans/<slug>.md`) — the same value `{{SOURCE_PLAN}}` carries.
 - **If that `.md` does not exist:** skip the write-back, still generate the
   prototype, and print exactly one line telling the user to run
-  `node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" <plan>.html > <plan>.md` first if they
+  `node <plan-agent>/scripts/extract-plan-spec.mjs <plan>.html > <plan>.md` first if they
   want the back-link. Most committed plans are legacy HTML with no spec
   sibling; materializing one as a side effect would silently rewrite a plan the
   user never asked us to touch.

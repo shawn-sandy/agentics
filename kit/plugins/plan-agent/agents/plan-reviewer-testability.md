@@ -19,7 +19,7 @@ You review **implementation plans** for testability and test coverage. Your scop
 
 ## How to Review
 
-Read the plan's spec with the extractor — `node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" <plan-path>`, which derives the spec from the visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file. The spec carries the whole authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Focus on the **Tests** and **Acceptance Criteria** sections. Look for:
+Read the plan HTML at `<plan-path>` with the `Read` tool. Its authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification — is what you review; status and progress state are intentionally out of review scope. Focus on the **Tests** and **Acceptance Criteria** sections. Look for:
 
 1. **Missing test types** — Should there be unit tests but aren't mentioned? Same for integration or E2E?
 2. **Vague test descriptions** — Does "test the new flow" count as a test plan?

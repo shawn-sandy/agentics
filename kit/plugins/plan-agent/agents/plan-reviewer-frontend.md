@@ -22,7 +22,7 @@ Your scope is component design, state placement, render cost, and design-system 
 
 ## How to Review
 
-Read the plan's spec with the extractor — `node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" <plan-path>`, which derives the spec from the visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file. The spec carries the whole authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Focus on the **Steps**, **Files to Modify**, and **Tests**. Look for:
+Read the plan HTML at `<plan-path>` with the `Read` tool. Its authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification — is what you review; status and progress state are intentionally out of review scope. Focus on the **Steps**, **Files to Modify**, and **Tests**. Look for:
 
 1. **Reinvented primitives** — A new component where the design system already ships one.
 2. **State hoisted too far** — Global state for something one subtree owns.

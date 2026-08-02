@@ -60,8 +60,24 @@ VALID_TOOLS = {
 # key rename is the mechanism; this is the property. Asserted separately because
 # a correctly-spelled `tools:` naming Write is the same defect with better
 # spelling, and would otherwise pass every check above.
-READ_ONLY_AGENT_GLOB = "plan-reviewer-"
+READ_ONLY_AGENT_PREFIXES = ("plan-reviewer-",)
 WRITE_TOOLS = {"Write", "Edit", "NotebookEdit"}
+
+# The ONLY Bash grant a read-only reviewer may hold. Asserted exactly, not
+# merely "not bare Bash" — the previous check rejected `Bash` and tolerated any
+# `Bash(...)`, so `Bash(node *)` would have passed while handing back arbitrary
+# write access via `node -e "require('fs').writeFileSync(...)"`.
+#
+# Verified empirically against Claude Code 2.1.220: for an agent defined in
+# markdown frontmatter, `Bash(git *)` genuinely scopes the tool — `git status`
+# runs, `node --version` is refused with "This command requires approval".
+# (Scoping is NOT applied the same way to agents injected via the `--agents`
+# JSON flag; that path granted full Bash. Shipped agents are markdown, so the
+# scope holds here — but do not generalize this to `--agents`.)
+#
+# Anything a reviewer cannot do under this grant must not be *documented* in its
+# instructions either; see check 6 of test-extractor-wiring.sh.
+ALLOWED_REVIEWER_BASH = "Bash(git *)"
 
 # Frontmatter keys carrying a tool list. `allowed-tools` is intentionally NOT
 # here — its presence on an agent is itself a failure, checked separately.
@@ -134,7 +150,7 @@ for path in agents:
 
     # 5. The read-only reviewers must actually be read-only. This is the
     #    plan's objective; checks 1-4 only cover the mechanism.
-    if os.path.basename(path).startswith(READ_ONLY_AGENT_GLOB):
+    if os.path.basename(path).startswith(READ_ONLY_AGENT_PREFIXES):
         granted = set(declared or [])
         writes = sorted(granted & WRITE_TOOLS)
         if writes:
@@ -142,14 +158,25 @@ for path in agents:
                 f"{rel}: read-only reviewer grants {', '.join(writes)} — "
                 f"its job is to read a plan and report findings"
             )
-        # Bare `Bash` is unrestricted shell, which is write access by another
-        # name. The plan-agent reviewers scope theirs to `Bash(git *)`.
+        # Every Bash grant must be exactly `Bash(git *)`. Bare `Bash` is
+        # unrestricted shell — write access by another name — and any other
+        # scope (`Bash(node *)`, `Bash(python3 *)`) is the same hole with a
+        # narrower mouth: an interpreter grant is arbitrary-write.
         m = re.search(r"^tools:\s*(.+)$", block, re.M)
-        if m and re.search(r"(^|,)\s*Bash\s*(,|$)", m.group(1)):
-            failures.append(
-                f"{rel}: read-only reviewer grants unrestricted `Bash` — "
-                f"scope it to `Bash(git *)` as the plan-agent reviewers do"
-            )
+        if m:
+            bash_grants = re.findall(r"Bash\([^)]*\)|Bash(?![\w(])", m.group(1))
+            for grant in bash_grants:
+                if grant != ALLOWED_REVIEWER_BASH:
+                    detail = (
+                        "unrestricted `Bash`" if grant == "Bash"
+                        else f"`{grant}`"
+                    )
+                    failures.append(
+                        f"{rel}: read-only reviewer grants {detail} — the only "
+                        f"permitted Bash grant is `{ALLOWED_REVIEWER_BASH}`. An "
+                        f"interpreter grant (node/python/sh) is arbitrary write "
+                        f"access: `node -e \"require('fs').writeFileSync(...)\"`"
+                    )
 
 if failures:
     print(f"FAIL: {len(failures)} problem(s) across {len(agents)} agent file(s):")

@@ -61,32 +61,36 @@ else
   fail "review-plan SKILL.md still has a digest-refresh pass or lacks the extractor reference"
 fi
 
-echo "5. All 10 reviewer briefs run the extractor with a full-HTML fallback..."
-BRIEF_EXTRACTOR_COUNT="$(grep -c 'extract-plan-spec.mjs' "$ROLE_PROMPTS" || true)"
-BRIEF_FALLBACK_COUNT="$(grep -c 'fall back to reading the full HTML' "$ROLE_PROMPTS" || true)"
-if [ "$BRIEF_EXTRACTOR_COUNT" -ge 10 ] && [ "$BRIEF_FALLBACK_COUNT" -ge 10 ] \
+echo "5. No reviewer brief instructs an extractor invocation the reviewer cannot run..."
+# Reviewers are scoped to `Bash(git *)`, so `node ...` is denied outright. Worse,
+# Claude Code's Bash tool rejects ANY command containing `${...}` expansion
+# ("Contains expansion") before permission rules are consulted — so a
+# plugin-root-anchored invocation is unrunnable by every agent at every
+# permission level, and no `tools:` grant can rescue it. A brief that documents
+# one sends every reviewer down the silent full-HTML fallback on every cycle,
+# which is the exact degradation 8.1.1 set out to fix. Briefs must therefore
+# instruct a plain `Read` of the plan HTML instead.
+if ! grep -q 'extract-plan-spec.mjs' "$ROLE_PROMPTS" \
   && ! grep -qF "$AWK_ONELINER" "$ROLE_PROMPTS"; then
   pass
 else
-  fail "role-prompts.md extractor refs=$BRIEF_EXTRACTOR_COUNT (need >=10), fallbacks=$BRIEF_FALLBACK_COUNT (need >=10), or awk remains"
+  fail "role-prompts.md still instructs reviewers to run the extractor (or uses awk) — reviewers cannot execute it"
 fi
 
-echo "6. All 10 reviewer agent defs run the extractor with a full-HTML fallback..."
+echo "6. No reviewer agent def instructs an extractor invocation it cannot run..."
 AGENT_FAIL=0
 AGENT_COUNT=0
 for agent in "$AGENTS_DIR"/plan-reviewer-*.md; do
   AGENT_COUNT=$((AGENT_COUNT + 1))
-  if ! grep -q 'extract-plan-spec.mjs' "$agent" \
-    || ! grep -q 'fall back to reading the full HTML' "$agent" \
-    || grep -qF "$AWK_ONELINER" "$agent"; then
-    echo "  FAIL: $(basename "$agent") missing extractor/fallback or still uses awk"
+  if grep -q 'extract-plan-spec.mjs' "$agent" || grep -qF "$AWK_ONELINER" "$agent"; then
+    echo "  FAIL: $(basename "$agent") instructs an extractor/awk invocation it cannot execute"
     AGENT_FAIL=1
   fi
 done
 if [ "$AGENT_FAIL" -eq 0 ] && [ "$AGENT_COUNT" -eq 10 ]; then
   pass
 else
-  fail "expected 10 wired agent defs, found $AGENT_COUNT with failures=$AGENT_FAIL"
+  fail "expected 10 clean agent defs, found $AGENT_COUNT with failures=$AGENT_FAIL"
 fi
 
 echo "7. test-backfill-digest.mjs corpus assertion scoped to legacy embedded plans..."
@@ -113,19 +117,55 @@ else
   fail "kit/plugins/plan-agent/scripts/extract-plan-spec.mjs is missing or does not load — installed users cannot run the extractor"
 fi
 
-echo "9. Every live extractor reference is plugin-root anchored..."
-# A bare `node scripts/extract-plan-spec.mjs` resolves against the user's cwd,
-# so it only ever worked inside this repo. Excluded: CHANGELOG (history, not a
-# call site) and the extractor's own usage/help text (must stay byte-identical
-# to the repo-root source — see the parity check in test-build-plan-html.mjs).
-BARE="$(grep -rn 'node scripts/extract-plan-spec\.mjs' "$ROOT/kit/plugins/plan-agent/" \
-  | grep -v CHANGELOG.md \
-  | grep -v 'scripts/extract-plan-spec\.mjs:' || true)"
-if [ -z "$BARE" ]; then
+echo "9. No documented Bash invocation contains shell expansion..."
+# The generalized invariant, and the one that would have caught 8.1.1's
+# regression at the source. Claude Code's Bash tool refuses any command whose
+# text contains `${VAR}` or `$VAR` — it cannot statically resolve the expansion,
+# so it errors with "Contains expansion" BEFORE consulting permission rules.
+# Verified empirically on 2.1.220: the refusal fires for an agent holding
+# unrestricted `Bash`, and holds even with a matching `--allowedTools` rule.
+#
+# So `node "${CLAUDE_PLUGIN_ROOT}/scripts/foo.mjs"` never runs for anybody. That
+# spelling is correct for a `Read` tool path (no shell involved) and fatal for a
+# Bash command — 8.1.1 "fixed" 15 call sites into it and made the feature dead
+# for every caller, including the lead and `prototype`.
+#
+# Matches a command *invocation* (`node ${...`), not prose that names the
+# variable. Excluded: CHANGELOG (history, not a call site) and the extractor's
+# own usage text (byte-identical to the repo-root source; see the parity check
+# in test-build-plan-html.mjs).
+EXPANSION="$(grep -rnE '(node|python3?|bash|sh) +"?\$\{?[A-Z_]+' \
+  "$AGENTS_DIR" "$ROLE_PROMPTS" "$REVIEW_SKILL" \
+  --include='*.md' 2>/dev/null || true)"
+if [ -z "$EXPANSION" ]; then
   pass
 else
-  echo "$BARE"
-  fail "unanchored extractor invocation(s) above — use \${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs"
+  echo "$EXPANSION"
+  fail "Bash invocation(s) above contain shell expansion — they error with 'Contains expansion' and never run. Use a literal path, or have the caller Read the file instead."
+fi
+
+echo "10. The known unfixed expansion call sites are exactly the documented set..."
+# Check 9 is scoped to the review surface repaired in 8.2.1. The SAME defect
+# exists elsewhere in this plugin and is NOT fixed here — the renderer pipeline
+# is a separate change with its own design call, so it was deliberately left
+# out of scope rather than quietly swept in.
+#
+# This is a ledger, not a suppression: it fails if a NEW site appears (silent
+# spread) and it fails if one is FIXED without updating the list (silent rot).
+# Either way a human looks. Widen check 9 and delete this once the list empties.
+KNOWN_BROKEN="skills/build/SKILL.md
+skills/finalize-plan/references/write-completions.md
+skills/implementation-plan/SKILL.md
+skills/prototype/SKILL.md"
+ACTUAL_BROKEN="$(grep -rlE '(node|python3?|bash|sh) +"?\$\{?[A-Z_]+' "$ROOT/kit/plugins/plan-agent/skills/" \
+  --include='*.md' 2>/dev/null \
+  | sed "s|$ROOT/kit/plugins/plan-agent/||" | sort || true)"
+if [ "$ACTUAL_BROKEN" = "$KNOWN_BROKEN" ]; then
+  pass
+else
+  echo "  expected:"; echo "$KNOWN_BROKEN" | sed 's/^/    /'
+  echo "  actual:";   echo "$ACTUAL_BROKEN" | sed 's/^/    /'
+  fail "the shell-expansion ledger drifted — a site was added or fixed; update this list"
 fi
 
 echo ""
