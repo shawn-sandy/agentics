@@ -10,7 +10,7 @@
 ## What shipped
 
 - Created the `export-session` skill at `kit/plugins/social-media-tools/skills/export-session/` with a `SKILL.md` and a bundled `scripts/export_session.py` converter (Why: the skill lives in social-media-tools because the plugin already owns session-derived content via `share-session`).
-- The Python script parses a session JSONL, retains user and assistant turns, strips sidechains, tool results, and harness-injected messages (`<system-reminder>`, `<local-command-*>`, `<command-*>`), and writes a `<date>-<slug>.md` file with YAML frontmatter (`session-id`, `date`, `source`, `type: session-export`).
+- The Python script parses a session JSONL, retains turns where `rec["type"]` is `user` or `assistant`, strips sidechains, tool-result-only user records, and harness-injected messages (`<system-reminder>`, `<command-*>`, `<local-command-*>`, `<task-notification>`), and writes a `{date}-{slug}-{session_id[:8]}.md` file with YAML frontmatter (`session-id`, `date`, `source`, `type: session-export`), where the slug is derived from the first user message text.
 - The skill resolves `plansDirectory` from `.claude/settings.json` (falling back to `docs/plans`) and outputs into a `sessions/` subdirectory, so exports land alongside plans without cluttering the root plans list.
 - Removed any standalone `session-tools` plugin from `kit/plugins/` and `marketplace.json` — the skill is folded into `social-media-tools`.
 - Bumped `social-media-tools` to `2.14.0` in `.claude-plugin/marketplace.json` with a matching CHANGELOG entry (new skill = minor bump).
@@ -29,7 +29,7 @@
 
 The skill follows a four-step workflow defined in `SKILL.md`:
 
-**Step 1 — Resolve output directory.** The skill reads `plansDirectory` from `.claude/settings.json` using Claude Code settings precedence (project-local `.claude/settings.local.json` → project `.claude/settings.json` → global `~/.claude/settings.json`). It falls back to `docs/plans` if the key is unset. Output goes to `<plansDirectory>/sessions/`.
+**Step 1 — Resolve output directory.** The skill reads `plansDirectory` from `.claude/settings.json` (falling back to `docs/plans` if unset). Output goes to `<plansDirectory>/sessions/`.
 
 **Step 2 — Locate the session transcript.** If the user passed a `.jsonl` file path or a session ID, the skill uses it directly (session IDs resolve to `~/.claude/projects/<project-slug>/<session-id>.jsonl`). Otherwise it defaults to the most recent transcript for the current project via `ls -t ~/.claude/projects/"$(pwd | sed 's|[/.]|-|g')"/*.jsonl | head -1`. If that directory does not exist (e.g. running from a git worktree), it falls back to listing `~/.claude/projects/` and matching the main repo path.
 
@@ -39,7 +39,7 @@ The skill follows a four-step workflow defined in `SKILL.md`:
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/export-session/scripts/export_session.py" <transcript.jsonl> <plansDirectory>/sessions
 ```
 
-The script keeps only `role: user` and `role: assistant` content blocks, skips sidechain entries, and drops any text matching harness-injected XML patterns. The output filename is `<date>-<slug>.md` where the slug is derived from the session ID. YAML frontmatter includes `session-id`, `date`, `source` (basename of the input file), and `type: session-export` so the output is machine-identifiable for later indexing.
+The script filters on `rec["type"]` (`user`/`assistant`), skips sidechain entries and tool-result-only blocks, and drops text prefixed with harness XML tags (`<system-reminder>`, `<command-*>`, `<local-command-*>`, `<task-notification>`). The output filename is `{date}-{slug}-{session_id[:8]}.md` — the slug is a kebab-cased truncation of the first user message (up to 6 words), and the 8-char session ID suffix prevents collisions across sessions. YAML frontmatter includes `session-id`, `date`, `source` (full path to the input transcript), and `type: session-export`.
 
 **Step 4 — Report.** The skill shows the user the written file path and its title extracted from the first user turn. For multiple sessions the skill repeats Step 3 per transcript.
 
@@ -48,9 +48,9 @@ The script keeps only `role: user` and `role: assistant` content blocks, skips s
 `export-session` is model-invocable via its description. Trigger it by command or by asking naturally:
 
 ```
-/export-session                                          # export most recent session for this project
-/export-session <session-id>                            # export a specific session by ID
-/export-session ~/.claude/projects/.../session.jsonl    # export by explicit transcript path
+/social-media-tools:export-session                                           # export most recent session for this project
+/social-media-tools:export-session <session-id>                              # export a specific session by ID
+/social-media-tools:export-session ~/.claude/projects/.../session.jsonl      # export by explicit transcript path
 ```
 
 Or by saying: "export this session as Markdown", "save the current session to docs", "archive this session".
@@ -61,7 +61,7 @@ Exported files land in `{plansDirectory}/sessions/` (default: `docs/plans/sessio
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
-| `d07c389` | 2026-07-21 | feat(git-agent): add lint gate before commit (#448) |
+| `d07c389` | 2026-07-21 | Initial repository import — skill introduced here |
 
 <!-- generated:end -->
 

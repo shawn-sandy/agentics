@@ -30,7 +30,7 @@
 
 ## How it works
 
-Every generated plan now renders three copy-paste execution framings — **implement**, **goal**, and **workflow** — in that DOM order. The goal prompt is the middle sibling.
+Every generated plan now renders two always-present copy-paste execution framings — **implement** and **goal** — plus a conditional **workflow** framing when the plan's complexity clears the heuristic threshold. When all three are present the DOM order is `implement → goal → workflow`.
 
 **SKELETON.html — markup.** `<meta name="plan-goal" content="{goal-prompt}">` appears in `<head>` alongside the existing `plan-implement` and `plan-workflow` meta tags. In the body, a `.plan-goal` `<details>` block sits between the green implement row and the blue workflow block. Its interior holds the goal-prompt text with an `id="goal-cmd"` element and an `onclick="copyGoal(this)"` button — structurally identical to the implement and workflow rows, differentiated only by the purple accent (`--purple*` tokens). The block carries `data-status`-aware CSS: `[data-status="completed"] .plan-goal { display: none; }` hides it once a plan is marked done, and `@media print { .plan-goal { display: none !important; } }` suppresses it in print, matching the other two rows' rules.
 
@@ -55,7 +55,6 @@ This framing lets the agent deviate from the plan's specific steps when a better
 | SHA | Date | Subject |
 | --- | ---- | ------- |
 | `ce69bc8` | 2026-07-29 | feat(plan-agent)!: validate frontmatter enums, trim the verify gate, license fan-out in goal prompts (#488) |
-| `d07c389` | 2026-07-21 | feat(git-agent): add lint gate before commit (#448) |
 
 <!-- generated:end -->
 

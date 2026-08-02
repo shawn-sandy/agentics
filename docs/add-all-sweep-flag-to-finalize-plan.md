@@ -63,7 +63,6 @@ In sweep mode the skill presents a table of candidates with evidence percentages
 | SHA | Date | Subject |
 | --- | ---- | ------- |
 | `e274327` | 2026-08-01 | refactor(plan-agent): split five skills into cores plus references (#505) |
-| `d07c389` | 2026-07-21 | feat(git-agent): add lint gate before commit (#448) |
 
 <!-- generated:end -->
 
