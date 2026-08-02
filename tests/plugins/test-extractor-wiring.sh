@@ -269,7 +269,11 @@ echo "12. bin/ survives the dist build..."
 # get — the same shape of defect as 8.1.1, where the extractor shipped its
 # library but not itself. build-dist.mjs copies only KEEP-listed top-level
 # entries, so bin/ must be on that allowlist.
-if grep -qE "^\s*'bin',\s*$" "$ROOT/scripts/build-dist.mjs"; then
+# `[[:space:]]`, not `\s`: the latter is a GNU extension, honoured by GNU and
+# Apple grep but not guaranteed in POSIX ERE, so it would degrade to a literal
+# `s` on a stricter grep (busybox) and silently stop matching. Every other
+# pattern in this file is POSIX already.
+if grep -qE "^[[:space:]]*'bin',[[:space:]]*$" "$ROOT/scripts/build-dist.mjs"; then
   pass
 else
   fail "scripts/build-dist.mjs KEEP allowlist is missing 'bin' — the wrappers would be dropped from dist/"
