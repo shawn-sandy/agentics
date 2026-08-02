@@ -444,8 +444,8 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | Agent | Purpose |
 |-------|---------|
 | `agent-review-plan` | Background plan-review agent — invokes the `review-plan` skill with `--background` and reports the updated path on completion |
-| `plan-reviewer-architecture` · `-completeness` · `-testability` · `-risk` · `-conventions` | Five core reviewer teammates, always spawned by the Agent Team |
-| `plan-reviewer-ux` · `-accessibility` | Two UI-conditional reviewer teammates, spawned when UI signals are detected |
+| `plan-reviewer-architecture` · `-completeness` · `-testability` · `-risk` · `-conventions` · `-product` · `-security` | Seven core reviewer teammates, always spawned by the Agent Team |
+| `plan-reviewer-ux` · `-accessibility` · `-frontend` | Three UI-conditional reviewer teammates, spawned when UI signals are detected |
 | `plan-documenter` | Batch documentation agent — scans the plans directory for completed plans with no `docs/` counterpart and runs `documenting-plans` on each |
 
 > The `review-plan` Agent Team requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and Claude Code ≥ 2.1.32.

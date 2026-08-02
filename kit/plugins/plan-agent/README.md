@@ -216,7 +216,7 @@ The skill spawns the following reviewers:
   - UX — user flows, error states, loading states, interaction clarity, responsive design, discoverability
   - Accessibility — WCAG 2.1 AA compliance, keyboard navigation, screen reader support, semantic HTML, motion
 
-**UI signal detection:** Scans the plan HTML for references to React, Vue, Svelte, `.tsx`/`.jsx`/`.css`/`.html`, `className`, `style`, Tailwind, buttons, modals, forms, dialogs, dropdowns, pages, components. If 2+ signals or UI-specific keywords are found, UX and accessibility reviewers are spawned.
+**UI signal detection:** Scans the plan HTML for references to React, Vue, Svelte, `.tsx`/`.jsx`/`.css`/`.html`, `className`, `style`, Tailwind, buttons, modals, forms, dialogs, dropdowns, pages, components. If 2+ signals or UI-specific keywords are found, the UX, accessibility, and frontend reviewers are spawned.
 
 The workflow:
 
