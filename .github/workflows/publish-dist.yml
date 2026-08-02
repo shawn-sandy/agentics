@@ -22,6 +22,8 @@ jobs:
           node-version: '20'
       - name: Check README plugin table is in sync
         run: node scripts/build-readme-table.mjs --check
+      - name: Verify no plugin files are git-ignored
+        run: bash tests/publish/test-no-ignored-plugin-files.sh
       - name: Build dist
         run: node scripts/build-dist.mjs
       - name: Verify no leaks

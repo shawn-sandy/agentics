@@ -1,6 +1,36 @@
 # Changelog
 
 
+## 8.1.1 — the spec extractor now ships with the plugin (2026-08-02)
+
+### Fixed
+
+- **`scripts/extract-plan-spec.mjs` was never shipped.** The plugin bundled
+  `scripts/lib/plan-spec.mjs` — the library the extractor imports — but not the
+  extractor itself, so the shared lib was orphaned in the published tree and no
+  installed user could run the compute-on-read spec path. The review team fell
+  back to reading full plan HTML on every run, costing roughly an order of
+  magnitude more tokens per reviewer per cycle than the README advertises, with
+  nothing surfacing the degradation. The extractor is now vendored alongside
+  `build-plan-html.mjs` and `lib/`, and is covered by the byte-identity parity
+  check in `tests/plugins/test-build-plan-html.mjs`.
+- **Extractor invocations were not plugin-root anchored.** All 15 live call
+  sites — the 7 reviewer briefs in `review-plan/references/role-prompts.md`, the
+  7 `plan-reviewer-*` agent defs, and `prototype/SKILL.md` — invoked a bare
+  `node scripts/extract-plan-spec.mjs`, which resolves against the user's cwd
+  and therefore only ever resolved inside this repo. They now use
+  `${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs`, matching every other
+  shipped script in the kit. Generated plans are untouched — they stay
+  self-contained and reference the plan by path, as before.
+- **`tests/plugins/test-extractor-wiring.sh` could not catch either defect.**
+  Its 7 checks grepped for the *string* `extract-plan-spec.mjs` in plugin docs,
+  proving the wiring was described but never that it was reachable, so the suite
+  stayed green throughout. Two checks added: check 8 runs the plugin's own copy
+  and asserts the documented misuse exit code (2), which is only reachable once
+  the file exists and its `./lib/plan-spec.mjs` import has resolved inside the
+  plugin tree; check 9 fails on any unanchored invocation.
+
+
 ## 8.1.0 — `prompt` drafts for Claude 5 generation models (2026-08-01)
 
 ### Added

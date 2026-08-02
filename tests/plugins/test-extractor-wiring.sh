@@ -14,6 +14,7 @@ PLAN_SKILL="$ROOT/kit/plugins/plan-agent/skills/implementation-plan/SKILL.md"
 REVIEW_SKILL="$ROOT/kit/plugins/plan-agent/skills/review-plan/SKILL.md"
 ROLE_PROMPTS="$ROOT/kit/plugins/plan-agent/skills/review-plan/references/role-prompts.md"
 AGENTS_DIR="$ROOT/kit/plugins/plan-agent/agents"
+PLUGIN_EXTRACTOR="$ROOT/kit/plugins/plan-agent/scripts/extract-plan-spec.mjs"
 BACKFILL_TEST="$ROOT/tests/plugins/test-backfill-digest.mjs"
 AWK_ONELINER="awk '!f && /<script[^>]*id=\"plan-digest\""
 FAILURES=0
@@ -94,6 +95,37 @@ if grep -q 'stays idempotent on legacy embedded plans' "$BACKFILL_TEST" \
   pass
 else
   fail "backfill corpus assertion is not scoped so digest-free plans pass"
+fi
+
+echo "8. The extractor actually ships with the plugin and runs from there..."
+# Checks 4-6 only prove the docs *mention* the extractor. This proves an
+# installed user can run it: the plugin copy must exist and load (exit 2 =
+# documented "misuse", which is only reachable once its ./lib/plan-spec.mjs
+# import has resolved inside the plugin tree).
+EXTRACTOR_RC=-1
+if [ -f "$PLUGIN_EXTRACTOR" ]; then
+  EXTRACTOR_RC=0
+  node "$PLUGIN_EXTRACTOR" >/dev/null 2>&1 || EXTRACTOR_RC=$?
+fi
+if [ "$EXTRACTOR_RC" -eq 2 ]; then
+  pass
+else
+  fail "kit/plugins/plan-agent/scripts/extract-plan-spec.mjs is missing or does not load — installed users cannot run the extractor"
+fi
+
+echo "9. Every live extractor reference is plugin-root anchored..."
+# A bare `node scripts/extract-plan-spec.mjs` resolves against the user's cwd,
+# so it only ever worked inside this repo. Excluded: CHANGELOG (history, not a
+# call site) and the extractor's own usage/help text (must stay byte-identical
+# to the repo-root source — see the parity check in test-build-plan-html.mjs).
+BARE="$(grep -rn 'node scripts/extract-plan-spec\.mjs' "$ROOT/kit/plugins/plan-agent/" \
+  | grep -v CHANGELOG.md \
+  | grep -v 'scripts/extract-plan-spec\.mjs:' || true)"
+if [ -z "$BARE" ]; then
+  pass
+else
+  echo "$BARE"
+  fail "unanchored extractor invocation(s) above — use \${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs"
 fi
 
 echo ""

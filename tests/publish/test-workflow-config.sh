@@ -20,6 +20,7 @@ grep -q "DIST_REPO_TOKEN" "$WORKFLOW" || fail "'DIST_REPO_TOKEN' not found in pu
 grep -q "DIST_REPO_URL" "$WORKFLOW" || fail "'DIST_REPO_URL' not found in publish-dist.yml"
 grep -q "Build dist" "$WORKFLOW" || fail "'Build dist' step not found in publish-dist.yml"
 grep -q "Verify no leaks" "$WORKFLOW" || fail "'Verify no leaks' step not found in publish-dist.yml"
+grep -q "test-no-ignored-plugin-files.sh" "$WORKFLOW" || fail "the git-ignored plugin file guard is not wired into publish-dist.yml"
 grep -q "Publish to agentics-kit" "$WORKFLOW" || fail "'Publish to agentics-kit' step not found in publish-dist.yml"
 
 echo "PASS: publish-dist.yml structure verified"

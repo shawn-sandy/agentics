@@ -948,7 +948,7 @@ ok('a spec with no prototype: key renders the same markup as the pre-change rend
 });
 
 ok('plugin-bundled renderer copies are byte-identical to the repo-root sources', () => {
-  for (const rel of ['build-plan-html.mjs', 'lib/plan-spec.mjs', 'lib/plan-shell.mjs']) {
+  for (const rel of ['build-plan-html.mjs', 'extract-plan-spec.mjs', 'lib/plan-spec.mjs', 'lib/plan-shell.mjs']) {
     const source = readFileSync(join(ROOT, 'scripts', rel), 'utf8');
     const bundled = readFileSync(join(ROOT, 'kit', 'plugins', 'plan-agent', 'scripts', rel), 'utf8');
     assert.equal(bundled, source, `kit/plugins/plan-agent/scripts/${rel} drifted from scripts/${rel} — re-copy it`);

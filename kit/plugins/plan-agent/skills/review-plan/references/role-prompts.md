@@ -1,6 +1,6 @@
 # Reviewer Role Prompts
 
-These prompts are used to brief each teammate reviewer. Substitute `<ABSOLUTE_PATH>` with the resolved plan path. Every brief instructs the reviewer to read the plan's spec via the extractor (`node scripts/extract-plan-spec.mjs`) rather than the full HTML, with a full-HTML fallback; the lead keeps reading the full HTML for selector-based edits.
+These prompts are used to brief each teammate reviewer. Substitute `<ABSOLUTE_PATH>` with the resolved plan path. Every brief instructs the reviewer to read the plan's spec via the extractor (`node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs"`) rather than the full HTML, with a full-HTML fallback; the lead keeps reading the full HTML for selector-based edits.
 
 ## Core Reviewers (always spawned)
 
@@ -10,7 +10,7 @@ Review the implementation plan at `<ABSOLUTE_PATH>` from an **architecture** len
 
 Read the plan's spec with the extractor:
 
-    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" '<ABSOLUTE_PATH>'
 
 This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
@@ -46,7 +46,7 @@ Review the implementation plan at `<ABSOLUTE_PATH>` from a **completeness** lens
 
 Read the plan's spec with the extractor:
 
-    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" '<ABSOLUTE_PATH>'
 
 This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
@@ -81,7 +81,7 @@ Review the implementation plan at `<ABSOLUTE_PATH>` from a **testability** lens:
 
 Read the plan's spec with the extractor:
 
-    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" '<ABSOLUTE_PATH>'
 
 This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
@@ -116,7 +116,7 @@ Review the implementation plan at `<ABSOLUTE_PATH>` from a **risk** lens: what c
 
 Read the plan's spec with the extractor:
 
-    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" '<ABSOLUTE_PATH>'
 
 This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
@@ -152,7 +152,7 @@ Review the implementation plan at `<ABSOLUTE_PATH>` from a **conventions** lens:
 
 Read the plan's spec with the extractor:
 
-    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" '<ABSOLUTE_PATH>'
 
 This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
@@ -192,7 +192,7 @@ Review the implementation plan at `<ABSOLUTE_PATH>` from a **UX** lens: is the u
 
 Read the plan's spec with the extractor:
 
-    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" '<ABSOLUTE_PATH>'
 
 This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
@@ -230,7 +230,7 @@ Review the implementation plan at `<ABSOLUTE_PATH>` from an **accessibility** le
 
 Read the plan's spec with the extractor:
 
-    node scripts/extract-plan-spec.mjs '<ABSOLUTE_PATH>'
+    node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" '<ABSOLUTE_PATH>'
 
 This derives the spec from the plan's visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file at `<ABSOLUTE_PATH>`. The spec carries the complete authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope.
 
