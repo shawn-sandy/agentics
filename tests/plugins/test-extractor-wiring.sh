@@ -147,7 +147,13 @@ echo "9. No documented interpreter invocation contains shell expansion..."
 # says things like "not a git repo — fall back to `docs/prompts` relative to
 # `$PWD`", which a `git` alternative matches as a command. A false positive on
 # prose would train the next author to loosen the check.
-EXPANSION_RE='(^|[[:space:]`"'"'"'(])(node|python3?|bash|sh|realpath)[[:space:]][^|;&]*\$[{(]?[A-Za-z_]'
+#
+# Scans to end of line rather than stopping at `|`/`;`/`&`: the guard is
+# textual over the whole command string, so `node x.mjs | sed "$VAR"` is just
+# as dead as an expansion in the first argument. Bounding at a pipe would have
+# contradicted the position-independence argument this check rests on.
+# Verified to change no result in the current tree.
+EXPANSION_RE='(^|[[:space:]`"'"'"'(])(node|python3?|bash|sh|realpath)[[:space:]].*\$[{(]?[A-Za-z_]'
 EXPANSION="$(grep -rnE "$EXPANSION_RE" \
   "$AGENTS_DIR" "$ROLE_PROMPTS" "$REVIEW_SKILL" \
   --include='*.md' 2>/dev/null || true)"
