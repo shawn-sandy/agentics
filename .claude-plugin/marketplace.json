@@ -327,6 +327,12 @@
   ],
   "removed": [
     {
+      "name": "plan-interview",
+      "version": "3.0.0",
+      "removedDate": "2026-07-17",
+      "reason": "Merged into plan-agent 4.0.0 — documenting-plans, markdown-to-html, plan-status, plan-maintenance, deep-grill, and the ExitPlanMode nudge carried over. Source recoverable from git history."
+    },
+    {
       "name": "issue-agent",
       "version": "0.2.4",
       "removedDate": "2026-06-16",

@@ -50,13 +50,13 @@ The body opens with the binding instruction, quoted verbatim:
 
 It then carries three things:
 
-- **A checklist**, grouped into Core quality, Code and scripts (apply only if the skill bundles executable scripts), and Testing.
+- **A pointer to the upstream checklist**, plus the instruction to read it at the source rather than from a copy. The rule used to inline all three checklist groups (Core quality, Code and scripts, Testing); those ~30 lines were removed in favour of the link, because a copied checklist goes stale silently while Anthropic's doc moves. The escalation path — `/skill-reviewer:reviewing-skills` — gives you a scored audit against the same criteria.
 - **Frontmatter constraints**, quoted verbatim — the hard validation rules enforced by the skill runtime:
 
   > - `name`: lowercase kebab-case, ≤64 chars, no XML tags, no reserved words (`anthropic`, `claude`)
   > - `description`: non-empty, ≤1024 chars, third person, no XML tags
 
-- **A deferred-tools note** for `ExitPlanMode` and similar tools, requiring both `ToolSearch` and the deferred tool in `allowed-tools`.
+- **A hand-off to `plugin-patterns.md`** for the repo's own conventions layered on top: the three-part description format, `allowed-tools`, deferred tools, and the plan-mode guard. Those live in one place now; this rule names where.
 
 ---
 
@@ -86,13 +86,17 @@ Claude opens a file
        └─ no  → rule stays dormant, costs nothing
 ```
 
-The checklist sorts into three groups, only two of which apply to a markdown-only skill:
+Once loaded, the rule is a router rather than a container. Three destinations, each owning one
+kind of requirement:
 
-| Group            | Applies when                          | Sample item                                  |
-| ---------------- | ------------------------------------- | -------------------------------------------- |
-| Core quality     | Always                                | "SKILL.md body is under 500 lines"           |
-| Code and scripts | The skill bundles executable scripts  | "No 'voodoo constants' (all values justified)" |
-| Testing          | Before sharing                        | "At least three evaluations created"         |
+| Destination                    | Owns                                              | Authority        |
+| ------------------------------ | ------------------------------------------------- | ---------------- |
+| Anthropic's effective-Skills checklist | Core quality, Code and scripts, Testing groups | Upstream, linked |
+| The rule body itself           | Runtime frontmatter hard limits                    | Skill runtime    |
+| `.claude/rules/plugin-patterns.md` | Repo conventions layered on top                | This repo        |
+
+The checklist groups still exist and still apply — Core quality always, Code and scripts only if
+the skill bundles executables, Testing before sharing. They are read upstream, not from this repo.
 
 ---
 
@@ -128,6 +132,8 @@ Run the full Core quality checklist; add Code and scripts if the skill bundles e
 
 ### 6.3 Which checklist groups to run
 
+Read them from [the upstream checklist](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices#checklist-for-effective-skills); the rule links rather than restates.
+
 - Markdown-only skill → Core quality + Testing.
 - Skill with `scripts/` → Core quality + Code and scripts + Testing.
 
@@ -137,12 +143,13 @@ Run the full Core quality checklist; add Code and scripts if the skill bundles e
 
 Before you save a skill file:
 
-- Do: read the checklist in `.claude/rules/skill-authoring.md` and walk every Core quality item.
+- Do: open [Anthropic's checklist](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices#checklist-for-effective-skills) — the link the rule gives you — and walk every Core quality item.
 - Do: confirm the `description` says both what the skill does and when to use it.
 - Do: keep the `SKILL.md` body under 500 lines, pushing detail into one-level-deep `reference/` files.
+- Do: check `plugin-patterns.md` for the repo conventions the upstream checklist knows nothing about — the ≤200-char three-part description, `allowed-tools`, and the plan-mode guard.
 - Do NOT: ship a `description` that only says what the skill does but not when to invoke it.
 - Do NOT: inline long reference material into `SKILL.md` that belongs in a bundled file.
-- Do NOT: leave `allowed-tools` implicit when the skill calls a deferred tool — list `ToolSearch` plus that tool.
+- Do NOT: leave `allowed-tools` implicit when the skill calls a deferred tool — list `ToolSearch` plus that tool. That requirement lives in `plugin-patterns.md`.
 
 When in doubt, the rule names its own escalation, quoted verbatim:
 
@@ -163,7 +170,7 @@ When in doubt, the rule names its own escalation, quoted verbatim:
 
 - **`.claude/rules/plugin-patterns.md`** — the sibling rule covering the command/skill component patterns, the three-part `description` format, and the deferred-tools `allowed-tools` requirement. Read both together when authoring.
 - **`skill-reviewer` plugin** — supplies the tooling this rule points to: `/skill-reviewer:reviewing-skills` (scored audit), `/skill-reviewer:check-description` (the ≤200-char budget), and `/skill-reviewer:auditing-allowed-tools` (permission audit against a transcript).
-- **Deferred tools and `ToolSearch`** — the rule's `ExitPlanMode` note pairs with the harness convention that deferred tools must be loaded via `ToolSearch` before they are called.
+- **Deferred tools and `ToolSearch`** — `plugin-patterns.md` owns this requirement outright. `skill-authoring.md` carried a duplicate that had drifted into contradicting it (this guide's sibling said to paste a bootstrap block into every skill body; `plugin-patterns.md` said not to, on the grounds that the harness already explains the mechanic). No shipped skill had ever carried the block, so the duplicate was removed rather than reconciled.
 
 ---
 
@@ -176,7 +183,7 @@ This guide is about a rule that exists only in this repo, and the distinction ma
 
 Repo specifics that shape how the rule applies here:
 
-- The glob targets `kit/plugins/**/skills/**`, matching the marketplace's plugin layout (11 plugins under `kit/plugins/`).
+- The glob targets `kit/plugins/**/skills/**`, matching the marketplace's plugin layout (13 plugins under `kit/plugins/`).
 - The stricter ≤200-char description budget from `plugin-patterns.md` is the local house style; the 1024-char limit is the universal runtime ceiling.
 
 ---
@@ -185,8 +192,10 @@ Repo specifics that shape how the rule applies here:
 
 Update the rule when:
 
-- Anthropic's [checklist for effective Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices#checklist-for-effective-skills) changes — re-sync the checklist items.
-- The runtime frontmatter constraints change (for example a new reserved word) — update the verbatim block in §2.
+- The runtime frontmatter constraints change (for example a new reserved word) — update the verbatim block in §2. This is now the *only* routine re-sync the rule carries.
+- A repo convention for skills changes — that belongs in `plugin-patterns.md`, not here.
+
+You no longer re-sync when Anthropic's [checklist for effective Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices#checklist-for-effective-skills) changes. The rule links it instead of copying it, so upstream edits arrive on their own — which was the point of externalizing it. Do check that the anchor still resolves if the upstream doc is restructured; a dead link fails silently in exactly the way the old copy did.
 
 Prune or rewrite it if the project's skill layout moves out from under `kit/plugins/**/skills/**`,
 which would silently stop the rule from firing.
@@ -216,7 +225,7 @@ Edit a skill `description`, then run:
 
 > `/skill-reviewer:reviewing-skills`
 
-**Expected:** a scored audit against the Core quality items in §2. **Failure signal:** if the
+**Expected:** a scored audit against the upstream Core quality items §2 links to. **Failure signal:** if the
 audit does not mention the checklist criteria, confirm the rule is present and the file is under
 the `skills/` glob.
 
@@ -232,10 +241,13 @@ RULE
 FIRES WHEN
   Claude reads/edits a file under kit/plugins/**/skills/**
 
-CHECKLIST GROUPS
+CHECKLIST GROUPS (read upstream — the rule links, does not copy)
   Core quality      → always
   Code and scripts  → only if the skill bundles scripts/
   Testing           → before sharing
+
+REPO CONVENTIONS (plugin-patterns.md, not this rule)
+  three-part description, allowed-tools, deferred tools, plan-mode guard
 
 DO
   - description says what AND when

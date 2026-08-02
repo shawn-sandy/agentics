@@ -45,6 +45,15 @@ jobs:
       # more line", which is exactly what review misses.
       - name: Test CLAUDE.md stays within its context budget
         run: bash tests/plugins/test-claude-md-budget.sh
+      # The de-registered plugin list is written twice — marketplace.json's
+      # `removed` array and .claude/rules/removed-plugins.md — and drifted in
+      # both directions before anything checked it. The rule file is the copy
+      # that matters: it loads unscoped in every session so the re-add
+      # confirmation gate fires before any plugin file is opened, so a missing
+      # row is the gate with a hole in it rather than cosmetic drift. Neither
+      # half of a two-file update shows up as missing in a review of the other.
+      - name: Test removed-plugins list stays in sync
+        run: bash tests/plugins/test-removed-plugins-sync.sh
       # The gallery merge driver runs during `git merge`, where a silent wrong
       # answer looks like lost plan or artifact cards rather than a failure.
       # Nothing else exercises it, so this is its only regression gate.
