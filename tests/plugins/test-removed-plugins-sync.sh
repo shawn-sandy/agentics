@@ -97,7 +97,7 @@ fi
 echo "4. No removed plugin is also registered as active..."
 RESURRECTED="$(comm -12 <(printf '%s\n' "$JSON_REMOVED") <(printf '%s\n' "$ACTIVE"))"
 if [ -z "$RESURRECTED" ]; then
-  echo "  PASS ($(printf '%s\n' "$ACTIVE" | grep -c .) active plugins, none previously removed)"
+  echo "  PASS ($(printf '%s\n' "$ACTIVE" | grep -c . || true) active plugins, none previously removed)"
 else
   while IFS= read -r p; do
     [ -z "$p" ] && continue

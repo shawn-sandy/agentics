@@ -9,7 +9,9 @@ marketplace **references** them by relative path — it does not embed them.
   `version` to a relative-path `plugin.json` silently overrides the marketplace
   value. Bump it manually in the same PR that touches a plugin — a CI guard
   fails the PR if it does not exceed the base branch. Check locally:
-  `BASE_REF=main node scripts/check-plugin-versions.mjs`
+  `git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs`
+  (the script reads `origin/${BASE_REF}` directly, so a stale remote-tracking
+  ref compares against the wrong base)
 - **`docs/plans/archive/` is off-limits.** Never glob, grep, or read it unless
   the user names the path.
 - **Two merge drivers auto-resolve conflicts** — `marketplace.json` keeps the
