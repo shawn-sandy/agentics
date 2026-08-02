@@ -30,10 +30,11 @@
   token saving the README advertised — it removes a claim that was never true in
   practice. Run `extract-plan-spec.mjs` yourself with a literal path and paste
   the spec into the review to get that saving today.
-- **Out of scope, deliberately left unfixed:** the same defect affects six
-  further call sites across five files, including `build-plan-html.mjs` (the
+- **Out of scope, deliberately left unfixed:** the same defect affects eight
+  further call sites across six files, including `build-plan-html.mjs` (the
   plan renderer) in `implementation-plan`, `build`, `finalize-plan`,
-  `prototype`, and two `python3` heredocs in `plans-library`. Repairing the
+  `prototype`, `python3` heredocs in `plans-library`, and `realpath` calls in
+  `plans-library` and `plans-open`. Repairing the
   renderer pipeline is a separate change with its own design call. Check 10 of
   `tests/plugins/test-extractor-wiring.sh` pins that list so it can neither grow
   nor quietly shrink.

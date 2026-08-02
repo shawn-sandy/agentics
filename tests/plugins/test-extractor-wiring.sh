@@ -117,7 +117,7 @@ else
   fail "kit/plugins/plan-agent/scripts/extract-plan-spec.mjs is missing or does not load — installed users cannot run the extractor"
 fi
 
-echo "9. No documented Bash invocation contains shell expansion..."
+echo "9. No documented interpreter invocation contains shell expansion..."
 # The generalized invariant, and the one that would have caught 8.1.1's
 # regression at the source. Claude Code's Bash tool refuses any command whose
 # text contains `${VAR}` or `$VAR` — it cannot statically resolve the expansion,
@@ -139,7 +139,15 @@ echo "9. No documented Bash invocation contains shell expansion..."
 # Excluded: CHANGELOG (history, not a call site) and the extractor's own usage
 # text (byte-identical to the repo-root source; see the parity check in
 # test-build-plan-html.mjs).
-EXPANSION_RE='(^|[[:space:]`"'"'"'(])(node|python3?|bash|sh)[[:space:]][^|;&]*\$[{(]?[A-Za-z_]'
+# Scope, stated honestly: this matches invocations of the commands named below,
+# not every conceivable Bash snippet. The guard itself rejects expansion in ANY
+# command, so a grep this shape is necessarily a subset — the check name says
+# "interpreter invocation" rather than "Bash invocation" so it does not claim
+# more than it enforces. `git`/`gh` are deliberately absent: prose in this tree
+# says things like "not a git repo — fall back to `docs/prompts` relative to
+# `$PWD`", which a `git` alternative matches as a command. A false positive on
+# prose would train the next author to loosen the check.
+EXPANSION_RE='(^|[[:space:]`"'"'"'(])(node|python3?|bash|sh|realpath)[[:space:]][^|;&]*\$[{(]?[A-Za-z_]'
 EXPANSION="$(grep -rnE "$EXPANSION_RE" \
   "$AGENTS_DIR" "$ROLE_PROMPTS" "$REVIEW_SKILL" \
   --include='*.md' 2>/dev/null || true)"
@@ -174,7 +182,8 @@ echo "10. The known unfixed expansion call sites are exactly the documented set.
 KNOWN_BROKEN="skills/build/SKILL.md:1
 skills/finalize-plan/references/write-completions.md:1
 skills/implementation-plan/SKILL.md:1
-skills/plans-library/SKILL.md:2
+skills/plans-library/SKILL.md:3
+skills/plans-open/SKILL.md:1
 skills/prototype/SKILL.md:1"
 ACTUAL_BROKEN="$(grep -rcE "$EXPANSION_RE" "$ROOT/kit/plugins/plan-agent/skills/" \
   --include='*.md' 2>/dev/null \
