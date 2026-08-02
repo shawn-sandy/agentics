@@ -5,7 +5,7 @@ paths:
 
 # Plugin Component Patterns
 
-Commands (`commands/<name>.md`, invoked `/plugin:command`, input via
+Commands (`commands/<name>.md`, invoked `/plugin-name:command-name`, input via
 `$ARGUMENTS`) and skills (`skills/<name>/SKILL.md`, auto-activated by
 `description`) follow the standard Claude Code formats. What follows is only
 what this repo does differently.

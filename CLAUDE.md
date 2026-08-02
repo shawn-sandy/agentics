@@ -49,10 +49,16 @@ Commit the plan file alongside plugin changes, however minor.
 
 ## Where things are
 
-- `.claude/rules/` — scoped authoring rules, auto-loaded by path:
-  `plugin-patterns` (`kit/plugins/**`), `skill-authoring`
-  (`**/skills/**`), `marketplace`, `testing` (`tests/**`), `plan-hygiene`
-  (`**/plans/**`), `removed-plugins` (always).
+- `.claude/rules/` — authoring rules, auto-loaded when a read matches their scope:
+
+  | Rule | Loads on |
+  |------|----------|
+  | `plugin-patterns` | `kit/plugins/**` |
+  | `skill-authoring` | `kit/plugins/**/skills/**` |
+  | `marketplace` | `kit/plugins/**`, `.claude-plugin/**` |
+  | `testing` | `tests/**` |
+  | `plan-hygiene` | `**/plans/**` |
+  | `removed-plugins` | always (unscoped) |
 - Per-plugin detail: README.md's generated Plugin Reference Table, then
   `kit/plugins/<name>/README.md`.
 - `tests/fixtures/valid-plugin/` — the validation reference.
