@@ -143,12 +143,12 @@ for path in agents:
                 f"its job is to read a plan and report findings"
             )
         # Bare `Bash` is unrestricted shell, which is write access by another
-        # name. product-plans scopes its reviewers to `Bash(git *)`.
+        # name. The plan-agent reviewers scope theirs to `Bash(git *)`.
         m = re.search(r"^tools:\s*(.+)$", block, re.M)
         if m and re.search(r"(^|,)\s*Bash\s*(,|$)", m.group(1)):
             failures.append(
                 f"{rel}: read-only reviewer grants unrestricted `Bash` — "
-                f"scope it to `Bash(git *)` as the product-plans reviewers do"
+                f"scope it to `Bash(git *)` as the plan-agent reviewers do"
             )
 
 if failures:

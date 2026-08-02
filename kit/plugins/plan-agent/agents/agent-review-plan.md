@@ -1,10 +1,10 @@
 ---
 name: agent-review-plan
 description: >
-  Background plan-review agent. Runs the seven-reviewer Agent Team
-  (architecture, completeness, testability, risk, conventions + conditional UX
-  and accessibility) on an implementation plan without blocking the parent
-  session. Improves and updates the plan in place. Use when the user asks to
+  Background plan-review agent. Runs the ten-reviewer Agent Team
+  (architecture, completeness, testability, risk, conventions, product,
+  security + conditional UX, accessibility, and frontend) on an implementation
+  plan without blocking the parent session. Improves and updates the plan in place. Use when the user asks to
   "review in the background", "fire off the review", or "review and improve
   this plan while I keep working".
   Mirrors the review-plan skill but runs as a background subagent.

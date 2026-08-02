@@ -46,7 +46,6 @@ the durable, automatable mechanism is declarative settings — not a hook.
     "skill-reviewer@agentics-kit": true,
     "code-testing-agent@agentics-kit": true,
     "git-agent@agentics-kit": true,
-    "product-plans@agentics-kit": true,
     "settings-sync@agentics-kit": true,
     "social-media-tools@agentics-kit": true,
     "plan-agent@agentics-kit": true,
@@ -108,7 +107,6 @@ that the 13 plugins are enabled by default with no per-plugin install.
 | `skill-reviewer` | Audit & optimize skill files |
 | `code-testing-agent` | Test suggestion, review, tdd-fix / tdd-loop |
 | `git-agent` | Branch / commit / PR / ship workflows |
-| `product-plans` | Cross-functional review panel |
 | `settings-sync` | Back up & restore Claude Code settings |
 | `social-media-tools` | Generate shareable social cards from code |
 | `plan-agent` | `/plan-agent:implementation-plan` workflow |

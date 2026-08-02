@@ -123,7 +123,6 @@ ln -s ../../kit/plugins/code-review code-review
 | skill-reviewer | 4 | 1 | — | Yes | No |
 | code-testing-agent | 5 | — | — | — | N/A |
 | git-agent | 5 | 3 | 3 | — | N/A |
-| product-plans | 1 | 1 | 7 | — | N/A |
 | settings-sync | 2 | — | — | — | N/A |
 | social-media-tools | 13 | 1 | — | — | N/A |
 | plan-agent | 5 | — | — | Yes | No |

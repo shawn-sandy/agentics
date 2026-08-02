@@ -1,6 +1,31 @@
 # Changelog
 
 
+## 8.2.0 — `review-plan` gains product, security, and frontend reviewers (2026-08-02)
+
+### Added
+
+- **Three reviewers fold the `product-plans` panel's unique roles into
+  `review-plan`.** The panel covered PM, security, and frontend-engineering
+  lenses that no plan reviewer had; the two skills otherwise overlapped only on
+  UX and accessibility. New agents:
+  - `plan-reviewer-product` (core) — user problem, scope sizing, falsifiable
+    success criteria, load-bearing assumptions, rollout readiness.
+  - `plan-reviewer-security` (core) — authn/authz, data handling, trust
+    boundaries, secrets, dependency risk. Cites CWE/OWASP identifiers, and
+    reports `Exposure: none` rather than manufacturing findings on plans with no
+    security surface.
+  - `plan-reviewer-frontend` (UI-conditional) — component boundaries, state
+    placement, render cost, design-system alignment. Runs behind the same
+    `ui_signals_present` gate as UX and accessibility.
+- Spawn prompts in `references/role-prompts.md` and role sections in
+  `references/output-template.md` for all three.
+
+### Changed
+
+- The roster is now **10 reviewers — 7 core + 3 UI-conditional** (was 7: 5 + 2).
+  Step 3b and Step 4 announcements report the new counts.
+
 ## 8.1.1 — the spec extractor now ships with the plugin (2026-08-02)
 
 ### Fixed

@@ -8,7 +8,7 @@ This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implem
 
 Plans are written as **self-contained `.html` files** — interactive, visually rich, and openable directly in a browser. No markdown output. Complex plans include a workflow prompt for parallel subagent orchestration via Claude Code's `/workflows` runtime.
 
-The `review-plan` skill uses an **Agent Team** (five core reviewers plus two UI-conditional reviewers) to review implementation plans in parallel, synthesize findings, and apply improvements directly in place. Detects UI signals (React, Vue, buttons, modals, etc.) and conditionally runs UX and accessibility reviewers when present. Requires Agent Teams feature flag and Claude Code ≥ 2.1.32.
+The `review-plan` skill uses an **Agent Team** (seven core reviewers plus three UI-conditional reviewers) to review implementation plans in parallel, synthesize findings, and apply improvements directly in place. Detects UI signals (React, Vue, buttons, modals, etc.) and conditionally runs UX, accessibility, and frontend reviewers when present. Requires Agent Teams feature flag and Claude Code ≥ 2.1.32.
 
 The `finalize-plan` skill reviews a plan for codebase implementation evidence, verifies each acceptance criterion individually, and marks the plan completed.
 
@@ -135,7 +135,7 @@ The skill enforces the full Steps 1–8 workflow:
 
 The exit menu always offers `Review the plan` as a one-click path to critique the freshly-generated plan before implementing it. Selecting it triggers a foreground-or-background sub-choice:
 
-- **Run now (foreground):** invokes `Skill(skill: "plan-agent:review-plan", args: "<plan path>")`, runs the seven-reviewer Agent Team in-session, then re-renders the updated plan and loops back to the menu.
+- **Run now (foreground):** invokes `Skill(skill: "plan-agent:review-plan", args: "<plan path>")`, runs the ten-reviewer Agent Team in-session, then re-renders the updated plan and loops back to the menu.
 - **Background:** invokes `Skill(skill: "plan-agent:review-plan-bg", args: "<plan path>")`, dispatches the review team detached via `agent-review-plan`, and returns to the menu immediately; reopen the plan after completion to view applied updates.
 
 **Adaptive menu swap:** The `AskUserQuestion` tool is capped at 4 options. When a workflow prompt is present the menu would otherwise have 5 slots, so `Edit the plan` is dropped from that variant — the full ordering becomes: `Implement now` / `Run as workflow` / `Review the plan` / `Exit`. Without a workflow prompt all four options appear: `Implement now` / `Review the plan` / `Edit the plan` / `Exit`.
@@ -172,7 +172,7 @@ The extractor reads an embedded `#plan-digest` block when one is present (legacy
 
 #### `review-plan` — Manual invoke or auto-activate
 
-Reviews implementation plans using a seven-reviewer Agent Team (five core reviewers plus two UI-conditional reviewers). Detects UI signals and conditionally spawns UX and accessibility reviewers when present. Synthesizes findings and applies improvements directly to the source plan in place.
+Reviews implementation plans using a ten-reviewer Agent Team (seven core reviewers plus three UI-conditional reviewers). Detects UI signals and conditionally spawns UX, accessibility, and frontend reviewers when present. Synthesizes findings and applies improvements directly to the source plan in place.
 
 Reviewers read the plan's spec via `node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs"` rather than the full HTML — roughly an order of magnitude fewer tokens per reviewer per cycle — falling back to the full HTML if the extractor can't run. The lead keeps reading the full HTML for selector-based edits.
 
@@ -197,7 +197,7 @@ Reviewers read the plan's spec via `node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-
 
 #### `review-plan-bg` — Background command
 
-Dispatches the `agent-review-plan` background agent to run the full seven-reviewer team without blocking the session. Returns an ack immediately; you are notified when it completes.
+Dispatches the `agent-review-plan` background agent to run the full ten-reviewer team without blocking the session. Returns an ack immediately; you are notified when it completes.
 
 ```
 /plan-agent:review-plan-bg docs/plans/add-dark-mode-toggle.html
@@ -216,14 +216,14 @@ The skill spawns the following reviewers:
   - UX — user flows, error states, loading states, interaction clarity, responsive design, discoverability
   - Accessibility — WCAG 2.1 AA compliance, keyboard navigation, screen reader support, semantic HTML, motion
 
-**UI signal detection:** Scans the plan HTML for references to React, Vue, Svelte, `.tsx`/`.jsx`/`.css`/`.html`, `className`, `style`, Tailwind, buttons, modals, forms, dialogs, dropdowns, pages, components. If 2+ signals or UI-specific keywords are found, UX and accessibility reviewers are spawned.
+**UI signal detection:** Scans the plan HTML for references to React, Vue, Svelte, `.tsx`/`.jsx`/`.css`/`.html`, `className`, `style`, Tailwind, buttons, modals, forms, dialogs, dropdowns, pages, components. If 2+ signals or UI-specific keywords are found, the UX, accessibility, and frontend reviewers are spawned.
 
 The workflow:
 
 1. **Resolve** — locates the HTML plan (`--dir` override, or glob `docs/plans/*.html` excluding `index.html`, or newest recent)
 2. **Verify** — confirms Agent Teams are available (feature flag + version check)
 3. **Detect** — scans plan HTML for UI signals to determine reviewer roster
-4. **Spawn** — creates the team and spawns 5 core + optional 2 UI reviewers in parallel
+4. **Spawn** — creates the team and spawns 7 core + optional 3 UI reviewers in parallel
 5. **Collect** — waits for all reviewers to report findings
 6. **Synthesize** — aggregates findings into a structured report (Executive Summary, Role-by-Role, Agreements/Conflicts, Highest-Risk Issues)
 7. **Update** — applies inline edits to the plan HTML (step refinements, criteria corrections, verification improvements) and appends a collapsible "Team Review" section
@@ -233,7 +233,7 @@ On success:
 
 ```
 Reviewing plan: docs/plans/add-dark-mode-toggle.html
-UI signals detected — running 7 reviewers
+UI signals detected — running 10 reviewers
 Plan updated in place: docs/plans/add-dark-mode-toggle.html
 ```
 
@@ -522,7 +522,7 @@ plan-agent/
         proposal-prompt-template.md   — proposal-type template (11 proposal-shaped slots)
         best-practices-reference.md   — Anthropic prompting guidance
   agents/
-    plan-reviewer-*.md      — Seven reviewer agent definitions (5 core + 2 UI-conditional)
+    plan-reviewer-*.md      — Ten reviewer agent definitions (7 core + 3 UI-conditional)
     agent-review-plan.md    — Background agent for fire-and-forget review
   commands/
     review-plan-bg.md       — Background review dispatcher command

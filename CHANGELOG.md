@@ -12,6 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 
 ### Added
 
+- **plan-agent 8.2.0 — product, security, and frontend plan reviewers** — `review-plan`'s Agent Team grows from seven to ten: `plan-reviewer-product` (user problem, scope sizing, falsifiable success criteria, rollout) and `plan-reviewer-security` (authn/authz, data handling, trust boundaries, secrets, dependency risk) join the core roster, and `plan-reviewer-frontend` (component boundaries, state placement, render cost, design-system fit) joins UX and accessibility behind the `ui_signals_present` gate. These are the three lenses that `product-plans` covered and no existing plan reviewer did
 - **content-tools plugin (1.0.0)** — New `documentation` plugin whose `artifact-to-post` skill converts a local HTML artifact, pasted HTML, or a Markdown file into a **draft** static-site post (Astro first). Each block takes the highest rung of a fidelity ladder that holds, artifact CSS is prefixed to a wrapper so it cannot collide with site tokens, and an MDX-safety pass runs after the prose rewrite. Blocking `security-scrub` gate before any write (#440)
 - **git-agent `merge` skill + `merge?` hook (4.5.0)** — Checks PR readiness (`MERGEABLE`, green checks, lint gate) and merges only with explicit approval, never passing `--delete-branch`. A `UserPromptSubmit` hook routes a bare `merge?` prompt to the skill deterministically (#441)
 - **git-agent `/merge-bg` (4.6.0)** — Background squash merge of one fully green PR via the new `agent-merge` subagent; dispatching the command is the approval, and anything ambiguous comes back as a report instead of a merge (#444)
@@ -31,6 +32,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 - **Plans index merge driver** — `scripts/merge-plans-index.mjs` unions plan cards in `docs/plans/index.html` to auto-resolve merge conflicts (#309)
 - **Guides** — GitHub Pages publishing guide (#331); DESIGN.md and COMPONENT.md tutorial (#325)
 - **Docs landing hub** — Replaced the root `docs/index.html` meta-refresh redirect with a card-based landing hub linking to the Plans gallery and Social Media gallery (#280)
+
+### Removed
+
+- **product-plans v3.4.13** — folded into `plan-agent` 8.2.0 and de-registered; source deleted, recoverable from git history. The panel overlapped `review-plan` on UX and accessibility and differed only in its PM, security, and frontend roles, which now ship as plan reviewers. `product-plans` reviewed Markdown PRDs; `review-plan` reads the HTML plan spec via `extract-plan-spec.mjs`
 
 ### Changed
 

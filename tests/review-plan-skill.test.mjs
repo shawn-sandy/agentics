@@ -4,7 +4,7 @@
 // the --skip-analysis and --triage-top flags, the Step 6b walkthrough, and
 // the accepted_edits state variable. Run: node tests/review-plan-skill.test.mjs
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -65,6 +65,34 @@ check('SKILL.md: has a Background mode section', bgStart !== -1);
 
 check('Background mode section: states --skip-analysis is implied',
   bgSection.includes('--skip-analysis') && /impli(?:ed|es)/i.test(bgSection));
+
+// ── Step 4 spawn roster ────────────────────────────────────────────────────
+// The roles folded in from the product-plans panel must actually be spawned,
+// and on the right gate: product and security run on every plan, frontend only
+// behind ui_signals_present alongside UX and accessibility. Asserted on the
+// individual roster lines rather than the whole file, so a reviewer that is
+// merely *mentioned* in prose does not satisfy the check.
+
+const rosterLine = (prefix) =>
+  skill.split('\n').find((l) => l.trim().startsWith(prefix)) ?? '';
+
+const alwaysLine = rosterLine('- Always:');
+const uiLine = rosterLine('- When `ui_signals_present`:');
+
+for (const role of ['-product', '-security']) {
+  check(`Step 4: ${role} is spawned on every plan`, alwaysLine.includes(role));
+}
+
+check('Step 4: -frontend is gated behind ui_signals_present',
+  uiLine.includes('-frontend') && !alwaysLine.includes('-frontend'));
+
+// Agent definitions must exist for every reviewer the roster names, or the
+// spawn silently resolves to nothing at runtime.
+const AGENTS = join(ROOT, 'kit', 'plugins', 'plan-agent', 'agents');
+for (const role of ['product', 'security', 'frontend']) {
+  check(`plan-reviewer-${role}.md exists`,
+    existsSync(join(AGENTS, `plan-reviewer-${role}.md`)));
+}
 
 // ── Summary ────────────────────────────────────────────────────────────────
 

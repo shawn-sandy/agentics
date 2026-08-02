@@ -61,17 +61,17 @@ else
   fail "review-plan SKILL.md still has a digest-refresh pass or lacks the extractor reference"
 fi
 
-echo "5. All 7 reviewer briefs run the extractor with a full-HTML fallback..."
+echo "5. All 10 reviewer briefs run the extractor with a full-HTML fallback..."
 BRIEF_EXTRACTOR_COUNT="$(grep -c 'extract-plan-spec.mjs' "$ROLE_PROMPTS" || true)"
 BRIEF_FALLBACK_COUNT="$(grep -c 'fall back to reading the full HTML' "$ROLE_PROMPTS" || true)"
-if [ "$BRIEF_EXTRACTOR_COUNT" -ge 7 ] && [ "$BRIEF_FALLBACK_COUNT" -ge 7 ] \
+if [ "$BRIEF_EXTRACTOR_COUNT" -ge 10 ] && [ "$BRIEF_FALLBACK_COUNT" -ge 10 ] \
   && ! grep -qF "$AWK_ONELINER" "$ROLE_PROMPTS"; then
   pass
 else
-  fail "role-prompts.md extractor refs=$BRIEF_EXTRACTOR_COUNT (need >=7), fallbacks=$BRIEF_FALLBACK_COUNT (need >=7), or awk remains"
+  fail "role-prompts.md extractor refs=$BRIEF_EXTRACTOR_COUNT (need >=10), fallbacks=$BRIEF_FALLBACK_COUNT (need >=10), or awk remains"
 fi
 
-echo "6. All 7 reviewer agent defs run the extractor with a full-HTML fallback..."
+echo "6. All 10 reviewer agent defs run the extractor with a full-HTML fallback..."
 AGENT_FAIL=0
 AGENT_COUNT=0
 for agent in "$AGENTS_DIR"/plan-reviewer-*.md; do
@@ -83,10 +83,10 @@ for agent in "$AGENTS_DIR"/plan-reviewer-*.md; do
     AGENT_FAIL=1
   fi
 done
-if [ "$AGENT_FAIL" -eq 0 ] && [ "$AGENT_COUNT" -eq 7 ]; then
+if [ "$AGENT_FAIL" -eq 0 ] && [ "$AGENT_COUNT" -eq 10 ]; then
   pass
 else
-  fail "expected 7 wired agent defs, found $AGENT_COUNT with failures=$AGENT_FAIL"
+  fail "expected 10 wired agent defs, found $AGENT_COUNT with failures=$AGENT_FAIL"
 fi
 
 echo "7. test-backfill-digest.mjs corpus assertion scoped to legacy embedded plans..."
