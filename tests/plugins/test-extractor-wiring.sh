@@ -196,7 +196,13 @@ echo "9. No documented interpreter invocation contains shell expansion..."
 # for — all 15 of 8.1.1's, all four of 8.2.1's ledger — was in a model-facing
 # file, never in the README.
 EXPANSION_RE='(^|[[:space:]`"'"'"'(])(node|python3?|bash|sh|realpath)[[:space:]].*\$[{(]?[A-Za-z_]'
-LEDGERED_RE="$(printf '%s\n' "$KNOWN_BROKEN" | sed 's/:[0-9]*$//' | paste -sd'|' -)"
+# `.` is escaped before these paths become an alternation: they are literal
+# filenames but are consumed as an ERE, so an unescaped `SKILL.md` would also
+# match `SKILL-md` or `SKILLxmd`. Harmless today, but this list's only job is to
+# say what is NOT guarded — an exclusion that quietly covers more than it names
+# is the same "asserts the description, not the behaviour" failure the rest of
+# this suite exists to catch.
+LEDGERED_RE="$(printf '%s\n' "$KNOWN_BROKEN" | sed 's/:[0-9]*$//; s/\./\\./g' | paste -sd'|' -)"
 EXPANSION="$(grep -rnE "$EXPANSION_RE" \
   "$ROOT/kit/plugins/plan-agent/skills" \
   "$ROOT/kit/plugins/plan-agent/agents" \
