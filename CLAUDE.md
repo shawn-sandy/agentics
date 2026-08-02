@@ -15,9 +15,11 @@ marketplace **references** them by relative path — it does not embed them.
 - **`docs/plans/archive/` is off-limits.** Never glob, grep, or read it unless
   the user names the path.
 - **Two merge drivers auto-resolve conflicts** — `marketplace.json` keeps the
-  higher semver, gallery `index.html` files union their cards. Run
-  `scripts/setup-merge-driver.sh` once per clone. Never hand-edit conflict
-  markers in a generated `index.html`.
+  higher semver, gallery `index.html` files union their cards. A SessionStart
+  hook registers them automatically; run `scripts/setup-merge-driver.sh` by hand
+  only outside Claude Code or with hooks off. Never hand-edit conflict markers
+  in a generated `index.html` — an unresolved conflict there means the driver
+  never registered.
 - **Plugin homepage URLs point at the plugin directory,** not the repo root:
   `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/<name>`
 - `.claude/settings.json` validates `marketplace.json` after every Write/Edit.
