@@ -168,7 +168,16 @@ Read a plan's spec without paying for the styled HTML:
 # Run from your own shell, with a literal path to the installed plugin.
 # Claude Code's Bash tool rejects commands containing shell expansion, so an
 # agent cannot invoke this via a plugin-root variable — see CHANGELOG 8.2.1.
-node ~/.claude/plugins/cache/*/plan-agent/*/scripts/extract-plan-spec.mjs docs/plans/<plan>.html
+#
+# Resolve exactly one script first: the cache can hold several plan-agent
+# versions (and several marketplace copies), and a bare glob would expand to
+# every match — node would run the first and silently read the second as the
+# plan path. Sorting on the version segment (not the whole path) is what makes
+# newest actually win: 8.10.0 must beat 8.9.0 even under a later marketplace
+# directory. Newest version wins, as the gallery hook also does.
+EXTRACTOR="$(ls -1 ~/.claude/plugins/cache/*/plan-agent/*/scripts/extract-plan-spec.mjs 2>/dev/null \
+  | awk -F/ '{print $(NF-2)"\t"$0}' | sort -V | tail -1 | cut -f2)"
+node "$EXTRACTOR" docs/plans/<plan>.html
 ```
 
 The extractor reads an embedded `#plan-digest` block when one is present (legacy plans, un-guarded to clean markdown) and otherwise derives the spec from the visible DOM — so every plan resolves the same way, old or new. Each plan is a single self-contained HTML file, so the implement, goal, and workflow prompts it ships reference the plan **by path** — Claude reads the HTML directly, with no dependency on this script in the target repo. The extractor is a token-efficiency tool for callers that have it on hand (the review team, or manual inspection): roughly an order of magnitude fewer tokens than the full styled HTML, with a full-HTML fallback when it isn't available. **Caveat:** new plans embed no digest, so the old `awk '…id="plan-digest"…'` one-liner returns empty on them — use the extractor (or read the HTML) instead. Legacy embedded plans can still be re-seeded with `node scripts/backfill-plan-digests.mjs [--dry-run]` (idempotent; skips plans it cannot fully parse rather than emitting partial digests).

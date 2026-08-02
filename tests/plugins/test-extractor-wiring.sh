@@ -153,12 +153,20 @@ echo "10. The known unfixed expansion call sites are exactly the documented set.
 # This is a ledger, not a suppression: it fails if a NEW site appears (silent
 # spread) and it fails if one is FIXED without updating the list (silent rot).
 # Either way a human looks. Widen check 9 and delete this once the list empties.
-KNOWN_BROKEN="skills/build/SKILL.md
-skills/finalize-plan/references/write-completions.md
-skills/implementation-plan/SKILL.md
-skills/prototype/SKILL.md"
-ACTUAL_BROKEN="$(grep -rlE '(node|python3?|bash|sh) +"?\$\{?[A-Z_]+' "$ROOT/kit/plugins/plan-agent/skills/" \
+#
+# Tracks `path:count`, not bare filenames. `grep -l` collapses every match in a
+# file to one name, so a second broken invocation added to an already-listed
+# file — or one of two fixed while the other remained — would leave the list
+# identical and the check green. That is the same "asserts the description, not
+# the behaviour" failure this whole change is about. Counts, not lines: line
+# numbers churn on unrelated edits and would fail noisily for no reason.
+KNOWN_BROKEN="skills/build/SKILL.md:1
+skills/finalize-plan/references/write-completions.md:1
+skills/implementation-plan/SKILL.md:1
+skills/prototype/SKILL.md:1"
+ACTUAL_BROKEN="$(grep -rcE '(node|python3?|bash|sh) +"?\$\{?[A-Z_]+' "$ROOT/kit/plugins/plan-agent/skills/" \
   --include='*.md' 2>/dev/null \
+  | grep -v ':0$' \
   | sed "s|$ROOT/kit/plugins/plan-agent/||" | sort || true)"
 if [ "$ACTUAL_BROKEN" = "$KNOWN_BROKEN" ]; then
   pass
