@@ -339,7 +339,7 @@ Use this for rapid reviews:
 For initial scanning of files, use the provided Python script:
 
 ```bash
-python scripts/check_wcag.py path/to/component.tsx
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/wcag-compliance-reviewer/scripts/check_wcag.py" path/to/component.tsx
 ```
 
 This performs static analysis to catch common issues like:

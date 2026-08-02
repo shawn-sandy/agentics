@@ -1,5 +1,26 @@
 # Changelog — social-media-tools
 
+## v2.21.1 — 2026-08-02 — Stop publishing compiled Python bytecode
+
+### Fixed
+
+- **A stale `.pyc` was tracked and published.**
+  `scripts/__pycache__/session_usage.cpython-311.pyc` was committed before
+  `__pycache__/` was added to `.gitignore`, so the rule never applied to it and
+  it shipped in every install. It was inert — its recorded source mtime and its
+  interpreter magic number both mismatched, so Python would always discard and
+  regenerate it — but it was dead weight in the package and a `.gitignore`
+  violation. Untracked with `git rm --cached`; the working copy is untouched and
+  now correctly ignored.
+- **`build-dist` would have kept shipping it anyway.** The builder walks the
+  working tree rather than git, so `.gitignore` never filtered it and untracking
+  alone was not enough — only `.DS_Store` and a few other patterns were denied.
+  `__pycache__/` and `*.pyc` are now `DROP_PATTERNS` entries, which also means
+  the existing `build-dist --check` step in `publish-dist.yml` fails if bytecode
+  ever reappears in a build.
+
+---
+
 ## v2.21.0 — 2026-08-01 — The media library joins the shared site shell
 
 ### Changed

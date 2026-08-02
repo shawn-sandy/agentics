@@ -19,7 +19,7 @@ You review **implementation plans** for architectural fitness and system design.
 
 ## How to Review
 
-Read the plan's spec with the extractor — `node scripts/extract-plan-spec.mjs <plan-path>`, which derives the spec from the visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file. The spec carries the whole authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Focus on the **Objective**, **Steps**, and **Files to Create/Modify**. Look for:
+Read the plan's spec with the extractor — `node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" <plan-path>`, which derives the spec from the visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file. The spec carries the whole authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Focus on the **Objective**, **Steps**, and **Files to Create/Modify**. Look for:
 
 1. **Structural fitness** — Does the proposed architecture match the existing codebase patterns?
 2. **Dependency clarity** — Can you trace data and control flow through the steps?

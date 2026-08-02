@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.3.1 — 2026-08-02 — The documented checker command actually runs
+
+### Fixed
+
+- **`check_wcag.py`'s documented invocation could not work as written.** Both
+  the skill and the README said `python scripts/check_wcag.py <file>`, which
+  fails twice over: the path is cwd-relative, so it only resolved if you
+  happened to be standing in the skill directory (the script actually lives at
+  `skills/wcag-compliance-reviewer/scripts/check_wcag.py`), and `python` does
+  not exist on a python3-only machine. Both call sites now use
+  `python3 "${CLAUDE_PLUGIN_ROOT}/skills/wcag-compliance-reviewer/scripts/check_wcag.py"`,
+  matching how every other shipped script in the kit is invoked. The script's
+  own usage/help text was updated from `python` to `python3` to match.
+
+> **Upstream note:** `skills/wcag-compliance-reviewer/` is synced from
+> [shawn-sandy/skills](https://github.com/shawn-sandy/skills) (see v1.3.0), so
+> the `SKILL.md` and `check_wcag.py` half of this fix will be reverted by the
+> next sync unless the same change is made upstream. The plugin `README.md` sits
+> outside `skills/` and is unaffected.
+
+---
+
 ## v1.3.0 — 2026-07-26 — Skill content now canonical in shawn-sandy/skills
 
 ### Changed
