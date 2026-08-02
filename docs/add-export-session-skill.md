@@ -4,7 +4,7 @@
 
 <!-- generated:start -->
 
-**Status:** Shipped 2026-07-21 **Plan:** [add-export-session-skill.md](plans/add-export-session-skill.md)
+**Status:** Shipped 2026-07-02 **Plan:** [add-export-session-skill.md](plans/add-export-session-skill.md)
 **Type:** feature
 
 ## What shipped
@@ -15,7 +15,7 @@
 - Removed any standalone `session-tools` plugin from `kit/plugins/` and `marketplace.json` — the skill is folded into `social-media-tools`.
 - Bumped `social-media-tools` to `2.14.0` in `.claude-plugin/marketplace.json` with a matching CHANGELOG entry (new skill = minor bump).
 
-> See [CHANGELOG v2.14.0](kit/plugins/social-media-tools/CHANGELOG.md#v2140--2026-07-02--export-session-session-transcripts-to-markdown) for the authoritative feature list.
+> See [CHANGELOG v2.14.0](../kit/plugins/social-media-tools/CHANGELOG.md#v2140--2026-07-02--export-session-session-transcripts-to-markdown) for the authoritative feature list.
 
 ## Files changed
 
@@ -68,4 +68,4 @@ Exported files land in `{plansDirectory}/sessions/` (default: `docs/plans/sessio
 ## References
 
 - Plan: [add-export-session-skill.md](plans/add-export-session-skill.md)
-- Changelog: [social-media-tools v2.14.0](kit/plugins/social-media-tools/CHANGELOG.md#v2140--2026-07-02--export-session-session-transcripts-to-markdown)
+- Changelog: [social-media-tools v2.14.0](../kit/plugins/social-media-tools/CHANGELOG.md#v2140--2026-07-02--export-session-session-transcripts-to-markdown)

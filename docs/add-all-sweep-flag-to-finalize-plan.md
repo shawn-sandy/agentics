@@ -4,7 +4,7 @@
 
 <!-- generated:start -->
 
-**Status:** Shipped 2026-07-21 **Plan:** [add-all-sweep-flag-to-finalize-plan.md](plans/add-all-sweep-flag-to-finalize-plan.md)
+**Status:** Shipped 2026-07-02 **Plan:** [add-all-sweep-flag-to-finalize-plan.md](plans/add-all-sweep-flag-to-finalize-plan.md)
 **Type:** feature
 
 ## What shipped
@@ -19,7 +19,7 @@
 - Bumped `plan-agent` to `2.13.0` in `.claude-plugin/marketplace.json` with a matching CHANGELOG entry.
 - Added `tests/plugins/test-finalize-all-flag.sh` to pin the flag to the SKILL.md contract, README docs, and marketplace version so they cannot silently diverge.
 
-> See [CHANGELOG v2.13.0](kit/plugins/plan-agent/CHANGELOG.md#2130--all-sweep-flag-on-finalize-plan-2026-07-02) for the authoritative feature list.
+> See [CHANGELOG v2.13.0](../kit/plugins/plan-agent/CHANGELOG.md#2130--all-sweep-flag-on-finalize-plan-2026-07-02) for the authoritative feature list.
 
 ## Files changed
 
@@ -70,4 +70,4 @@ In sweep mode the skill presents a table of candidates with evidence percentages
 ## References
 
 - Plan: [add-all-sweep-flag-to-finalize-plan.md](plans/add-all-sweep-flag-to-finalize-plan.md)
-- Changelog: [plan-agent v2.13.0](kit/plugins/plan-agent/CHANGELOG.md#2130--all-sweep-flag-on-finalize-plan-2026-07-02)
+- Changelog: [plan-agent v2.13.0](../kit/plugins/plan-agent/CHANGELOG.md#2130--all-sweep-flag-on-finalize-plan-2026-07-02)

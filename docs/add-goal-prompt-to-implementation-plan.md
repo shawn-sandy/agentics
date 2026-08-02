@@ -4,7 +4,7 @@
 
 <!-- generated:start -->
 
-**Status:** Shipped 2026-07-21 **Plan:** [add-goal-prompt-to-implementation-plan.md](plans/add-goal-prompt-to-implementation-plan.md)
+**Status:** Shipped 2026-06-18 **Plan:** [add-goal-prompt-to-implementation-plan.md](plans/add-goal-prompt-to-implementation-plan.md)
 **Type:** feature
 
 ## What shipped
@@ -17,7 +17,7 @@
 - Added `tests/plugins/test-goal-prompt.sh` pinning the goal prompt to the skeleton (meta tag, markup, `copyGoal()` wiring, CSS hidden-when-completed and print rules) and the SKILL.md contract.
 - Bumped `plan-agent` from `2.5.1` to `2.6.0` in `.claude-plugin/marketplace.json` (new always-present feature = minor) with a matching CHANGELOG entry.
 
-> See [CHANGELOG v2.6.0](kit/plugins/plan-agent/CHANGELOG.md#260--outcome-driven-goal-prompt-on-every-html-plan-2026-06-18) for the authoritative feature list.
+> See [CHANGELOG v2.6.0](../kit/plugins/plan-agent/CHANGELOG.md#260--outcome-driven-goal-prompt-on-every-html-plan-2026-06-18) for the authoritative feature list.
 
 ## Files changed
 
@@ -62,4 +62,4 @@ This framing lets the agent deviate from the plan's specific steps when a better
 ## References
 
 - Plan: [add-goal-prompt-to-implementation-plan.md](plans/add-goal-prompt-to-implementation-plan.md)
-- Changelog: [plan-agent v2.6.0](kit/plugins/plan-agent/CHANGELOG.md#260--outcome-driven-goal-prompt-on-every-html-plan-2026-06-18)
+- Changelog: [plan-agent v2.6.0](../kit/plugins/plan-agent/CHANGELOG.md#260--outcome-driven-goal-prompt-on-every-html-plan-2026-06-18)
