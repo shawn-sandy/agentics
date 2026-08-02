@@ -30,9 +30,9 @@ Follow these steps in strict order. **STOP immediately after step 4.**
 
 ### Step 1: Guards
 
-Run `git status` to check repository state.
+Run `git status --porcelain` to check repository state.
 
-- **Clean working tree** (nothing to commit): report "Nothing to commit — working tree is clean." and **STOP**.
+- **Clean working tree** (empty output): report "Nothing to commit — working tree is clean." and **STOP**.
 - **Detached HEAD** (`git branch --show-current` returns empty): report "Cannot commit: repository is in detached HEAD state. Checkout a branch first." and **STOP**.
 
 ### Step 2: Stage Changes
