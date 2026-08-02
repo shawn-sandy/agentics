@@ -117,6 +117,30 @@ else
   fail "kit/plugins/plan-agent/scripts/extract-plan-spec.mjs is missing or does not load — installed users cannot run the extractor"
 fi
 
+# This is a ledger, not a suppression: it fails if a NEW site appears (silent
+# spread) and it fails if one is FIXED without updating the list (silent rot).
+# Either way a human looks. Delete this once the list empties — check 9 needs no
+# edit, since it already excludes exactly what is ledgered here.
+#
+# Tracks `path:count`, not bare filenames. `grep -l` collapses every match in a
+# file to one name, so a second broken invocation added to an already-listed
+# file — or one of two fixed while the other remained — would leave the list
+# identical and the check green. That is the same "asserts the description, not
+# the behaviour" failure this whole change is about. Counts, not lines: line
+# numbers churn on unrelated edits and would fail noisily for no reason.
+#
+# 8.3.0 removed the four renderer-pipeline entries by shipping bin/ wrappers
+# (checks 11-12). What remains is the GALLERY pipeline, a different defect
+# class: these are not bundled-script paths but multi-line snippets whose
+# variables are set in the same shell block — `while IFS= read -r f` feeding
+# `python3 - "$f"`, `python3 - "$PLANS_DIR/index.html" "$SOURCE_COUNT"`, and the
+# `realpath`/`open` fallback chain. Being locally defined does not help: the
+# guard is textual and rejects the command string before any shell sees it.
+# Repairing them means extracting the two inline heredoc scripts into scripts/
+# with real CLIs, which is its own change.
+KNOWN_BROKEN="skills/plans-library/SKILL.md:3
+skills/plans-open/SKILL.md:1"
+
 echo "9. No documented interpreter invocation contains shell expansion..."
 # The generalized invariant, and the one that would have caught 8.1.1's
 # regression at the source. Claude Code's Bash tool refuses any command whose
@@ -153,44 +177,41 @@ echo "9. No documented interpreter invocation contains shell expansion..."
 # as dead as an expansion in the first argument. Bounding at a pipe would have
 # contradicted the position-independence argument this check rests on.
 # Verified to change no result in the current tree.
+#
+# 8.3.0 widened the scan from the review surface to every MODEL-FACING markdown
+# file in the plugin — skills/, agents/, commands/ — minus the files check 10
+# still ledgers. The ledger is now the single exclusion list, so emptying it
+# needs no edit here: every file that is not ledgered is guarded, including the
+# four 8.3.0 repaired, which are therefore protected against a silent regression
+# back into `${CLAUDE_PLUGIN_ROOT}`.
+#
+# README.md is excluded alongside CHANGELOG.md, and the distinction is the whole
+# point of this check rather than a convenience. The invariant is "no
+# instruction handed to the model names a command the model cannot run". The
+# README documents a `node "$EXTRACTOR" …` snippet that is correct *because* it
+# is prefaced "Run from your own shell, with a literal path" — a human's shell
+# has no expansion guard, and that snippet sets `$EXTRACTOR` itself. Flagging it
+# would be a false positive, and a false positive is the thing most likely to
+# make the next author loosen the pattern. Every real defect this check exists
+# for — all 15 of 8.1.1's, all four of 8.2.1's ledger — was in a model-facing
+# file, never in the README.
 EXPANSION_RE='(^|[[:space:]`"'"'"'(])(node|python3?|bash|sh|realpath)[[:space:]].*\$[{(]?[A-Za-z_]'
+LEDGERED_RE="$(printf '%s\n' "$KNOWN_BROKEN" | sed 's/:[0-9]*$//' | paste -sd'|' -)"
 EXPANSION="$(grep -rnE "$EXPANSION_RE" \
-  "$AGENTS_DIR" "$ROLE_PROMPTS" "$REVIEW_SKILL" \
-  --include='*.md' 2>/dev/null || true)"
+  "$ROOT/kit/plugins/plan-agent/skills" \
+  "$ROOT/kit/plugins/plan-agent/agents" \
+  "$ROOT/kit/plugins/plan-agent/commands" \
+  --include='*.md' 2>/dev/null \
+  | sed "s|$ROOT/kit/plugins/plan-agent/||" \
+  | grep -vE "^($LEDGERED_RE):" || true)"
 if [ -z "$EXPANSION" ]; then
   pass
 else
   echo "$EXPANSION"
-  fail "Bash invocation(s) above contain shell expansion — they error with 'Contains expansion' and never run. Use a literal path, or have the caller Read the file instead."
+  fail "Bash invocation(s) above contain shell expansion — they error with 'Contains expansion' and never run. Ship the script in bin/ and invoke it by bare name, or have the caller Read the file instead."
 fi
 
 echo "10. The known unfixed expansion call sites are exactly the documented set..."
-# Check 9 is scoped to the review surface repaired in 8.2.1. The SAME defect
-# exists elsewhere in this plugin and is NOT fixed here — the renderer pipeline
-# is a separate change with its own design call, so it was deliberately left
-# out of scope rather than quietly swept in.
-#
-# This is a ledger, not a suppression: it fails if a NEW site appears (silent
-# spread) and it fails if one is FIXED without updating the list (silent rot).
-# Either way a human looks. Widen check 9 and delete this once the list empties.
-#
-# Tracks `path:count`, not bare filenames. `grep -l` collapses every match in a
-# file to one name, so a second broken invocation added to an already-listed
-# file — or one of two fixed while the other remained — would leave the list
-# identical and the check green. That is the same "asserts the description, not
-# the behaviour" failure this whole change is about. Counts, not lines: line
-# numbers churn on unrelated edits and would fail noisily for no reason.
-# plans-library's two entries were surfaced only after the pattern was widened
-# to scan a command's whole argument list: `python3 - "$f"` and
-# `python3 - "$PLANS_DIR/index.html" "$SOURCE_COUNT"` set their variables in the
-# same shell block, which does not help — the guard is textual and rejects the
-# command string before it ever reaches a shell.
-KNOWN_BROKEN="skills/build/SKILL.md:1
-skills/finalize-plan/references/write-completions.md:1
-skills/implementation-plan/SKILL.md:1
-skills/plans-library/SKILL.md:3
-skills/plans-open/SKILL.md:1
-skills/prototype/SKILL.md:1"
 ACTUAL_BROKEN="$(grep -rcE "$EXPANSION_RE" "$ROOT/kit/plugins/plan-agent/skills/" \
   --include='*.md' 2>/dev/null \
   | grep -v ':0$' \
@@ -201,6 +222,44 @@ else
   echo "  expected:"; echo "$KNOWN_BROKEN" | sed 's/^/    /'
   echo "  actual:";   echo "$ACTUAL_BROKEN" | sed 's/^/    /'
   fail "the shell-expansion ledger drifted — a site was added or fixed; update this list"
+fi
+
+echo "11. Bundled scripts are reachable by bare name via bin/ on PATH..."
+# The positive half of check 9. Claude Code adds every enabled plugin's bin/ to
+# the Bash tool's PATH, so a bare `plan-agent-render ...` is the ONLY invocation
+# shape a skill can actually run: no ${VAR} for the expansion guard to reject,
+# and no dependence on CLAUDE_PLUGIN_ROOT, which is a config-file substitution
+# (hooks.json, MCP/LSP, monitors) and is not exported into the Bash tool's env.
+#
+# Asserts the wrapper exists, is executable, and resolves its target through its
+# own `dirname "$0"` — exit 2 is build-plan-html.mjs's documented no-args usage
+# code, reachable only once the relative hop into scripts/ has landed. The
+# prototypes wrapper shares that hop, so it is checked for the exec bit, clean
+# syntax, and a target that exists rather than being run for its side effects.
+BIN_DIR="$ROOT/kit/plugins/plan-agent/bin"
+RENDER_RC=-1
+if [ -x "$BIN_DIR/plan-agent-render" ]; then
+  RENDER_RC=0
+  "$BIN_DIR/plan-agent-render" >/dev/null 2>&1 || RENDER_RC=$?
+fi
+if [ "$RENDER_RC" -eq 2 ] \
+  && [ -x "$BIN_DIR/plan-agent-prototypes-index" ] \
+  && bash -n "$BIN_DIR/plan-agent-prototypes-index" 2>/dev/null \
+  && [ -f "$ROOT/kit/plugins/plan-agent/hooks/build-prototypes-index.sh" ]; then
+  pass
+else
+  fail "bin/ wrappers are missing, not executable, or cannot reach their target (plan-agent-render rc=$RENDER_RC, want 2)"
+fi
+
+echo "12. bin/ survives the dist build..."
+# A wrapper that is not copied into dist/ is a wrapper installed users never
+# get — the same shape of defect as 8.1.1, where the extractor shipped its
+# library but not itself. build-dist.mjs copies only KEEP-listed top-level
+# entries, so bin/ must be on that allowlist.
+if grep -qE "^\s*'bin',\s*$" "$ROOT/scripts/build-dist.mjs"; then
+  pass
+else
+  fail "scripts/build-dist.mjs KEEP allowlist is missing 'bin' — the wrappers would be dropped from dist/"
 fi
 
 echo ""

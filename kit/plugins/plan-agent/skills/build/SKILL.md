@@ -38,10 +38,11 @@ Per `references/resolve-plan.md`.
 ## Re-render (subroutine — referenced by every step below)
 
 ```bash
-RENDERER="${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs"
-[ -f "$RENDERER" ] || RENDERER="scripts/build-plan-html.mjs"
-node "$RENDERER" "<stem>.md" -o "<stem>.html"
+plan-agent-render "<stem>.md" -o "<stem>.html"
 ```
+
+Invoke `plan-agent-render` by bare name, never by path (this plugin's `bin/`
+is on `PATH`).
 
 `<stem>` is the resolved plan's path without its extension, fixed in Step 1
 (the subroutine is defined here but never runs before Step 1 resolves it).

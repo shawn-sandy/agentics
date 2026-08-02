@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Bare-name entry point for the prototypes-gallery rebuild
+# (hooks/build-prototypes-index.sh). See bin/plan-agent-render for why bin/ is
+# the only invocation shape a skill can actually run.
+#
+# Takes an optional project root; defaults to the current directory. stdin is
+# closed because the underlying script doubles as a PostToolUse hook and reads a
+# JSON payload from a non-tty stdin — a manual run must not block on that.
+exec bash "$(dirname "$0")/../hooks/build-prototypes-index.sh" "${1:-$PWD}" </dev/null

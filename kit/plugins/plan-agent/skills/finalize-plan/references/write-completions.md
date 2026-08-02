@@ -31,10 +31,11 @@ Each item names the specific criterion, token gap, or test — never a generic s
 **5e — Re-render.** Regenerate the HTML from the spec and confirm it succeeded:
 
 ```bash
-RENDERER="${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs"
-[ -f "$RENDERER" ] || RENDERER="scripts/build-plan-html.mjs"
-node "$RENDERER" "<stem>.md" -o "<stem>.html"
+plan-agent-render "<stem>.md" -o "<stem>.html"
 ```
+
+`plan-agent-render` ships with this plugin in `bin/`, which Claude Code puts on
+the Bash tool's `PATH` — invoke it by bare name, never by path.
 
 Exit 1 means the spec edit broke the format — fix the reported problem in the markdown and re-run. Never hand-edit the HTML to compensate. (The plugin's `render-plan-html.py` hook also re-renders on every spec write, but run the script explicitly so a failure surfaces here, not silently.)
 

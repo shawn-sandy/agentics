@@ -1,6 +1,87 @@
 # Changelog
 
 
+## 8.3.0 — the plan renderer is reachable again, via `bin/` (2026-08-02)
+
+### Added
+
+- **`bin/plan-agent-render`** and **`bin/plan-agent-prototypes-index`** — thin
+  wrappers around `scripts/build-plan-html.mjs` and
+  `hooks/build-prototypes-index.sh`. Claude Code adds every enabled plugin's
+  `bin/` to the Bash tool's `PATH`, so skills invoke them by bare name with no
+  path, no `${VAR}`, and no environment dependency. This is the only invocation
+  shape a skill can actually run, and it is now the plugin's answer to "how does
+  a bundled script get called at all". Each wrapper resolves its target through
+  its own `dirname "$0"`, so it works from any install location.
+
+### Fixed
+
+- **The four call sites 8.2.1 ledgered as known-broken now work.** All four
+  spelled a Bash command as `node "${CLAUDE_PLUGIN_ROOT}/…"`, which the Bash
+  tool refuses outright with "error: Contains expansion" before permission rules
+  are consulted — verified on 2.1.220, unrunnable even for an agent holding
+  unrestricted `Bash` and with a matching `--allowedTools` rule. The defect runs
+  deeper than the guard: `CLAUDE_PLUGIN_ROOT` is a config-file substitution
+  (`hooks.json`, MCP/LSP, monitors) and is **not exported into the Bash tool's
+  environment**, so the command would have expanded to a bare `/scripts/…` even
+  without the refusal. Sites fixed:
+  - `skills/implementation-plan/SKILL.md` — the plan renderer, the plugin's
+    most-used script. Every plan this skill wrote depended on the model
+    improvising a path after the documented command was refused; that only ever
+    resolved inside this repo, where `scripts/build-plan-html.mjs` happens to
+    sit at the root.
+  - `skills/build/SKILL.md` and `skills/finalize-plan/references/write-completions.md`
+    — the shared re-render subroutine. Its `RENDERER=…` / `[ -f "$RENDERER" ] ||`
+    fallback dance was doubly dead: the assignment carried an expansion too, and
+    the fallback named a repo-local path no installed user has. Both now call
+    `plan-agent-render` directly.
+  - `skills/prototype/SKILL.md` — the manual prototypes-index rebuild, now
+    `plan-agent-prototypes-index`. The wrapper defaults to the current directory
+    (replacing the unrunnable `"${CLAUDE_PROJECT_DIR:-$PWD}"`, whose variable is
+    likewise absent from the Bash tool's env) and closes stdin, so a manual run
+    cannot block reading the PostToolUse payload the underlying script also
+    accepts.
+- **`scripts/build-dist.mjs` would have dropped `bin/` from the published
+  tree.** It copies only KEEP-listed top-level entries, so wrappers that work
+  from source would have been missing for every marketplace install — the same
+  shape as 8.1.1's defect, where the extractor's library shipped but the
+  extractor did not. `bin` is now on the allowlist; `cpSync` preserves the
+  executable bit for these extensionless files.
+
+### Tests
+
+- `tests/plugins/test-extractor-wiring.sh`: **check 9 now scans every
+  model-facing markdown file** in the plugin — `skills/`, `agents/`,
+  `commands/` — minus whatever check 10 still ledgers, instead of just the
+  review surface. The ledger became the single exclusion list, so emptying it
+  later needs no edit to check 9, and the four files repaired here are now
+  actively guarded against regressing to `${CLAUDE_PLUGIN_ROOT}`.
+  `README.md` joins `CHANGELOG.md` in the exclusions, deliberately: its
+  `node "$EXTRACTOR" …` snippet is correct precisely because it is prefaced
+  "Run from your own shell, with a literal path" and sets `$EXTRACTOR` itself.
+  A human shell has no expansion guard, and a false positive there is what
+  would tempt the next author to loosen the pattern. Every real defect this
+  check exists for lived in a model-facing file.
+- **Check 10's ledger is updated, not deleted — it does not empty here.** It
+  listed 8 sites across 6 files; the 4 fixed above are gone, leaving
+  `skills/plans-library/SKILL.md:3` and `skills/plans-open/SKILL.md:1`. Those
+  are a different defect class and out of scope: not bundled-script paths but
+  multi-line snippets whose variables are set in the same shell block
+  (`while IFS= read -r f` feeding `python3 - "$f"`,
+  `python3 - "$PLANS_DIR/index.html" "$SOURCE_COUNT"`, and the
+  `realpath`/`open` fallback chain). Local definition does not help — the guard
+  is textual and rejects the command string before any shell sees it — so
+  repairing them means extracting two inline heredoc scripts into `scripts/`
+  with real CLIs. That is the gallery pipeline's own change, exactly as the
+  renderer pipeline was.
+- Two checks added for the wrappers: **check 11** asserts `plan-agent-render`
+  exists, is executable, and reaches `build-plan-html.mjs` through its own
+  `dirname "$0"` (exit 2 = the renderer's documented no-args usage code,
+  unreachable unless that hop landed), plus the exec bit, clean syntax, and an
+  existing target for the prototypes wrapper; **check 12** asserts `bin` is on
+  the dist KEEP allowlist.
+
+
 ## 8.2.1 — reviewers stop documenting an extractor they cannot run (2026-08-02)
 
 ### Fixed
