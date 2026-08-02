@@ -88,7 +88,7 @@ Create an agent team and spawn:
 
 Brief each with its matching prompt from `role-prompts.md`. Wait for all spawned teammates.
 
-**Lead-vs-reviewer read split:** Reviewers read only the plan's spec — their briefs in `role-prompts.md` run the extractor (`node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" <plan>`), which derives the spec from the visible DOM (or an embedded digest on legacy plans) in a few thousand tokens instead of the full styled HTML. The lead (this skill) still reads the **full HTML**: Step 3b keyword scanning and Step 7's CSS-selector edits both need the real markup, not the spec.
+**Lead-vs-reviewer read split:** Both the lead and the reviewers read the **full plan HTML**. Reviewers do *not* run `extract-plan-spec.mjs`: they are scoped to `Bash(git *)`, and Claude Code's Bash tool rejects any command containing shell expansion outright ("Contains expansion") — before permission rules are consulted. A plugin-root-anchored invocation is therefore unrunnable by *any* agent at *any* permission level, so no `tools:` grant can enable it. See `../../CHANGELOG.md` (8.2.1). Users who want the cheaper spec read can run the extractor themselves with a literal path and paste the result in.
 
 Announce progress: "`Spawned 7 core reviewers`" or "`Spawned 10 reviewers (7 core + 3 UI)`".
 

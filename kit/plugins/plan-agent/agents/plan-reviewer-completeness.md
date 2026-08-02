@@ -19,7 +19,7 @@ You review **implementation plans** for completeness and clarity. Your scope is 
 
 ## How to Review
 
-Read the plan's spec with the extractor — `node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs" <plan-path>`, which derives the spec from the visible DOM (or an embedded digest on legacy plans). If the extractor cannot run, fall back to reading the full HTML file. The spec carries the whole authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification; status and progress state are intentionally absent and out of review scope. Focus on the **Steps** section and **Files to Create/Modify**. Look for:
+Read the plan HTML at `<plan-path>` with the `Read` tool. Its authored content — objective, context, files, steps with why/verify, tests, acceptance criteria, and verification — is what you review; status and progress state are intentionally out of review scope. Focus on the **Steps** section and **Files to Create/Modify**. Look for:
 
 1. **Vague steps** — Any step that says "implement," "refactor," or "improve" without concrete targets?
 2. **Omitted files** — Are there likely config, test, type, or documentation files not mentioned?

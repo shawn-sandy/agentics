@@ -1,6 +1,61 @@
 # Changelog
 
 
+## 8.2.1 — reviewers stop documenting an extractor they cannot run (2026-08-02)
+
+### Fixed
+
+- **The reviewer spec-extraction path cannot work, and is now removed rather
+  than described.** 8.1.1 anchored all 15 extractor call sites to
+  `${CLAUDE_PLUGIN_ROOT}` to fix a cwd-relative path bug. That spelling is
+  correct for a `Read` tool path — no shell is involved — and fatal for a Bash
+  command: **Claude Code's Bash tool rejects any command whose text contains
+  `${VAR}` or `$VAR` with `error: Contains expansion`**, because it cannot
+  statically resolve the expansion. The refusal fires *before* permission rules
+  are consulted, so the invocation is unrunnable by every agent at every
+  permission level. 8.1.1 therefore did not restore the compute-on-read path it
+  set out to restore — it replaced one silent fallback with another.
+- **No `tools:` grant can fix it, so none was added.** All ten
+  `plan-reviewer-*` agents declare `tools: Read, Glob, Grep, Bash(git *)`, which
+  is genuinely enforced for markdown-defined agents (verified against 2.1.220:
+  `git status` runs, `node --version` is refused with "This command requires
+  approval"). But widening that grant would not have helped: a
+  prefix rule such as `Bash(node "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-spec.mjs":*)`
+  can never match, because the expansion guard rejects the command before rule
+  matching begins. A literal-path grant cannot ship either — the install path
+  differs per machine. All ten reviewer briefs and all ten agent defs now instruct
+  a plain `Read` of the plan HTML, which is what every review has actually been
+  doing since the feature shipped.
+- **Cost note, stated plainly:** this does not recover the ~10x per-reviewer
+  token saving the README advertised — it removes a claim that was never true in
+  practice. Run `extract-plan-spec.mjs` yourself with a literal path and paste
+  the spec into the review to get that saving today.
+- **Out of scope, deliberately left unfixed:** the same defect affects eight
+  further call sites across six files, including `build-plan-html.mjs` (the
+  plan renderer) in `implementation-plan`, `build`, `finalize-plan`,
+  `prototype`, `python3` heredocs in `plans-library`, and `realpath` calls in
+  `plans-library` and `plans-open`. Repairing the
+  renderer pipeline is a separate change with its own design call. Check 10 of
+  `tests/plugins/test-extractor-wiring.sh` pins that list so it can neither grow
+  nor quietly shrink.
+
+### Changed
+
+- `tests/plugins/test-extractor-wiring.sh` checks 5, 6, and 9 were **inverted**.
+  They previously *required* the broken wiring — check 9 mandated the
+  `${CLAUDE_PLUGIN_ROOT}` anchoring that makes the command unrunnable. They now
+  fail if a reviewer brief or agent def documents an invocation it cannot
+  execute. Check 8, added in 8.1.1 to prove reachability, runs the extractor
+  straight from bash rather than through Claude Code's Bash tool, so it proved
+  the *file* loads and never that the *documented invocation* is executable —
+  that gap is why the suite stayed green while the feature was dead. New check
+  10 ledgers the four unfixed sites.
+- `tests/plugins/test-agent-frontmatter.sh` now asserts the reviewer Bash grant
+  is **exactly** `Bash(git *)`. It previously rejected bare `Bash` and tolerated
+  any `Bash(...)`, so `Bash(node *)` would have passed while granting arbitrary
+  writes via `node -e "require('fs').writeFileSync(...)"`. It covers all ten
+  `plan-reviewer-*` agents.
+
 ## 8.2.0 — `review-plan` gains product, security, and frontend reviewers (2026-08-02)
 
 ### Added
