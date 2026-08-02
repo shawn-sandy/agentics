@@ -70,7 +70,7 @@ echo "5. No reviewer brief instructs an extractor invocation the reviewer cannot
 # one sends every reviewer down the silent full-HTML fallback on every cycle,
 # which is the exact degradation 8.1.1 set out to fix. Briefs must therefore
 # instruct a plain `Read` of the plan HTML instead.
-if ! grep -q 'extract-plan-spec.mjs' "$ROLE_PROMPTS" \
+if ! grep -qF 'extract-plan-spec.mjs' "$ROLE_PROMPTS" \
   && ! grep -qF "$AWK_ONELINER" "$ROLE_PROMPTS"; then
   pass
 else
@@ -82,7 +82,7 @@ AGENT_FAIL=0
 AGENT_COUNT=0
 for agent in "$AGENTS_DIR"/plan-reviewer-*.md; do
   AGENT_COUNT=$((AGENT_COUNT + 1))
-  if grep -q 'extract-plan-spec.mjs' "$agent" || grep -qF "$AWK_ONELINER" "$agent"; then
+  if grep -qF 'extract-plan-spec.mjs' "$agent" || grep -qF "$AWK_ONELINER" "$agent"; then
     echo "  FAIL: $(basename "$agent") instructs an extractor/awk invocation it cannot execute"
     AGENT_FAIL=1
   fi
@@ -130,11 +130,17 @@ echo "9. No documented Bash invocation contains shell expansion..."
 # Bash command — 8.1.1 "fixed" 15 call sites into it and made the feature dead
 # for every caller, including the lead and `prototype`.
 #
-# Matches a command *invocation* (`node ${...`), not prose that names the
-# variable. Excluded: CHANGELOG (history, not a call site) and the extractor's
-# own usage text (byte-identical to the repo-root source; see the parity check
-# in test-build-plan-html.mjs).
-EXPANSION="$(grep -rnE '(node|python3?|bash|sh) +"?\$\{?[A-Z_]+' \
+# Matches a command *invocation* carrying an expansion anywhere in its
+# arguments, not prose that merely names the variable. Scanning only the token
+# straight after the command name would miss
+# `node scripts/extract-plan-spec.mjs "$PLAN_PATH"`, which is just as dead —
+# the guard reads the whole command string, so the position of `$` is
+# irrelevant. Shared with check 10 so the two cannot drift apart.
+# Excluded: CHANGELOG (history, not a call site) and the extractor's own usage
+# text (byte-identical to the repo-root source; see the parity check in
+# test-build-plan-html.mjs).
+EXPANSION_RE='(^|[[:space:]`"'"'"'(])(node|python3?|bash|sh)[[:space:]][^|;&]*\$[{(]?[A-Za-z_]'
+EXPANSION="$(grep -rnE "$EXPANSION_RE" \
   "$AGENTS_DIR" "$ROLE_PROMPTS" "$REVIEW_SKILL" \
   --include='*.md' 2>/dev/null || true)"
 if [ -z "$EXPANSION" ]; then
@@ -160,11 +166,17 @@ echo "10. The known unfixed expansion call sites are exactly the documented set.
 # identical and the check green. That is the same "asserts the description, not
 # the behaviour" failure this whole change is about. Counts, not lines: line
 # numbers churn on unrelated edits and would fail noisily for no reason.
+# plans-library's two entries were surfaced only after the pattern was widened
+# to scan a command's whole argument list: `python3 - "$f"` and
+# `python3 - "$PLANS_DIR/index.html" "$SOURCE_COUNT"` set their variables in the
+# same shell block, which does not help — the guard is textual and rejects the
+# command string before it ever reaches a shell.
 KNOWN_BROKEN="skills/build/SKILL.md:1
 skills/finalize-plan/references/write-completions.md:1
 skills/implementation-plan/SKILL.md:1
+skills/plans-library/SKILL.md:2
 skills/prototype/SKILL.md:1"
-ACTUAL_BROKEN="$(grep -rcE '(node|python3?|bash|sh) +"?\$\{?[A-Z_]+' "$ROOT/kit/plugins/plan-agent/skills/" \
+ACTUAL_BROKEN="$(grep -rcE "$EXPANSION_RE" "$ROOT/kit/plugins/plan-agent/skills/" \
   --include='*.md' 2>/dev/null \
   | grep -v ':0$' \
   | sed "s|$ROOT/kit/plugins/plan-agent/||" | sort || true)"

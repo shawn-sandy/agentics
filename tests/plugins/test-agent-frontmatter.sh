@@ -56,8 +56,10 @@ VALID_TOOLS = {
 }
 
 # Agents whose entire job is to read and report. The plan's objective was not
-# "spell the key correctly" — it was that these seven hold no write access. The
-# key rename is the mechanism; this is the property. Asserted separately because
+# "spell the key correctly" — it was that every one of them holds no write
+# access. The key rename is the mechanism; this is the property. The roster
+# grows (5 core + 2 UI originally, 7 + 3 as of 8.2.0), so this matches on the
+# name prefix rather than a fixed count. Asserted separately because
 # a correctly-spelled `tools:` naming Write is the same defect with better
 # spelling, and would otherwise pass every check above.
 READ_ONLY_AGENT_PREFIXES = ("plan-reviewer-",)

@@ -30,9 +30,10 @@
   token saving the README advertised — it removes a claim that was never true in
   practice. Run `extract-plan-spec.mjs` yourself with a literal path and paste
   the spec into the review to get that saving today.
-- **Out of scope, deliberately left unfixed:** the same defect affects four
-  further call sites, including `build-plan-html.mjs` (the plan renderer) in
-  `implementation-plan`, `build`, `finalize-plan`, and `prototype`. Repairing the
+- **Out of scope, deliberately left unfixed:** the same defect affects six
+  further call sites across five files, including `build-plan-html.mjs` (the
+  plan renderer) in `implementation-plan`, `build`, `finalize-plan`,
+  `prototype`, and two `python3` heredocs in `plans-library`. Repairing the
   renderer pipeline is a separate change with its own design call. Check 10 of
   `tests/plugins/test-extractor-wiring.sh` pins that list so it can neither grow
   nor quietly shrink.
@@ -51,9 +52,8 @@
 - `tests/plugins/test-agent-frontmatter.sh` now asserts the reviewer Bash grant
   is **exactly** `Bash(git *)`. It previously rejected bare `Bash` and tolerated
   any `Bash(...)`, so `Bash(node *)` would have passed while granting arbitrary
-  writes via `node -e "require('fs').writeFileSync(...)"`. The read-only check
-  also now covers the six `product-reviewer-*` agents, which the old comment
-  already cited as the exemplar without testing them.
+  writes via `node -e "require('fs').writeFileSync(...)"`. It covers all ten
+  `plan-reviewer-*` agents.
 
 ## 8.2.0 — `review-plan` gains product, security, and frontend reviewers (2026-08-02)
 

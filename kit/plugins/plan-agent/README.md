@@ -146,7 +146,7 @@ If Agent Teams are unavailable (Claude Code < 2.1.32 or `CLAUDE_CODE_EXPERIMENTA
 
 Every plan is a single self-contained `.html` file (no CDN links, no external assets):
 
-- **Compute-on-read spec** — the visible plan DOM is the single source of truth; `node <plan-agent>/scripts/extract-plan-spec.mjs <plan>` derives a spec-only markdown rendition on demand (objective, context, files, steps with why/verify, tests, acceptance criteria, verification) — a few thousand tokens of spec instead of the full ~21k styled HTML. New plans embed nothing; legacy plans that still carry a `<script type="text/markdown" id="plan-digest">` block are read from it verbatim (un-guarded). Status, checkbox, and progress state are never part of the spec
+- **Compute-on-read spec** — the visible plan DOM is the single source of truth; `node <path-to-plan-agent-plugin>/scripts/extract-plan-spec.mjs <plan>` derives a spec-only markdown rendition on demand (objective, context, files, steps with why/verify, tests, acceptance criteria, verification) — a few thousand tokens of spec instead of the full ~21k styled HTML. New plans embed nothing; legacy plans that still carry a `<script type="text/markdown" id="plan-digest">` block are read from it verbatim (un-guarded). Status, checkbox, and progress state are never part of the spec
 - **Status badge** — colour-coded: grey = todo, amber = in-progress, green = completed
 - **Objective card** — prominent highlighted block at the top
 - **Implement prompt** — Copy button produces a concise action-oriented prompt with plan status, step/criteria progress counts, and numbered instructions to implement directly from the plan file
