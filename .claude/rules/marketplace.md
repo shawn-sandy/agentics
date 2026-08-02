@@ -48,6 +48,10 @@ cleanly.
 
 - `path` in a `git-subdir` source that does not match a real directory
 - Duplicate plugin names within one marketplace
-- Missing `marketplace.json` in `kit/.claude-plugin/`
+- Moving `marketplace.json` out of the repo root. Claude Code discovers it at
+  `.claude-plugin/marketplace.json` and nowhere else. This repo tried housing it
+  under `kit/.claude-plugin/` twice and reverted both times (`fe3b4e5`,
+  `42740ec`); there is no `kit/.claude-plugin/` directory and no tooling looks
+  for one.
 
 Removed plugins are gated in `removed-plugins.md`, which is always loaded.
