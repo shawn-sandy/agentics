@@ -24,9 +24,9 @@ The caller owns the push in that case (`ship-autonomous` Step 4 delegates to `pr
 
 ## Step 1: Guards
 
-Run `git status` to check repository state.
+Run `git status --porcelain` to check repository state.
 
-- **Clean working tree** (nothing to commit): output "Nothing to commit — working tree is clean." and **STOP**.
+- **Clean working tree** (empty output): output "Nothing to commit — working tree is clean." and **STOP**.
 - **Detached HEAD** (`git branch --show-current` returns empty): output "Cannot commit: repository is in detached HEAD state. Checkout a branch first." and **STOP**.
 
 ## Step 2: Stage Changes

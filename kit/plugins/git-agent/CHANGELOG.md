@@ -1,6 +1,17 @@
 # Changelog — git-agent
 
 
+## v4.10.1 — 2026-08-02 — clean-tree guard uses `--porcelain`
+
+### Changed
+
+- **`commit-agent` and `agent-commit` Step 1 run `git status --porcelain`.**
+  Both guards already stopped on a clean working tree, but judged cleanliness
+  from verbose `git status` prose — a call left to the model, and both run on
+  `haiku`. `--porcelain` makes it mechanical: empty output means clean, full
+  stop.
+
+
 ## v4.10.0 — 2026-07-31 — commit-agent asks whether to push
 
 ### Added
