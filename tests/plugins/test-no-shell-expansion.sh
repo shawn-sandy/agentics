@@ -65,14 +65,23 @@ echo "=== No-Shell-Expansion Test ==="
 # things like "fall back to `docs/prompts` relative to `$PWD`", which a `git`
 # alternative would match as a command. A false positive on prose trains the
 # next author to loosen the check.
+# The quote class covers BOTH `"${...}"` and `'${...}'`. Single quotes suppress
+# expansion in a real shell, but the Bash tool's guard is purely textual — it
+# rejects the command string before any shell sees it — so a single-quoted
+# plugin-root path is exactly as dead as a double-quoted one.
 INTERP_RE='(^|[[:space:]`"'"'"'(])(node|python3?|bash|sh|realpath)[[:space:]].*\$[{(]?[A-Za-z_]'
-BARE_RE='^[[:space:]]*"?\$\{[A-Za-z_]'
+BARE_RE='^[[:space:]]*['"'"'"]?\$\{[A-Za-z_]'
 
 # CHANGELOG.md files are excluded: they quote historical broken commands as the
 # record of what was fixed. Re-flagging them would force authors to mangle
 # history to keep the suite green.
+# `--include` sits with the other options, before the pattern and path. Trailing
+# it works only because GNU grep permutes arguments; under POSIXLY_CORRECT, or
+# on a grep that does not permute, it would be read as a filename and the *.md
+# filter would silently vanish — scanning every file instead, which is the
+# failure mode that still looks green until it does not.
 scan() { # $1=regex  [$2=any value to also drop plan-agent]  -> "path:count" lines
-  grep -rcE "$1" "$PLUGINS" --include='*.md' 2>/dev/null \
+  grep -rcE --include='*.md' "$1" "$PLUGINS" 2>/dev/null \
     | grep -v ':0$' \
     | grep -v '/CHANGELOG\.md:' \
     | sed "s|$PLUGINS/||" \
@@ -96,6 +105,20 @@ echo "2. The fixed call sites invoke their bin/ wrapper by bare name..."
 # Asserts the repair, not just the absence of the old spelling. Without this a
 # site could be "fixed" by deleting the command outright and check 1 would
 # still pass — which is how 8.1.1 replaced one silent fallback with another.
+#
+# Matched in COMMAND POSITION — line start, optional indent, the command name,
+# then whitespace or end of line — not anywhere in the file. A bare `grep -F`
+# was satisfied by *prose*: every one of these eight files carries an
+# explanatory sentence naming its wrapper (```social-export-session` is a
+# bundled `bin/` wrapper...``), added by the same change that fixed them. So
+# the runnable command block could be deleted from all eight while this check
+# stayed green — verified, not hypothesized. That is precisely the "asserts the
+# description, not the behaviour" failure this suite exists to catch, reproduced
+# inside the suite itself.
+#
+# Prose lines cannot satisfy the anchored form because they open with a
+# backtick, which is not whitespace. Indent is allowed: export-session's command
+# sits inside a numbered list.
 declare -a SITES=(
   "skill-reviewer/skills/auditing-allowed-tools/SKILL.md:skill-reviewer-scan-tools"
   "skill-reviewer/commands/check-description.md:skill-reviewer-measure-description"
@@ -110,8 +133,10 @@ MISSING=""
 for entry in "${SITES[@]}"; do
   file="${entry%%:*}"
   cmd="${entry##*:}"
-  if ! grep -qF "$cmd" "$PLUGINS/$file" 2>/dev/null; then
-    MISSING="$MISSING\n    $file (expected bare command: $cmd)"
+  # `-` is the only regex-special character these wrapper names contain, and it
+  # is literal outside a bracket expression, so the names interpolate safely.
+  if ! grep -qE "^[[:space:]]*${cmd}([[:space:]]|$)" "$PLUGINS/$file" 2>/dev/null; then
+    MISSING="$MISSING\n    $file (expected bare command in command position: $cmd)"
   fi
 done
 if [ -z "$MISSING" ]; then
