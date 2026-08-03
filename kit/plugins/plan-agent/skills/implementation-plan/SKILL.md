@@ -19,10 +19,12 @@ nav. Progress state travels in the spec too: `- [x]` criteria bullets and
 every status or checkbox change is a Markdown edit plus a re-render. Never
 hand-write or hand-edit plan HTML.
 
-Render command (the script ships with this plugin):
+Render command (`plan-agent-render` ships with this plugin, in `bin/`, which
+Claude Code puts on the Bash tool's `PATH` — invoke it by bare name, never by
+path):
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" <plan>.md -o <plan>.html
+plan-agent-render <plan>.md -o <plan>.html
 ```
 
 Exit 0 = rendered; exit 1 prints exactly which required section is missing

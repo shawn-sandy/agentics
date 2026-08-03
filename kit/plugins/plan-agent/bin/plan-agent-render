@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Bare-name entry point for the plan renderer (scripts/build-plan-html.mjs).
+#
+# Why this exists: Claude Code adds every enabled plugin's bin/ to the Bash
+# tool's PATH, so a skill can invoke `plan-agent-render <plan>.md -o <plan>.html`
+# with no path at all. The obvious alternative —
+# `node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs"` — cannot work from a
+# skill: the Bash tool refuses any command whose text contains `${VAR}` or `$VAR`
+# with "error: Contains expansion" before permission rules are consulted, and
+# CLAUDE_PLUGIN_ROOT is not exported into the Bash tool's environment anyway.
+# That variable is a config-file substitution (hooks.json, MCP/LSP, monitors)
+# and a valid `Read` tool path; it is never a Bash command.
+#
+# On `$0`: this is a `#!` script, so the kernel execs the interpreter with the
+# pathname that was passed to execve — the absolute path the PATH lookup
+# resolved — as the script argument. `$0` is therefore that absolute path, not
+# the bare word the caller typed, and `dirname "$0"` is this bin/ directory
+# rather than `.`. (A shell builtin or a `-c` string would see argv[0] as typed;
+# a shebang script never does.) Verified identical under bash, zsh, and sh, and
+# check 11 of tests/plugins/test-extractor-wiring.sh runs this file by bare name
+# on a prefixed PATH so the property stays proven rather than assumed.
+#
+# Arguments pass through unchanged. Exit status is the renderer's.
+exec node "$(dirname "$0")/../scripts/build-plan-html.mjs" "$@"
