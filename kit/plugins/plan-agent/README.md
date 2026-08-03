@@ -131,6 +131,13 @@ The skill enforces the full Steps 1–8 workflow:
 7. **Status** — tracks `todo` → `in-progress` → `completed` via `<html data-status>` and `<meta name="plan-status">`
 8. **Open** — opens the plan in a browser and presents a next-action menu: **Implement now**, **Run as workflow** (complex plans), **Review the plan**, **Edit the plan**, or **Exit**
 
+**Step 8 exit menu — Implement now option:**
+
+`Implement now` triggers a this-session-or-fresh-session sub-choice:
+
+- **This session:** invokes `Skill(skill: "plan-agent:build", args: "<spec path>")` and builds immediately, with the whole planning conversation still loaded.
+- **Fresh session:** sets status to `in-progress`, prints the implement prompt, and stops so you can `/clear` and paste it into a clean context window. The prompt names the markdown spec, and the spec carries the whole plan, so nothing from the planning conversation is lost. Claude cannot clear its own context — `/clear` is a client command you type.
+
 **Step 8 exit menu — Review the plan option:**
 
 The exit menu always offers `Review the plan` as a one-click path to critique the freshly-generated plan before implementing it. Selecting it triggers a foreground-or-background sub-choice:
