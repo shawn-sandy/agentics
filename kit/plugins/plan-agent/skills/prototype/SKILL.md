@@ -188,8 +188,10 @@ credential, token, key, email, or other PII.
 ## Step 9 — Index, preview, report
 
 - The `PostToolUse` hook auto-rebuilds `docs/prototypes/index.html` on the
-  write. If it did not run (e.g. hook disabled), run
-  `bash "${CLAUDE_PLUGIN_ROOT}/hooks/build-prototypes-index.sh" "${CLAUDE_PROJECT_DIR:-$PWD}"`.
+  write. If it did not run (e.g. hook disabled), run `plan-agent-prototypes-index`
+  — it ships with this plugin in `bin/`, which Claude Code puts on the Bash
+  tool's `PATH`, and defaults to the current directory. Invoke it by bare name,
+  never by path.
 - Open the prototype in the browser, screenshot it, and `SendUserFile` the
   prototype path.
 - Report **what to validate**: the data shapes, the core flow, and whether the
