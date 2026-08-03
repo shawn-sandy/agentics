@@ -36,7 +36,7 @@
   second site had no interpreter prefix — it invoked
   `"${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh"` directly — so it was
   invisible to a scan that looks for `python3`/`node`/`bash` and was found only
-  when the new test'"'"'s command-position pattern was written.
+  when the new test's command-position pattern was written.
 
 ## v2.4.0 — 2026-07-30 — Drop "Follow these steps exactly" from `optimizing-skill-frontmatter`
 

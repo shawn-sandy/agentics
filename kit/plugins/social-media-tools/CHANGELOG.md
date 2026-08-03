@@ -1,7 +1,7 @@
 # Changelog — social-media-tools
 
 
-## v2.22.0 — 2026-08-02 — `export-session`'"'"'s script invocation becomes a `bin/` command
+## v2.22.0 — 2026-08-02 — `export-session`'s script invocation becomes a `bin/` command
 
 ### Fixed
 
