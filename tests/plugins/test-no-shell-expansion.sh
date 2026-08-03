@@ -223,8 +223,31 @@ echo "4. 'bin' is on the dist KEEP allowlist..."
 # Without this the wrappers are silently dropped from dist/ and every installed
 # user gets a plugin whose documented commands are not on PATH — the same
 # class of "documented but unrunnable" bug this whole test exists to prevent.
-if grep -qE "^[[:space:]]*'bin'," "$ROOT/scripts/build-dist.mjs"; then
+#
+# Parses the KEEP array rather than grepping for a formatted line. The first
+# version matched `^[[:space:]]*'bin',` literally, so switching to double
+# quotes, dropping the trailing comma, or collapsing the array to one line would
+# all have failed the check while `bin` was still in KEEP — a guard that reports
+# on formatting instead of the invariant. Reported by Copilot.
+#
+# Three outcomes, deliberately distinct: 0 = present, 1 = KEEP found but no
+# `bin`, 3 = the KEEP block itself could not be located. That last one must not
+# read as success — if the allowlist is restructured or renamed this check has
+# stopped measuring anything, and saying so is the whole lesson of the vacuous
+# passes elsewhere in this file.
+KEEP_STATUS=0
+node -e '
+  const fs = require("fs");
+  const src = fs.readFileSync(process.argv[1], "utf8");
+  const m = src.match(/const\s+KEEP\s*=\s*new\s+Set\(\s*\[([\s\S]*?)\]\s*\)/);
+  if (!m) process.exit(3);
+  const items = [...m[1].matchAll(/["'"'"'`]([^"'"'"'`]+)["'"'"'`]/g)].map((x) => x[1]);
+  process.exit(items.includes("bin") ? 0 : 1);
+' "$ROOT/scripts/build-dist.mjs" || KEEP_STATUS=$?
+if [ "$KEEP_STATUS" -eq 0 ]; then
   pass
+elif [ "$KEEP_STATUS" -eq 3 ]; then
+  fail "could not locate the KEEP allowlist in scripts/build-dist.mjs — this check is no longer measuring anything; update the parser"
 else
   fail "scripts/build-dist.mjs KEEP allowlist is missing 'bin' — wrappers will not reach dist/"
 fi
