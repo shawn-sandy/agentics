@@ -80,12 +80,45 @@ BARE_RE='^[[:space:]]*['"'"'"]?\$\{[A-Za-z_]'
 # on a grep that does not permute, it would be read as a filename and the *.md
 # filter would silently vanish — scanning every file instead, which is the
 # failure mode that still looks green until it does not.
+# Exit-status discipline, because "found nothing" and "could not look" are the
+# same empty string downstream. grep exits 0 on matches, 1 on no matches, and
+# >=2 on a real error. The earlier form hid stderr AND swallowed every status
+# with a trailing `|| true`, so any error produced an empty scan and every check
+# consuming it passed vacuously. Status 1 is tolerated; >=2 emits
+# SCAN_ERROR_SENTINEL.
+#
+# What counts as >=2 is NOT portable, which is why check 7's canary exists
+# alongside this rather than instead of it. Measured on this tree: a bad regex
+# is exit 2 under BSD grep (what `bash script.sh` gets on macOS), GNU grep (CI),
+# and ugrep. A MISSING directory is exit 2 under GNU grep and ugrep but exit
+# **1** under BSD grep — so on a developer's macOS run this sentinel would not
+# fire for a vanished kit/plugins, and only the canary catches it. Neither guard
+# subsumes the other.
+#
+# The error is signalled through STDOUT, not a variable. scan() is always called
+# in a command substitution — `X="$(scan ...)"` — which runs in a subshell, so
+# any `SCAN_BROKEN=1` set inside it is discarded when that subshell exits and
+# the parent never sees it. A first draft of this fix did exactly that and the
+# flag was unreachable dead code; only stdout crosses the boundary. Caught by
+# mutation-testing the check that was supposed to report it.
+SCAN_ERROR_SENTINEL='__SCAN_ERROR__'
 scan() { # $1=regex  [$2=any value to also drop plan-agent]  -> "path:count" lines
-  grep -rcE --include='*.md' "$1" "$PLUGINS" 2>/dev/null \
+  local raw status=0
+  raw="$(grep -rcE --include='*.md' "$1" "$PLUGINS" 2>/dev/null)" || status=$?
+  if [ "$status" -ge 2 ]; then
+    printf '%s\n' "$SCAN_ERROR_SENTINEL"
+    return 0
+  fi
+  # `sed '/^$/d'` last, not first: an empty $raw becomes a single blank line
+  # through printf, and `grep -v ':0$'` KEEPS blank lines (they do not match the
+  # pattern being inverted), so without this an empty scan yields one empty
+  # entry and the ledger comparison drifts for a reason no reader would guess.
+  printf '%s\n' "$raw" \
     | grep -v ':0$' \
     | grep -v '/CHANGELOG\.md:' \
     | sed "s|$PLUGINS/||" \
     | { if [ -n "${2:-}" ]; then grep -v '^plan-agent/' || true; else cat; fi; } \
+    | sed '/^$/d' \
     | sort || true
 }
 
@@ -94,7 +127,12 @@ echo "1. No bundled script is invoked via a bare braced expansion..."
 # path in command position — and exactly one fix, so there is nothing
 # legitimate to grandfather.
 BARE="$(scan "$BARE_RE")"
-if [ -z "$BARE" ]; then
+if printf '%s' "$BARE" | grep -qF "$SCAN_ERROR_SENTINEL"; then
+  # Without this the sentinel is just a non-empty result and the check would
+  # fail with "the file(s) above invoke a script via a braced expansion",
+  # pointing the reader at a defect that does not exist.
+  fail "the scan hit a grep error (exit >=2) — most likely a malformed BARE_RE, or an unreadable tree; this check could not look at anything"
+elif [ -z "$BARE" ]; then
   pass
 else
   echo "$BARE" | sed 's/^/    /'
@@ -239,6 +277,39 @@ if [ ! -f "$EXTRACTOR_TEST" ]; then
 elif ! grep -qE '^KNOWN_BROKEN=' "$EXTRACTOR_TEST" \
   || ! grep -qE '^EXPANSION_RE=' "$EXTRACTOR_TEST"; then
   fail "test-extractor-wiring.sh no longer carries a plan-agent shell-expansion ledger (expected a ^KNOWN_BROKEN= and a ^EXPANSION_RE= assignment) — plan-agent is now unguarded; fold its sites into check 5 here"
+else
+  pass
+fi
+
+echo "7. The scan machinery actually scanned something..."
+# Checks 1 and 5 are ABSENCE assertions: they pass when the scan returns
+# nothing. That makes them indistinguishable from a scan that never ran, which
+# is the one failure mode an absence assertion cannot self-detect.
+#
+# Grep ERRORS are handled at the point of use, via SCAN_ERROR_SENTINEL in check
+# 1. This check covers what that sentinel cannot see:
+#
+#   - a corpus that is valid but EMPTY — grep exits 1, not 2, so nothing raises
+#     an error anywhere and checks 1 and 5 simply pass on air;
+#   - a MISSING kit/plugins under BSD grep, which reports exit 1 for that (see
+#     the portability note above), so the sentinel stays silent on macOS.
+#
+# Both are caught only by a positive assertion, which is why the canary greps
+# for a pattern that MUST match rather than asserting a problem's absence.
+# Verified by mutation: pointing PLUGINS at a missing directory and at an empty
+# one both fail here, while check 1 passes in the empty case.
+#
+# The canary greps for the YAML frontmatter delimiter every SKILL.md opens with,
+# so it tracks the same *.md corpus the real scans walk.
+CANARY_STATUS=0
+# `--include` before the pattern here too, for the reason given above scan().
+# It was written trailing at first and POSIXLY_CORRECT=1 caught it — the same
+# defect the reviewer flagged in scan(), reintroduced two edits later in code
+# added to guard against exactly this class of silent miss.
+CANARY="$(grep -rlE --include='*.md' '^---$' "$PLUGINS" 2>/dev/null)" || CANARY_STATUS=$?
+CANARY_COUNT="$(printf '%s\n' "$CANARY" | sed '/^$/d' | wc -l | tr -d ' ')"
+if [ "$CANARY_STATUS" -ge 2 ] || [ "$CANARY_COUNT" -lt 50 ]; then
+  fail "the canary matched only $CANARY_COUNT markdown files under kit/plugins (expected 50+) — the corpus or the --include filter is broken, so every absence check above is vacuous"
 else
   pass
 fi
