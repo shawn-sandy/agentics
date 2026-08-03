@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Bare-name wrapper so the documented invocation carries no shell expansion.
+# Claude Code's Bash tool refuses any command whose text contains ${VAR} or
+# $VAR ("Contains expansion") before permission rules are consulted, so a
+# ${CLAUDE_PLUGIN_ROOT}-anchored command never runs for anybody. A plugin's
+# bin/ is on the Bash tool's PATH, so this is callable as a bare command.
+set -euo pipefail
+exec python3 "$(dirname "$0")/../skills/session-artifact/scripts/export_session.py" "$@"

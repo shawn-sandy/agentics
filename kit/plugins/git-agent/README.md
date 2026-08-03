@@ -302,6 +302,8 @@ plugins/git-agent/
 │   ├── pr-bg.md
 │   ├── ship-bg.md
 │   └── ship-ci-bg.md
+├── bin/
+│   └── git-agent-extract-plan-issues  # On the Bash tool's PATH; call by bare name
 ├── scripts/
 │   └── extract-plan-issues.sh    # Extracts plan-issue meta tags for PR descriptions
 ├── skills/

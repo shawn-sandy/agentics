@@ -19,8 +19,12 @@ Measure the `description:` frontmatter length for one or more SKILL.md files by 
 For each resolved file path, run:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh" "$file"
+skill-reviewer-measure-description <file>
 ```
+
+Substitute the resolved path for `<file>` literally — do not write a command
+containing `${VAR}` or `$VAR`, which the Bash tool refuses outright with
+`error: Contains expansion`.
 
 This emits one line per file. Print each line as-is.
 

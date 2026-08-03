@@ -54,8 +54,12 @@ transcript is far larger than the recap and reading it wastes the context the
 recap needs:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/skills/session-artifact/scripts/export_session.py" <transcript.jsonl> <output-dir>
+artifact-export-session <transcript.jsonl> <output-dir>
 ```
+
+`artifact-export-session` is a bundled `bin/` wrapper on the Bash tool's
+`PATH`. Substitute both arguments literally — the Bash tool refuses any command
+whose text contains `${VAR}` or `$VAR`.
 
 It skips tool results, sidechains, and system reminders, writes
 `<date>-<slug>-<id>.md` with frontmatter, and prints the path. Read that file —

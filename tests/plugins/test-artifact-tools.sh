@@ -88,8 +88,18 @@ SCRIPT="$PLUGIN/skills/session-artifact/scripts/export_session.py"
 [ -f "$SCRIPT" ] || fail "bundled export_session.py missing at $SCRIPT"
 python3 -c "import ast,sys; ast.parse(open(sys.argv[1]).read())" "$SCRIPT" \
   || fail "bundled export_session.py is not valid Python"
-grep -qF 'export_session.py' "$PLUGIN/skills/session-artifact/SKILL.md" \
-  || fail "session-artifact does not invoke the bundled script"
+# The SKILL.md names the bare `bin/` wrapper, not the .py path: a command
+# spelled `python3 "${CLAUDE_PLUGIN_ROOT}/.../export_session.py"` is refused by
+# the Bash tool ("Contains expansion") before permission rules are consulted and
+# never runs. So this follows the indirection — SKILL.md must name the wrapper,
+# and the wrapper must exec the bundled script — rather than grepping SKILL.md
+# for a filename it can no longer legally contain.
+WRAPPER="$PLUGIN/bin/artifact-export-session"
+grep -qF 'artifact-export-session' "$PLUGIN/skills/session-artifact/SKILL.md" \
+  || fail "session-artifact does not invoke its bin/ wrapper by bare name"
+[ -x "$WRAPPER" ] || fail "bin/artifact-export-session missing or not executable"
+grep -qF 'export_session.py' "$WRAPPER" \
+  || fail "bin/artifact-export-session does not exec the bundled script"
 ok
 
 # 4. Safety contracts are documented, not just implied.

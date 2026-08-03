@@ -150,13 +150,15 @@ If there are multiple recent sessions and the user's intent is ambiguous, list t
 
 ### Step 2: Run the scan script
 
-The script lives in `scripts/session_tool_scan.py` inside this skill's folder. Invoke it via `${CLAUDE_PLUGIN_ROOT}` so it resolves regardless of the current working directory:
+The script lives in `scripts/session_tool_scan.py` inside this skill's folder. Invoke the bundled `bin/` wrapper as a bare command — the plugin's `bin/` is on the Bash tool's `PATH`, so it resolves regardless of the current working directory:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/skills/auditing-allowed-tools/scripts/session_tool_scan.py" <jsonl-path> [--include-subagents]
+skill-reviewer-scan-tools <jsonl-path> [--include-subagents]
 ```
 
-If `${CLAUDE_PLUGIN_ROOT}` is unset (e.g. the skill was loaded ad hoc rather than as an installed plugin), fall back to an absolute path built from the directory containing this SKILL.md (known because you just read it). Pass `--include-subagents` when the user wants subagent transcripts aggregated in, or when running Mode 3.
+Do **not** spell this as a plugin-root-anchored path. Claude Code's Bash tool refuses any command whose text contains `${VAR}` or `$VAR` with `error: Contains expansion`, and the refusal fires before permission rules are consulted — so such a command never runs, at any permission level.
+
+If the bare command is not found (e.g. the skill was loaded ad hoc rather than as an installed plugin), fall back to an absolute path built from the directory containing this SKILL.md (known because you just read it). Pass `--include-subagents` when the user wants subagent transcripts aggregated in, or when running Mode 3.
 
 The script emits JSON on stdout with this shape:
 

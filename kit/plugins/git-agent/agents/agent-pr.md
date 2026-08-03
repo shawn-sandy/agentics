@@ -97,10 +97,15 @@ git push
 
 Look for plan files on this branch that link to GitHub or GitLab issues.
 
-Run:
+Run, substituting the base branch name literally:
 ```
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" <base>
+git-agent-extract-plan-issues <base>
 ```
+
+`git-agent-extract-plan-issues` is a bundled `bin/` wrapper on the Bash tool's
+`PATH`. Do not write a plugin-root-anchored path: the Bash tool refuses any
+command whose text contains `${VAR}` or `$VAR` with `error: Contains
+expansion`, before permission rules are consulted.
 
 Each line of output is a unique issue URL. If any URLs are returned, include a `## Linked Issues` section in the PR body (Step 5) with one `Closes <url>` line per URL. If the script produces no output, skip this section entirely.
 

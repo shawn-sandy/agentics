@@ -339,8 +339,14 @@ Use this for rapid reviews:
 For initial scanning of files, use the provided Python script:
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/skills/wcag-compliance-reviewer/scripts/check_wcag.py" path/to/component.tsx
+wcag-check path/to/component.tsx
 ```
+
+`wcag-check` is a bundled `bin/` wrapper; a plugin's `bin/` is on the Bash
+tool's `PATH`, so it works from any directory. Do not spell this as a
+plugin-root-anchored path — the Bash tool refuses any command containing
+`${VAR}` or `$VAR` with `error: Contains expansion`, before permission rules
+are consulted.
 
 This performs static analysis to catch common issues like:
 - Missing alt text

@@ -164,44 +164,12 @@ else
   fail "Bash invocation(s) above contain shell expansion — they error with 'Contains expansion' and never run. Use a literal path, or have the caller Read the file instead."
 fi
 
-echo "10. The known unfixed expansion call sites are exactly the documented set..."
-# Check 9 is scoped to the review surface repaired in 8.2.1. The SAME defect
-# exists elsewhere in this plugin and is NOT fixed here — the renderer pipeline
-# is a separate change with its own design call, so it was deliberately left
-# out of scope rather than quietly swept in.
-#
-# This is a ledger, not a suppression: it fails if a NEW site appears (silent
-# spread) and it fails if one is FIXED without updating the list (silent rot).
-# Either way a human looks. Widen check 9 and delete this once the list empties.
-#
-# Tracks `path:count`, not bare filenames. `grep -l` collapses every match in a
-# file to one name, so a second broken invocation added to an already-listed
-# file — or one of two fixed while the other remained — would leave the list
-# identical and the check green. That is the same "asserts the description, not
-# the behaviour" failure this whole change is about. Counts, not lines: line
-# numbers churn on unrelated edits and would fail noisily for no reason.
-# plans-library's two entries were surfaced only after the pattern was widened
-# to scan a command's whole argument list: `python3 - "$f"` and
-# `python3 - "$PLANS_DIR/index.html" "$SOURCE_COUNT"` set their variables in the
-# same shell block, which does not help — the guard is textual and rejects the
-# command string before it ever reaches a shell.
-KNOWN_BROKEN="skills/build/SKILL.md:1
-skills/finalize-plan/references/write-completions.md:1
-skills/implementation-plan/SKILL.md:1
-skills/plans-library/SKILL.md:3
-skills/plans-open/SKILL.md:1
-skills/prototype/SKILL.md:1"
-ACTUAL_BROKEN="$(grep -rcE "$EXPANSION_RE" "$ROOT/kit/plugins/plan-agent/skills/" \
-  --include='*.md' 2>/dev/null \
-  | grep -v ':0$' \
-  | sed "s|$ROOT/kit/plugins/plan-agent/||" | sort || true)"
-if [ "$ACTUAL_BROKEN" = "$KNOWN_BROKEN" ]; then
-  pass
-else
-  echo "  expected:"; echo "$KNOWN_BROKEN" | sed 's/^/    /'
-  echo "  actual:";   echo "$ACTUAL_BROKEN" | sed 's/^/    /'
-  fail "the shell-expansion ledger drifted — a site was added or fixed; update this list"
-fi
+# The plan-agent-scoped ledger that used to live here as check 10 has moved to
+# tests/plugins/test-no-shell-expansion.sh, which tracks the same defect across
+# every plugin. Two ledgers for one invariant guarantee drift; check 9 above
+# stays because it is a *stricter* rule than the ledger — zero tolerance on the
+# review surface, where a grandfathered entry would silently resurrect the 8.1.1
+# regression.
 
 echo ""
 if [ "$FAILURES" -eq 0 ]; then

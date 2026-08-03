@@ -77,6 +77,8 @@ artifact-tools/
 │   └── plugin.json
 ├── README.md
 ├── CHANGELOG.md
+├── bin/
+│   └── artifact-export-session  # on the Bash tool's PATH; call by bare name
 ├── commands/
 │   ├── product-doc.md     # product-team framing over session-artifact
 │   ├── team-recap.md      # whole-team visual framing over session-artifact
