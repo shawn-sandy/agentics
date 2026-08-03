@@ -437,12 +437,12 @@ EOF
    workflow option:
    - Question: "The plan is complete. What would you like to do next?"
    - Options (when workflow prompt exists):
-     - `Implement now` — Begin implementing the plan steps in the current session.
+     - `Implement now` — Begin implementing the plan steps, in this session or a fresh one.
      - `Run as workflow` — Launch a dynamic workflow (`/workflows`) to implement steps in parallel with subagents.
      - `Review the plan` — Run the `review-plan` Agent Team on this plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
    - Options (when no workflow prompt):
-     - `Implement now` — Begin implementing the plan steps in the current session.
+     - `Implement now` — Begin implementing the plan steps, in this session or a fresh one.
      - `Review the plan` — Run the `review-plan` Agent Team on this plan before implementing.
      - `Edit the plan` — Revise or extend the plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
@@ -459,7 +459,23 @@ EOF
    call fails to resolve), say so in one line and continue with the
    next-step choice — never block on it.
 
-   **If the user chooses `Implement now`:** Invoke
+   **If the user chooses `Implement now`:** Ask where to implement using
+   `AskUserQuestion` with a single question:
+   - Question: "Implement in this session, or hand off to a fresh one?"
+   - Options:
+     - `This session` — Start building now; planning context stays loaded.
+     - `Fresh session` — Print the implement prompt to paste after `/clear`, for a clean context window.
+
+   **If the user chooses `Fresh session`:** Set status to `in-progress` (spec +
+   re-render), then output the implement prompt (the `plan-implement` meta tag)
+   and tell the user to run `/clear` first, then paste it. Stop there — do not
+   implement. The prompt is self-contained by design: it names the markdown
+   spec, and the spec carries the whole plan, so nothing in this conversation
+   is load-bearing after the handoff. Claude cannot clear its own context —
+   `/clear` is a client command the user types — so never claim to have cleared
+   it, and never silently skip the instruction.
+
+   **If the user chooses `This session`:** Invoke
    `Skill(skill: "plan-agent:build", args: "<spec path>")` with the markdown
    spec's relative path. That skill owns the implementation loop and its
    three gates — acceptance criteria, end-to-end verification, completion

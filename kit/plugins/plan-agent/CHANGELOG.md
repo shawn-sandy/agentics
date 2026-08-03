@@ -1,6 +1,25 @@
 # Changelog
 
 
+## 8.4.0 — implement in a fresh context window (2026-08-02)
+
+### Added
+
+- **`Implement now` asks where to implement.** Step 8's `Implement now` now
+  opens a sub-choice — `This session` or `Fresh session` — mirroring the
+  existing `Review the plan` foreground/background pattern rather than adding a
+  fifth top-level option (`AskUserQuestion` caps at 4, and both menu variants
+  are already full).
+- **`Fresh session` hands off instead of building.** It sets the plan to
+  `in-progress`, re-renders, prints the `plan-implement` prompt, and stops so
+  the user can `/clear` and paste it into a clean context window. The handoff is
+  lossless because the prompt names the markdown spec and the spec carries the
+  whole plan — the planning conversation is not load-bearing after Step 8.
+- **The skill states that it cannot clear its own context.** `/clear` is a
+  client command the user types; no tool triggers it. The branch is written to
+  print the instruction and stop, never to claim the context was cleared.
+
+
 ## 8.3.0 — the plan renderer is reachable again, via `bin/` (2026-08-02)
 
 ### Added

@@ -105,6 +105,32 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
+echo "13. 'Implement now' offers a this-session / fresh-session sub-choice..."
+if grep -A8 "If the user chooses \`Implement now\`" "$SKILL" | grep -q '`This session`' &&
+   grep -A8 "If the user chooses \`Implement now\`" "$SKILL" | grep -q '`Fresh session`'; then
+  echo "  PASS"
+else
+  echo "  FAIL: Implement-now handler lacks the session sub-choice"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "14. 'Fresh session' prints the prompt and stops instead of building..."
+if grep -A10 "If the user chooses \`Fresh session\`" "$SKILL" | grep -q "plan-implement" &&
+   grep -A10 "If the user chooses \`Fresh session\`" "$SKILL" | grep -q "/clear"; then
+  echo "  PASS"
+else
+  echo "  FAIL: Fresh-session handler must emit the plan-implement prompt and name /clear"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "15. 'This session' still delegates to plan-agent:build..."
+if grep -A6 "If the user chooses \`This session\`" "$SKILL" | grep -q "plan-agent:build"; then
+  echo "  PASS"
+else
+  echo "  FAIL: This-session handler no longer invokes plan-agent:build"
+  FAILURES=$((FAILURES + 1))
+fi
+
 echo ""
 if [ "$FAILURES" -eq 0 ]; then
   echo "All checks PASSED."
