@@ -105,7 +105,7 @@ echo "5. Body carries all three gates plus the re-render command..."
 if grep -q "Acceptance criteria gate" "$SKILL" \
   && grep -q "End-to-end verification gate" "$SKILL" \
   && grep -q "Completion checklist gate" "$SKILL" \
-  && grep -q "build-plan-html.mjs" "$SKILL"; then
+  && grep -q "plan-agent-render" "$SKILL"; then
   echo "  PASS"
 else
   echo "  FAIL: a gate heading or the re-render command is missing"

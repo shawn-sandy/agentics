@@ -21,11 +21,20 @@ set -euo pipefail
 # call while the plugin is enabled" — plugins reference). A bare command name
 # contains no `$`, so it clears the guard.
 #
-# This test generalizes check 9 of test-extractor-wiring.sh, which covers only
-# the plan-agent review surface.
+# Scope: every plugin EXCEPT plan-agent, whose interpreter-invocation ledger is
+# owned by checks 9-12 of test-extractor-wiring.sh (plan-agent 8.3.0). Two
+# ledgers for one invariant guarantee drift — that test's check 9 uses its
+# KNOWN_BROKEN as its exclusion list, so a second copy here would silently
+# diverge the moment either is edited. Check 6 below asserts the handoff is
+# real, so deleting that ledger fails here instead of leaving plan-agent
+# unguarded.
+#
+# The bare-invocation shape (check 1) is NOT excluded for plan-agent: nothing in
+# test-extractor-wiring.sh scans for it, so that check stays repo-wide.
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 PLUGINS="$ROOT/kit/plugins"
+EXTRACTOR_TEST="$ROOT/tests/plugins/test-extractor-wiring.sh"
 FAILURES=0
 
 pass() { echo "  PASS"; }
@@ -62,11 +71,12 @@ BARE_RE='^[[:space:]]*"?\$\{[A-Za-z_]'
 # CHANGELOG.md files are excluded: they quote historical broken commands as the
 # record of what was fixed. Re-flagging them would force authors to mangle
 # history to keep the suite green.
-scan() { # $1=regex  -> "path:count" lines, repo-relative, CHANGELOGs dropped
+scan() { # $1=regex  [$2=any value to also drop plan-agent]  -> "path:count" lines
   grep -rcE "$1" "$PLUGINS" --include='*.md' 2>/dev/null \
     | grep -v ':0$' \
     | grep -v '/CHANGELOG\.md:' \
     | sed "s|$PLUGINS/||" \
+    | { if [ -n "${2:-}" ]; then grep -v '^plan-agent/' || true; else cat; fi; } \
     | sort || true
 }
 
@@ -172,25 +182,40 @@ echo "5. The known unfixed expansion call sites are exactly the documented set..
 # numbers — the latter churn on unrelated edits and fail noisily for no reason.
 KNOWN_BROKEN="memory-tools/skills/agentic-memory-management/SKILL.md:1
 memory-tools/skills/path-rules-advisor/references/write-verification.md:1
-plan-agent/README.md:1
-plan-agent/skills/build/SKILL.md:1
-plan-agent/skills/finalize-plan/references/write-completions.md:1
-plan-agent/skills/implementation-plan/SKILL.md:1
-plan-agent/skills/plans-library/SKILL.md:3
-plan-agent/skills/plans-open/SKILL.md:1
-plan-agent/skills/prototype/SKILL.md:1
 social-media-tools/references/rendering-pipeline.md:2
 social-media-tools/skills/media-library/SKILL.md:2
 social-media-tools/skills/save-artifact/SKILL.md:1
 social-media-tools/skills/share-blog/SKILL.md:1
 social-media-tools/skills/share-session/references/session-data.md:1"
-ACTUAL_BROKEN="$(scan "$INTERP_RE")"
+ACTUAL_BROKEN="$(scan "$INTERP_RE" drop-plan-agent)"
 if [ "$ACTUAL_BROKEN" = "$KNOWN_BROKEN" ]; then
   pass
 else
   echo "  expected:"; echo "$KNOWN_BROKEN" | sed 's/^/    /'
   echo "  actual:";   echo "$ACTUAL_BROKEN" | sed 's/^/    /'
   fail "the shell-expansion ledger drifted — a site was added or fixed; update this list"
+fi
+
+echo "6. plan-agent's interpreter ledger is still owned by test-extractor-wiring.sh..."
+# Check 5 excludes plan-agent because that test ledgers it. This asserts the
+# handoff instead of assuming it: if that test is deleted, renamed, or has its
+# ledger stripped, plan-agent would silently drop out of BOTH tests — an
+# exclusion pointing at nothing, which is the most dangerous shape a guard can
+# take because everything stays green. Fail loudly and tell the next author to
+# widen check 5 instead.
+# Both greps are ANCHORED to a real assignment (`^NAME=`), not a bare substring.
+# An unanchored `grep -q 'KNOWN_BROKEN='` passes on the *comment* at that test's
+# line 207, which documents the empty-ledger edge case — so renaming the actual
+# variable left this check green while the ledger was gone. Caught by mutation
+# testing this check, and it is the same "asserts the description, not the
+# behaviour" failure the rest of this suite exists to prevent.
+if [ ! -f "$EXTRACTOR_TEST" ]; then
+  fail "tests/plugins/test-extractor-wiring.sh is gone — plan-agent is now unguarded; drop the 'drop-plan-agent' argument in check 5 and fold its sites into KNOWN_BROKEN"
+elif ! grep -qE '^KNOWN_BROKEN=' "$EXTRACTOR_TEST" \
+  || ! grep -qE '^EXPANSION_RE=' "$EXTRACTOR_TEST"; then
+  fail "test-extractor-wiring.sh no longer carries a plan-agent shell-expansion ledger (expected a ^KNOWN_BROKEN= and a ^EXPANSION_RE= assignment) — plan-agent is now unguarded; fold its sites into check 5 here"
+else
+  pass
 fi
 
 echo ""
