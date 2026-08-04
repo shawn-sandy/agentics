@@ -290,11 +290,33 @@ echo "15. No file under the skill advertises a bare .md handoff; Step 8 hands of
 # implementation-plan takes the first `.md`-suffixed POSITIONAL token ANYWHERE in
 # the string, so prose in front of the path changed nothing. Since 8.5.0 the path
 # rides behind `--from-prompt`, and a flag value is not a positional token. The
-# regex below therefore excludes a `-`-led token — that is the flag form, and it
-# is the only shape allowed to be followed by a path.
-if grep -rqE 'implementation-plan +[^-][^ ]*\.md' "$SKILL_DIR"; then
-  echo "  FAIL: a build-proposal file advertises a bare '.md' handoff token (triggers conversion mode)"
-  grep -rnE 'implementation-plan +[^-][^ ]*\.md' "$SKILL_DIR" | sed 's/^/    /'
+# check is TOKEN-WISE, not adjacency-based. An `implementation-plan +<tok>.md`
+# regex only inspects the token right after the command, but the parser takes the
+# first positional `.md` ANYWHERE, so `implementation-plan <objective> foo.md`
+# would slip past the regex while still tripping conversion mode. This walks
+# every token and skips the values of flags known to take one.
+positional_md() {  # positional_md <command-line-text> -> prints offending tokens
+  printf '%s\n' "$1" | tr ' ' '\n' | awk '
+    BEGIN { skip = 0 }
+    /^--(from-prompt|dir|type|template|priority)$/ { skip = 1; next }
+    /^--/                                          { skip = 0; next }
+    { if (skip) { skip = 0; next } }
+    /\.md`?$/ { gsub(/`/, "", $0); if ($0 != ".md") print }   # bare `.md` is prose
+  '
+}
+BARE_HITS=""
+while IFS= read -r hit; do
+  [ -n "$hit" ] || continue
+  hfile="${hit%%:*}"; hrest="${hit#*:}"; hline="${hrest%%:*}"; htext="${hrest#*:}"
+  hfound="$(positional_md "$htext")"
+  [ -n "$hfound" ] && BARE_HITS="$BARE_HITS
+    $hfile:$hline -> $(printf '%s' "$hfound" | tr '\n' ' ')"
+done <<EOF
+$(grep -rn 'implementation-plan' "$SKILL_DIR" 2>/dev/null || true)
+EOF
+if [ -n "$BARE_HITS" ]; then
+  echo "  FAIL: a build-proposal file advertises a positional '.md' handoff token (triggers conversion mode)"
+  printf '%s\n' "$BARE_HITS"
   FAILURES=$((FAILURES + 1))
 elif grep -q "author an execution plan from the proposal prompt at" "$SKILL"; then
   echo "  FAIL: Step 8 still uses the pre-8.5.0 prose handoff, which lands in conversion mode"

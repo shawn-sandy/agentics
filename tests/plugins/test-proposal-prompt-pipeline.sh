@@ -125,9 +125,27 @@ printf '%s' "$STEP8F" | grep -qF -- '--from-prompt <prompts-dir>/proposal-<slug>
 # The prose handoff is the conversion-mode bug. Fail on its return anywhere in
 # Step 8, including alongside a correct flag form.
 if printf '%s' "$STEP8F" | grep -qi 'execution plan from the proposal prompt at'; then M="$M prose-handoff-returned"; fi
-# Narrower than the flag check above and kept for the adjacency case it names:
-# a positional path immediately after the command, with no flag at all.
-if printf '%s' "$STEP8" | grep -qE 'implementation-plan +[^-][^ ]*\.md'; then M="$M bare-md-token"; fi
+# Token-wise, not adjacency-based: the parser takes the first positional `.md`
+# ANYWHERE, so `implementation-plan <objective> foo.md` trips conversion mode
+# while sliding past a regex anchored to the token after the command. Walks every
+# token and skips the values of flags known to take one. A bare inline-code
+# `` `.md` `` is prose, not an advertised path.
+positional_md() {  # positional_md <command-line-text> -> prints offending tokens
+  printf '%s\n' "$1" | tr ' ' '\n' | awk '
+    BEGIN { skip = 0 }
+    /^--(from-prompt|dir|type|template|priority)$/ { skip = 1; next }
+    /^--/                                          { skip = 0; next }
+    { if (skip) { skip = 0; next } }
+    /\.md`?$/ { gsub(/`/, "", $0); if ($0 != ".md") print }
+  '
+}
+while IFS= read -r sline; do
+  [ -n "$sline" ] || continue
+  case "$sline" in *implementation-plan*) ;; *) continue ;; esac
+  [ -n "$(positional_md "$sline")" ] && M="$M bare-md-token"
+done <<STEP8EOF
+$STEP8
+STEP8EOF
 # The chain reads whatever Step 8 reports, so build/ must expect a prompt too —
 # and must pass it the same way, or the two halves of the handoff disagree.
 printf '%s' "$(cat "${BUILD_FILES[@]}" | flat)" | grep -qF -- '--from-prompt <prompt path>' || M="$M chain-not-updated"

@@ -238,9 +238,17 @@ fi
 # its type inferred from a leading verb that belongs to the chain's own wording
 # ("author an execution plan...") rather than to the user's objective — which
 # resolved to `chore` for every proposal-path plan before 8.5.0.
-# `flatten` collapses the section to a single line, so `grep -c` would cap at 1
-# and pass on one mention. Count occurrences, not matching lines.
-[ "$(printf '%s' "$CHAIN" | grep -o -- '--type' | wc -l)" -ge 2 ] || MISSING="$MISSING type-not-forwarded-on-both-paths"
+#
+# Checked PER BRANCH, not by counting occurrences across the whole section. An
+# aggregate count of 2 is satisfied by one branch mentioning --type twice while
+# the other forwards nothing — which is the exact half-fixed state this assertion
+# is supposed to catch. Each branch is extracted and asserted on its own.
+CHAIN_PROPOSAL="$(section '^3\. \*\*Proposal path' '^4\. \*\*Direct path' | flatten)"
+CHAIN_DIRECT="$(section '^4\. \*\*Direct path' '^5\. \*\*Return path' | flatten)"
+[ -n "$CHAIN_PROPOSAL" ] || MISSING="$MISSING proposal-branch-not-found"
+[ -n "$CHAIN_DIRECT" ] || MISSING="$MISSING direct-branch-not-found"
+printf '%s' "$CHAIN_PROPOSAL" | grep -qF -- '--type' || MISSING="$MISSING type-not-forwarded-on-proposal-path"
+printf '%s' "$CHAIN_DIRECT" | grep -qF -- '--type' || MISSING="$MISSING type-not-forwarded-on-direct-path"
 # Tier 0 writes neither artifact, and the abandonment contract must cover both.
 printf '%s' "$CHAIN" | grep -qi 'no artifact of either kind' || MISSING="$MISSING tier0-neither-artifact"
 printf '%s' "$CHAIN" | grep -qi 'leave \*\*both\*\* artifacts in place' || MISSING="$MISSING abandonment-covers-both"

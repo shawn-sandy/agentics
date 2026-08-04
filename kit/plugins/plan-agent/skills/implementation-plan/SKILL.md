@@ -85,7 +85,18 @@ Parse `$ARGUMENTS` (or the derived text) in this order:
    second clause is the load-bearing one — a path like
    `docs/prompts/proposal-x.md` does not begin with `-`, so under a bare
    "non-flag token" reading it would still be picked up as a conversion source
-   even when it arrived as `--from-prompt`'s value. Resolve as given, then by
+   even when it arrived as `--from-prompt`'s value.
+
+   **`--from-prompt` and conversion mode are mutually exclusive.** Excluding the
+   flag's own value is not enough on its own: an objective can contain a
+   positional `.md` of its own (`--from-prompt p.md rewrite docs/plans/old.md`),
+   which would otherwise set `$MD_SOURCE` and run both modes at once. When
+   `--from-prompt` is present and a positional `.md` is *also* present, that is
+   ambiguous input — stop and name both paths, asking which was meant. Never
+   silently pick one. With `--from-prompt` and no positional `.md`, skip this
+   rule entirely.
+
+   Resolve as given, then by
    basename under the plan roots, then via
    `git show origin/<default-branch>:<path>` after a fetch. If unreadable
    everywhere, report where you searched and ask whether to draft fresh
