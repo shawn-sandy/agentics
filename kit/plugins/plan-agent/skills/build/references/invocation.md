@@ -27,7 +27,10 @@ already exists and routes elsewhere when there is none.
   Forwarded to `implementation-plan` on both Step 1b paths so the authored plan
   states its type instead of having it inferred from a leading verb. Repeated
   occurrences resolve **last-wins**, which is what lets the `fix` and `refactor`
-  commands append a default that a user-supplied `--type` overrides.
+  commands **prepend** a default that a user-supplied `--type` overrides.
+  Prepend, not append: under last-wins the surviving value is the final one, so
+  a default placed after `$ARGUMENTS` would beat the user's explicit flag
+  instead of yielding to it.
   **It applies only when a plan is being authored.** With a plan path resolved
   at Step 1, that plan already carries its own `type:` — ignore the flag and say
   so in one line rather than rewriting frontmatter the user did not ask you to

@@ -420,10 +420,41 @@ for pair in "fix.md:fix" "refactor.md:refactor"; do
   # first-wins these files must flip too, so name the coupling here.
   grep -qi 'last-wins' "$p" || MISSING="$MISSING $f-omits-precedence-rationale"
 done
+# The docs must not contradict the commands. Fixing the two command files while
+# leaving `append a default` in invocation.md and implementation-plan/SKILL.md is
+# exactly what happened once: the code was right and two skill bodies still
+# taught the inverted rule, which is the version a model actually reads.
+for doc in \
+  "$ROOT/kit/plugins/plan-agent/skills/build/references/invocation.md" \
+  "$ROOT/kit/plugins/plan-agent/skills/implementation-plan/SKILL.md"; do
+  if printf '%s' "$(cat "$doc" | flatten)" | grep -qiE 'append(ing)? a default'; then
+    MISSING="$MISSING $(basename "$doc")-teaches-append"
+  fi
+done
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
   echo "  FAIL: typed entry commands mishandle --type precedence:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "20. The conversion scan is defined as positional, excluding flag values..."
+# "first non-flag token ending in .md" is not sufficient: `--from-prompt`'s value
+# does not begin with `-`, so a literal reading still picks it up as a conversion
+# source — which is the very bug --from-prompt exists to prevent. The rule has to
+# exclude recognized flag VALUES, not merely tokens that look like flags.
+IPSKILL="$ROOT/kit/plugins/plan-agent/skills/implementation-plan/SKILL.md"
+IPFLAT="$(cat "$IPSKILL" | flatten)"
+MISSING=""
+printf '%s' "$IPFLAT" | grep -qi 'not a recognized flag' || MISSING="$MISSING flag-values-not-excluded"
+printf '%s' "$IPFLAT" | grep -qi 'first \*\*positional\*\* token ending in' || MISSING="$MISSING scan-not-called-positional"
+if printf '%s' "$IPFLAT" | grep -qi 'first non-flag token ending in `.md`'; then
+  MISSING="$MISSING md-rule-still-says-non-flag"
+fi
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: the .md conversion scan is still ambiguous about flag values:$MISSING"
   FAILURES=$((FAILURES + 1))
 fi
 

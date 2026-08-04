@@ -78,10 +78,14 @@ Parse `$ARGUMENTS` (or the derived text) in this order:
    `<title>` for the objective and treat the run as drafting a fresh spec
    for that stem. If the file can't be found, ask for the objective via
    `AskUserQuestion` — do not abort.
-3. **Markdown source** — first non-flag token ending in `.md` becomes
-   `$MD_SOURCE` (conversion mode, below). A path passed as the value of
-   `--from-prompt` is a flag value, not a token, and never lands here.
-   Resolve as given, then by
+3. **Markdown source** — first **positional** token ending in `.md` becomes
+   `$MD_SOURCE` (conversion mode, below). Positional means: not a flag, **and
+   not a recognized flag's value**. Strip every recognized flag together with
+   its value first (see the flag list below), then scan what remains. That
+   second clause is the load-bearing one — a path like
+   `docs/prompts/proposal-x.md` does not begin with `-`, so under a bare
+   "non-flag token" reading it would still be picked up as a conversion source
+   even when it arrived as `--from-prompt`'s value. Resolve as given, then by
    basename under the plan roots, then via
    `git show origin/<default-branch>:<path>` after a fetch. If unreadable
    everywhere, report where you searched and ask whether to draft fresh
@@ -101,8 +105,10 @@ in the spec, not yet rendered). When `--type` is absent, infer from the
 leading verb: create/add/build/implement/introduce → `feature`;
 fix/repair/patch/resolve → `fix`; refactor/rename/extract/move/restructure/
 convert → `refactor`; document/docs → `docs`; else `chore`. The skip flags
-are opt-in only — never inferred. A repeated `--type` resolves last-wins, so
-a caller may append a default that an explicit user value overrides.
+are opt-in only — never inferred. A repeated `--type` resolves last-wins, so a
+caller supplying a default must **prepend** it for an explicit user value to
+override: the surviving value is the final one, and a default appended after the
+user's arguments would beat them instead.
 
 **Prompt-source mode** (`--from-prompt <path>` set): the path names a saved
 **proposal prompt**, not a plan. This is the `build` chain's proposal handoff.
