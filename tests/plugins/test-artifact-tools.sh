@@ -88,8 +88,27 @@ SCRIPT="$PLUGIN/skills/session-artifact/scripts/export_session.py"
 [ -f "$SCRIPT" ] || fail "bundled export_session.py missing at $SCRIPT"
 python3 -c "import ast,sys; ast.parse(open(sys.argv[1]).read())" "$SCRIPT" \
   || fail "bundled export_session.py is not valid Python"
-grep -qF 'export_session.py' "$PLUGIN/skills/session-artifact/SKILL.md" \
-  || fail "session-artifact does not invoke the bundled script"
+# The SKILL.md names the bare `bin/` wrapper, not the .py path: a command
+# spelled `python3 "${CLAUDE_PLUGIN_ROOT}/.../export_session.py"` is refused by
+# the Bash tool ("Contains expansion") before permission rules are consulted and
+# never runs. So this follows the indirection — SKILL.md must name the wrapper,
+# and the wrapper must exec the bundled script — rather than grepping SKILL.md
+# for a filename it can no longer legally contain.
+# Both greps are structural, not substring. A raw `grep -qF` is satisfied by
+# PROSE: SKILL.md line 60 reads "`artifact-export-session` is a bundled bin/
+# wrapper...", so deleting the actual command on line 57 would leave a substring
+# check green while the runnable invocation was gone. Same for the wrapper — a
+# comment naming export_session.py would satisfy a substring match without the
+# script ever being exec'd. Matching command position and the exec line closes
+# both. (The SKILL.md half is the identical loophole flagged in
+# test-no-shell-expansion.sh check 2 and fixed there; this file had it too.)
+WRAPPER="$PLUGIN/bin/artifact-export-session"
+grep -qE '^[[:space:]]*artifact-export-session([[:space:]]|$)' \
+  "$PLUGIN/skills/session-artifact/SKILL.md" \
+  || fail "session-artifact does not invoke its bin/ wrapper in command position (prose naming it does not count)"
+[ -x "$WRAPPER" ] || fail "bin/artifact-export-session missing or not executable"
+grep -qE '^[[:space:]]*exec[[:space:]].*export_session\.py' "$WRAPPER" \
+  || fail "bin/artifact-export-session does not exec the bundled script (a mention in a comment does not count)"
 ok
 
 # 4. Safety contracts are documented, not just implied.

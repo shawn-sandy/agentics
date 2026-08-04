@@ -190,6 +190,8 @@ social-media-tools/
 │   ├── saving-and-delivery.md             ← persistent save block + deliver phase
 │   ├── social-config.md                   ← SOCIAL.md format + loading convention
 │   └── variables.md                       ← per-template variable maps (all 7 cards)
+├── bin/
+│   └── social-export-session              ← on the Bash tool's PATH; call by bare name
 ├── scripts/
 │   └── find_free_port.py                  ← port helper for Playwright
 ├── skills/

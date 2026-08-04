@@ -92,6 +92,16 @@ jobs:
       # being pasted into all three except a check that runs before merge.
       - name: Test the recap commands stay deduplicated
         run: bash tests/plugins/test-recap-command-dedupe.sh
+      # A documented command containing ${VAR} is refused by the Bash tool
+      # before permission rules are consulted, so it never runs for anybody —
+      # and it fails silently, as prose that reads correctly and greps clean.
+      # Eight such commands shipped across five plugins; one of them had been
+      # "fixed" INTO that shape by a release, and one was invisible to a
+      # node|python3|bash scan because it had no interpreter prefix at all.
+      # Nothing but a pre-merge check distinguishes a command that works from
+      # one that has never run.
+      - name: Test no documented Bash command contains shell expansion
+        run: bash tests/plugins/test-no-shell-expansion.sh
       - name: Test the memory-tools write guard executes shipped code
         run: bash tests/plugins/test-memory-doctor-guard.sh
       - name: Test generator skills verify their own output

@@ -1,5 +1,52 @@
 # Changelog
 
+
+## v1.4.0 — 2026-08-02 — The checker command actually runs (this time)
+
+### Fixed
+
+- **The documented invocation could never run — for anybody, at any permission
+  level.** Claude Code's Bash tool refuses any command whose text contains
+  `${VAR}` or `$VAR`, erroring with `Contains expansion` because it cannot
+  statically resolve the expansion. The refusal fires *before* permission rules
+  are consulted, so no `allowed-tools` entry, `tools:` grant, or permission rule
+  can rescue it — a prefix rule like ``Bash(python3 "${CLAUDE_PLUGIN_ROOT}/...":*)``
+  can never match, because the command is rejected before rule matching begins.
+  `${CLAUDE_PLUGIN_ROOT}` compounds this: it is a config-file substitution for
+  `hooks.json`, MCP/LSP, and monitor commands, and is not exported into the Bash
+  tool's environment, so it would expand to empty even if the guard allowed it.
+- **The fix is a `bin/` wrapper invoked by bare name.** Claude Code adds a
+  plugin's `bin/` directory to the Bash tool's `PATH`, so a bundled script is
+  callable as a bare command containing no `$` at all. The wrapper resolves its
+  own location via `dirname "$0"` — legal, because the expansion guard inspects
+  only the command text passed to the Bash tool, not what the shell then runs.
+  A literal absolute path could not ship instead: the install path differs per
+  machine.
+- **Guarded by `tests/plugins/test-no-shell-expansion.sh`,** a repo-wide check
+  that fails on any documented interpreter invocation carrying an expansion, on
+  any bundled script invoked via a braced expansion in command position, on a
+  wrapper that loses its exec bit or its target, and on `bin` falling off the
+  `dist/` KEEP allowlist.
+
+### Changed
+
+- Both call sites — `skills/wcag-compliance-reviewer/SKILL.md` and the plugin
+  `README.md` — now invoke `wcag-check <file>`.
+- **v1.3.1 introduced this defect while claiming to fix it.** That release
+  retargeted a cwd-relative path to
+  `python3 "${CLAUDE_PLUGIN_ROOT}/skills/wcag-compliance-reviewer/scripts/check_wcag.py"`
+  under the heading "The documented checker command actually runs". The path was
+  correct; the spelling was fatal. It traded a command that worked from one
+  directory for one that worked from none.
+
+> **Upstream note:** `skills/wcag-compliance-reviewer/` is synced from
+> [shawn-sandy/skills](https://github.com/shawn-sandy/skills), so the `SKILL.md`
+> half of this fix will be reverted by the next sync unless the same change is
+> made upstream. The `bin/wcag-check` wrapper and the plugin `README.md` sit
+> outside `skills/` and survive a sync. **This mirroring is not done here** — it
+> requires a commit to a repository outside this tree.
+
+---
 ## v1.3.1 — 2026-08-02 — The documented checker command actually runs
 
 ### Fixed

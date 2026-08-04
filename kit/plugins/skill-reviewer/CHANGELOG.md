@@ -1,6 +1,43 @@
 # Changelog
 
 
+
+## v2.5.0 — 2026-08-02 — Two dead script invocations become `bin/` commands
+
+### Fixed
+
+- **The documented invocation could never run — for anybody, at any permission
+  level.** Claude Code's Bash tool refuses any command whose text contains
+  `${VAR}` or `$VAR`, erroring with `Contains expansion` because it cannot
+  statically resolve the expansion. The refusal fires *before* permission rules
+  are consulted, so no `allowed-tools` entry, `tools:` grant, or permission rule
+  can rescue it — a prefix rule like ``Bash(python3 "${CLAUDE_PLUGIN_ROOT}/...":*)``
+  can never match, because the command is rejected before rule matching begins.
+  `${CLAUDE_PLUGIN_ROOT}` compounds this: it is a config-file substitution for
+  `hooks.json`, MCP/LSP, and monitor commands, and is not exported into the Bash
+  tool's environment, so it would expand to empty even if the guard allowed it.
+- **The fix is a `bin/` wrapper invoked by bare name.** Claude Code adds a
+  plugin's `bin/` directory to the Bash tool's `PATH`, so a bundled script is
+  callable as a bare command containing no `$` at all. The wrapper resolves its
+  own location via `dirname "$0"` — legal, because the expansion guard inspects
+  only the command text passed to the Bash tool, not what the shell then runs.
+  A literal absolute path could not ship instead: the install path differs per
+  machine.
+- **Guarded by `tests/plugins/test-no-shell-expansion.sh`,** a repo-wide check
+  that fails on any documented interpreter invocation carrying an expansion, on
+  any bundled script invoked via a braced expansion in command position, on a
+  wrapper that loses its exec bit or its target, and on `bin` falling off the
+  `dist/` KEEP allowlist.
+
+### Changed
+
+- `auditing-allowed-tools`: the session scan is now `skill-reviewer-scan-tools <jsonl-path>`.
+- `/check-description`: now `skill-reviewer-measure-description <file>`. This
+  second site had no interpreter prefix — it invoked
+  `"${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh"` directly — so it was
+  invisible to a scan that looks for `python3`/`node`/`bash` and was found only
+  when the new test's command-position pattern was written.
+
 ## v2.4.0 — 2026-07-30 — Drop "Follow these steps exactly" from `optimizing-skill-frontmatter`
 
 ### Changed

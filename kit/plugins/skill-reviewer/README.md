@@ -196,6 +196,9 @@ Or uninstall the plugin (`/plugin uninstall skill-reviewer`) if you no longer ne
 plugins/skill-reviewer/
 ├── .claude-plugin/
 │   └── plugin.json
+├── bin/                                    ← on the Bash tool's PATH; call by bare name
+│   ├── skill-reviewer-measure-description
+│   └── skill-reviewer-scan-tools
 ├── commands/
 │   └── check-description.md
 ├── hooks.json
