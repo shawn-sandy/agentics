@@ -1,6 +1,36 @@
 # Changelog
 
 
+## 8.5.1 — plans-library delegates to the gallery generator (2026-08-04)
+
+### Fixed
+
+- **`plans-library` no longer counts plans its own way.** The skill hand-executed
+  `find "$PLANS_DIR" -maxdepth 1 -name "*.html"`, a second collection rule
+  alongside the walk in `hooks/build-index.sh`. `-maxdepth 1` does keep
+  `archive/` and `artifacts/` out, but it sees only the top level of the plans
+  directory — so every plan filed in any other subdirectory vanished from the
+  gallery the moment a user ran this skill, after the `rebuild-plans-index.py`
+  PostToolUse hook had already rendered a card for it. Steps 1-5 now delegate to
+  `hooks/build-index.sh`, the script that hook already runs, so there is one
+  implementation and one total. **-159 lines**
+- **Gallery order now matches its own subtitle.** The skill sorted purely
+  newest-first while substituting the subtitle "in flight first, then newest".
+  `build-index.sh` sorts in-progress plans ahead of the rest, so the page and its
+  description finally agree
+- **The delegated command can actually run.** It is invoked as the bare name
+  `plan-agent-plans-index` via the new `bin/` wrapper, not through a plugin-root
+  variable — the Bash tool refuses any command text carrying a shell expansion
+  before permission rules are consulted, so the path spelling would have made the
+  rewritten skill's only action dead on arrival. Check 11b of
+  `tests/plugins/test-extractor-wiring.sh` pins the call site in command position
+
+### Added
+
+- **`bin/plan-agent-plans-index`** — bare-name entry point for
+  `hooks/build-index.sh`, mirroring the existing `bin/plan-agent-prototypes-index`
+
+
 ## 8.5.0 — typed build entry points (2026-08-03)
 
 ### Added

@@ -507,6 +507,7 @@ plan-agent/
   bin/                      — On the Bash tool's PATH; invoke by bare name, never by path
     plan-agent-render            — Renders a plan spec (wraps scripts/build-plan-html.mjs)
     plan-agent-prototypes-index  — Rebuilds the prototypes gallery (wraps hooks/build-prototypes-index.sh)
+    plan-agent-plans-index       — Rebuilds the plans gallery (wraps hooks/build-index.sh)
   skills/
     implementation-plan/
       SKILL.md              — Workflow, arguments, spec authoring, render pipeline

@@ -23,14 +23,22 @@ const SKILLS = [
   {
     name: 'plans-library',
     path: 'kit/plugins/plan-agent/skills/plans-library/SKILL.md',
-    listVar: 'PLAN_FILES',
+    countVar: 'PLAN_COUNT',
     noun: 'plans',
+    // 8.5.1 deleted this skill's own scan: the count now comes from
+    // build-index.sh's own `wrote … (N items)` line. So the thing to guard
+    // against is the skill re-deriving it by listing the directory itself —
+    // that second collection rule is exactly what dropped nested plans.
+    countMustNot: /^\s*(find|ls)\s[^\n]*\|[^\n]*wc/m,
+    countMust: /Capture[^\n]*`PLAN_COUNT`/,
   },
   {
     name: 'media-library',
     path: 'kit/plugins/social-media-tools/skills/media-library/SKILL.md',
-    listVar: 'MEDIA_FILES',
+    countVar: 'SOURCE_COUNT',
     noun: 'files',
+    countMustNot: /SOURCE_COUNT=\$\(printf[^\n]*\$MEDIA_FILES/,
+    countMust: /SOURCE_COUNT=<number of (entries|cards)/,
   },
 ];
 
@@ -80,21 +88,22 @@ function runCheck(script, html, expected) {
   return { status: r.status, out: `${r.stdout}${r.stderr}` };
 }
 
-// SOURCE_COUNT must be the number of entries the generation step PARSED, not the
-// raw file list: those steps skip files they cannot read, and comparing against
-// the raw count reports a mismatch for a file that was deliberately skipped.
+// The expected count must be what the generation step actually EMITTED, never a
+// raw directory listing. A hand-rolling skill skips files it cannot read, and a
+// delegating one hands the whole scan to a generator — either way, counting the
+// files independently reports a mismatch for a file that was legitimately not a
+// card.
 function assertParsedCountSemantics(skill) {
   const body = readFileSync(join(ROOT, skill.path), 'utf8');
-  const rawCount = new RegExp(`SOURCE_COUNT=\\$\\(printf[^\\n]*\\$${skill.listVar}`);
   check(
-    `${skill.name}: SOURCE_COUNT is not the raw ${skill.listVar} line count`,
-    !rawCount.test(body),
-    'skill still derives SOURCE_COUNT from the unfiltered file list',
+    `${skill.name}: ${skill.countVar} is not re-derived from a file listing`,
+    !skill.countMustNot.test(body),
+    'skill still counts the source files itself instead of using the emitted count',
   );
   check(
-    `${skill.name}: SOURCE_COUNT is documented as the parsed/emitted count`,
-    /SOURCE_COUNT=<number of (entries|cards)/.test(body),
-    'skill does not tell the model to substitute the parsed count',
+    `${skill.name}: ${skill.countVar} is documented as the emitted count`,
+    skill.countMust.test(body),
+    'skill does not tell the model where the emitted count comes from',
   );
 }
 
@@ -145,7 +154,7 @@ for (const skill of SKILLS) {
   assertParsedCountSemantics(skill);
 
   const emptyCount = 0;
-  check(`${skill.name}: empty ${skill.listVar} counts as 0 sources`, emptyCount === 0, `got ${emptyCount}`);
+  check(`${skill.name}: empty ${skill.countVar} counts as 0 sources`, emptyCount === 0, `got ${emptyCount}`);
   const empty = runCheck(script, indexHtml(0), emptyCount);
   check(`${skill.name}: empty index from 0 sources exits 0`, empty.status === 0, empty.out.trim());
 

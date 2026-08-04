@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Bare-name entry point for the plans-gallery rebuild (hooks/build-index.sh).
+# See bin/plan-agent-render for why bin/ is the only invocation shape a skill
+# can actually run.
+#
+# Takes an optional project root; defaults to the current directory. No stdin
+# redirect: unlike build-prototypes-index.sh, this script is never wired as a
+# PostToolUse hook directly — rebuild-plans-index.py reads the hook payload and
+# calls it with a plain argument — and its own python3 body is fed by a heredoc.
+exec bash "$(dirname "$0")/../hooks/build-index.sh" "${1:-$PWD}"
