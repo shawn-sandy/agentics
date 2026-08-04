@@ -12,15 +12,29 @@ already exists and routes elsewhere when there is none.
 
 ## Invocation & Arguments
 
-- **Command:** `/plan-agent:build [<plan path>] [<objective>] [--dir <path>]` —
-  `$ARGUMENTS` carries an optional plan path (`.md` spec or `.html`; an `.html`
-  resolves to its sibling `.md`), an optional free-text objective, and an
-  optional plans-directory override.
-- **Parse flags first.** Strip `--dir <path>` and any other recognized option
+- **Command:** `/plan-agent:build [<plan path>] [<objective>] [--type <kind>]
+  [--dir <path>]` — `$ARGUMENTS` carries an optional plan path (`.md` spec or
+  `.html`; an `.html` resolves to its sibling `.md`), an optional free-text
+  objective, an optional plan type, and an optional plans-directory override.
+- **Parse flags first.** Strip `--dir <path>`, `--type <kind>`, and any other
+  recognized option
   with its value out of `$ARGUMENTS` before classifying anything. The test below
   applies to the **first positional token**, never to a flag: `--dir tmp/plans`
   alone leaves no positional token at all, which is a bare `build` and takes the
   discovery offer, not an objective named `--dir`.
+- **`--type <kind>`** — one of `feature`, `fix`, `refactor`, `docs`, `chore`;
+  anything else is an error naming the valid set, never a silent fallback.
+  Forwarded to `implementation-plan` on both Step 1b paths so the authored plan
+  states its type instead of having it inferred from a leading verb. Repeated
+  occurrences resolve **last-wins**, which is what lets the `fix` and `refactor`
+  commands **prepend** a default that a user-supplied `--type` overrides.
+  Prepend, not append: under last-wins the surviving value is the final one, so
+  a default placed after `$ARGUMENTS` would beat the user's explicit flag
+  instead of yielding to it.
+  **It applies only when a plan is being authored.** With a plan path resolved
+  at Step 1, that plan already carries its own `type:` — ignore the flag and say
+  so in one line rather than rewriting frontmatter the user did not ask you to
+  touch.
 - **Objective versus path.** The test applies to that **first positional token
   only**: it is an objective unless that token carries an `.md`/`.html` suffix
   or a `/`.

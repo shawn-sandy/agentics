@@ -3,7 +3,7 @@ name: implementation-plan
 model: claude-fable-5
 description: "Generates HTML implementation-plan documents. Produces a self-contained .html plan file with steps, acceptance criteria, and metadata. Use when the user asks to create or generate an HTML plan file."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, WebFetch, WebSearch, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
-argument-hint: "<issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]"
+argument-hint: "<issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]"
 ---
 
 ## Plan Agent — Planning
@@ -78,8 +78,25 @@ Parse `$ARGUMENTS` (or the derived text) in this order:
    `<title>` for the objective and treat the run as drafting a fresh spec
    for that stem. If the file can't be found, ask for the objective via
    `AskUserQuestion` — do not abort.
-3. **Markdown source** — first non-flag token ending in `.md` becomes
-   `$MD_SOURCE` (conversion mode, below). Resolve as given, then by
+3. **Markdown source** — first **positional** token ending in `.md` becomes
+   `$MD_SOURCE` (conversion mode, below). Positional means: not a flag, **and
+   not a recognized flag's value**. Strip every recognized flag together with
+   its value first (see the flag list below), then scan what remains. That
+   second clause is the load-bearing one — a path like
+   `docs/prompts/proposal-x.md` does not begin with `-`, so under a bare
+   "non-flag token" reading it would still be picked up as a conversion source
+   even when it arrived as `--from-prompt`'s value.
+
+   **`--from-prompt` and conversion mode are mutually exclusive.** Excluding the
+   flag's own value is not enough on its own: an objective can contain a
+   positional `.md` of its own (`--from-prompt p.md rewrite docs/plans/old.md`),
+   which would otherwise set `$MD_SOURCE` and run both modes at once. When
+   `--from-prompt` is present and a positional `.md` is *also* present, that is
+   ambiguous input — stop and name both paths, asking which was meant. Never
+   silently pick one. With `--from-prompt` and no positional `.md`, skip this
+   rule entirely.
+
+   Resolve as given, then by
    basename under the plan roots, then via
    `git show origin/<default-branch>:<path>` after a fetch. If unreadable
    everywhere, report where you searched and ask whether to draft fresh
@@ -91,14 +108,42 @@ Parse `$ARGUMENTS` (or the derived text) in this order:
 Flags: `--quick` (= `--no-clarify --no-align --no-interview`),
 `--no-clarify`, `--no-align`, `--no-interview`, `--workflow` (always
 generate the workflow prompt: set `workflow: always` in the spec
-frontmatter), `--type <kind>`, `--template <name>` (`default` only;
+frontmatter), `--from-prompt <path>` (prompt-source mode, below),
+`--type <kind>`, `--template <name>` (`default` only;
 variants ship later as renderer style shells), `--dir <path>`,
 `--priority <level>` (written as a `priority:` frontmatter key; preserved
 in the spec, not yet rendered). When `--type` is absent, infer from the
 leading verb: create/add/build/implement/introduce → `feature`;
 fix/repair/patch/resolve → `fix`; refactor/rename/extract/move/restructure/
 convert → `refactor`; document/docs → `docs`; else `chore`. The skip flags
-are opt-in only — never inferred.
+are opt-in only — never inferred. A repeated `--type` resolves last-wins, so a
+caller supplying a default must **prepend** it for an explicit user value to
+override: the surviving value is the final one, and a default appended after the
+user's arguments would beat them instead.
+
+**Prompt-source mode** (`--from-prompt <path>` set): the path names a saved
+**proposal prompt**, not a plan. This is the `build` chain's proposal handoff.
+Read it for context — the decisions it settled, the constraints it names, the
+approach it recommends — then author a plan through the **normal drafting
+workflow**. This is not conversion: a proposal argues *whether and what*, a plan
+states *how*, so its headings are input, never a step list to transcribe. The
+skip flags are not implied; pass `--quick` explicitly to skip stages.
+
+**Type derivation here has one rule: a source `type:` is used only when it is
+already a valid plan type** (`feature`, `fix`, `refactor`, `docs`, `chore`).
+Anything else — including a missing key — falls through to leading-verb
+inference on the objective. Do not map unrecognized values onto plan types.
+This matters because the usual `--from-prompt` target is a **saved prompt**, not
+a proposal document, and `prompt` writes its own classifier into that
+frontmatter: every prompt `build-proposal` saves carries `type: proposal`, which
+names the *prompt's* genre and says nothing about the plan's. Carrying it across
+would write an invalid `type:` and fail the render; special-casing it into some
+plan type would be a guess. The objective is the better signal, which is why the
+handoff leads with it. The same rule covers a `--from-prompt` pointed at the
+legacy proposal document, whose `design` value is likewise not a plan type.
+
+If the path is unreadable, say so and ask whether to draft from the objective
+alone — never invent proposal content.
 
 **Conversion mode** (`$MD_SOURCE` set): a committed markdown plan is
 pre-validated content, so conversion implies `--quick` (extra objective

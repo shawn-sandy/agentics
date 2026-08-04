@@ -22,7 +22,9 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 |-----------|------|-----------|
 | `implementation-plan` | Skill | Command (`/plan-agent:implementation-plan <objective>`) or auto-activates on plan-document intent |
 | `build-proposal` | Skill | Command (`/plan-agent:build-proposal <idea>`) or auto-activates on idea / "should-we" / compare-and-align intent — converges on a saved prompt at `docs/prompts/proposal-<slug>.md` |
-| `build` | Skill | Command (`/plan-agent:build [<plan>] [<objective>]`) or auto-activates on "implement / build this plan" intent — implements a plan and runs its gates; with no plan named, the command form authors one first through proposal → plan → review |
+| `build` | Skill | Command (`/plan-agent:build [<plan>] [<objective>] [--type <kind>]`) or auto-activates on "implement / build this plan" intent — implements a plan and runs its gates; with no plan named, the command form authors one first through proposal → plan → review |
+| `fix` | Command | Typed entry point — `/plan-agent:fix <objective>` runs the `build` chain with `--type fix` |
+| `refactor` | Command | Typed entry point — `/plan-agent:refactor <objective>` runs the `build` chain with `--type refactor` |
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html] [--all]` |
@@ -90,7 +92,7 @@ Passing a `.md` plan path enters **conversion mode**: the markdown is treated as
 **Full invocation syntax:**
 
 ```
-/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
+/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
 ```
 
 **Flags:**
@@ -101,6 +103,7 @@ Passing a `.md` plan path enters **conversion mode**: the markdown is treated as
 | `--no-clarify` | Skip Step 1 Clarify only |
 | `--no-align` | Skip Step 5 Align only |
 | `--no-interview` | Skip Step 5b Interview (built-in structured interview) |
+| `--from-prompt <path>` | **Prompt-source mode.** Read a saved proposal prompt for context, then author through the normal drafting workflow. Not conversion mode: proposal headings are input, not a step list to transcribe. Passing the same path positionally instead would trigger conversion mode, which is the bug this flag exists to prevent; the two are mutually exclusive and an ambiguous mix is rejected |
 | `--type <kind>` | Set plan `type` in HTML metadata (`feature`, `fix`, `refactor`, `docs`, `chore`) |
 | `--template <name>` | Reserved — only `default` is currently supported; additional variants are planned |
 | `--dir <path>` | Override directory resolution; write the plan to this path |
@@ -115,6 +118,7 @@ Passing a `.md` plan path enters **conversion mode**: the markdown is treated as
 /plan-agent:implementation-plan --dir tmp/plans add dark mode toggle
 /plan-agent:implementation-plan --no-interview fix a config typo
 /plan-agent:implementation-plan --workflow migrate all API endpoints to v2
+/plan-agent:implementation-plan add SSO to the admin console --from-prompt docs/prompts/proposal-admin-sso.md
 ```
 
 **Smart defaults when flags are absent:** `--type` is inferred from the leading verb (`add`/`create`/`build` → `feature`; `fix`/`patch` → `fix`; `refactor`/`rename` → `refactor`; `document`/`docs` → `docs`). All skip-flags (`--quick`, `--no-clarify`, `--no-align`, `--no-interview`) and `--workflow` are opt-in only and are never inferred automatically.

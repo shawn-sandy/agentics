@@ -114,11 +114,66 @@ STEP8="$(sed -n '/^### Step 8 —/,/^## Operating principles/p' "$BP")"
 STEP8F="$(printf '%s' "$STEP8" | flat)"
 M=""
 printf '%s' "$STEP8" | grep -qF 'prompts-dir>/proposal-<slug>.md' || M="$M handoff-not-prompt-path"
-printf '%s' "$STEP8F" | grep -qi 'author an execution plan from the proposal prompt at' || M="$M no-objective-lead"
-if printf '%s' "$STEP8" | grep -qE 'implementation-plan +[^ ]+\.md'; then M="$M bare-md-token"; fi
-# The chain reads whatever Step 8 reports, so build/ must expect a prompt too.
-printf '%s' "$(cat "${BUILD_FILES[@]}" | flat)" | grep -qi 'proposal prompt at <prompt path>' || M="$M chain-not-updated"
+# Since 8.5.0 the path rides behind `--from-prompt` instead of inside prose
+# ("author an execution plan from the proposal prompt at ..."). Objective-leading
+# prose was never actually protective: implementation-plan's conversion scan
+# takes the first `.md`-suffixed POSITIONAL token anywhere in the string, so the
+# prompt was picked up as a conversion source no matter what preceded it. A flag
+# value is not a positional token, so the flag form is the guarantee the prose
+# only claimed to be.
+printf '%s' "$STEP8F" | grep -qF -- '--from-prompt <prompts-dir>/proposal-<slug>.md' || M="$M handoff-not-behind-flag"
+# The prose handoff is the conversion-mode bug. Fail on its return anywhere in
+# Step 8, including alongside a correct flag form.
+if printf '%s' "$STEP8F" | grep -qi 'execution plan from the proposal prompt at'; then M="$M prose-handoff-returned"; fi
+# Token-wise, not adjacency-based: the parser takes the first positional `.md`
+# ANYWHERE, so `implementation-plan <objective> foo.md` trips conversion mode
+# while sliding past a regex anchored to the token after the command. Walks every
+# token and skips the values of flags known to take one. A bare inline-code
+# `` `.md` `` is prose, not an advertised path.
+positional_md() {  # positional_md <command-line-text> -> prints offending tokens
+  printf '%s\n' "$1" | tr ' ' '\n' | awk '
+    BEGIN { skip = 0 }
+    /^--(from-prompt|dir|type|template|priority)$/ { skip = 1; next }
+    /^--/                                          { skip = 0; next }
+    { if (skip) { skip = 0; next } }
+    /\.md`?$/ { gsub(/`/, "", $0); if ($0 != ".md") print }
+  '
+}
+while IFS= read -r sline; do
+  [ -n "$sline" ] || continue
+  case "$sline" in *implementation-plan*) ;; *) continue ;; esac
+  [ -n "$(positional_md "$sline")" ] && M="$M bare-md-token"
+done <<STEP8EOF
+$STEP8
+STEP8EOF
+# The chain reads whatever Step 8 reports, so build/ must expect a prompt too —
+# and must pass it the same way, or the two halves of the handoff disagree.
+printf '%s' "$(cat "${BUILD_FILES[@]}" | flat)" | grep -qF -- '--from-prompt <prompt path>' || M="$M chain-not-updated"
 [ -z "$M" ] && echo "  PASS" || fail "Step 8 handoff:$M"
+
+echo "6b. Prompt-source mode never propagates the prompt's own 'proposal' type..."
+# The `--from-prompt` target is a SAVED PROMPT, and prompt/SKILL.md writes its
+# own classifier into that frontmatter — every prompt build-proposal saves
+# carries `type: proposal`. That names the prompt's genre, not the plan's, and
+# it is not a member of the plan enum (feature|fix|refactor|docs|chore), so
+# carrying it across writes an invalid `type:` and fails the render.
+# The rule must be "valid plan type or fall through to the objective", never a
+# mapping table — a mapping is a guess, and the objective is real signal.
+IP="$ROOT/kit/plugins/plan-agent/skills/implementation-plan/SKILL.md"
+IPF="$(cat "$IP" | flat)"
+M=""
+# Premise guard: this check is only meaningful while `prompt` really does stamp
+# a classifier into the saved prompt's frontmatter. If that ever stops being
+# true, fail loudly here rather than leaving a check that asserts nothing.
+grep -qF 'type: {classified type}' "$ROOT/kit/plugins/plan-agent/skills/prompt/SKILL.md" \
+  || M="$M premise-gone-prompt-writes-no-type"
+printf '%s' "$IPF" | grep -qi 'only when it is already a valid plan type' || M="$M no-valid-type-only-rule"
+printf '%s' "$IPF" | grep -qi 'type: proposal' || M="$M proposal-case-unnamed"
+printf '%s' "$IPF" | grep -qi 'Do not map unrecognized values' || M="$M mapping-not-forbidden"
+# The pre-review rule mapped design->feature and fell back only on a MISSING
+# key, which is exactly how `type: proposal` slipped through.
+if printf '%s' "$IPF" | grep -qi 'so it becomes.*feature'; then M="$M stale-design-mapping"; fi
+[ -z "$M" ] && echo "  PASS" || fail "prompt-source type derivation:$M"
 
 echo "7. Tier behaviour survives: Tier 0 writes nothing, Tier 1 omits unpopulated slots..."
 # build/SKILL.md falls through to direct plan authoring precisely when the

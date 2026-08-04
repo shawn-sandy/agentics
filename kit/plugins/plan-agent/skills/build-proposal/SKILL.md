@@ -296,7 +296,7 @@ conversion:
 
 > The proposal is decision-complete at `<prompts-dir>/proposal-<slug>.md`. To
 > turn it into an execution plan, run:
-> `/plan-agent:implementation-plan author an execution plan from the proposal prompt at <prompts-dir>/proposal-<slug>.md`
+> `/plan-agent:implementation-plan <objective> --from-prompt <prompts-dir>/proposal-<slug>.md`
 
 Report the prompt path — the same one passed to `prompt` via `--out` in
 Step 6, byte-for-byte. Never report the legacy copy as the deliverable.
@@ -323,14 +323,21 @@ to the handoff below — the proposal saved in Step 6 is the deliverable, and th
 page was optional. Do not retry silently, and do not let it swallow the paths
 the human is waiting on.
 
-**Lead with the objective, not a bare `.md` path.** A proposal carries
-Workstreams and a Roadmap, not a `Steps`/`Changes` section, so handing
-`implementation-plan` a bare `.md` first token would trigger its **conversion
-mode** (which skips clarify/align/interview and maps sections 1:1) and produce a
-plan with no actionable steps. Leading with objective text keeps it in its
-**full workflow** — it explores the proposal, drafts real steps (the *how*), and
-authors tests. Reaffirm the seam: this skill decided *should-we + what*;
-planning owns *how*.
+**Pass the path behind `--from-prompt`, never as a positional token.** A
+proposal carries Workstreams and a Roadmap, not a `Steps`/`Changes` section, so
+handing `implementation-plan` a positional `.md` token triggers its **conversion
+mode** (which skips clarify/align/interview and maps sections 1:1) and produces a
+plan with no actionable steps. Leading with objective text is *not* sufficient
+protection: that scan takes the first `.md`-suffixed positional token anywhere in
+the string, not just the first one. A flag value is not a positional token, and
+`--from-prompt` is mutually exclusive with conversion mode — a positional `.md`
+alongside it is rejected as ambiguous rather than silently converted. Those two
+rules together are what make this a guarantee rather than a convention; the flag
+alone would not be, since an objective can carry an `.md` of its own. It selects
+**prompt-source mode** — the full workflow, where the skill explores the
+proposal, drafts real steps (the *how*), and authors tests. Still lead with the
+objective: it is what the plan is about, and what type inference reads. Reaffirm
+the seam: this skill decided *should-we + what*; planning owns *how*.
 
 ## Operating principles & relationship to existing capabilities
 

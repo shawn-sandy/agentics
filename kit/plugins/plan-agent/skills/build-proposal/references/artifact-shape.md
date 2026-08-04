@@ -100,7 +100,7 @@ Resolved in the <YYYY-MM-DD> review:
 
 ## Next step
 Convert to an execution plan:
-`/plan-agent:implementation-plan author an execution plan from the proposal prompt at <prompts-dir>/proposal-<slug>.md`
+`/plan-agent:implementation-plan <objective> --from-prompt <prompts-dir>/proposal-<slug>.md`
 ```
 
 **Lead with objective text, never a bare `.md` first token.** A bare token drops

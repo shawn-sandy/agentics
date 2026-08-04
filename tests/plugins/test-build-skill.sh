@@ -214,10 +214,41 @@ printf '%s' "$CHAIN" | grep -qi 'is forwarded here' || MISSING="$MISSING dir-not
 # Since plan-agent 6.0.0 build-proposal converges on a saved prompt, not a
 # proposal doc. The chain interpolates whatever it reports without parsing it, so
 # a stale artifact name here silently chains a path that was never written.
-printf '%s' "$CHAIN" | grep -qi 'proposal prompt at <prompt path>' || MISSING="$MISSING prompt-path-chained"
+#
+# Since 8.5.0 that path travels behind `--from-prompt` rather than inside prose
+# ("...proposal prompt at <prompt path>"). implementation-plan scans positional
+# arguments for a `.md` suffix and treats the first hit as a CONVERSION source,
+# anywhere in the string — so the prose form silently restructured the proposal
+# into a plan whose steps restated its headings. The chain's own prose guard
+# ("never a bare `.md` first token") could not prevent that, because the scan was
+# never limited to the first token. A flag value is not a positional token, so
+# the flag form is the fix. Asserting the flag rather than the placeholder alone
+# is what keeps a revert to prose from passing.
+printf '%s' "$CHAIN" | grep -qF -- '--from-prompt <prompt path>' || MISSING="$MISSING prompt-path-chained-behind-flag"
 if printf '%s' "$CHAIN" | grep -qi 'from the proposal at <'; then
   MISSING="$MISSING stale-proposal-doc-path"
 fi
+# The prose handoff is the conversion-mode bug itself. Fail on its return even if
+# `--from-prompt` is also present somewhere, since the first `.md`-suffixed
+# positional token still wins the scan.
+if printf '%s' "$CHAIN" | grep -qi 'proposal prompt at <prompt path>'; then
+  MISSING="$MISSING prompt-path-as-bare-positional"
+fi
+# Both Step 1b paths forward --type, or a plan authored through the chain gets
+# its type inferred from a leading verb that belongs to the chain's own wording
+# ("author an execution plan...") rather than to the user's objective — which
+# resolved to `chore` for every proposal-path plan before 8.5.0.
+#
+# Checked PER BRANCH, not by counting occurrences across the whole section. An
+# aggregate count of 2 is satisfied by one branch mentioning --type twice while
+# the other forwards nothing — which is the exact half-fixed state this assertion
+# is supposed to catch. Each branch is extracted and asserted on its own.
+CHAIN_PROPOSAL="$(section '^3\. \*\*Proposal path' '^4\. \*\*Direct path' | flatten)"
+CHAIN_DIRECT="$(section '^4\. \*\*Direct path' '^5\. \*\*Return path' | flatten)"
+[ -n "$CHAIN_PROPOSAL" ] || MISSING="$MISSING proposal-branch-not-found"
+[ -n "$CHAIN_DIRECT" ] || MISSING="$MISSING direct-branch-not-found"
+printf '%s' "$CHAIN_PROPOSAL" | grep -qF -- '--type' || MISSING="$MISSING type-not-forwarded-on-proposal-path"
+printf '%s' "$CHAIN_DIRECT" | grep -qF -- '--type' || MISSING="$MISSING type-not-forwarded-on-direct-path"
 # Tier 0 writes neither artifact, and the abandonment contract must cover both.
 printf '%s' "$CHAIN" | grep -qi 'no artifact of either kind' || MISSING="$MISSING tier0-neither-artifact"
 printf '%s' "$CHAIN" | grep -qi 'leave \*\*both\*\* artifacts in place' || MISSING="$MISSING abandonment-covers-both"
@@ -372,6 +403,66 @@ if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
   echo "  FAIL: the AskUserQuestion-unavailable fallback is not stated in build/SKILL.md:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "19. The typed entry commands prepend their default --type, so a user's wins..."
+# `build` resolves a repeated --type LAST-WINS. A command that appends its
+# default therefore beats the user's explicit value:
+#   /plan-agent:fix task --type docs  ->  "task --type docs --type fix"  -> fix
+# Prepending is what makes the advertised override real:
+#   -> "--type fix task --type docs" -> docs
+# Asserting the ORDER, not just the presence of both tokens, is the whole point:
+# the appended form contains exactly the same two tokens and is silently wrong.
+MISSING=""
+CMD_DIR="$ROOT/kit/plugins/plan-agent/commands"
+for pair in "fix.md:fix" "refactor.md:refactor"; do
+  f="${pair%%:*}"; kind="${pair##*:}"
+  p="$CMD_DIR/$f"
+  if [ ! -f "$p" ]; then MISSING="$MISSING $f-missing"; continue; fi
+  # The invoke line must read `--type <kind> $ARGUMENTS`, in that order.
+  grep -qF -- "args: \"--type $kind \$ARGUMENTS\"" "$p" || MISSING="$MISSING $f-not-prepended"
+  # And must not carry the appended form anywhere.
+  if grep -qF -- "\$ARGUMENTS --type $kind" "$p"; then MISSING="$MISSING $f-appends-default"; fi
+  # last-wins is the premise the ordering depends on; if build ever changes to
+  # first-wins these files must flip too, so name the coupling here.
+  grep -qi 'last-wins' "$p" || MISSING="$MISSING $f-omits-precedence-rationale"
+done
+# The docs must not contradict the commands. Fixing the two command files while
+# leaving `append a default` in invocation.md and implementation-plan/SKILL.md is
+# exactly what happened once: the code was right and two skill bodies still
+# taught the inverted rule, which is the version a model actually reads.
+for doc in \
+  "$ROOT/kit/plugins/plan-agent/skills/build/references/invocation.md" \
+  "$ROOT/kit/plugins/plan-agent/skills/implementation-plan/SKILL.md"; do
+  if printf '%s' "$(cat "$doc" | flatten)" | grep -qiE 'append(ing)? a default'; then
+    MISSING="$MISSING $(basename "$doc")-teaches-append"
+  fi
+done
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: typed entry commands mishandle --type precedence:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "20. The conversion scan is defined as positional, excluding flag values..."
+# "first non-flag token ending in .md" is not sufficient: `--from-prompt`'s value
+# does not begin with `-`, so a literal reading still picks it up as a conversion
+# source — which is the very bug --from-prompt exists to prevent. The rule has to
+# exclude recognized flag VALUES, not merely tokens that look like flags.
+IPSKILL="$ROOT/kit/plugins/plan-agent/skills/implementation-plan/SKILL.md"
+IPFLAT="$(cat "$IPSKILL" | flatten)"
+MISSING=""
+printf '%s' "$IPFLAT" | grep -qi 'not a recognized flag' || MISSING="$MISSING flag-values-not-excluded"
+printf '%s' "$IPFLAT" | grep -qi 'first \*\*positional\*\* token ending in' || MISSING="$MISSING scan-not-called-positional"
+if printf '%s' "$IPFLAT" | grep -qi 'first non-flag token ending in `.md`'; then
+  MISSING="$MISSING md-rule-still-says-non-flag"
+fi
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: the .md conversion scan is still ambiguous about flag values:$MISSING"
   FAILURES=$((FAILURES + 1))
 fi
 
