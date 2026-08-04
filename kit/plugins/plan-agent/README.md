@@ -22,7 +22,9 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 |-----------|------|-----------|
 | `implementation-plan` | Skill | Command (`/plan-agent:implementation-plan <objective>`) or auto-activates on plan-document intent |
 | `build-proposal` | Skill | Command (`/plan-agent:build-proposal <idea>`) or auto-activates on idea / "should-we" / compare-and-align intent — converges on a saved prompt at `docs/prompts/proposal-<slug>.md` |
-| `build` | Skill | Command (`/plan-agent:build [<plan>] [<objective>]`) or auto-activates on "implement / build this plan" intent — implements a plan and runs its gates; with no plan named, the command form authors one first through proposal → plan → review |
+| `build` | Skill | Command (`/plan-agent:build [<plan>] [<objective>] [--type <kind>]`) or auto-activates on "implement / build this plan" intent — implements a plan and runs its gates; with no plan named, the command form authors one first through proposal → plan → review |
+| `fix` | Command | Typed entry point — `/plan-agent:fix <objective>` runs the `build` chain with `--type fix` |
+| `refactor` | Command | Typed entry point — `/plan-agent:refactor <objective>` runs the `build` chain with `--type refactor` |
 | `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html] [--all]` |

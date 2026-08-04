@@ -1,6 +1,49 @@
 # Changelog
 
 
+## 8.5.0 — typed build entry points (2026-08-03)
+
+### Added
+
+- **`/plan-agent:fix` and `/plan-agent:refactor`.** Thin dispatchers over the
+  `build` chain that append `--type fix` / `--type refactor`. They restate none
+  of the workflow — the proposal gate, plan authoring, review, and the
+  completion gates all remain `build`'s. Appending rather than prepending means
+  a user-supplied `--type` lands later in the string and wins.
+- **`build` accepts `--type <kind>`** and forwards it to `implementation-plan`
+  on both Step 1b paths. Previously the plan type could only be inferred from
+  the objective's leading verb, against a closed vocabulary — `clean up the
+  token parser` produced `chore`, not `refactor`.
+- **`implementation-plan` accepts `--from-prompt <path>`** — prompt-source
+  mode. Reads a saved proposal prompt for context and authors a plan through the
+  normal drafting workflow. Distinct from conversion mode: a proposal argues
+  whether and what, a plan states how, so proposal headings are input rather
+  than a step list to transcribe. Derives `type` from the proposal's own
+  frontmatter when `--type` is absent, mapping the proposal-only `design` value
+  to `feature`.
+
+### Fixed
+
+- **The proposal path no longer lands in conversion mode.** `build`'s chain
+  handed the prompt path to `implementation-plan` as prose
+  (`author an execution plan from the proposal prompt at <path>.md`), but the
+  parser scans for the first non-flag `.md` token *anywhere* in the string, so
+  the prompt was picked up as `$MD_SOURCE` and restructured into a plan whose
+  steps restated proposal headings. The chain's prose guard against this
+  ("never a bare `.md` first token") was unenforceable, since leading with prose
+  did not stop the scan. The path now travels behind `--from-prompt`, where a
+  flag value is not a positional token and the ambiguity cannot arise.
+- **`build-proposal`'s Step 8 handoff carried the same bug** and is fixed the
+  same way. The printed command a user copies by hand now reads
+  `/plan-agent:implementation-plan <objective> --from-prompt <path>`. This is the
+  path taken when someone runs `build-proposal` on its own rather than through
+  the `build` chain, so fixing only the chain would have left the bug reachable.
+- **The proposal path no longer types every plan as `chore`.** That same invoke
+  led with the verb `author`, which matches no inference bucket. Plans authored
+  through the proposal gate now take an explicit `--type`, the proposal's own
+  frontmatter type, or the real objective's verb — in that order.
+
+
 ## 8.4.0 — implement in a fresh context window (2026-08-02)
 
 ### Added

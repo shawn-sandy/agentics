@@ -114,10 +114,23 @@ STEP8="$(sed -n '/^### Step 8 —/,/^## Operating principles/p' "$BP")"
 STEP8F="$(printf '%s' "$STEP8" | flat)"
 M=""
 printf '%s' "$STEP8" | grep -qF 'prompts-dir>/proposal-<slug>.md' || M="$M handoff-not-prompt-path"
-printf '%s' "$STEP8F" | grep -qi 'author an execution plan from the proposal prompt at' || M="$M no-objective-lead"
-if printf '%s' "$STEP8" | grep -qE 'implementation-plan +[^ ]+\.md'; then M="$M bare-md-token"; fi
-# The chain reads whatever Step 8 reports, so build/ must expect a prompt too.
-printf '%s' "$(cat "${BUILD_FILES[@]}" | flat)" | grep -qi 'proposal prompt at <prompt path>' || M="$M chain-not-updated"
+# Since 8.5.0 the path rides behind `--from-prompt` instead of inside prose
+# ("author an execution plan from the proposal prompt at ..."). Objective-leading
+# prose was never actually protective: implementation-plan's conversion scan
+# takes the first `.md`-suffixed POSITIONAL token anywhere in the string, so the
+# prompt was picked up as a conversion source no matter what preceded it. A flag
+# value is not a positional token, so the flag form is the guarantee the prose
+# only claimed to be.
+printf '%s' "$STEP8F" | grep -qF -- '--from-prompt <prompts-dir>/proposal-<slug>.md' || M="$M handoff-not-behind-flag"
+# The prose handoff is the conversion-mode bug. Fail on its return anywhere in
+# Step 8, including alongside a correct flag form.
+if printf '%s' "$STEP8F" | grep -qi 'execution plan from the proposal prompt at'; then M="$M prose-handoff-returned"; fi
+# Narrower than the flag check above and kept for the adjacency case it names:
+# a positional path immediately after the command, with no flag at all.
+if printf '%s' "$STEP8" | grep -qE 'implementation-plan +[^-][^ ]*\.md'; then M="$M bare-md-token"; fi
+# The chain reads whatever Step 8 reports, so build/ must expect a prompt too —
+# and must pass it the same way, or the two halves of the handoff disagree.
+printf '%s' "$(cat "${BUILD_FILES[@]}" | flat)" | grep -qF -- '--from-prompt <prompt path>' || M="$M chain-not-updated"
 [ -z "$M" ] && echo "  PASS" || fail "Step 8 handoff:$M"
 
 echo "7. Tier behaviour survives: Tier 0 writes nothing, Tier 1 omits unpopulated slots..."

@@ -28,13 +28,19 @@ proposal writing, plan authoring, or review. Control returns through
    It converges on a **saved proposal prompt** at
    `<prompts-dir>/proposal-<slug>.md`; that path, the one it reports, is what
    chains onward. Invoke `Skill(skill: "plan-agent:implementation-plan", args:
-   "author an execution plan from the proposal prompt at <prompt path> --dir <path>")`
+   "<objective> --from-prompt <prompt path> --dir <path> --type <kind>")`
    — **`--dir` is forwarded here**, unlike to `build-proposal`: it names where
    the *plan* goes, so omitting it would write the spec to the default directory
-   and then fail to resolve it on return. Lead with
-   objective text naming the prompt path, never a bare `.md` first token,
-   which would drop `implementation-plan` into conversion mode and produce a
-   plan whose steps restate proposal headings instead of naming real actions.
+   and then fail to resolve it on return. `--type` is forwarded when it was
+   given.
+   **Pass the prompt path behind `--from-prompt`, never as a bare positional
+   token.** `implementation-plan` scans positional arguments for a `.md` suffix
+   and treats the first hit as a conversion source — the prompt would be
+   restructured into a plan whose steps restate proposal headings instead of
+   naming real actions. A flag value is not a positional token, so the
+   ambiguity cannot arise. Lead with the original objective text: it is what
+   the plan is actually about, and it is what type inference reads when no
+   `--type` was given.
    **No proposal written → fall through to the direct path.** `build-proposal`
    triages a Tier 0 idea by answering it directly and writing no artifact of
    either kind, so there is nothing to plan from. Say so in one line and continue
@@ -42,7 +48,7 @@ proposal writing, plan authoring, or review. Control returns through
    an empty or guessed path.
 4. **Direct path.** Invoke
    `Skill(skill: "plan-agent:implementation-plan", args: "<objective>")`,
-   forwarding `--dir <path>` when it was given.
+   forwarding `--dir <path>` and `--type <kind>` when they were given.
 5. **Return path.** Re-resolve the produced spec **by path** — the one
    `implementation-plan` reports — never by re-running discovery, which would
    ask the user about the plan they just watched being authored. Then:

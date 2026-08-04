@@ -280,16 +280,26 @@ else
 fi
 
 echo "15. No file under the skill advertises a bare .md handoff; Step 8 hands off the prompt path..."
-# A bare `.md` first token would put implementation-plan into conversion mode,
+# A positional `.md` token would put implementation-plan into conversion mode,
 # which maps Changes/Steps -> step cards; proposals have only Workstreams/Roadmap,
-# so the handoff must lead with an objective to keep the full step-drafting pass.
+# so the handoff must keep the full step-drafting pass.
 # Scoped to the whole skill dir, not just SKILL.md: references/artifact-shape.md
 # taught the trap for months because the old check only scanned SKILL.md.
-if grep -rqE 'implementation-plan +[^ ]+\.md' "$SKILL_DIR"; then
+#
+# Until 8.5.0 the defence was "lead with objective text". That was never real:
+# implementation-plan takes the first `.md`-suffixed POSITIONAL token ANYWHERE in
+# the string, so prose in front of the path changed nothing. Since 8.5.0 the path
+# rides behind `--from-prompt`, and a flag value is not a positional token. The
+# regex below therefore excludes a `-`-led token — that is the flag form, and it
+# is the only shape allowed to be followed by a path.
+if grep -rqE 'implementation-plan +[^-][^ ]*\.md' "$SKILL_DIR"; then
   echo "  FAIL: a build-proposal file advertises a bare '.md' handoff token (triggers conversion mode)"
-  grep -rnE 'implementation-plan +[^ ]+\.md' "$SKILL_DIR" | sed 's/^/    /'
+  grep -rnE 'implementation-plan +[^-][^ ]*\.md' "$SKILL_DIR" | sed 's/^/    /'
   FAILURES=$((FAILURES + 1))
-elif grep -q "author an execution plan from the proposal prompt at" "$SKILL" \
+elif grep -q "author an execution plan from the proposal prompt at" "$SKILL"; then
+  echo "  FAIL: Step 8 still uses the pre-8.5.0 prose handoff, which lands in conversion mode"
+  FAILURES=$((FAILURES + 1))
+elif grep -qF -- "--from-prompt <prompts-dir>/proposal-<slug>.md" "$SKILL" \
   && grep -q "prompts-dir>/proposal-<slug>.md" "$SKILL" \
   && grep -qi "conversion" "$SKILL"; then
   echo "  PASS"

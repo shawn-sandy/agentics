@@ -214,10 +214,33 @@ printf '%s' "$CHAIN" | grep -qi 'is forwarded here' || MISSING="$MISSING dir-not
 # Since plan-agent 6.0.0 build-proposal converges on a saved prompt, not a
 # proposal doc. The chain interpolates whatever it reports without parsing it, so
 # a stale artifact name here silently chains a path that was never written.
-printf '%s' "$CHAIN" | grep -qi 'proposal prompt at <prompt path>' || MISSING="$MISSING prompt-path-chained"
+#
+# Since 8.5.0 that path travels behind `--from-prompt` rather than inside prose
+# ("...proposal prompt at <prompt path>"). implementation-plan scans positional
+# arguments for a `.md` suffix and treats the first hit as a CONVERSION source,
+# anywhere in the string — so the prose form silently restructured the proposal
+# into a plan whose steps restated its headings. The chain's own prose guard
+# ("never a bare `.md` first token") could not prevent that, because the scan was
+# never limited to the first token. A flag value is not a positional token, so
+# the flag form is the fix. Asserting the flag rather than the placeholder alone
+# is what keeps a revert to prose from passing.
+printf '%s' "$CHAIN" | grep -qF -- '--from-prompt <prompt path>' || MISSING="$MISSING prompt-path-chained-behind-flag"
 if printf '%s' "$CHAIN" | grep -qi 'from the proposal at <'; then
   MISSING="$MISSING stale-proposal-doc-path"
 fi
+# The prose handoff is the conversion-mode bug itself. Fail on its return even if
+# `--from-prompt` is also present somewhere, since the first `.md`-suffixed
+# positional token still wins the scan.
+if printf '%s' "$CHAIN" | grep -qi 'proposal prompt at <prompt path>'; then
+  MISSING="$MISSING prompt-path-as-bare-positional"
+fi
+# Both Step 1b paths forward --type, or a plan authored through the chain gets
+# its type inferred from a leading verb that belongs to the chain's own wording
+# ("author an execution plan...") rather than to the user's objective — which
+# resolved to `chore` for every proposal-path plan before 8.5.0.
+# `flatten` collapses the section to a single line, so `grep -c` would cap at 1
+# and pass on one mention. Count occurrences, not matching lines.
+[ "$(printf '%s' "$CHAIN" | grep -o -- '--type' | wc -l)" -ge 2 ] || MISSING="$MISSING type-not-forwarded-on-both-paths"
 # Tier 0 writes neither artifact, and the abandonment contract must cover both.
 printf '%s' "$CHAIN" | grep -qi 'no artifact of either kind' || MISSING="$MISSING tier0-neither-artifact"
 printf '%s' "$CHAIN" | grep -qi 'leave \*\*both\*\* artifacts in place' || MISSING="$MISSING abandonment-covers-both"
