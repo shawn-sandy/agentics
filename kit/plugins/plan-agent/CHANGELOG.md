@@ -5,25 +5,39 @@
 
 ### Fixed
 
+- **A plan is identified by its `plan-*` meta, not by its file extension.** The
+  walk in `build-index.sh`, `build-artifacts-index.sh`, and
+  `build-prototypes-index.sh` counted every `.html` it found under the plans
+  directory. A repo that keeps design source beside its plans — a
+  `welcome-desk-design/` holding `Welcome Desk.html` next to `welcome.jsx` and
+  `welcome.css` — therefore got that mock counted as a plan, and a Plans total
+  one larger than the number of rows its plans gallery renders. All three
+  generators now apply a shared `is_plan()` check: the file must carry a
+  `plan-status`, `plan-created`, or `plan-type` meta tag, which every plan this
+  plugin renders does and no hand-written page does
 - **`plans-library` no longer counts plans its own way.** The skill hand-executed
   `find "$PLANS_DIR" -maxdepth 1 -name "*.html"`, a third collection rule
   alongside the identical walks in `build-index.sh` and
   `build-artifacts-index.sh`. `-maxdepth 1` is not the archive/artifacts filter
   its comment claimed: it counted `<plans>/artifacts/*.html` as plans while
-  dropping every plan nested one level down. In a repo with two saved artifacts
-  under the plans directory and one plan in a subdirectory, the Plans gallery
-  printed 74 and the Artifacts gallery's Plans tab printed 73 — an off-by-one
-  that was really +2 and -1 cancelling. Steps 1-5 now delegate to
+  dropping every plan nested one level down. Steps 1-5 now delegate to
   `hooks/build-index.sh`, the same script the `rebuild-plans-index.py`
-  PostToolUse hook already runs, so there is one implementation and one total.
-  The canonical plan set is stated in the skill: every `.html` under the plans
-  directory except `index.html`, walking subdirectories, skipping `archive/` and
-  `artifacts/`. Unrendered `.md` specs are not counted — the gallery has no row
-  to link them to
+  PostToolUse hook already runs, so there is one implementation and one total
 - **Gallery order now matches its own subtitle.** The skill sorted purely
   newest-first while substituting the subtitle "in flight first, then newest".
   `build-index.sh` sorts in-progress plans ahead of the rest, so the page and its
   description finally agree
+
+### Note
+
+An earlier draft of this entry claimed these changes fixed a 74-vs-73 Plans
+total observed in a consumer repo. They did not, and the claim is withdrawn.
+That divergence was between *that repo's own* plans-index generator, which
+globbed `<plans>/artifacts/*.html` and counted published artifacts as plans, and
+this plugin's `plans_count()`, which counted a design mock. The apparent
+off-by-one was +2 and -1 cancelling. `plans-library` was a latent third rule
+that had not yet run there. The `is_plan()` fix above closes this plugin's half;
+the consumer repo owns the other half.
 
 
 ## 8.5.0 — typed build entry points (2026-08-03)

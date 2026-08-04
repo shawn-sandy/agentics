@@ -88,12 +88,30 @@ def resolve_templates_dir():
 templates_dir = resolve_templates_dir()
 
 # ── Collect and sort plan files ────────────────────────────────────────────────
+_PLAN_META = re.compile(r'<meta\s+name="plan-(?:status|created|type)"')
+
+def is_plan(path):
+    """True when the file is a rendered plan rather than some other HTML that
+    happens to live under the plans directory. Every plan this plugin renders
+    carries plan-* meta; design mocks, exports, and hand-written pages kept
+    beside the plans do not. Extension alone is not enough — a repo with a
+    design-source subdirectory under its plans directory would otherwise get
+    those mocks as cards in its plans gallery, and a Plans total larger than
+    the number of plans it actually has."""
+    try:
+        with open(path, encoding='utf-8', errors='replace') as fh:
+            return bool(_PLAN_META.search(fh.read(4000)))
+    except OSError:
+        return False
+
 plan_files = []
 for dirpath, dirnames, filenames in os.walk(plans_dir):
     dirnames[:] = [d for d in dirnames if not d.startswith('.') and d not in ('archive', 'artifacts')]
     for name in filenames:
         if name.endswith('.html') and name != 'index.html':
-            plan_files.append(os.path.join(dirpath, name))
+            path = os.path.join(dirpath, name)
+            if is_plan(path):
+                plan_files.append(path)
 def _plan_created_sort_key(path):
     """In-progress plans first, then plan-created desc; undated plans sort last
     by filename. The gallery leads with the work actually in flight — 88 cards

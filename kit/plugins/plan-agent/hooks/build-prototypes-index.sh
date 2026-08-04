@@ -163,18 +163,33 @@ def docs_count(directory):
     except OSError:
         return 0
 
+_PLAN_META = re.compile(r'<meta\s+name="plan-(?:status|created|type)"')
+
+def is_plan(path):
+    """True when the file is a rendered plan rather than some other HTML that
+    happens to live under the plans directory. Every plan this plugin renders
+    carries plan-* meta; design mocks, exports, and hand-written pages kept
+    beside the plans do not."""
+    try:
+        with open(path, encoding='utf-8', errors='replace') as fh:
+            return bool(_PLAN_META.search(fh.read(4000)))
+    except OSError:
+        return False
+
 def plans_count(directory):
     """The plans collection counted the way the plans gallery counts it: a walk
-    that includes nested plans and skips archive/ and artifacts/. A flat listdir
-    here would print a different Plans total on this page than the Plans page
-    prints on its own, which reads as data loss rather than as the two
-    different counting rules it actually is."""
+    that includes nested plans, skips archive/ and artifacts/, and keeps only
+    files that are actually plans. A flat listdir here would print a different
+    Plans total on this page than the Plans page prints on its own, which reads
+    as data loss rather than as the two different counting rules it actually
+    is."""
     total = 0
     for dirpath, dirnames, filenames in os.walk(directory):
         dirnames[:] = [d for d in dirnames
                        if not d.startswith('.') and d not in ('archive', 'artifacts')]
         total += sum(1 for f in filenames
-                     if f.endswith('.html') and f != 'index.html')
+                     if f.endswith('.html') and f != 'index.html'
+                     and is_plan(os.path.join(dirpath, f)))
     return total
 
 def apply_shell(text, output_dir, active):
