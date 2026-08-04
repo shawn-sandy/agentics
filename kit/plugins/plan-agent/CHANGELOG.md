@@ -6,10 +6,13 @@
 ### Added
 
 - **`/plan-agent:fix` and `/plan-agent:refactor`.** Thin dispatchers over the
-  `build` chain that append `--type fix` / `--type refactor`. They restate none
+  `build` chain that prepend `--type fix` / `--type refactor`. They restate none
   of the workflow — the proposal gate, plan authoring, review, and the
-  completion gates all remain `build`'s. Appending rather than prepending means
-  a user-supplied `--type` lands later in the string and wins.
+  completion gates all remain `build`'s. The default is **prepended** precisely
+  because `--type` resolves last-wins: `/plan-agent:fix task --type docs`
+  expands to `--type fix task --type docs`, so the user's `docs` is last and
+  wins. Appending would invert that and let the command's default silently beat
+  an explicit override.
 - **`build` accepts `--type <kind>`** and forwards it to `implementation-plan`
   on both Step 1b paths. Previously the plan type could only be inferred from
   the objective's leading verb, against a closed vocabulary — `clean up the
@@ -18,9 +21,13 @@
   mode. Reads a saved proposal prompt for context and authors a plan through the
   normal drafting workflow. Distinct from conversion mode: a proposal argues
   whether and what, a plan states how, so proposal headings are input rather
-  than a step list to transcribe. Derives `type` from the proposal's own
-  frontmatter when `--type` is absent, mapping the proposal-only `design` value
-  to `feature`.
+  than a step list to transcribe. When `--type` is absent, a source `type:` is
+  used **only if it is already a valid plan type**; anything else falls through
+  to leading-verb inference on the objective. No mapping table — the usual
+  `--from-prompt` target is a saved prompt, and `prompt` stamps its own genre
+  classifier there (`type: proposal` on every prompt `build-proposal` saves),
+  which says nothing about the plan's type and would fail the render if carried
+  across.
 
 ### Fixed
 

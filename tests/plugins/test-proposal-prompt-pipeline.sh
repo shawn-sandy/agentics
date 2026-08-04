@@ -133,6 +133,30 @@ if printf '%s' "$STEP8" | grep -qE 'implementation-plan +[^-][^ ]*\.md'; then M=
 printf '%s' "$(cat "${BUILD_FILES[@]}" | flat)" | grep -qF -- '--from-prompt <prompt path>' || M="$M chain-not-updated"
 [ -z "$M" ] && echo "  PASS" || fail "Step 8 handoff:$M"
 
+echo "6b. Prompt-source mode never propagates the prompt's own 'proposal' type..."
+# The `--from-prompt` target is a SAVED PROMPT, and prompt/SKILL.md writes its
+# own classifier into that frontmatter — every prompt build-proposal saves
+# carries `type: proposal`. That names the prompt's genre, not the plan's, and
+# it is not a member of the plan enum (feature|fix|refactor|docs|chore), so
+# carrying it across writes an invalid `type:` and fails the render.
+# The rule must be "valid plan type or fall through to the objective", never a
+# mapping table — a mapping is a guess, and the objective is real signal.
+IP="$ROOT/kit/plugins/plan-agent/skills/implementation-plan/SKILL.md"
+IPF="$(cat "$IP" | flat)"
+M=""
+# Premise guard: this check is only meaningful while `prompt` really does stamp
+# a classifier into the saved prompt's frontmatter. If that ever stops being
+# true, fail loudly here rather than leaving a check that asserts nothing.
+grep -qF 'type: {classified type}' "$ROOT/kit/plugins/plan-agent/skills/prompt/SKILL.md" \
+  || M="$M premise-gone-prompt-writes-no-type"
+printf '%s' "$IPF" | grep -qi 'only when it is already a valid plan type' || M="$M no-valid-type-only-rule"
+printf '%s' "$IPF" | grep -qi 'type: proposal' || M="$M proposal-case-unnamed"
+printf '%s' "$IPF" | grep -qi 'Do not map unrecognized values' || M="$M mapping-not-forbidden"
+# The pre-review rule mapped design->feature and fell back only on a MISSING
+# key, which is exactly how `type: proposal` slipped through.
+if printf '%s' "$IPF" | grep -qi 'so it becomes.*feature'; then M="$M stale-design-mapping"; fi
+[ -z "$M" ] && echo "  PASS" || fail "prompt-source type derivation:$M"
+
 echo "7. Tier behaviour survives: Tier 0 writes nothing, Tier 1 omits unpopulated slots..."
 # build/SKILL.md falls through to direct plan authoring precisely when the
 # proposal stage produces no artifact; a Tier 0 run that wrote a file would

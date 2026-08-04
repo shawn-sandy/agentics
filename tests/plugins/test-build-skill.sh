@@ -398,6 +398,35 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
+echo "19. The typed entry commands prepend their default --type, so a user's wins..."
+# `build` resolves a repeated --type LAST-WINS. A command that appends its
+# default therefore beats the user's explicit value:
+#   /plan-agent:fix task --type docs  ->  "task --type docs --type fix"  -> fix
+# Prepending is what makes the advertised override real:
+#   -> "--type fix task --type docs" -> docs
+# Asserting the ORDER, not just the presence of both tokens, is the whole point:
+# the appended form contains exactly the same two tokens and is silently wrong.
+MISSING=""
+CMD_DIR="$ROOT/kit/plugins/plan-agent/commands"
+for pair in "fix.md:fix" "refactor.md:refactor"; do
+  f="${pair%%:*}"; kind="${pair##*:}"
+  p="$CMD_DIR/$f"
+  if [ ! -f "$p" ]; then MISSING="$MISSING $f-missing"; continue; fi
+  # The invoke line must read `--type <kind> $ARGUMENTS`, in that order.
+  grep -qF -- "args: \"--type $kind \$ARGUMENTS\"" "$p" || MISSING="$MISSING $f-not-prepended"
+  # And must not carry the appended form anywhere.
+  if grep -qF -- "\$ARGUMENTS --type $kind" "$p"; then MISSING="$MISSING $f-appends-default"; fi
+  # last-wins is the premise the ordering depends on; if build ever changes to
+  # first-wins these files must flip too, so name the coupling here.
+  grep -qi 'last-wins' "$p" || MISSING="$MISSING $f-omits-precedence-rationale"
+done
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: typed entry commands mishandle --type precedence:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
 echo ""
 if [ "$FAILURES" -eq 0 ]; then
   echo "All build-skill checks passed."

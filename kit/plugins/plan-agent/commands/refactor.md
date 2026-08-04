@@ -6,13 +6,17 @@ argument-hint: "<objective> [--dir <path>]"
 
 # Refactor
 
-Invoke `Skill(skill: "plan-agent:build", args: "$ARGUMENTS --type refactor")`.
+Invoke `Skill(skill: "plan-agent:build", args: "--type refactor $ARGUMENTS")`.
 
 A typed entry point, nothing more. Every step — the proposal gate, plan
 authoring, review, implementation, the completion gates — belongs to `build`
-and is not restated here. `--type refactor` is appended rather than prepended
-so a user-supplied `--type` lands later in the string and wins under last-wins
-parsing.
+and is not restated here.
+
+**`--type refactor` is prepended, not appended.** `build` resolves a repeated
+`--type` last-wins, so the default has to come *first* for a user's explicit
+value to override it: `/plan-agent:refactor task --type docs` must expand to
+`--type refactor task --type docs`, where `docs` is last and wins. Appending
+would invert that and make the command's default silently beat the user.
 
 `allowed-tools` mirrors `build`'s exactly. `Skill()` runs the skill body
 **inline under this command's permissions**, so a short list here would not fail

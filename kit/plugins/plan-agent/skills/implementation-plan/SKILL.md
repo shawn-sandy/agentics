@@ -110,13 +110,23 @@ Read it for context — the decisions it settled, the constraints it names, the
 approach it recommends — then author a plan through the **normal drafting
 workflow**. This is not conversion: a proposal argues *whether and what*, a plan
 states *how*, so its headings are input, never a step list to transcribe. The
-skip flags are not implied; pass `--quick` explicitly to skip stages. When
-`--type` is absent, read the proposal's own `type:` frontmatter and map it —
-`design` is a proposal-only value with no plan equivalent, so it becomes
-`feature`; `feature`, `refactor`, and `chore` carry across unchanged. Fall back
-to leading-verb inference only when the proposal has no `type:`. If the path is
-unreadable, say so and ask whether to draft from the objective alone — never
-invent proposal content.
+skip flags are not implied; pass `--quick` explicitly to skip stages.
+
+**Type derivation here has one rule: a source `type:` is used only when it is
+already a valid plan type** (`feature`, `fix`, `refactor`, `docs`, `chore`).
+Anything else — including a missing key — falls through to leading-verb
+inference on the objective. Do not map unrecognized values onto plan types.
+This matters because the usual `--from-prompt` target is a **saved prompt**, not
+a proposal document, and `prompt` writes its own classifier into that
+frontmatter: every prompt `build-proposal` saves carries `type: proposal`, which
+names the *prompt's* genre and says nothing about the plan's. Carrying it across
+would write an invalid `type:` and fail the render; special-casing it into some
+plan type would be a guess. The objective is the better signal, which is why the
+handoff leads with it. The same rule covers a `--from-prompt` pointed at the
+legacy proposal document, whose `design` value is likewise not a plan type.
+
+If the path is unreadable, say so and ask whether to draft from the objective
+alone — never invent proposal content.
 
 **Conversion mode** (`$MD_SOURCE` set): a committed markdown plan is
 pre-validated content, so conversion implies `--quick` (extra objective
