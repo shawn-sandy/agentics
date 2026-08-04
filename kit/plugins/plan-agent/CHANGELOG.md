@@ -1,6 +1,31 @@
 # Changelog
 
 
+## 8.5.1 — one plan-counting rule (2026-08-04)
+
+### Fixed
+
+- **`plans-library` no longer counts plans its own way.** The skill hand-executed
+  `find "$PLANS_DIR" -maxdepth 1 -name "*.html"`, a third collection rule
+  alongside the identical walks in `build-index.sh` and
+  `build-artifacts-index.sh`. `-maxdepth 1` is not the archive/artifacts filter
+  its comment claimed: it counted `<plans>/artifacts/*.html` as plans while
+  dropping every plan nested one level down. In a repo with two saved artifacts
+  under the plans directory and one plan in a subdirectory, the Plans gallery
+  printed 74 and the Artifacts gallery's Plans tab printed 73 — an off-by-one
+  that was really +2 and -1 cancelling. Steps 1-5 now delegate to
+  `hooks/build-index.sh`, the same script the `rebuild-plans-index.py`
+  PostToolUse hook already runs, so there is one implementation and one total.
+  The canonical plan set is stated in the skill: every `.html` under the plans
+  directory except `index.html`, walking subdirectories, skipping `archive/` and
+  `artifacts/`. Unrendered `.md` specs are not counted — the gallery has no row
+  to link them to
+- **Gallery order now matches its own subtitle.** The skill sorted purely
+  newest-first while substituting the subtitle "in flight first, then newest".
+  `build-index.sh` sorts in-progress plans ahead of the rest, so the page and its
+  description finally agree
+
+
 ## 8.5.0 — typed build entry points (2026-08-03)
 
 ### Added
