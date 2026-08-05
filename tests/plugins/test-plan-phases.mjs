@@ -98,6 +98,36 @@ Only paragraph of context.
 Render, extract, re-render, and diff.
 `;
 
+/** A plan phased partway through: step 1 has no phase, phasing starts at 2 —
+ * the retrofit shape (finish some steps, then add checkpoints for the rest). */
+const PARTIALLY_PHASED_SPEC = `---
+status: in-progress
+type: feature
+created: 2026-01-02
+repo: phase-repo
+---
+# Plan: A plan phased partway through
+
+## Objective
+Prove a leading unphased step does not corrupt the first phase's range.
+
+## Steps
+
+1. [x] Do the unphased setup step. Why: it predates the retrofit. Verify: it still carries no phase.
+
+### Phase: Build
+
+2. Group the step cards. Why: the progress JS counts .step-card. Verify: the count still matches.
+3. Render the Decisions card. Why: a resumed session re-litigates what it cannot see. Verify: the nav gains an entry.
+
+## Acceptance Criteria
+- [x] Setup is done.
+- [ ] Build phase is done.
+
+## Verification
+Render, extract, re-render, and diff.
+`;
+
 /** The frozen unphased fixture. Do not edit without re-deriving BASELINE_SHA256. */
 const UNPHASED_SPEC = `---
 status: todo
@@ -170,6 +200,24 @@ ok('objective: a phased plan with Decisions survives render → extract → re-r
   // Round 3: re-render the recovered spec — the cycle must be stable, which is
   // what proves neither side quietly normalized the other's output.
   const reHtml = render({ ...reparsed, metadata: parsed.metadata }, 'phased');
+  assert.deepEqual(extractSections(reHtml), parsed.sections, 're-render diverged');
+});
+
+ok('a leading unphased step does not shift the first phase\'s range on extraction', () => {
+  const parsed = parseSpecMarkdown(PARTIALLY_PHASED_SPEC);
+  const expectedPhases = [{ name: 'Build', firstStep: 2, lastStep: 3 }];
+  assert.deepEqual(parsed.sections.phases, expectedPhases, 'spec parse');
+
+  const html = render(parsed, 'partial');
+  // Step 1 renders as a bare card before the phase-group — stepsBody()'s
+  // lead-in loop — which is exactly what extractSections() must count past.
+  assert.match(html, /<div class="step-card[^"]*"[^>]*id="step-1"[\s\S]*?<div class="phase-group"/);
+  const extracted = extractSections(html);
+  assert.deepEqual(extracted.phases, expectedPhases, 'first phase range absorbed the leading unphased step');
+
+  const reparsed = parseSpecMarkdown(unguardScriptClose(buildDigest(extracted)));
+  assert.deepEqual(reparsed.sections, parsed.sections, 'sections diverged through the digest');
+  const reHtml = render({ ...reparsed, metadata: parsed.metadata }, 'partial');
   assert.deepEqual(extractSections(reHtml), parsed.sections, 're-render diverged');
 });
 

@@ -50,8 +50,8 @@ The renderer has two homes, and that shaped the step order. `tests/plugins/test-
 - tests/plugins/test-plan-phases.mjs (new) — objective-verification smoke test
 - tests/plugins/test-build-plan-html.mjs (modified) — phase and Decisions render cases
 - tests/plugins/test-extract-plan-spec.mjs (modified) — phase and Decisions extraction cases
-- .claude-plugin/marketplace.json (modified) — plan-agent 7.0.1 to 7.1.0
-- kit/plugins/plan-agent/CHANGELOG.md (modified) — 7.1.0 entry
+- .claude-plugin/marketplace.json (modified) — plan-agent 8.5.1 to 8.6.0
+- kit/plugins/plan-agent/CHANGELOG.md (modified) — 8.6.0 entry
 
 ## Steps
 
@@ -66,7 +66,7 @@ The renderer has two homes, and that shaped the step order. `tests/plugins/test-
 9. [x] Teach `skills/finalize-plan/SKILL.md` about phases so it refuses to set `status: completed` while any phase still holds unmarked steps, recording each unfinished phase as a `## Completion Report` bullet instead. Why: `build/SKILL.md` line 303 states that finalize-plan applies the same completion rules and instructs that the two be kept consistent when either changes, so a phase-blind finalize-plan would close out a plan that stopped at its first checkpoint. Verify: run finalize-plan against a phased spec with phase two unmarked and confirm the status stays `in-progress` with the unfinished phase named in the report.
 10. [x] Document both sections in `guidelines/section-catalog.md` with their exact syntax, and replace the "probably two plans — split it" sentence in `guidelines/right-sizing.md` with a phase profile naming when a plan earns phases, then add both to the renderer-derives list in `implementation-plan/SKILL.md`. Why: right-sizing currently sends the author to a mechanism that does not exist, which is the specific gap this plan closes. Verify: confirm the old sentence is gone and that both guideline files show a `### Phase:` example.
 11. [x] Extend `tests/plugins/test-build-plan-html.mjs` and `tests/plugins/test-extract-plan-spec.mjs` with phase and Decisions cases, and add `tests/plugins/test-plan-phases.mjs` asserting the render-extract-re-render cycle preserves both, that an unphased spec renders unchanged, and that `build/SKILL.md` and `finalize-plan/SKILL.md` still carry their phase contract strings. Why: the render-extract-render pair catches a format change applied to one side and missed on the other, and the prose-contract grep follows the established pattern in `test-exitplanmode-guard.sh`, which guards a required skill string the same way. Verify: run all three test files and confirm each exits 0.
-12. [x] Bump plan-agent from 7.0.1 to 7.1.0 in `.claude-plugin/marketplace.json` and add the matching `kit/plugins/plan-agent/CHANGELOG.md` entry describing both new sections, the build checkpoint loop, and the finalize-plan gate. Why: repo convention requires any change under `kit/plugins/` to ship a version exceeding the value on main, and a new spec section is a minor bump. Verify: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0.
+12. [x] Bump plan-agent from 8.5.1 to 8.6.0 in `.claude-plugin/marketplace.json` and add the matching `kit/plugins/plan-agent/CHANGELOG.md` entry describing both new sections, the build checkpoint loop, and the finalize-plan gate. Why: repo convention requires any change under `kit/plugins/` to ship a version exceeding the value on main, and a new spec section is a minor bump. Verify: `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0.
 
 ## Decisions
 
@@ -105,7 +105,7 @@ Tier 1 — This plan changes application code
 - [x] The sentence "probably two plans — split it" no longer appears in `guidelines/right-sizing.md`
 - [x] Each of the three renderer sources under `kit/plugins/plan-agent/scripts/` is byte-identical to its repo-root counterpart under `scripts/`
 - [x] `node tests/plugins/test-plan-phases.mjs` exits 0
-- [x] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with plan-agent at 7.1.0
+- [x] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with plan-agent at 8.6.0
 
 ## Verification
 

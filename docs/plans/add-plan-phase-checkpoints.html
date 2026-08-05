@@ -1569,7 +1569,7 @@ img, video { max-width: 100%; height: auto; }
         <li><a class="rail-step done" href="#step-9"><span class="rail-no">✓</span><span class="rail-text">Teach <code class="md">skills/finalize-plan/SKILL.md</code> about phases so it refuses to set <code class="md">status: completed</code> while any phase still holds unmarked steps, recording each unfinished phase as a <code class="md">## Completion Report</code> bullet instead.</span><span class="rail-state">step 9 of 12, done</span></a></li>
         <li><a class="rail-step done" href="#step-10"><span class="rail-no">✓</span><span class="rail-text">Document both sections in <code class="md">guidelines/section-catalog.md</code> with their exact syntax, and replace the &quot;probably two plans — split it&quot; sentence in <code class="md">guidelines/right-sizing.md</code> with a phase profile naming when a plan earns phases, then add both to the renderer-derives list in <code class="md">implementation-plan/SKILL.md</code>.</span><span class="rail-state">step 10 of 12, done</span></a></li>
         <li><a class="rail-step done" href="#step-11"><span class="rail-no">✓</span><span class="rail-text">Extend <code class="md">tests/plugins/test-build-plan-html.mjs</code> and <code class="md">tests/plugins/test-extract-plan-spec.mjs</code> with phase and Decisions cases, and add <code class="md">tests/plugins/test-plan-phases.mjs</code> asserting the render-extract-re-render cycle preserves both, that an unphased spec renders unchanged, and that <code class="md">build/SKILL.md</code> and <code class="md">finalize-plan/SKILL.md</code> still carry their phase contract strings.</span><span class="rail-state">step 11 of 12, done</span></a></li>
-        <li><a class="rail-step done" href="#step-12"><span class="rail-no">✓</span><span class="rail-text">Bump plan-agent from 7.0.1 to 7.1.0 in <code class="md">.claude-plugin/marketplace.json</code> and add the matching <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> entry describing both new sections, the build checkpoint loop, and the finalize-plan gate.</span><span class="rail-state">step 12 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-12"><span class="rail-no">✓</span><span class="rail-text">Bump plan-agent from 8.5.1 to 8.6.0 in <code class="md">.claude-plugin/marketplace.json</code> and add the matching <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> entry describing both new sections, the build checkpoint loop, and the finalize-plan gate.</span><span class="rail-state">step 12 of 12, done</span></a></li>
       </ul>
     </details>
   </nav>
@@ -1713,8 +1713,8 @@ img, video { max-width: 100%; height: auto; }
             <li><code>test-extract-plan-spec.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">phase and Decisions extraction cases</span></li>
             </ul>
           </li>
-          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 7.0.1 to 7.1.0</span></li>
-          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">7.1.0 entry</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 8.5.1 to 8.6.0</span></li>
+          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">8.6.0 entry</span></li>
         </ul>
       </div>
     </section>
@@ -1953,7 +1953,7 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">done</span>
-                <span class="step-chip-text">Bump plan-agent from 7.0.1 to 7.1.0 in <code class="md">.claude-plugin/marketplace.json</code> and add the matching <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> entry describing both new sections, the build checkpoint loop, and the finalize-plan gate.</span>
+                <span class="step-chip-text">Bump plan-agent from 8.5.1 to 8.6.0 in <code class="md">.claude-plugin/marketplace.json</code> and add the matching <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> entry describing both new sections, the build checkpoint loop, and the finalize-plan gate.</span>
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
@@ -2050,7 +2050,7 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac15" checked>
-          <label for="ac15"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 with plan-agent at 7.1.0</label>
+          <label for="ac15"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 with plan-agent at 8.6.0</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"

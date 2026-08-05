@@ -315,10 +315,17 @@ export function extractSections(html) {
   while ((g = groupRe.exec(stepsInner)) !== null) {
     const inner = sliceBalanced(stepsInner, g.index, 'div');
     if (inner === null) continue;
-    groups.push({ name: decodeEntities(g[1]), inner });
+    groups.push({ name: decodeEntities(g[1]), inner, start: g.index });
   }
   if (groups.length > 0) {
-    let seen = 0;
+    // A plan can be phased partway through — stepsBody() (build-plan-html.mjs)
+    // renders any steps before the first phase heading as bare cards. Count
+    // those leading cards so the first phase's range isn't misattributed to
+    // step 1; parseSpecMarkdown only ever leaves an unphased run BEFORE the
+    // first heading, never between phases, so this single lead-in count is
+    // the whole correction needed.
+    const before = stepsInner.slice(0, groups[0].start);
+    let seen = allInnerByRe(before, /<div\b[^>]*class="step-card[" ][^>]*>/, 'div').length;
     phases = groups.map(({ name, inner }) => {
       const firstStep = seen + 1;
       seen += allInnerByRe(inner, /<div\b[^>]*class="step-card[" ][^>]*>/, 'div').length;
