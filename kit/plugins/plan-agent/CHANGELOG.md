@@ -25,6 +25,10 @@
   rewritten skill's only action dead on arrival. Check 11b of
   `tests/plugins/test-extractor-wiring.sh` pins the call site in command position
 
+- **`plans-library` no longer claims it opened a browser it could not open.** The
+  launch step ended in `|| true`, so a headless box — no `open`, no `xdg-open` —
+  still got "opened in your browser". It now reports which happened, and still
+  never fails the skill: the gallery is written and valid either way
 - **`build-index.sh` reports the number of cards it wrote, not the number of files
   it found.** The card loop skips any plan it cannot open — a broken symlink, a
   file whose permissions changed between the walk and the read — but the total

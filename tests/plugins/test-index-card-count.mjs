@@ -19,6 +19,19 @@ const TMP = mkdtempSync(join(tmpdir(), 'index-card-count-'));
 // Every sibling suite cleans up after itself; this one leaked a dir per run.
 process.on('exit', () => rmSync(TMP, { recursive: true, force: true }));
 
+// Fenced bash blocks only — the commands the model is told to RUN. plans-library's
+// prose quotes the `find -maxdepth 1` it replaced, and a scan over the whole body
+// would read that history as a live call site.
+function bashBlocks(body) {
+  return [...body.matchAll(/```bash\n([\s\S]*?)```/g)].map((m) => m[1]);
+}
+
+// Any way of enumerating the directory independently, not one pipeline shape. A
+// reintroduced scan is far more likely to be spelled `X=$(find … | wc -l)` or a
+// mapfile/glob than as a line starting with `find`, so anchoring to line start or
+// requiring a `| wc` would let the realistic regression straight through.
+const ENUMERATION = /\b(find|ls|mapfile|compgen|readarray|os\.walk|listdir|glob\.glob|iglob)\b/;
+
 const SKILLS = [
   {
     name: 'plans-library',
@@ -26,10 +39,10 @@ const SKILLS = [
     countVar: 'PLAN_COUNT',
     noun: 'plans',
     // 8.5.1 deleted this skill's own scan: the count now comes from
-    // build-index.sh's own `wrote … (N items)` line. So the thing to guard
-    // against is the skill re-deriving it by listing the directory itself —
-    // that second collection rule is exactly what dropped nested plans.
-    countMustNot: /^\s*(find|ls)\s[^\n]*\|[^\n]*wc/m,
+    // build-index.sh's own `wrote … (N items)` line. A delegating skill has no
+    // legitimate reason to enumerate the plans directory at all, so the rule is
+    // the blunt one — nothing it runs may list files.
+    countMustNot: (body) => bashBlocks(body).some((b) => ENUMERATION.test(b)),
     countMust: /Capture[^\n]*`PLAN_COUNT`/,
   },
   {
@@ -37,7 +50,10 @@ const SKILLS = [
     path: 'kit/plugins/social-media-tools/skills/media-library/SKILL.md',
     countVar: 'SOURCE_COUNT',
     noun: 'files',
-    countMustNot: /SOURCE_COUNT=\$\(printf[^\n]*\$MEDIA_FILES/,
+    // NOT the blunt rule: this skill still does its own scan by design, so the
+    // defect to catch is narrower — deriving the count from the raw file list
+    // rather than from the entries it actually emitted.
+    countMustNot: (body) => /SOURCE_COUNT=\$\(printf[^\n]*\$MEDIA_FILES/.test(body),
     countMust: /SOURCE_COUNT=<number of (entries|cards)/,
   },
 ];
@@ -97,7 +113,7 @@ function assertParsedCountSemantics(skill) {
   const body = readFileSync(join(ROOT, skill.path), 'utf8');
   check(
     `${skill.name}: ${skill.countVar} is not re-derived from a file listing`,
-    !skill.countMustNot.test(body),
+    !skill.countMustNot(body),
     'skill still counts the source files itself instead of using the emitted count',
   );
   check(

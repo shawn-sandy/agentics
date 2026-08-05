@@ -101,10 +101,18 @@ and the `PLAN_COUNT` the script reported — and **STOP** instead of opening the
 ## Step 3 — Open in browser
 
 ```bash
-open "$INDEX_PATH" 2>/dev/null || xdg-open "$INDEX_PATH" 2>/dev/null || true
+open "$INDEX_PATH" 2>/dev/null || xdg-open "$INDEX_PATH" 2>/dev/null || echo "[plans-library] no browser launcher"
 ```
 
-Tell the user:
+A headless box has neither launcher, and the gallery is still written and still
+valid — so this never fails the skill. It reports instead: the fallback `echo`
+is what tells you which of the two messages below to use.
+
+If the `no browser launcher` line appeared, tell the user:
+
+> "Plans library generated at `<INDEX_PATH>` with {PLAN_COUNT} plans. No browser launcher available here — open the file yourself to view it."
+
+Otherwise:
 
 > "Plans library generated at `<INDEX_PATH>` with {PLAN_COUNT} plans — opened in your browser. Click any card to open it."
 
