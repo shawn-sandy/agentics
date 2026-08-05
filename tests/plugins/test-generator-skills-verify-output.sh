@@ -128,7 +128,7 @@ kit/plugins/artifact-tools/skills/plan-artifact/SKILL.md|order|^## Step [0-9]+ �
 kit/plugins/artifact-tools/skills/diff-artifact/SKILL.md|order|^## Step [0-9]+ — Publish|\burl\b
 kit/plugins/artifact-tools/skills/session-artifact/SKILL.md|order|^## Step [0-9]+ — Publish|\burl\b
 kit/plugins/artifact-tools/skills/prompt-artifact/SKILL.md|order|^## Step [0-9]+ — Publish|\burl\b
-kit/plugins/plan-agent/skills/plans-library/SKILL.md|order|^## Step [0-9]+ — Populate and write|SOURCE_COUNT
+kit/plugins/plan-agent/skills/plans-library/SKILL.md|order|^## Step [0-9]+ — Build and write|PLAN_COUNT
 kit/plugins/social-media-tools/skills/media-library/SKILL.md|order|^## Step [0-9]+ — Build the HTML page|SOURCE_COUNT
 kit/plugins/memory-tools/skills/agentic-memory-management/SKILL.md|order|^## Step [0-9]+ — Offer to write|TARGET
 kit/plugins/memory-tools/skills/path-rules-advisor/SKILL.md|ref|^.*run \[Verify the write\]\(#verify-the-write\)|TARGET"

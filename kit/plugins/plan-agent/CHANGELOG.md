@@ -1,6 +1,49 @@
 # Changelog
 
 
+## 8.5.1 — plans-library delegates to the gallery generator (2026-08-04)
+
+### Fixed
+
+- **`plans-library` no longer counts plans its own way.** The skill hand-executed
+  `find "$PLANS_DIR" -maxdepth 1 -name "*.html"`, a second collection rule
+  alongside the walk in `hooks/build-index.sh`. `-maxdepth 1` does keep
+  `archive/` and `artifacts/` out, but it sees only the top level of the plans
+  directory — so every plan filed in any other subdirectory vanished from the
+  gallery the moment a user ran this skill, after the `rebuild-plans-index.py`
+  PostToolUse hook had already rendered a card for it. Steps 1-5 now delegate to
+  `hooks/build-index.sh`, the script that hook already runs, so there is one
+  implementation and one total. **-159 lines**
+- **Gallery order now matches its own subtitle.** The skill sorted purely
+  newest-first while substituting the subtitle "in flight first, then newest".
+  `build-index.sh` sorts in-progress plans ahead of the rest, so the page and its
+  description finally agree
+- **The delegated command can actually run.** It is invoked as the bare name
+  `plan-agent-plans-index` via the new `bin/` wrapper, not through a plugin-root
+  variable — the Bash tool refuses any command text carrying a shell expansion
+  before permission rules are consulted, so the path spelling would have made the
+  rewritten skill's only action dead on arrival. Check 11b of
+  `tests/plugins/test-extractor-wiring.sh` pins the call site in command position
+
+- **`plans-library` no longer claims it opened a browser it could not open.** The
+  launch step ended in `|| true`, so a headless box — no `open`, no `xdg-open` —
+  still got "opened in your browser". It now reports which happened, and still
+  never fails the skill: the gallery is written and valid either way
+- **`build-index.sh` reports the number of cards it wrote, not the number of files
+  it found.** The card loop skips any plan it cannot open — a broken symlink, a
+  file whose permissions changed between the walk and the read — but the total
+  was taken from the pre-parse file list, so the page's own "N items" line, the
+  topbar Plans tab, and the `wrote … (N items)` line all overstated by exactly
+  the number dropped. Harmless while nothing compared them; now that
+  `plans-library` checks its card count against that number, one unreadable file
+  would have reported the gallery as a corrupt write and refused to open it
+
+### Added
+
+- **`bin/plan-agent-plans-index`** — bare-name entry point for
+  `hooks/build-index.sh`, mirroring the existing `bin/plan-agent-prototypes-index`
+
+
 ## 8.5.0 — typed build entry points (2026-08-03)
 
 ### Added

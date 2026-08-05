@@ -138,7 +138,7 @@ fi
 # guard is textual and rejects the command string before any shell sees it.
 # Repairing them means extracting the two inline heredoc scripts into scripts/
 # with real CLIs, which is its own change.
-KNOWN_BROKEN="skills/plans-library/SKILL.md:3
+KNOWN_BROKEN="skills/plans-library/SKILL.md:1
 skills/plans-open/SKILL.md:1"
 
 echo "9. No documented interpreter invocation contains shell expansion..."
@@ -276,17 +276,38 @@ echo "11. Bundled scripts are reachable by bare name via bin/ on PATH..."
 # wrapper shares that hop but rebuilds a gallery as a side effect, so it is
 # proven reachable via `command -v` under the same PATH, plus exec bit, clean
 # syntax, and an existing target.
+#
+# plan-agent-plans-index is proven the same way as the prototypes wrapper: both
+# rebuild a gallery as a side effect, so neither can be run for a return code.
 BIN_DIR="$ROOT/kit/plugins/plan-agent/bin"
 RENDER_RC=0
 PATH="$BIN_DIR:$PATH" plan-agent-render >/dev/null 2>&1 || RENDER_RC=$?
 PROTO_RESOLVED="$(PATH="$BIN_DIR:$PATH" command -v plan-agent-prototypes-index || true)"
+PLANS_RESOLVED="$(PATH="$BIN_DIR:$PATH" command -v plan-agent-plans-index || true)"
 if [ "$RENDER_RC" -eq 2 ] \
   && [ "$PROTO_RESOLVED" = "$BIN_DIR/plan-agent-prototypes-index" ] \
   && bash -n "$BIN_DIR/plan-agent-prototypes-index" 2>/dev/null \
-  && [ -f "$ROOT/kit/plugins/plan-agent/hooks/build-prototypes-index.sh" ]; then
+  && [ -f "$ROOT/kit/plugins/plan-agent/hooks/build-prototypes-index.sh" ] \
+  && [ "$PLANS_RESOLVED" = "$BIN_DIR/plan-agent-plans-index" ] \
+  && bash -n "$BIN_DIR/plan-agent-plans-index" 2>/dev/null \
+  && [ -f "$ROOT/kit/plugins/plan-agent/hooks/build-index.sh" ]; then
   pass
 else
-  fail "bin/ wrappers are not reachable by bare name on PATH, or cannot reach their target (plan-agent-render rc=$RENDER_RC, want 2; prototypes resolved to '${PROTO_RESOLVED:-nothing}')"
+  fail "bin/ wrappers are not reachable by bare name on PATH, or cannot reach their target (plan-agent-render rc=$RENDER_RC, want 2; prototypes resolved to '${PROTO_RESOLVED:-nothing}'; plans resolved to '${PLANS_RESOLVED:-nothing}')"
+fi
+
+echo "11b. plans-library invokes its bin/ wrapper in command position..."
+# The positive half of the plans-library repair, and the one that would have
+# caught PR #524: that branch replaced the skill's hand-rolled scan with a
+# single delegated command spelled through a plugin-root expansion, so the
+# rewritten skill's only action could never run. Anchored to command position —
+# prose naming the wrapper opens with a backtick, which is not whitespace, so it
+# cannot satisfy this the way a bare `grep -F` would.
+if grep -qE '^[[:space:]]*plan-agent-plans-index([[:space:]]|$)' \
+     "$ROOT/kit/plugins/plan-agent/skills/plans-library/SKILL.md" 2>/dev/null; then
+  pass
+else
+  fail "plans-library/SKILL.md no longer invokes plan-agent-plans-index in command position — the delegation was removed, renamed, or respelled as a path"
 fi
 
 echo "12. bin/ survives the dist build..."

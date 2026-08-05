@@ -19,18 +19,42 @@ const TMP = mkdtempSync(join(tmpdir(), 'index-card-count-'));
 // Every sibling suite cleans up after itself; this one leaked a dir per run.
 process.on('exit', () => rmSync(TMP, { recursive: true, force: true }));
 
+// Fenced bash blocks only — the commands the model is told to RUN. plans-library's
+// prose quotes the `find -maxdepth 1` it replaced, and a scan over the whole body
+// would read that history as a live call site.
+function bashBlocks(body) {
+  return [...body.matchAll(/```bash\n([\s\S]*?)```/g)].map((m) => m[1]);
+}
+
+// Any way of enumerating the directory independently, not one pipeline shape. A
+// reintroduced scan is far more likely to be spelled `X=$(find … | wc -l)` or a
+// mapfile/glob than as a line starting with `find`, so anchoring to line start or
+// requiring a `| wc` would let the realistic regression straight through.
+const ENUMERATION = /\b(find|ls|mapfile|compgen|readarray|os\.walk|listdir|glob\.glob|iglob)\b/;
+
 const SKILLS = [
   {
     name: 'plans-library',
     path: 'kit/plugins/plan-agent/skills/plans-library/SKILL.md',
-    listVar: 'PLAN_FILES',
+    countVar: 'PLAN_COUNT',
     noun: 'plans',
+    // 8.5.1 deleted this skill's own scan: the count now comes from
+    // build-index.sh's own `wrote … (N items)` line. A delegating skill has no
+    // legitimate reason to enumerate the plans directory at all, so the rule is
+    // the blunt one — nothing it runs may list files.
+    countMustNot: (body) => bashBlocks(body).some((b) => ENUMERATION.test(b)),
+    countMust: /Capture[^\n]*`PLAN_COUNT`/,
   },
   {
     name: 'media-library',
     path: 'kit/plugins/social-media-tools/skills/media-library/SKILL.md',
-    listVar: 'MEDIA_FILES',
+    countVar: 'SOURCE_COUNT',
     noun: 'files',
+    // NOT the blunt rule: this skill still does its own scan by design, so the
+    // defect to catch is narrower — deriving the count from the raw file list
+    // rather than from the entries it actually emitted.
+    countMustNot: (body) => /SOURCE_COUNT=\$\(printf[^\n]*\$MEDIA_FILES/.test(body),
+    countMust: /SOURCE_COUNT=<number of (entries|cards)/,
   },
 ];
 
@@ -80,21 +104,22 @@ function runCheck(script, html, expected) {
   return { status: r.status, out: `${r.stdout}${r.stderr}` };
 }
 
-// SOURCE_COUNT must be the number of entries the generation step PARSED, not the
-// raw file list: those steps skip files they cannot read, and comparing against
-// the raw count reports a mismatch for a file that was deliberately skipped.
+// The expected count must be what the generation step actually EMITTED, never a
+// raw directory listing. A hand-rolling skill skips files it cannot read, and a
+// delegating one hands the whole scan to a generator — either way, counting the
+// files independently reports a mismatch for a file that was legitimately not a
+// card.
 function assertParsedCountSemantics(skill) {
   const body = readFileSync(join(ROOT, skill.path), 'utf8');
-  const rawCount = new RegExp(`SOURCE_COUNT=\\$\\(printf[^\\n]*\\$${skill.listVar}`);
   check(
-    `${skill.name}: SOURCE_COUNT is not the raw ${skill.listVar} line count`,
-    !rawCount.test(body),
-    'skill still derives SOURCE_COUNT from the unfiltered file list',
+    `${skill.name}: ${skill.countVar} is not re-derived from a file listing`,
+    !skill.countMustNot(body),
+    'skill still counts the source files itself instead of using the emitted count',
   );
   check(
-    `${skill.name}: SOURCE_COUNT is documented as the parsed/emitted count`,
-    /SOURCE_COUNT=<number of (entries|cards)/.test(body),
-    'skill does not tell the model to substitute the parsed count',
+    `${skill.name}: ${skill.countVar} is documented as the emitted count`,
+    skill.countMust.test(body),
+    'skill does not tell the model where the emitted count comes from',
   );
 }
 
@@ -145,7 +170,7 @@ for (const skill of SKILLS) {
   assertParsedCountSemantics(skill);
 
   const emptyCount = 0;
-  check(`${skill.name}: empty ${skill.listVar} counts as 0 sources`, emptyCount === 0, `got ${emptyCount}`);
+  check(`${skill.name}: empty ${skill.countVar} counts as 0 sources`, emptyCount === 0, `got ${emptyCount}`);
   const empty = runCheck(script, indexHtml(0), emptyCount);
   check(`${skill.name}: empty index from 0 sources exits 0`, empty.status === 0, empty.out.trim());
 
