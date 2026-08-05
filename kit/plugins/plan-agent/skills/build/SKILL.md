@@ -36,7 +36,7 @@ Read `references/invocation.md` before parsing `$ARGUMENTS`.
 
 Per `references/resolve-plan.md`.
 
-## Re-render (subroutine — referenced by every step below)
+## Re-render (subroutine)
 
 ```bash
 plan-agent-render "<stem>.md" -o "<stem>.html"
@@ -46,7 +46,8 @@ Bare name, never a path — this plugin's `bin/` is on `PATH`. `<stem>` is the
 resolved plan's path without its extension, fixed in Step 1. Run after
 **every** batch of spec edits, status changes included, and as the final
 action. A non-zero exit naming a missing or malformed section means the spec
-edit broke the format: fix the markdown and re-run, never the HTML.
+edit broke the format: fix the markdown and re-run,
+never hand-edit the HTML to compensate.
 Any other failure — `MODULE_NOT_FOUND`, a missing renderer, a node crash — is
 an environment problem: report it and stop, never rewrite a valid spec.
 The `render-plan-html.py` hook also re-renders on each spec write; run the
