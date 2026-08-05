@@ -34,9 +34,12 @@ check to run while they keep working — do not wait for it to finish.
 
 Running this command is the approval for **one squash merge of a fully green
 PR** — it replaces the `merge` skill's `AskUserQuestion` prompt, which a
-background agent cannot show. Anything else — pending or failing checks,
-conflicts, `CHANGES_REQUESTED`, unresolved review threads, a failing lint gate —
-comes back as a report, not a merge. The agent never passes `--delete-branch`.
+background agent cannot show. Anything else — a **required** check pending or
+failing, conflicts, `CHANGES_REQUESTED`, a `mergeStateStatus` outside
+`CLEAN` / `UNSTABLE` / `HAS_HOOKS`, a failing lint gate — comes back as a
+report, not a merge. A *non-required* check that is pending or failing is
+reported alongside the merge, not treated as a block. The agent never passes
+`--delete-branch`.
 
 If you want to review the status yourself before merging, type `merge?` or run
 the `merge` skill in the foreground instead.

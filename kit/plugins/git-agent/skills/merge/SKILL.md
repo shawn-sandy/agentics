@@ -59,7 +59,7 @@ gh pr checks <pr-url> --json name,state,link              # everything, for the 
 Merge only when **all** of these hold:
 
 - `mergeable` is `MERGEABLE` (not `CONFLICTING`, not `UNKNOWN`)
-- `mergeStateStatus` is `CLEAN` or `UNSTABLE`
+- `mergeStateStatus` is `CLEAN`, `UNSTABLE`, or `HAS_HOOKS`
 - every **required** check is `SUCCESS` or `SKIPPED`
 - `reviewDecision` is not `CHANGES_REQUESTED`
 
@@ -74,6 +74,13 @@ Like `mergeable`, it is computed asynchronously, so a transient `UNKNOWN` means
 pending** — a failing *required* check reads `BLOCKED`. Blocking on `UNSTABLE`
 would silently overturn the `--required` rule below, which is the one place this
 skill decides what counts as enforced.
+
+`HAS_HOOKS` passes because it is `CLEAN` on a repo with pre-receive hooks —
+mergeable, with passing status. It is the *normal* state on a GitHub Enterprise
+repo that uses them, so rejecting it would make this skill permanently unable to
+merge there. The hook itself is the enforcement point: if it rejects the push,
+the pinned `gh pr merge` fails server-side, which is the same protection every
+other gate here relies on.
 
 Unresolved review threads are **not a separate gate**. If the repo enables
 "Require conversation resolution before merging", `mergeStateStatus` reads
@@ -98,10 +105,12 @@ signal is a gate here — there is no automated gate at all. Say that plainly in
 the Step 4 summary and let the full check list and the user's judgement carry
 the decision.
 
-If any of these fails — checks pending, checks failing, conflicts, changes
-requested, a non-`CLEAN`/`UNSTABLE` merge state, or anything ambiguous — print
-the status summary (checks, review decision, `mergeStateStatus`) **and ask what
-to do**. Do not merge.
+If any of these fails — a **required** check pending or failing, conflicts,
+changes requested, a merge state outside the three above, or anything ambiguous
+— print the status summary (checks, review decision, `mergeStateStatus`) **and
+ask what to do**. Do not merge. A *non-required* check that is pending or
+failing is not in this list; it is summary material, per the `--required` rule
+above.
 
 Automated review bots re-fire on every push. A re-fired review on an
 already-approved PR is not a new blocking concern — see the `review-bot-loops`

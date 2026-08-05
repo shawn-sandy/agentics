@@ -37,11 +37,12 @@ decision that gate does not cover is a stop-and-report, never a guess.**
 
 ## Scope — what you do NOT do
 
-- **Never merge a PR that is not unambiguously green.** Pending checks,
-  failing checks, `CONFLICTING` or `UNKNOWN` mergeable state, a
-  `mergeStateStatus` that is neither `CLEAN` nor `UNSTABLE`,
+- **Never merge a PR that is not unambiguously green.** A **required** check
+  pending or failing, `CONFLICTING` or `UNKNOWN` mergeable state, a
+  `mergeStateStatus` outside `CLEAN` / `UNSTABLE` / `HAS_HOOKS`,
   `CHANGES_REQUESTED`, a failing lint gate, a moved head commit — each one ends
-  the run in a report.
+  the run in a report. A *non-required* check that is pending or failing is
+  reported, not merged around — it does not end the run.
 - **Never pass `--delete-branch`** (or GitLab's `-d` / `--remove-source-branch`).
   Branch deletion needs its own explicit yes that you do not have.
 - **Never switch merge method.** If squash is disallowed, report the allowed

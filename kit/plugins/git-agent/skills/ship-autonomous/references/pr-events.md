@@ -88,7 +88,7 @@ commit:
 | Carried by a `CHANGES_REQUESTED` review | "Consider…", "optional", "future work", Wish List |
 | Failing a required check | Praise, summaries, informational notes |
 
-A non-blocking finding is **not actioned**. Reply once saying it is noted and
+A non-blocking finding **earns no commit**. Reply once saying it is noted and
 not blocking, resolve the thread, and name it in the next status update so the
 user can decide. Never push a commit for one — every push re-fires the review
 bot, so a round of nit-polishing buys another round of nits and can cost as much

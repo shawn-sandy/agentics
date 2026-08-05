@@ -17,12 +17,21 @@
   conversation-resolution policy is honored where it is configured and ignored
   where it is not. `mergeable` was never a substitute: it reports *conflicts*
   (`MERGEABLE`/`CONFLICTING`), not *permission to merge*.
-- **`CLEAN` and `UNSTABLE` both pass.** `UNSTABLE` means only non-required
-  checks are failing or pending — a failing *required* check reads `BLOCKED`.
-  Blocking on `UNSTABLE` would have silently overturned the `--required` rule,
-  which is the one place this skill decides what counts as enforced. Everything
-  else (`BLOCKED`, `BEHIND`, `DIRTY`, `DRAFT`, `UNKNOWN`) stops and asks;
-  `UNKNOWN` means re-query, never proceed.
+- **`CLEAN`, `UNSTABLE`, and `HAS_HOOKS` pass.** `UNSTABLE` means only
+  non-required checks are failing or pending — a failing *required* check reads
+  `BLOCKED` — so blocking on it would have silently overturned the `--required`
+  rule, which is the one place this skill decides what counts as enforced.
+  `HAS_HOOKS` is `CLEAN` on a repo with pre-receive hooks, and is the *normal*
+  state on a GitHub Enterprise repo that uses them; rejecting it would have made
+  the skill permanently unable to merge there, with the hook itself already
+  serving as the server-side enforcement point. Everything else (`BLOCKED`,
+  `BEHIND`, `DIRTY`, `DRAFT`, `UNKNOWN`) stops and asks; `UNKNOWN` means
+  re-query, never proceed.
+- **Stop conditions say *required* check, not *check*.** The prose lists in
+  `merge`, `agent-merge`, and `/git-agent:merge-bg` all said "pending or failing
+  checks", which contradicts accepting `UNSTABLE` and would have rejected a
+  merge state the gate above admits. `merge-bg`'s contract also still named
+  unresolved review threads, a gate that no longer exists.
 - **On a repo with no branch protection, `mergeStateStatus` reads `CLEAN`** for
   the same reason `--required` exits non-zero: nothing is configured to block
   on. Neither signal is a gate there, which the Step 4 summary now says plainly
