@@ -37,6 +37,7 @@ import {
   unguardScriptClose,
 } from '../../scripts/lib/plan-spec.mjs';
 import { deriveEffort, inline, renderPlanHtml } from '../../scripts/build-plan-html.mjs';
+import * as shell from '../../scripts/lib/plan-shell.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const RENDERER = join(ROOT, 'scripts', 'build-plan-html.mjs');
@@ -316,6 +317,121 @@ ok('parseSpecMarkdown inverts buildDigest for a synthetic sections object', () =
   const { sections } = parseSpecMarkdown(SAMPLE_SPEC);
   const again = parseSpecMarkdown(unguardScriptClose(buildDigest(sections)));
   assert.deepEqual(again.sections, sections);
+});
+
+/* ── Unit: `### Phase:` groupings inside Steps ────────────────────── */
+
+/** SAMPLE_SPEC's two-step Steps section with `steps` substituted verbatim. */
+const withSteps = (steps) =>
+  SAMPLE_SPEC.replace(
+    '1. Do the first thing. Why: because it unblocks everything. Verify: run the check.\n2. Do the second thing. Why: because the first is not enough. Verify: run the other check.',
+    steps,
+  );
+
+ok('parseSpecMarkdown groups steps under phase headings, flat numbering intact', () => {
+  // Heading before the first step AND a heading between two steps — the second
+  // is the case that used to be folded into step 1's Verify: text.
+  const { sections } = parseSpecMarkdown(withSteps(
+    `### Phase: Alpha
+
+1. Do the first thing. Why: because it unblocks everything. Verify: run the check.
+
+### Phase: Beta
+
+2. Do the second thing. Why: because the first is not enough. Verify: run the other check.`,
+  ));
+  assert.deepEqual(sections.phases, [
+    { name: 'Alpha', firstStep: 1, lastStep: 1 },
+    { name: 'Beta', firstStep: 2, lastStep: 2 },
+  ]);
+  // Same two steps as the unphased spec: grouping must not touch content.
+  assert.deepEqual(sections.steps, parseSpecMarkdown(SAMPLE_SPEC).sections.steps);
+});
+
+ok('a phase heading between two steps never leaks into the preceding Verify: text', () => {
+  const { sections } = parseSpecMarkdown(withSteps(
+    `1. Do the first thing. Why: because it unblocks everything. Verify: run the check.
+### Phase: Beta
+2. Do the second thing. Why: because the first is not enough. Verify: run the other check.`,
+  ));
+  for (const s of sections.steps) {
+    assert.ok(!s.verify.includes('#'), `heading markup leaked into a verify: ${s.verify}`);
+    assert.ok(!s.verify.includes('Phase'), `phase name leaked into a verify: ${s.verify}`);
+  }
+  // Steps before the first heading belong to no phase — the range starts at 2.
+  assert.deepEqual(sections.phases, [{ name: 'Beta', firstStep: 2, lastStep: 2 }]);
+});
+
+ok('a step whose Verify: text contains a hash character is left alone', () => {
+  const { sections } = parseSpecMarkdown(withSteps(
+    `### Phase: Alpha
+
+1. Do the first thing. Why: because it unblocks everything. Verify: confirm issue #42 closed and the ### marker survives.
+2. Do the second thing. Why: because the first is not enough. Verify: run the other check.`,
+  ));
+  assert.equal(sections.steps[0].verify, 'confirm issue #42 closed and the ### marker survives.');
+  assert.deepEqual(sections.phases, [{ name: 'Alpha', firstStep: 1, lastStep: 2 }]);
+});
+
+ok('a Steps section with no phase heading parses phases as null', () => {
+  assert.equal(parseSpecMarkdown(SAMPLE_SPEC).sections.phases, null);
+});
+
+ok('a phase heading with no steps under it is a ParseError', () => {
+  assert.throws(
+    () => parseSpecMarkdown(withSteps(
+      `### Phase: Empty
+
+### Phase: Alpha
+
+1. Do the first thing. Why: because it unblocks everything. Verify: run the check.
+2. Do the second thing. Why: because the first is not enough. Verify: run the other check.`,
+    )),
+    (err) => err instanceof ParseError && /phase "Empty" has no steps/.test(err.message),
+  );
+});
+
+ok('buildDigest re-emits phase headings so they survive a spec reconstruction', () => {
+  const { sections } = parseSpecMarkdown(withSteps(
+    `### Phase: Alpha
+
+1. Do the first thing. Why: because it unblocks everything. Verify: run the check.
+
+### Phase: Beta
+
+2. Do the second thing. Why: because the first is not enough. Verify: run the other check.`,
+  ));
+  const digest = unguardScriptClose(buildDigest(sections));
+  assert.match(digest, /### Phase: Alpha/);
+  assert.match(digest, /### Phase: Beta/);
+  assert.deepEqual(parseSpecMarkdown(digest).sections.phases, sections.phases);
+  assert.deepEqual(parseSpecMarkdown(digest).sections, sections);
+});
+
+/* ── Unit: the `## Decisions` ledger ──────────────────────────────── */
+
+const withDecisions = (block) => SAMPLE_SPEC.replace('## Files', `${block}\n## Files`);
+
+ok('parseSpecMarkdown reads Decisions bullets, null when the section is absent', () => {
+  assert.equal(parseSpecMarkdown(SAMPLE_SPEC).sections.decisions, null);
+  const one = parseSpecMarkdown(withDecisions('## Decisions\n- Only one choice was settled.\n'));
+  assert.deepEqual(one.sections.decisions, ['Only one choice was settled.']);
+  const many = parseSpecMarkdown(withDecisions('## Decisions\n- First choice.\n- Second choice.\n- Third choice.\n'));
+  assert.deepEqual(many.sections.decisions, ['First choice.', 'Second choice.', 'Third choice.']);
+});
+
+ok('a present-but-empty Decisions section is a ParseError, not a silent null', () => {
+  assert.throws(() => parseSpecMarkdown(withDecisions('## Decisions\n\n')), ParseError);
+});
+
+ok('Decisions round-trips through buildDigest and renders its own card', () => {
+  const parsed = parseSpecMarkdown(withDecisions('## Decisions\n- First choice.\n- Second choice.\n'));
+  const again = parseSpecMarkdown(unguardScriptClose(buildDigest(parsed.sections)));
+  assert.deepEqual(again.sections, parsed.sections);
+  assert.ok(shell.SECTION_CHROME.decisions, 'SECTION_CHROME needs a decisions entry to render the card');
+  const html = renderPlanHtml(parsed, { fileName: 'd.html', planPath: 'docs/plans/d.html', repo: 'r' });
+  assert.match(html, /id="decisions"/);
+  assert.deepEqual(extractSections(html).decisions, parsed.sections.decisions);
 });
 
 /* ── Unit: renderer + shell ───────────────────────────────────────── */

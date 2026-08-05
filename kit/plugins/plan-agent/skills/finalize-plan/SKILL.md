@@ -44,7 +44,9 @@ Per `references/evidence-analysis.md` Step 4: print the findings table, the obje
 
 ## Step 5 — Write the completions
 
-Read `references/write-completions.md` and follow its Step 5 — `### Spec mode` edits `<stem>.md` (5a–5d) and re-renders (5e); `### Legacy mode` does the HTML attribute surgery.
+Read `references/write-completions.md` and follow its Step 5 — `### Spec mode` edits `<stem>.md` (5a0–5d) and re-renders (5e); `### Legacy mode` does the HTML attribute surgery.
+
+**Phase gate (5a0):** a spec whose `## Steps` carries `### Phase: <name>` headings never reaches `status: completed` while any phase still holds an unmarked step. Leave it `in-progress` and name each unfinished phase in the `## Completion Report` instead. `build` stops at its first phase boundary by design, so this is the difference between a plan that finished and one that checkpointed. Unphased specs are unaffected.
 
 ## Step 5f — Update the linked tracking ticket
 

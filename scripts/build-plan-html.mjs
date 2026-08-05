@@ -180,6 +180,39 @@ function testsBody(tests) {
   return paragraphs(tests.prose);
 }
 
+/**
+ * Step cards in flat document order, wrapped in a .phase-group per
+ * `### Phase:` heading. Every card stays a DESCENDANT of .steps-list, which is
+ * what keeps `querySelectorAll('.step-card')` — the progress bar and the
+ * completion checklist both read it — matching the full set.
+ *
+ * Steps outside any phase (a plan that starts phasing partway through) render
+ * bare, exactly as they do today.
+ */
+function stepsBody(cards, phases) {
+  const wrap = (blocks) => `      <div class="steps-list">\n\n${blocks.join('\n\n')}\n\n      </div>`;
+  if (!phases || phases.length === 0) return wrap(cards);
+  const blocks = [];
+  let i = 0;
+  for (const p of phases) {
+    while (i < p.firstStep - 1) {
+      blocks.push(cards[i]);
+      i += 1;
+    }
+    blocks.push(shell.phaseGroup({
+      name: esc(p.name),
+      heading: inline(p.name),
+      body: cards.slice(p.firstStep - 1, p.lastStep).join('\n\n'),
+    }));
+    i = p.lastStep;
+  }
+  while (i < cards.length) {
+    blocks.push(cards[i]);
+    i += 1;
+  }
+  return wrap(blocks);
+}
+
 /** `## Completion Report` entries → the dl.report-list markup finalize-plan
  * used to write by hand; replaces the default report-empty paragraph. */
 function reportList(entries) {
@@ -348,11 +381,11 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   const criteriaDoneCount = s.criteria.filter((_, i) => Boolean(criteriaDone[i])).length;
   main.push('', shell.progressBlock(criteriaDoneCount, s.criteria.length));
   if (s.context) main.push('', shell.sectionCard('context', paragraphs(s.context)));
+  if (s.decisions) main.push('', shell.sectionCard('decisions', shell.decisionsListBlock(s.decisions.map(inline))));
   if (s.files) main.push('', shell.sectionCard('files', shell.fileTreeBlock(esc(repoName), fileTreeRows(s.files))));
   const stepCards = s.steps
-    .map((st, i) => shell.stepCard(i + 1, { action: inline(st.action), why: inline(st.why), verify: inline(st.verify), done: Boolean(stepsDone[i]) }))
-    .join('\n\n');
-  main.push('', shell.sectionCard('steps', `      <div class="steps-list">\n\n${stepCards}\n\n      </div>`));
+    .map((st, i) => shell.stepCard(i + 1, { action: inline(st.action), why: inline(st.why), verify: inline(st.verify), done: Boolean(stepsDone[i]) }));
+  main.push('', shell.sectionCard('steps', stepsBody(stepCards, s.phases)));
   if (s.tests) main.push('', shell.sectionCard('tests', testsBody(s.tests)));
   main.push('', shell.sectionCard('criteria', shell.criteriaListBlock(s.criteria.map((c, i) => ({ text: inline(c), done: Boolean(criteriaDone[i]) })))));
   main.push('', shell.sectionCard('verification', paragraphs(s.verification)));
@@ -380,6 +413,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
 
   const navIds = shell.NAV_ENTRIES.map((e) => e.id).filter((id) => {
     if (id === 'context') return Boolean(s.context);
+    if (id === 'decisions') return Boolean(s.decisions);
     if (id === 'files') return Boolean(s.files);
     if (id === 'tests') return Boolean(s.tests);
     if (id === 'next-steps') return Boolean(nextSteps);

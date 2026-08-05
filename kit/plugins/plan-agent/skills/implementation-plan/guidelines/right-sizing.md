@@ -32,8 +32,8 @@ A feature with UI + logic, a fix spanning 2 domains, a focused refactor.
 
 Cross-cutting work, 3+ domains, decisions that are expensive to reverse.
 
-- 6–10 steps; if you need more, the objective is probably two plans — split
-  it.
+- 6–10 steps; past that, group them into phases rather than splitting the
+  objective (see **Phased** below).
 - Context carries the decision story: options weighed, why this approach,
   known risks with mitigations. Open questions go to the interview or an
   `## Unresolved Questions` markdown section — never planned around.
@@ -47,6 +47,36 @@ Cross-cutting work, 3+ domains, decisions that are expensive to reverse.
   as complex but the raw step/file counts alone would read as medium.
 - Interview: Rounds 1 + 2 + 3.
 
+## Phased — long sequential work that outlasts one context window
+
+A Deep plan whose steps must run **in order**, where step seven depends on a
+choice made in step two. The limit here is context, not parallelism: `workflow`
+fans out across subagents, which does nothing for a chain that cannot be split.
+
+Reach for phases when any of these hold:
+
+- More than ~10 steps, or steps whose implementation is large enough that
+  ten of them will not fit in one session.
+- Natural seams where a run of steps ends in something verifiable on its own
+  (parse works / render works / docs updated), not mid-refactor.
+- Ordered edits to the same file — the exact shape `workflow` cannot help with.
+
+Then:
+
+- Group the steps with `### Phase: <name>` headings (syntax in
+  `section-catalog.md`). Numbering stays flat; phases are pure grouping.
+- 2–5 phases, each ending at a state a fresh session could pick up from. A
+  phase that leaves the tree broken is a boundary in the wrong place.
+- Add `## Decisions` and write the load-bearing choices into it up front.
+  `/plan-agent:build` appends to it at each boundary, so it becomes the record
+  the next context window reads instead of re-deriving.
+- `/plan-agent:build` stops at each boundary and offers to compact; `--continue`
+  pushes straight through. `finalize-plan` will not mark a plan completed while
+  any phase still holds an unmarked step.
+
+Splitting into separate plan files is still the answer when the objectives are
+genuinely different — phases are for one objective that is simply long.
+
 For a **spike** (time-boxed investigation), the steps are the questions to
 answer and the verify lines are the evidence to collect; acceptance criteria
 state what "we learned enough" means. Keep it Tier 2 unless the spike ships
@@ -54,12 +84,13 @@ code.
 
 ## Calibration knobs, in one place
 
-| Knob | Minimal | Standard | Deep |
-|------|---------|----------|------|
-| Steps | 1–3 | 3–6 | 6–10 |
-| Context | omit | short | decision story |
-| Files section | optional | yes | yes |
-| Tests | objective only / 1 unit | Tier 1, applicable types | full Tier 1 spread |
-| `glance` | no | yes | yes |
-| `workflow` key | no | rarely | when parallelizable |
-| Interview rounds | 1 | 1–2 | 1–3 |
+| Knob | Minimal | Standard | Deep | Phased |
+|------|---------|----------|------|--------|
+| Steps | 1–3 | 3–6 | 6–10 | 10+, in 2–5 phases |
+| Context | omit | short | decision story | decision story |
+| `## Decisions` | no | no | optional | yes |
+| Files section | optional | yes | yes | yes |
+| Tests | objective only / 1 unit | Tier 1, applicable types | full Tier 1 spread | full Tier 1 spread |
+| `glance` | no | yes | yes | yes |
+| `workflow` key | no | rarely | when parallelizable | usually `never` |
+| Interview rounds | 1 | 1–2 | 1–3 | 1–3 |

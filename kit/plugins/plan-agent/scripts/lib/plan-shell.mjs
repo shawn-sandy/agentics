@@ -1798,6 +1798,7 @@ function copyPrompt(btn) {
       strips <p class="section-intro">), headings match the skeleton ── */
 export const SECTION_CHROME = {
   context: { icon: 'ic-document-text', heading: 'Context', intro: 'The story behind this plan — what prompted the work and why it matters now.' },
+  decisions: { icon: 'ic-sparkles', heading: 'Decisions', intro: 'Choices already settled — read these before re-opening any of them.' },
   files: { icon: 'ic-folder', heading: 'Files that change', intro: 'Every file this plan touches, and what happens to each one.' },
   steps: { icon: 'ic-list-bullet', heading: 'Steps', intro: 'The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.' },
   tests: { icon: 'ic-beaker', heading: 'Tests', intro: 'The tests that prove the change does what it promises.' },
@@ -1813,6 +1814,7 @@ export const NAV_ENTRIES = [
   { id: 'objective', icon: 'ic-bolt', label: 'Objective' },
   { id: 'progress', icon: 'ic-chart-bar', label: 'Progress' },
   { id: 'context', icon: 'ic-document-text', label: 'Context' },
+  { id: 'decisions', icon: 'ic-sparkles', label: 'Decisions' },
   { id: 'files', icon: 'ic-folder', label: 'Files that change' },
   { id: 'steps', icon: 'ic-list-bullet', label: 'Steps' },
   { id: 'tests', icon: 'ic-beaker', label: 'Tests' },
@@ -2127,6 +2129,35 @@ export function stepCard(n, { action, why, verify, done = false }) {
             </div>
           </div>
         </div>`;
+}
+
+/**
+ * A run of step cards under one `### Phase:` heading. `name` is the raw phase
+ * name attribute-escaped, `heading` the same name through inline(); extraction
+ * reads the attribute, so the two may legitimately differ.
+ *
+ * ponytail: the h3 and the wrapper carry inline styles instead of classes in
+ * the shared CSS block. That block is emitted verbatim into EVERY rendered
+ * plan, so one new rule rewrites the bytes of ~100 committed plans that have
+ * no phases at all. Move these into CSS as `.phase-group`/`.phase-name` the
+ * next time a change is already rewriting every plan.
+ */
+const PHASE_NAME_STYLE = 'font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .75rem;';
+
+export function phaseGroup({ name, heading, body }) {
+  return `        <div class="phase-group" data-phase="${name}" style="margin-top:1.5rem;">
+          <h3 class="phase-name" style="${PHASE_NAME_STYLE}">${heading}</h3>
+${body}
+        </div>`;
+}
+
+/** One `- ` bullet per settled decision. Same inline-style rule as
+ * phaseGroup(): local styling keeps phase-free plans byte-stable. */
+export function decisionsListBlock(items) {
+  const lis = items.map((text) => `        <li style="margin-bottom:.5rem;">${text}</li>`).join('\n');
+  return `      <ul class="decisions-list" style="padding-left:1.15rem;">
+${lis}
+      </ul>`;
 }
 
 /** items: [{ text, done }] — done renders the `checked` attribute, the

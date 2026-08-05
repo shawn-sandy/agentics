@@ -198,9 +198,9 @@ export function readEmbeddedDigest(html) {
 /**
  * Extract the spec sections from a plan's HTML.
  * Required: title, objective, steps (each with action/why/verify),
- * acceptance criteria, verification. Optional when absent: context, files,
- * tests — but if their anchor exists and yields nothing, that is a parse
- * failure (no partial digests).
+ * acceptance criteria, verification. Optional when absent: context, decisions,
+ * files, phases, tests — but if their anchor exists and yields nothing, that is
+ * a parse failure (no partial digests).
  */
 export function extractSections(html) {
   const fail = (reason) => {
@@ -226,6 +226,17 @@ export function extractSections(html) {
   if (contextInner !== null) {
     context = blockTextOf(stripIntro(stripHeading(contextInner)));
     if (!context) fail('context section present but empty');
+  }
+
+  let decisions = null;
+  const decisionsInner = innerByMarker(html, 'id="decisions"', 'section');
+  if (decisionsInner !== null) {
+    decisions = [];
+    for (const li of allInnerByRe(decisionsInner, /<li\b[^>]*>/, 'li')) {
+      const text = textOf(li);
+      if (text) decisions.push(text);
+    }
+    if (decisions.length === 0) fail('decisions section present but no items parsed');
   }
 
   let files = null;
@@ -291,6 +302,37 @@ export function extractSections(html) {
     return { action, why: textOf(whyInner), verify: textOf(verifyInner) };
   });
 
+  // Phase groups wrap runs of step cards. The NAME is read from the
+  // data-phase attribute rather than the <h3> text: the attribute carries the
+  // author's raw markdown (esc()'d only), while the heading has been through
+  // inline(), so `code` in a phase name survives the round trip only here.
+  // Ranges are counted from the cards inside each wrapper, so the flat step
+  // numbering stays the single source of truth.
+  let phases = null;
+  const groupRe = /<div\b[^>]*\bclass="phase-group"[^>]*\bdata-phase="([^"]*)"[^>]*>/g;
+  const groups = [];
+  let g;
+  while ((g = groupRe.exec(stepsInner)) !== null) {
+    const inner = sliceBalanced(stepsInner, g.index, 'div');
+    if (inner === null) continue;
+    groups.push({ name: decodeEntities(g[1]), inner, start: g.index });
+  }
+  if (groups.length > 0) {
+    // A plan can be phased partway through — stepsBody() (build-plan-html.mjs)
+    // renders any steps before the first phase heading as bare cards. Count
+    // those leading cards so the first phase's range isn't misattributed to
+    // step 1; parseSpecMarkdown only ever leaves an unphased run BEFORE the
+    // first heading, never between phases, so this single lead-in count is
+    // the whole correction needed.
+    const before = stepsInner.slice(0, groups[0].start);
+    let seen = allInnerByRe(before, /<div\b[^>]*class="step-card[" ][^>]*>/, 'div').length;
+    phases = groups.map(({ name, inner }) => {
+      const firstStep = seen + 1;
+      seen += allInnerByRe(inner, /<div\b[^>]*class="step-card[" ][^>]*>/, 'div').length;
+      return { name, firstStep, lastStep: seen };
+    });
+  }
+
   let tests = null;
   const testsInner = innerByMarker(html, 'id="tests"', 'section');
   if (testsInner !== null) {
@@ -328,7 +370,7 @@ export function extractSections(html) {
   const verification = blockTextOf(stripIntro(stripHeading(verificationInner)));
   if (!verification) fail('verification section is empty');
 
-  return { title, objective, context, files, steps, tests, criteria, verification };
+  return { title, objective, context, decisions, files, steps, phases, tests, criteria, verification };
 }
 
 /**
@@ -394,8 +436,12 @@ export function extractNextSteps(html) {
  *
  * Returns { metadata, sections, progress, nextSteps }. Throws ParseError when a required
  * section (title, Objective, Steps, Acceptance Criteria, Verification) is
- * missing or malformed; optional sections (Context, Files, Tests) come back
- * null when absent, matching extractSections().
+ * missing or malformed; optional sections (Context, Decisions, Files, Tests)
+ * come back null when absent, matching extractSections(). `sections.phases` is
+ * the same kind of optional: an ordered `[{ name, firstStep, lastStep }]` when
+ * the Steps section carries `### Phase: <name>` headings, null when it does
+ * not. Phases are pure grouping over the flat numbering, so adding them to an
+ * in-progress plan keeps every `[x]` marker valid.
  *
  * `progress` carries completion state, kept out of `sections` so the
  * content round-trip (extract → digest → parse) stays byte-stable:
@@ -493,6 +539,15 @@ export function parseSpecMarkdown(md) {
     if (!context) fail('Context section present but empty');
   }
 
+  // `## Decisions` — the settled-choices ledger a resumed session reads so it
+  // does not re-litigate what an earlier context window already decided.
+  // Distinct from `## Completion Report`, which records gaps, not choices.
+  let decisions = null;
+  if ('Decisions' in chunks) {
+    decisions = listItems(chunks.Decisions);
+    if (decisions.length === 0) fail('Decisions section present but no entries');
+  }
+
   let files = null;
   if ('Files' in chunks) {
     files = [];
@@ -516,24 +571,50 @@ export function parseSpecMarkdown(md) {
   if (!('Steps' in chunks)) fail('no "## Steps" section');
   const steps = [];
   const stepsDone = [];
-  // Numbered items may wrap across lines in hand-written specs; fold
-  // continuations into the item before splitting on the Why:/Verify: markers.
-  const stepLines = chunks.Steps.split(/\n(?=\d+\.\s)/);
-  for (const raw of stepLines) {
-    const item = inline(raw);
-    const numbered = item.match(/^\d+\.\s+(.*)$/);
-    if (!numbered) continue;
-    const { text: stepText, done: stepDone } = takeCheckbox(numbered[1]);
-    const parts = stepText.match(/^(.*?)\s+Why:\s+(.*?)\s+Verify:\s+(.*)$/);
-    if (!parts) fail(`step ${steps.length + 1} is missing its "Why:" or "Verify:" part`);
-    const [action, why, verify] = parts.slice(1).map((p) => p.trim());
-    // An empty part would render HTML that extractSections() rejects — fail
-    // here, at authoring time, instead of breaking the round trip later.
-    if (!action || !why || !verify) fail(`step ${steps.length + 1} has an empty action, "Why:", or "Verify:" part`);
-    steps.push({ action, why, verify });
-    stepsDone.push(stepDone);
+  // Split on `### Phase: <name>` headings BEFORE the numbered-item split.
+  // The item splitter folds every continuation line into the preceding step
+  // and inline() then collapses it, so a heading left in place lands silently
+  // inside step N's Verify: text — corruption with no error raised.
+  const segments = [];
+  let segment = { name: null, lines: [] };
+  for (const line of chunks.Steps.split('\n')) {
+    const heading = line.match(/^###\s+Phase:\s*(.+?)\s*$/);
+    if (heading) {
+      segments.push(segment);
+      segment = { name: heading[1], lines: [] };
+    } else {
+      segment.lines.push(line);
+    }
+  }
+  segments.push(segment);
+
+  const phaseList = [];
+  for (const seg of segments) {
+    const firstStep = steps.length + 1;
+    // Numbered items may wrap across lines in hand-written specs; fold
+    // continuations into the item before splitting on the Why:/Verify: markers.
+    for (const raw of seg.lines.join('\n').split(/\n(?=\d+\.\s)/)) {
+      const item = inline(raw);
+      const numbered = item.match(/^\d+\.\s+(.*)$/);
+      if (!numbered) continue;
+      const { text: stepText, done: stepDone } = takeCheckbox(numbered[1]);
+      const parts = stepText.match(/^(.*?)\s+Why:\s+(.*?)\s+Verify:\s+(.*)$/);
+      if (!parts) fail(`step ${steps.length + 1} is missing its "Why:" or "Verify:" part`);
+      const [action, why, verify] = parts.slice(1).map((p) => p.trim());
+      // An empty part would render HTML that extractSections() rejects — fail
+      // here, at authoring time, instead of breaking the round trip later.
+      if (!action || !why || !verify) fail(`step ${steps.length + 1} has an empty action, "Why:", or "Verify:" part`);
+      steps.push({ action, why, verify });
+      stepsDone.push(stepDone);
+    }
+    if (seg.name === null) continue;
+    // buildDigest anchors a phase heading to its first step, so a phase with
+    // no steps cannot round-trip — it would silently vanish. Fail here.
+    if (steps.length < firstStep) fail(`phase "${seg.name}" has no steps under it`);
+    phaseList.push({ name: seg.name, firstStep, lastStep: steps.length });
   }
   if (steps.length === 0) fail('Steps section has no numbered steps');
+  const phases = phaseList.length > 0 ? phaseList : null;
 
   let tests = null;
   if ('Tests' in chunks) {
@@ -648,7 +729,7 @@ export function parseSpecMarkdown(md) {
 
   return {
     metadata,
-    sections: { title, objective, context, files, steps, tests, criteria, verification },
+    sections: { title, objective, context, decisions, files, steps, phases, tests, criteria, verification },
     progress: { steps: stepsDone, criteria: criteriaDone, report },
     nextSteps,
   };
@@ -701,6 +782,11 @@ export function buildDigest(sections, nextSteps = null) {
     lines.push('## Context');
     lines.push(sections.context);
   }
+  if (sections.decisions && sections.decisions.length > 0) {
+    lines.push('');
+    lines.push('## Decisions');
+    for (const d of sections.decisions) lines.push(`- ${d}`);
+  }
   if (sections.files && sections.files.length > 0) {
     lines.push('');
     lines.push('## Files');
@@ -710,7 +796,17 @@ export function buildDigest(sections, nextSteps = null) {
   }
   lines.push('');
   lines.push('## Steps');
+  // A phase heading is anchored to its first step, so the flat numbering is
+  // untouched and inserting a step cannot shift a phase off its range the way
+  // a `phases: 1-3, 4-6` frontmatter list would.
+  const phaseStart = new Map((sections.phases || []).map((p) => [p.firstStep, p.name]));
   sections.steps.forEach((s, i) => {
+    const name = phaseStart.get(i + 1);
+    if (name !== undefined) {
+      lines.push('');
+      lines.push(`### Phase: ${name}`);
+      lines.push('');
+    }
     lines.push(`${i + 1}. ${s.action} Why: ${s.why} Verify: ${s.verify}`);
   });
   if (sections.tests && (sections.tests.entries.length > 0 || sections.tests.prose)) {

@@ -23,6 +23,7 @@ spec.
 - `references/invocation.md` — activation, flags, argument grammar
 - `references/resolve-plan.md` — Steps 0-1
 - `references/author-plan-chain.md` — Step 1b
+- `references/phase-checkpoints.md` — Step 2, phased specs
 - `references/completion-gates.md` — Steps 3-5
 
 ## Invocation & Arguments
@@ -35,25 +36,22 @@ Read `references/invocation.md` before parsing `$ARGUMENTS`.
 
 Per `references/resolve-plan.md`.
 
-## Re-render (subroutine — referenced by every step below)
+## Re-render (subroutine)
 
 ```bash
 plan-agent-render "<stem>.md" -o "<stem>.html"
 ```
 
-Invoke `plan-agent-render` by bare name, never by path (this plugin's `bin/`
-is on `PATH`).
-
-`<stem>` is the resolved plan's path without its extension, fixed in Step 1
-(the subroutine is defined here but never runs before Step 1 resolves it).
-Run this after **every** batch of spec edits — status changes included — and
-always as the final action. A non-zero exit that names a missing or malformed
-section means the spec edit broke the format: fix the markdown and re-run,
-never hand-edit the HTML to compensate. Any other failure — `MODULE_NOT_FOUND`,
-a missing renderer, a node crash — is an environment problem, not a spec
-problem: report it and stop rather than rewriting a valid spec. The plugin's
-`render-plan-html.py` hook also re-renders on each spec write; run the command
-explicitly anyway so a parse failure surfaces here instead of silently.
+Bare name, never a path — this plugin's `bin/` is on `PATH`. `<stem>` is the
+resolved plan's path without its extension, fixed in Step 1. Run after
+**every** batch of spec edits, status changes included, and as the final
+action. A non-zero exit naming a missing or malformed section means the spec
+edit broke the format: fix the markdown and re-run,
+never hand-edit the HTML to compensate.
+Any other failure — `MODULE_NOT_FOUND`, a missing renderer, a node crash — is
+an environment problem: report it and stop, never rewrite a valid spec.
+The `render-plan-html.py` hook also re-renders on each spec write; run the
+command anyway so a parse failure surfaces here rather than silently.
 
 ## Step 1 — Resolve the plan
 
@@ -74,6 +72,10 @@ Set the spec's `status:` to `in-progress` and re-render, then work through each
 step sequentially — apply the changes, verify each step, and mark progress in
 the spec as you go (insert the `[x]` marker after the finished step's number;
 the re-render flips the card and chip).
+
+**Phased spec** (`### Phase: <name>` headings in `## Steps`): follow
+`references/phase-checkpoints.md`. It **stops at each boundary by default**;
+`--continue` overrides. Unphased specs never stop.
 
 ## Step 3 — Acceptance criteria gate (mandatory)
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="high">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +14,7 @@ try {
   if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
 } catch (e) { /* no storage — prefers-color-scheme decides */ }
 </script>
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-07-30">
@@ -334,7 +334,6 @@ try {
     border: 1px solid var(--accent);
     border-radius: 4px;
     cursor: pointer;
-    font-family: inherit;
     line-height: 1.4;
     white-space: nowrap;
     flex-shrink: 0;
@@ -1525,7 +1524,7 @@ img, video { max-width: 100%; height: auto; }
         <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
                 aria-pressed="false" aria-label="Use dark theme">Dark</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1546,6 +1545,7 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
       <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
       <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <li><a href="#decisions"><svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg> Decisions</a></li>
       <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
       <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
       <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
@@ -1558,18 +1558,18 @@ img, video { max-width: 100%; height: auto; }
       <summary>12 steps</summary>
       <div class="rail-heading">Steps</div>
       <ul class="rail-steps">
-        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Make <code class="md">parseSpecMarkdown</code> in <code class="md">scripts/lib/plan-spec.mjs</code> phase-aware by splitting the Steps chunk on <code class="md">^###\s+Phase:</code> lines before the existing numbered-item split, returning <code class="md">sections.phases</code> as an ordered array of <code class="md">{ name, firstStep, lastStep }</code> and <code class="md">null</code> when no heading is present.</span><span class="rail-state">step 1 of 12</span></a></li>
-        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Emit phases from <code class="md">buildDigest</code> as a <code class="md">### Phase: &lt;name&gt;</code> line above the first step of each phase, keeping the flat numbering unchanged.</span><span class="rail-state">step 2 of 12</span></a></li>
-        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Read phases back out of rendered HTML in <code class="md">extractSections</code> by matching the <code class="md">data-phase</code> attribute on each phase group wrapper, and extend the existing <code class="md">stripHeading</code> helper to remove the phase <code class="md">&lt;h3&gt;</code> as well as the section <code class="md">&lt;h2&gt;</code>.</span><span class="rail-state">step 3 of 12</span></a></li>
-        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Render phase groups by adding a <code class="md">phaseHeader</code> helper to <code class="md">scripts/lib/plan-shell.mjs</code> that emits <code class="md">&lt;div class=&quot;phase-group&quot; data-phase=&quot;…&quot;&gt;&lt;h3&gt;…&lt;/h3&gt;</code>, and group the step cards under those wrappers in <code class="md">build-plan-html.mjs</code>, leaving every <code class="md">.step-card</code> in flat document order inside them.</span><span class="rail-state">step 4 of 12</span></a></li>
-        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Add the <code class="md">## Decisions</code> section end-to-end — parse it as a bullet list in <code class="md">parseSpecMarkdown</code>, re-emit it in <code class="md">buildDigest</code>, extract it in <code class="md">extractSections</code>, add a <code class="md">decisions</code> key to <code class="md">SECTION_CHROME</code>, and render it with a <code class="md">sectionCard</code> call placed after Context.</span><span class="rail-state">step 5 of 12</span></a></li>
-        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Re-copy the three edited renderer sources — <code class="md">scripts/build-plan-html.mjs</code>, <code class="md">scripts/lib/plan-spec.mjs</code>, and <code class="md">scripts/lib/plan-shell.mjs</code> — over their counterparts under <code class="md">kit/plugins/plan-agent/scripts/</code>, after steps 1 through 5 are complete and before any test run.</span><span class="rail-state">step 6 of 12</span></a></li>
-        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Rewrite Step 2 of <code class="md">skills/build/SKILL.md</code> as a phase checkpoint loop — implement one phase, run its verify gate, append the decisions made to <code class="md">## Decisions</code>, then reach the boundary offer — with a <code class="md">--continue</code> flag that pushes straight through and no behaviour change for a spec that declares no phases.</span><span class="rail-state">step 7 of 12</span></a></li>
-        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Add the phase boundary offer to that same Step 2 — an <code class="md">AskUserQuestion</code> presenting <code class="md">Compact and continue</code> (recommended), <code class="md">Stop here — resume later</code>, and <code class="md">Continue without compacting</code>, where the compact branch prints the <code class="md">/compact</code> command with focus instructions naming the spec path and the phase just finished, then stops so the user can run it.</span><span class="rail-state">step 8 of 12</span></a></li>
-        <li><a class="rail-step" href="#step-9"><span class="rail-no">9</span><span class="rail-text">Teach <code class="md">skills/finalize-plan/SKILL.md</code> about phases so it refuses to set <code class="md">status: completed</code> while any phase still holds unmarked steps, recording each unfinished phase as a <code class="md">## Completion Report</code> bullet instead.</span><span class="rail-state">step 9 of 12</span></a></li>
-        <li><a class="rail-step" href="#step-10"><span class="rail-no">10</span><span class="rail-text">Document both sections in <code class="md">guidelines/section-catalog.md</code> with their exact syntax, and replace the &quot;probably two plans — split it&quot; sentence in <code class="md">guidelines/right-sizing.md</code> with a phase profile naming when a plan earns phases, then add both to the renderer-derives list in <code class="md">implementation-plan/SKILL.md</code>.</span><span class="rail-state">step 10 of 12</span></a></li>
-        <li><a class="rail-step" href="#step-11"><span class="rail-no">11</span><span class="rail-text">Extend <code class="md">tests/plugins/test-build-plan-html.mjs</code> and <code class="md">tests/plugins/test-extract-plan-spec.mjs</code> with phase and Decisions cases, and add <code class="md">tests/plugins/test-plan-phases.mjs</code> asserting the render-extract-re-render cycle preserves both, that an unphased spec renders unchanged, and that <code class="md">build/SKILL.md</code> and <code class="md">finalize-plan/SKILL.md</code> still carry their phase contract strings.</span><span class="rail-state">step 11 of 12</span></a></li>
-        <li><a class="rail-step" href="#step-12"><span class="rail-no">12</span><span class="rail-text">Bump plan-agent from 7.0.1 to 7.1.0 in <code class="md">.claude-plugin/marketplace.json</code> and add the matching <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> entry describing both new sections, the build checkpoint loop, and the finalize-plan gate.</span><span class="rail-state">step 12 of 12</span></a></li>
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Make <code class="md">parseSpecMarkdown</code> in <code class="md">scripts/lib/plan-spec.mjs</code> phase-aware by splitting the Steps chunk on <code class="md">^###\s+Phase:</code> lines before the existing numbered-item split, returning <code class="md">sections.phases</code> as an ordered array of <code class="md">{ name, firstStep, lastStep }</code> and <code class="md">null</code> when no heading is present.</span><span class="rail-state">step 1 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Emit phases from <code class="md">buildDigest</code> as a <code class="md">### Phase: &lt;name&gt;</code> line above the first step of each phase, keeping the flat numbering unchanged.</span><span class="rail-state">step 2 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Read phases back out of rendered HTML in <code class="md">extractSections</code> by matching the <code class="md">data-phase</code> attribute on each phase group wrapper, and extend the existing <code class="md">stripHeading</code> helper to remove the phase <code class="md">&lt;h3&gt;</code> as well as the section <code class="md">&lt;h2&gt;</code>.</span><span class="rail-state">step 3 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Render phase groups by adding a <code class="md">phaseHeader</code> helper to <code class="md">scripts/lib/plan-shell.mjs</code> that emits <code class="md">&lt;div class=&quot;phase-group&quot; data-phase=&quot;…&quot;&gt;&lt;h3&gt;…&lt;/h3&gt;</code>, and group the step cards under those wrappers in <code class="md">build-plan-html.mjs</code>, leaving every <code class="md">.step-card</code> in flat document order inside them.</span><span class="rail-state">step 4 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Add the <code class="md">## Decisions</code> section end-to-end — parse it as a bullet list in <code class="md">parseSpecMarkdown</code>, re-emit it in <code class="md">buildDigest</code>, extract it in <code class="md">extractSections</code>, add a <code class="md">decisions</code> key to <code class="md">SECTION_CHROME</code>, and render it with a <code class="md">sectionCard</code> call placed after Context.</span><span class="rail-state">step 5 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Re-copy the three edited renderer sources — <code class="md">scripts/build-plan-html.mjs</code>, <code class="md">scripts/lib/plan-spec.mjs</code>, and <code class="md">scripts/lib/plan-shell.mjs</code> — over their counterparts under <code class="md">kit/plugins/plan-agent/scripts/</code>, after steps 1 through 5 are complete and before any test run.</span><span class="rail-state">step 6 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Rewrite Step 2 of <code class="md">skills/build/SKILL.md</code> as a phase checkpoint loop — implement one phase, run its verify gate, append the decisions made to <code class="md">## Decisions</code>, then reach the boundary offer — with a <code class="md">--continue</code> flag that pushes straight through and no behaviour change for a spec that declares no phases.</span><span class="rail-state">step 7 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-8"><span class="rail-no">✓</span><span class="rail-text">Add the phase boundary offer to that same Step 2 — an <code class="md">AskUserQuestion</code> presenting <code class="md">Compact and continue</code> (recommended), <code class="md">Stop here — resume later</code>, and <code class="md">Continue without compacting</code>, where the compact branch prints the <code class="md">/compact</code> command with focus instructions naming the spec path and the phase just finished, then stops so the user can run it.</span><span class="rail-state">step 8 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-9"><span class="rail-no">✓</span><span class="rail-text">Teach <code class="md">skills/finalize-plan/SKILL.md</code> about phases so it refuses to set <code class="md">status: completed</code> while any phase still holds unmarked steps, recording each unfinished phase as a <code class="md">## Completion Report</code> bullet instead.</span><span class="rail-state">step 9 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-10"><span class="rail-no">✓</span><span class="rail-text">Document both sections in <code class="md">guidelines/section-catalog.md</code> with their exact syntax, and replace the &quot;probably two plans — split it&quot; sentence in <code class="md">guidelines/right-sizing.md</code> with a phase profile naming when a plan earns phases, then add both to the renderer-derives list in <code class="md">implementation-plan/SKILL.md</code>.</span><span class="rail-state">step 10 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-11"><span class="rail-no">✓</span><span class="rail-text">Extend <code class="md">tests/plugins/test-build-plan-html.mjs</code> and <code class="md">tests/plugins/test-extract-plan-spec.mjs</code> with phase and Decisions cases, and add <code class="md">tests/plugins/test-plan-phases.mjs</code> asserting the render-extract-re-render cycle preserves both, that an unphased spec renders unchanged, and that <code class="md">build/SKILL.md</code> and <code class="md">finalize-plan/SKILL.md</code> still carry their phase contract strings.</span><span class="rail-state">step 11 of 12, done</span></a></li>
+        <li><a class="rail-step done" href="#step-12"><span class="rail-no">✓</span><span class="rail-text">Bump plan-agent from 8.5.1 to 8.6.0 in <code class="md">.claude-plugin/marketplace.json</code> and add the matching <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> entry describing both new sections, the build checkpoint loop, and the finalize-plan gate.</span><span class="rail-state">step 12 of 12, done</span></a></li>
       </ul>
     </details>
   </nav>
@@ -1632,12 +1632,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 15 done</span>
+        <span id="progress-label">15 / 15 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1656,6 +1656,26 @@ img, video { max-width: 100%; height: auto; }
       <p>The remaining decisions, recorded here as well as in this plan&#39;s own <code class="md">## Decisions</code> section because the renderer skips that section until step 5 lands and the gallery, the extractor, and plan reviewers all read the rendered HTML. A phase name renders as an <code class="md">&lt;h3&gt;</code> inside a <code class="md">data-phase</code> wrapper, so phases join the document outline for screen-reader navigation while the attribute carries extraction. Phases group the same flat step numbering, so adding them to an in-progress plan keeps every existing <code class="md">[x]</code> marker valid and <code class="md">build</code> still resumes at the first unmarked step rather than at a phase start. The boundary offers to compact the session rather than only stopping, and <code class="md">build</code> prints the <code class="md">/compact</code> command rather than running it, since compaction is a user-typed CLI built-in and not a callable tool — safe mid-plan only because durable state lives in the spec rather than the conversation. <code class="md">finalize-plan</code> is in scope because <code class="md">build/SKILL.md</code> line 303 requires the two skills&#39; completion rules to stay consistent. The checkpoint contract in both skills is guarded by a prose grep in the style of <code class="md">test-exitplanmode-guard.sh</code>, which catches deletion of the contract rather than proving runtime behaviour.</p>
       <p>The renderer has two homes, and that shaped the step order. <code class="md">tests/plugins/test-build-plan-html.mjs</code> line 837 asserts the three files under <code class="md">kit/plugins/plan-agent/scripts/</code> are byte-identical to their repo-root counterparts under <code class="md">scripts/</code>, so every renderer edit lands at the root and is re-copied into the bundle before any test runs. The extractor is not mirrored at all — <code class="md">extract-plan-spec.mjs</code> ships only at the repo root.</p>
       <p><code class="md">workflow: never</code> is set deliberately. Four of the twelve steps — 1, 2, 3, and 5 — are ordered edits to a single file, <code class="md">scripts/lib/plan-spec.mjs</code>, so subagents fanning out would conflict on it. The renderer&#39;s own heuristic counts files and directories and would otherwise license fan-out this plan cannot use.</p>
+    </section>
+
+    <section class="section-card card-decisions" id="decisions" aria-labelledby="h-decisions">
+      <h2 id="h-decisions">
+        <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+        Decisions
+      </h2>
+      <p class="section-intro">Choices already settled — read these before re-opening any of them.</p>
+      <ul class="decisions-list" style="padding-left:1.15rem;">
+        <li style="margin-bottom:.5rem;">Phase boundaries are <code class="md">### Phase:</code> headings rather than a <code class="md">phases:</code> frontmatter range list — headings survive step insertion and reordering, which range lists do not.</li>
+        <li style="margin-bottom:.5rem;">The Decisions section renders rather than staying markdown-only, so the ledger is visible on the plan page and in the gallery, not just to an agent reading the spec.</li>
+        <li style="margin-bottom:.5rem;"><code class="md">build</code> stops at a phase boundary by default and takes <code class="md">--continue</code> to push through, matching the skill&#39;s existing headless contract of stopping rather than choosing.</li>
+        <li style="margin-bottom:.5rem;">The phase boundary offers to compact the session rather than only stopping, because continuing in the same session with reclaimed context is usually what the user wants; <code class="md">build</code> prints the <code class="md">/compact</code> command rather than running it, since compaction is a user-typed CLI built-in and not a callable tool.</li>
+        <li style="margin-bottom:.5rem;">Compaction is safe mid-plan only because durable state lives in the spec — step markers, <code class="md">status:</code>, and the Decisions ledger — so a lossy summary of the conversation costs nothing the next phase needs.</li>
+        <li style="margin-bottom:.5rem;">A phase name renders as an <code class="md">&lt;h3&gt;</code> inside a <code class="md">data-phase</code> group wrapper — the heading puts phases in the document outline for screen-reader navigation, and the wrapper carries the attribute extraction reads.</li>
+        <li style="margin-bottom:.5rem;">Phases are pure grouping over the same flat step numbering, so adding them to an already in-progress plan keeps every existing <code class="md">[x]</code> marker valid and <code class="md">build</code> still resumes at the first unmarked step rather than at a phase start.</li>
+        <li style="margin-bottom:.5rem;">The checkpoint contract in <code class="md">build</code> and <code class="md">finalize-plan</code> is guarded by a prose grep in the style of <code class="md">test-exitplanmode-guard.sh</code>, accepting that this catches deletion of the contract rather than proving the runtime behaviour.</li>
+        <li style="margin-bottom:.5rem;"><code class="md">finalize-plan</code> is in scope because <code class="md">build/SKILL.md</code> line 303 requires the two skills&#39; completion rules to stay consistent.</li>
+        <li style="margin-bottom:.5rem;">Parent and child plan files are out of scope; phase boundaries are shaped so they can be extracted into child files in a later change.</li>
+      </ul>
     </section>
 
     <section class="section-card card-files" id="files" aria-labelledby="h-files">
@@ -1693,8 +1713,8 @@ img, video { max-width: 100%; height: auto; }
             <li><code>test-extract-plan-spec.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">phase and Decisions extraction cases</span></li>
             </ul>
           </li>
-          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 7.0.1 to 7.1.0</span></li>
-          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">7.1.0 entry</span></li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plan-agent 8.5.1 to 8.6.0</span></li>
+          <li><code>kit/plugins/plan-agent/CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">8.6.0 entry</span></li>
         </ul>
       </div>
     </section>
@@ -1707,12 +1727,12 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card" id="step-1">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Make <code class="md">parseSpecMarkdown</code> in <code class="md">scripts/lib/plan-spec.mjs</code> phase-aware by splitting the Steps chunk on <code class="md">^###\s+Phase:</code> lines before the existing numbered-item split, returning <code class="md">sections.phases</code> as an ordered array of <code class="md">{ name, firstStep, lastStep }</code> and <code class="md">null</code> when no heading is present.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1727,12 +1747,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-2">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Emit phases from <code class="md">buildDigest</code> as a <code class="md">### Phase: &lt;name&gt;</code> line above the first step of each phase, keeping the flat numbering unchanged.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1747,12 +1767,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-3">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Read phases back out of rendered HTML in <code class="md">extractSections</code> by matching the <code class="md">data-phase</code> attribute on each phase group wrapper, and extend the existing <code class="md">stripHeading</code> helper to remove the phase <code class="md">&lt;h3&gt;</code> as well as the section <code class="md">&lt;h2&gt;</code>.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1767,12 +1787,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-4">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Render phase groups by adding a <code class="md">phaseHeader</code> helper to <code class="md">scripts/lib/plan-shell.mjs</code> that emits <code class="md">&lt;div class=&quot;phase-group&quot; data-phase=&quot;…&quot;&gt;&lt;h3&gt;…&lt;/h3&gt;</code>, and group the step cards under those wrappers in <code class="md">build-plan-html.mjs</code>, leaving every <code class="md">.step-card</code> in flat document order inside them.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1787,12 +1807,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-5">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the <code class="md">## Decisions</code> section end-to-end — parse it as a bullet list in <code class="md">parseSpecMarkdown</code>, re-emit it in <code class="md">buildDigest</code>, extract it in <code class="md">extractSections</code>, add a <code class="md">decisions</code> key to <code class="md">SECTION_CHROME</code>, and render it with a <code class="md">sectionCard</code> call placed after Context.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1807,12 +1827,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-6">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Re-copy the three edited renderer sources — <code class="md">scripts/build-plan-html.mjs</code>, <code class="md">scripts/lib/plan-spec.mjs</code>, and <code class="md">scripts/lib/plan-shell.mjs</code> — over their counterparts under <code class="md">kit/plugins/plan-agent/scripts/</code>, after steps 1 through 5 are complete and before any test run.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1827,12 +1847,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-7">
+        <div class="step-card completed" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Rewrite Step 2 of <code class="md">skills/build/SKILL.md</code> as a phase checkpoint loop — implement one phase, run its verify gate, append the decisions made to <code class="md">## Decisions</code>, then reach the boundary offer — with a <code class="md">--continue</code> flag that pushes straight through and no behaviour change for a spec that declares no phases.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1847,12 +1867,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-8">
+        <div class="step-card completed" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the phase boundary offer to that same Step 2 — an <code class="md">AskUserQuestion</code> presenting <code class="md">Compact and continue</code> (recommended), <code class="md">Stop here — resume later</code>, and <code class="md">Continue without compacting</code>, where the compact branch prints the <code class="md">/compact</code> command with focus instructions naming the spec path and the phase just finished, then stops so the user can run it.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1867,12 +1887,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-9">
+        <div class="step-card completed" id="step-9">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Teach <code class="md">skills/finalize-plan/SKILL.md</code> about phases so it refuses to set <code class="md">status: completed</code> while any phase still holds unmarked steps, recording each unfinished phase as a <code class="md">## Completion Report</code> bullet instead.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1887,12 +1907,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-10">
+        <div class="step-card completed" id="step-10">
           <div class="step-card-header">
             <div class="step-number">10</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Document both sections in <code class="md">guidelines/section-catalog.md</code> with their exact syntax, and replace the &quot;probably two plans — split it&quot; sentence in <code class="md">guidelines/right-sizing.md</code> with a phase profile naming when a plan earns phases, then add both to the renderer-derives list in <code class="md">implementation-plan/SKILL.md</code>.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1907,12 +1927,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-11">
+        <div class="step-card completed" id="step-11">
           <div class="step-card-header">
             <div class="step-number">11</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Extend <code class="md">tests/plugins/test-build-plan-html.mjs</code> and <code class="md">tests/plugins/test-extract-plan-spec.mjs</code> with phase and Decisions cases, and add <code class="md">tests/plugins/test-plan-phases.mjs</code> asserting the render-extract-re-render cycle preserves both, that an unphased spec renders unchanged, and that <code class="md">build/SKILL.md</code> and <code class="md">finalize-plan/SKILL.md</code> still carry their phase contract strings.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1927,13 +1947,13 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-12">
+        <div class="step-card completed" id="step-12">
           <div class="step-card-header">
             <div class="step-number">12</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Bump plan-agent from 7.0.1 to 7.1.0 in <code class="md">.claude-plugin/marketplace.json</code> and add the matching <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> entry describing both new sections, the build checkpoint loop, and the finalize-plan gate.</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Bump plan-agent from 8.5.1 to 8.6.0 in <code class="md">.claude-plugin/marketplace.json</code> and add the matching <code class="md">kit/plugins/plan-agent/CHANGELOG.md</code> entry describing both new sections, the build checkpoint loop, and the finalize-plan gate.</span>
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
@@ -1973,64 +1993,64 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">A spec with two <code class="md">### Phase:</code> headings parses with every step&#39;s <code class="md">Verify:</code> text free of heading markup</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2"><code class="md">parseSpecMarkdown(buildDigest(parsed))</code> returns phases deep-equal to the original for a phased fixture</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3"><code class="md">extractSections</code> on a rendered phased plan returns the phase names in document order, with no phase name leaking into a step&#39;s action text</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">The rendered progress bar total equals the step count for a phased plan, confirming the <code class="md">.step-card</code> selector still matches</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">Each phase renders an <code class="md">&lt;h3&gt;</code> inside a <code class="md">data-phase</code> wrapper, so the outline runs h1 to h2 to h3 with no skipped level</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">A phased spec whose first phase is fully <code class="md">[x]</code> resumes at the first unmarked step of the next phase rather than restarting</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code class="md">finalize-plan</code> leaves a plan with an unfinished phase at <code class="md">status: in-progress</code> and names that phase in the Completion Report</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8">A spec with a <code class="md">## Decisions</code> section renders a Decisions card and a sidebar nav entry</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">An unphased spec with no Decisions section renders byte-identically to its output before this change</label>
         </li>
         <li>
-          <input type="checkbox" id="ac10">
+          <input type="checkbox" id="ac10" checked>
           <label for="ac10"><code class="md">kit/plugins/plan-agent/skills/build/SKILL.md</code> documents both the stop-at-phase-boundary default and the <code class="md">--continue</code> override</label>
         </li>
         <li>
-          <input type="checkbox" id="ac11">
+          <input type="checkbox" id="ac11" checked>
           <label for="ac11">The phase boundary offers <code class="md">Compact and continue</code>, <code class="md">Stop here — resume later</code>, and <code class="md">Continue without compacting</code>, and prints a <code class="md">/compact</code> line naming the spec path and the finished phase</label>
         </li>
         <li>
-          <input type="checkbox" id="ac12">
+          <input type="checkbox" id="ac12" checked>
           <label for="ac12">The sentence &quot;probably two plans — split it&quot; no longer appears in <code class="md">guidelines/right-sizing.md</code></label>
         </li>
         <li>
-          <input type="checkbox" id="ac13">
+          <input type="checkbox" id="ac13" checked>
           <label for="ac13">Each of the three renderer sources under <code class="md">kit/plugins/plan-agent/scripts/</code> is byte-identical to its repo-root counterpart under <code class="md">scripts/</code></label>
         </li>
         <li>
-          <input type="checkbox" id="ac14">
+          <input type="checkbox" id="ac14" checked>
           <label for="ac14"><code class="md">node tests/plugins/test-plan-phases.mjs</code> exits 0</label>
         </li>
         <li>
-          <input type="checkbox" id="ac15">
-          <label for="ac15"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 with plan-agent at 7.1.0</label>
+          <input type="checkbox" id="ac15" checked>
+          <label for="ac15"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 with plan-agent at 8.6.0</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"
@@ -2054,27 +2074,36 @@ img, video { max-width: 100%; height: auto; }
         Wrapping up
       </h2>
       <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">No items to report — all requirements met.</p>
+          <dl class="report-list">
+            <dt>Version shipped as 8.6.0, not 7.1.0</dt>
+            <dd>plan-agent was already at 8.5.1 when this landed; 7.1.0 would fail the version guard</dd>
+            <dt>Phase and Decisions styling is element-local, not new shared CSS</dt>
+            <dd>the plan stylesheet is emitted verbatim into every plan, so a new rule breaks the byte-identical-unphased criterion</dd>
+            <dt>The checkpoint loop lives in build/references/phase-checkpoints.md, not inline in SKILL.md</dt>
+            <dd>that core was at 598 of the 600-word ceiling test-progressive-disclosure.sh enforces</dd>
+            <dt>stripHeading was left stripping only h2</dt>
+            <dd>step cards are sliced at their own div boundaries so a phase h3 can never reach a step&#39;s action text, and stripping h3 would drop legitimate headings from legacy Context sections</dd>
+          </dl>
         </div>
       </div>
     </section>
