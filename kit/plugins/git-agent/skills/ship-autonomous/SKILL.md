@@ -27,15 +27,15 @@ Hard stops.
 - Never guess: unrecognized failures and ambiguous comments →
   **AskUserQuestion**.
 - Do not narrate routine investigation; skip duplicate or no-op events.
-- A wrong finding: one reply, then silence — never a no-op fix.
+- A finding that is wrong, non-blocking (nit, style), or re-fired: one reply,
+  resolve, **no commit** — no no-op fixes, no batching into a blocking one, no
+  follow-on polishing.
 - **Never dismiss a review on your own initiative**; never merge around a
   standing change request.
 - **Never merge on anything but green.** AskUserQuestion gates it; pin it
   with `--match-head-commit`.
 - **Branch deletion requires its own explicit approval** — never pass
   `--delete-branch` on the strength of a merge approval.
-- A re-fired bot review on an approved PR is not new information: no more
-  polishing, unrelated code, tests, or follow-ups.
 
 ## Step 0: Exit Plan Mode
 
@@ -87,7 +87,8 @@ Classify against the table in `references/ci-autofix.md`; autofix only `lint`,
 
 ### 6c: Review comments
 
-Apply, reply, refute, or escalate per `references/pr-events.md`.
+Classify severity first, then apply, reply, refute, or escalate per
+`references/pr-events.md`.
 
 ### 6d: Commit and let the next event drive
 

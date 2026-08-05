@@ -79,7 +79,31 @@ routine investigation, and skip duplicate or no-op events silently.
 
 ## Step 6c: Review comments
 
-If the requested change is clear, safe, and in scope: apply it with `Edit`,
+**Classify severity before doing anything.** Only a *blocking* finding earns a
+commit:
+
+| Blocking | Non-blocking |
+|----------|--------------|
+| Correctness, security, data loss | Nits, naming, formatting, style preference |
+| Carried by a `CHANGES_REQUESTED` review | "Consider…", "optional", "future work", Wish List |
+| Failing a required check | Praise, summaries, informational notes |
+
+A non-blocking finding **earns no commit**. Reply once saying it is noted and
+not blocking, resolve the thread, and name it in the next status update so the
+user can decide. Never push a commit for one — every push re-fires the review
+bot, so a round of nit-polishing buys another round of nits and can cost as much
+as the change under review. Do not batch a nit into a blocking fix's commit
+either; "I'm already pushing" is how the filter erodes.
+
+When the verdict is "LGTM otherwise", "approve with minor suggestions", or
+"ready to merge", the review is done — go to Step 7. Do not open another fix
+round.
+
+Resolve only threads you replied to, and never one carried by a
+`CHANGES_REQUESTED` review — that is blocking by the table above, and resolving
+it does not clear the review decision (see below).
+
+If a blocking finding is clear, safe, and in scope: apply it with `Edit`,
 commit via **`git-agent:commit-agent`** (delegated — no push prompt), `git push`,
 then reply to the comment via `gh` noting the commit that addresses it.
 

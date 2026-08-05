@@ -21,7 +21,7 @@ create a PR.
 ## Step 1: Find the PR
 
 ```
-gh pr view --json url,number,state,mergeable,reviewDecision,headRefOid
+gh pr view --json url,number,state,mergeable,mergeStateStatus,reviewDecision,headRefOid
 ```
 
 If that fails because the branch has no PR, look for one — note that `gh pr
@@ -40,7 +40,7 @@ list` returns none of `mergeable`, `reviewDecision`, or `headRefOid`, and Step 4
 cannot pin the merge without `headRefOid`:
 
 ```
-gh pr view <number> --json url,number,state,mergeable,reviewDecision,headRefOid
+gh pr view <number> --json url,number,state,mergeable,mergeStateStatus,reviewDecision,headRefOid
 ```
 
 ## Step 2: Readiness gate
@@ -59,19 +59,37 @@ gh pr checks <pr-url> --json name,state,link              # everything, for the 
 Merge only when **all** of these hold:
 
 - `mergeable` is `MERGEABLE` (not `CONFLICTING`, not `UNKNOWN`)
+- `mergeStateStatus` is `CLEAN`, `UNSTABLE`, or `HAS_HOOKS`
 - every **required** check is `SUCCESS` or `SKIPPED`
 - `reviewDecision` is not `CHANGES_REQUESTED`
-- no unresolved review threads:
 
-```
-gh api graphql -f query='{ repository(owner: "<owner>", name: "<repo>") {
-  pullRequest(number: <n>) { reviewThreads(first: 100) {
-    totalCount pageInfo { hasNextPage } nodes { isResolved } } } } }'
-```
+`mergeable` and `mergeStateStatus` answer different questions. `mergeable` is
+about **conflicts**; `mergeStateStatus` is about **whether the merge is
+permitted**, computed by GitHub from the repo's own branch protection. Anything
+else — `BLOCKED`, `BEHIND`, `DIRTY`, `DRAFT`, `UNKNOWN` — is a stop-and-ask.
+Like `mergeable`, it is computed asynchronously, so a transient `UNKNOWN` means
+*re-query*, never *proceed*.
 
-Fill `<owner>`, `<repo>`, and `<n>` from `gh repo view --json owner,name` and
-the PR number — never from a guess. If `hasNextPage` is true, the thread list is
-truncated: say so and ask rather than reporting a count you cannot trust.
+`UNSTABLE` passes because it means **only non-required checks are failing or
+pending** — a failing *required* check reads `BLOCKED`. Blocking on `UNSTABLE`
+would silently overturn the `--required` rule below, which is the one place this
+skill decides what counts as enforced.
+
+`HAS_HOOKS` passes because it is `CLEAN` on a repo with pre-receive hooks —
+mergeable, with passing status. It is the *normal* state on a GitHub Enterprise
+repo that uses them, so rejecting it would make this skill permanently unable to
+merge there. The hook itself is the enforcement point: if it rejects the push,
+the pinned `gh pr merge` fails server-side, which is the same protection every
+other gate here relies on.
+
+Unresolved review threads are **not a separate gate**. If the repo enables
+"Require conversation resolution before merging", `mergeStateStatus` reads
+`BLOCKED` and the merge stops here; if it does not, the repo has decided open
+threads do not block, and this skill does not overrule that. An earlier version
+ran a paginated GraphQL `reviewThreads` query and blocked on any unresolved
+node — stricter than every repo it ran against had asked for, and enough for six
+bot nit comments to deadlock an approved PR. `BLOCKED` does not say *why*; name
+it in the Step 4 summary and let the user open the PR.
 
 `--required` is what branch protection actually enforces, so it — not the full
 list — decides whether the merge is blocked. Never infer required-ness yourself
@@ -81,14 +99,18 @@ the full picture rather than a filtered one.
 
 When a repo has no branch protection, `--required` exits non-zero with
 "no required checks reported" — that means *nothing is enforced*, not *nothing
-passed*. Do not read it as a failure. In that case there is no automated gate at
-all, so say so plainly in the Step 4 summary and let the full check list and the
-user's judgement carry the decision.
+passed*. Do not read it as a failure. `mergeStateStatus` reads `CLEAN` on such a
+repo for the same reason: there is nothing configured to block on. So neither
+signal is a gate here — there is no automated gate at all. Say that plainly in
+the Step 4 summary and let the full check list and the user's judgement carry
+the decision.
 
-If any of these fails — checks pending, checks failing, conflicts, changes
-requested, unresolved threads, or anything ambiguous — print the status summary
-(checks, review decision, unresolved-thread count) **and ask what to do**. Do
-not merge.
+If any of these fails — a **required** check pending or failing, conflicts,
+changes requested, a merge state outside the three above, or anything ambiguous
+— print the status summary (checks, review decision, `mergeStateStatus`) **and
+ask what to do**. Do not merge. A *non-required* check that is pending or
+failing is not in this list; it is summary material, per the `--required` rule
+above.
 
 Automated review bots re-fire on every push. A re-fired review on an
 already-approved PR is not a new blocking concern — see the `review-bot-loops`
@@ -121,13 +143,13 @@ executing one is.
 
 **Re-run the Step 2 queries first.** Lint can take minutes, and
 `--match-head-commit` only catches a moved head — it does not catch a review
-flipping to `CHANGES_REQUESTED`, a new unresolved thread, or a check turning red
-on the same commit. Show the user state you fetched just now, not state you
+flipping to `CHANGES_REQUESTED`, `mergeStateStatus` flipping to `BLOCKED`, or a
+check turning red on the same commit. Show the user state you fetched just now, not state you
 remember. If anything regressed, go back to Step 2 and ask.
 
 Green checks alone never authorize a merge. Use **AskUserQuestion** to confirm,
-showing the PR URL, the check summary, the review decision, and the
-unresolved-thread count.
+showing the PR URL, the check summary, the review decision, and
+`mergeStateStatus`.
 
 On approval, pin the merge to the commit you verified:
 
@@ -154,13 +176,18 @@ Print the merge result and the PR URL, then **STOP**.
 ## GitLab
 
 With a `glab` remote, substitute the equivalent commands and apply the same
-gates — pipeline green, no unresolved discussions, explicit approval:
+gates — pipeline green, explicit approval:
 
 ```
 glab mr view <id>              # state, pipeline status, commit
-glab mr view <id> --unresolved # unresolved discussions only
+glab mr view <id> --unresolved # unresolved discussions — for the summary, not a gate
 glab mr merge <id>
 ```
+
+As on GitHub, unresolved discussions are **not** a gate this skill enforces. If
+the project sets "All threads must be resolved", `glab mr merge` fails
+server-side; if it does not, the project has decided they do not block. Report
+the count so the user approves with the full picture.
 
 `glab mr view` has no flag that prints approval state; query the API or open
 `--web` rather than assuming approval.

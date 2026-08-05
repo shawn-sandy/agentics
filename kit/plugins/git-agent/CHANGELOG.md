@@ -1,6 +1,86 @@
 # Changelog — git-agent
 
+## v4.13.0 — 2026-08-05 — `merge` reads `mergeStateStatus` instead of hand-gating threads
 
+### Changed
+
+- **The unresolved-review-thread gate is gone from `merge` and `agent-merge`.**
+  A paginated GraphQL `reviewThreads` query blocked the merge on any unresolved
+  node. Nothing in GitHub asked for that: "Require conversation resolution
+  before merging" is a per-repo branch-protection toggle, and the skill enforced
+  the strictest reading on every repo regardless of what the repo had chosen.
+  Six nit-level bot comments were enough to deadlock an approved, fully green
+  PR — and since the only way out was to fix them and push, the push re-fired
+  the bot.
+- **`mergeStateStatus` replaces it**, added to the Step 1 `gh pr view --json`
+  field list. GitHub computes it from that repo's own branch protection, so
+  conversation-resolution policy is honored where it is configured and ignored
+  where it is not. `mergeable` was never a substitute: it reports *conflicts*
+  (`MERGEABLE`/`CONFLICTING`), not *permission to merge*.
+- **`CLEAN`, `UNSTABLE`, and `HAS_HOOKS` pass.** `UNSTABLE` means only
+  non-required checks are failing or pending — a failing *required* check reads
+  `BLOCKED` — so blocking on it would have silently overturned the `--required`
+  rule, which is the one place this skill decides what counts as enforced.
+  `HAS_HOOKS` is `CLEAN` on a repo with pre-receive hooks, and is the *normal*
+  state on a GitHub Enterprise repo that uses them; rejecting it would have made
+  the skill permanently unable to merge there, with the hook itself already
+  serving as the server-side enforcement point. Everything else (`BLOCKED`,
+  `BEHIND`, `DIRTY`, `DRAFT`, `UNKNOWN`) stops and asks; `UNKNOWN` means
+  re-query, never proceed.
+- **Stop conditions say *required* check, not *check*.** The prose lists in
+  `merge`, `agent-merge`, and `/git-agent:merge-bg` all said "pending or failing
+  checks", which contradicts accepting `UNSTABLE` and would have rejected a
+  merge state the gate above admits. `merge-bg`'s contract also still named
+  unresolved review threads, a gate that no longer exists.
+- **On a repo with no branch protection, `mergeStateStatus` reads `CLEAN`** for
+  the same reason `--required` exits non-zero: nothing is configured to block
+  on. Neither signal is a gate there, which the Step 4 summary now says plainly
+  — the mandatory `AskUserQuestion` is the gate, as it always was.
+- Net effect on safety: unchanged for protected repos (GitHub enforces the same
+  policy server-side, and `gh pr merge` fails if violated), and unchanged for
+  unprotected ones (the human approval prompt was always the only gate). What
+  changed is that the skill no longer invents policy the repo did not set.
+- `BLOCKED` does not report *why*. The Step 4 summary names the status and the
+  user opens the PR; restoring the thread query purely as a diagnostic would
+  cost more lines than the gate that was deleted.
+- GitLab follows the same rule: `glab mr view --unresolved` feeds the summary
+  rather than gating, since `glab mr merge` fails server-side when the project
+  requires resolved threads.
+
+## v4.12.0 — 2026-08-05 — `ship-autonomous` Step 6c filters findings by severity
+
+### Changed
+
+- **A non-blocking review finding no longer earns a commit.** Step 6c had three
+  branches — apply, escalate, refute — and a correct-but-trivial nit matched the
+  first one: it is clear, safe, and in scope, so the skill would `Edit`, commit,
+  and push. Every push re-fires the review bot, which returns a fresh round of
+  nits on a slightly different commit, so the pipeline could spend more output
+  on polishing than the change under review cost to write. The existing refute
+  branch did not catch this — a nit is not *wrong*, so nothing routed it away
+  from the eager path.
+- **The filter is a gate ahead of the three branches, not a fourth branch.** A
+  fourth would have competed with "clear, safe, and in scope" for the same
+  finding and lost. Blocking means correctness, security, data loss, a finding
+  carried by a `CHANGES_REQUESTED` review, or a required-check failure;
+  everything else — nits, naming, formatting, "consider…", "optional", future
+  work, Wish List items, praise, summaries — gets one reply, a resolved thread,
+  and a line in the next status update so the user decides.
+- **Nits may not be batched into a blocking fix's commit.** "I'm already
+  pushing" is the rationalization that erodes the filter one finding at a time,
+  so it is refused explicitly rather than left to judgement.
+- **Three guardrail bullets collapse into one.** Wrong findings, non-blocking
+  findings, and re-fired reviews were the same policy at three generalities —
+  reply once, do not commit, do not polish. `ship-autonomous`'s core sat one
+  word under the 600-word ceiling that `test-skill-split-git-social.sh`
+  enforces, so the new rule paid for itself by merging them rather than by
+  raising the ceiling. Nothing was dropped; the full severity table lives in
+  `references/pr-events.md`, which is where the ceiling is meant to push it.
+- **An "LGTM otherwise" / "approve with minor suggestions" / "ready to merge"
+  verdict now routes to Step 7** instead of opening another fix round.
+- Thread resolution is scoped: resolve only threads you replied to, never one
+  carried by a `CHANGES_REQUESTED` review — resolving that does not clear the
+  review decision, and Step 8 still blocks on it.
 
 ## v4.11.0 — 2026-08-02 — The plan-issue extractor becomes a `bin/` command
 

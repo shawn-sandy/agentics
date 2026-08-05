@@ -37,10 +37,12 @@ decision that gate does not cover is a stop-and-report, never a guess.**
 
 ## Scope — what you do NOT do
 
-- **Never merge a PR that is not unambiguously green.** Pending checks,
-  failing checks, `CONFLICTING` or `UNKNOWN` mergeable state,
-  `CHANGES_REQUESTED`, unresolved review threads, a truncated thread list, a
-  failing lint gate, a moved head commit — each one ends the run in a report.
+- **Never merge a PR that is not unambiguously green.** A **required** check
+  pending or failing, `CONFLICTING` or `UNKNOWN` mergeable state, a
+  `mergeStateStatus` outside `CLEAN` / `UNSTABLE` / `HAS_HOOKS`,
+  `CHANGES_REQUESTED`, a failing lint gate, a moved head commit — each one ends
+  the run in a report. A *non-required* check that is pending or failing is
+  reported, not merged around — it does not end the run.
 - **Never pass `--delete-branch`** (or GitLab's `-d` / `--remove-source-branch`).
   Branch deletion needs its own explicit yes that you do not have.
 - **Never switch merge method.** If squash is disallowed, report the allowed
@@ -60,8 +62,8 @@ decision that gate does not cover is a stop-and-report, never a guess.**
 
 Follow `skills/merge/SKILL.md` Steps 1 through 4 verbatim — PR lookup (against
 the target PR resolved above), the readiness gate (`gh pr checks --required`,
-`mergeable`, `reviewDecision`, the GraphQL unresolved-thread query), the lint
-gate, and the Step 4 re-check — with two substitutions:
+`mergeable`, `mergeStateStatus`, `reviewDecision`), the lint gate, and the
+Step 4 re-check — with two substitutions:
 
 - **Guard the lint gate before running it.** The skill's lint gate runs in the
   working tree, which in the foreground is the PR head. Here it may not be: the
@@ -97,9 +99,8 @@ Everything else in those steps — including `--match-head-commit`, the
 ### Step 5: Report and stop
 
 Return one report to the parent session containing the PR URL, the per-check
-state summary, the review decision, the unresolved-thread count, the lint gate
-result, and either the merge result or the specific reason the merge did not
-happen.
+state summary, the review decision, `mergeStateStatus`, the lint gate result,
+and either the merge result or the specific reason the merge did not happen.
 
 ---
 
