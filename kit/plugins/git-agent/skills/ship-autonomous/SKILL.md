@@ -28,6 +28,8 @@ Hard stops.
   **AskUserQuestion**.
 - Do not narrate routine investigation; skip duplicate or no-op events.
 - A wrong finding: one reply, then silence — never a no-op fix.
+- A non-blocking finding (nit, style, "consider", Wish List): one reply, resolve
+  the thread, **no commit** — not even batched into a blocking fix.
 - **Never dismiss a review on your own initiative**; never merge around a
   standing change request.
 - **Never merge on anything but green.** AskUserQuestion gates it; pin it
@@ -87,7 +89,8 @@ Classify against the table in `references/ci-autofix.md`; autofix only `lint`,
 
 ### 6c: Review comments
 
-Apply, reply, refute, or escalate per `references/pr-events.md`.
+Classify severity first — only a blocking finding earns a commit. Then apply,
+reply, refute, or escalate per `references/pr-events.md`.
 
 ### 6d: Commit and let the next event drive
 
