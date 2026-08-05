@@ -9,7 +9,7 @@
 // regexes below are lifted out of the driver source rather than restated here:
 // if the driver's contract changes, this test changes with it or fails.
 
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -221,6 +221,45 @@ check(
   'a browser without color-mix drops the second declaration and needs the first',
 );
 check('no template placeholder survives substitution', !/\{\{[A-Z_]+\}\}/.test(index));
+
+// ── The reported count is the count of cards actually written ───────────────
+// A second fixture, because it needs a plans directory containing a file the
+// card loop cannot open. The loop skips those silently, so sourcing the count
+// from the pre-parse file list overstates it — and the plans-library skill
+// compares its own card count against that number and STOPs on a mismatch,
+// turning one unreadable file into "the gallery is corrupt, do not open it".
+// A broken symlink is the deterministic way to produce an unopenable entry that
+// os.walk still lists: no chmod, and it behaves the same for root.
+const TMP2 = mkdtempSync(join(tmpdir(), 'gallery-count-'));
+process.on('exit', () => rmSync(TMP2, { recursive: true, force: true }));
+const plansDir2 = join(TMP2, 'docs', 'plans');
+mkdirSync(plansDir2, { recursive: true });
+writeFileSync(join(plansDir2, 'readable-one.html'), plan(PLANS[0]));
+writeFileSync(join(plansDir2, 'readable-two.html'), plan(PLANS[2]));
+symlinkSync(join(TMP2, 'no-such-target'), join(plansDir2, 'dangling.html'));
+
+const build2 = spawnSync('bash', [join(ROOT, 'docs/plans/build-index.sh'), TMP2], {
+  encoding: 'utf8',
+  env: { ...process.env, HOME: TMP2, CLAUDE_PLUGIN_ROOT: '' },
+});
+check('build-index.sh exits 0 despite an unreadable plan', build2.status === 0, build2.stderr);
+const index2 = readFileSync(join(plansDir2, 'index.html'), 'utf8');
+const cards2 = (index2.match(CARD_RE) ?? []).length;
+check('the unreadable plan produced no card', cards2 === 2, `got ${cards2}`);
+// The three places the number is published must all agree with the page.
+const reported = build2.stdout.match(/\((\d+) items,/)?.[1];
+check(`the "wrote … (N items)" line reports ${cards2}, not 3`, reported === String(cards2), `got ${reported}`);
+// The template prints the total twice ("N items" in the header and the footer);
+// both are substituted from the same PLAN_COUNT, so both must read 2, and the
+// pre-parse total must appear nowhere.
+const itemLines = index2.match(/\d+ items/g) ?? [];
+check(
+  'every "N items" line on the page matches its card count',
+  itemLines.length === 2 && itemLines.every((l) => l === `${cards2} items`),
+  itemLines.join(', ') || 'no items line found',
+);
+const tab2 = index2.match(/<a href="index\.html"[^>]*>Plans<span class="n">(\d+)/)?.[1];
+check('the topbar Plans tab matches its card count', tab2 === String(cards2), `got ${tab2}`);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

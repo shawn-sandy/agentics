@@ -122,7 +122,6 @@ if not plan_files:
     print(f'[build-index] no plan files found in {plans_dir} — skipping', file=sys.stderr)
     sys.exit(0)
 
-plan_count = len(plan_files)
 generated_at = datetime.now().strftime('%Y-%m-%d %H:%M')
 
 # ── Parse metadata and build gallery entries ───────────────────────────────────
@@ -199,6 +198,15 @@ for f in plan_files:
 </a>''')
 
 gallery_entries = '\n'.join(cards)
+# Counted off the cards actually emitted, never off plan_files: the loop above
+# skips anything it cannot open (a broken symlink, a file whose permissions
+# changed between the walk and the read), and every consumer of this number —
+# the page's own "N plans" line, the topbar Plans tab, and the `wrote … (N
+# items)` line the plans-library skill compares its card count against — is
+# claiming how many rows the page has. Sourcing it from the pre-parse list makes
+# all three overstate by exactly the number of files silently dropped, which
+# reads to the skill as a corrupt write.
+plan_count = len(cards)
 
 # ── Topbar ─────────────────────────────────────────────────────────────────────
 # Counts come off the filesystem, not out of the sibling index.html files: the

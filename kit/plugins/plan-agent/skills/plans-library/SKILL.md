@@ -49,7 +49,9 @@ On success it prints one line to stdout:
 [build-index] wrote <PLANS_DIR>/index.html (<N> items, <YYYY-MM-DD HH:MM>)
 ```
 
-Capture `<PLANS_DIR>/index.html` as `INDEX_PATH` and `<N>` as `PLAN_COUNT`.
+Capture `<PLANS_DIR>/index.html` as `INDEX_PATH` and `<N>` as `PLAN_COUNT`. `<N>` is the
+number of cards the script actually wrote, not the number of files it found — anything it
+could not open is already excluded, so Step 2 compares like with like.
 
 If no `wrote` line appears, the script skipped the build and explained why on stderr —
 the plans directory is missing, no plan files were found in it, or the plugin templates

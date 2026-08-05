@@ -25,6 +25,15 @@
   rewritten skill's only action dead on arrival. Check 11b of
   `tests/plugins/test-extractor-wiring.sh` pins the call site in command position
 
+- **`build-index.sh` reports the number of cards it wrote, not the number of files
+  it found.** The card loop skips any plan it cannot open — a broken symlink, a
+  file whose permissions changed between the walk and the read — but the total
+  was taken from the pre-parse file list, so the page's own "N items" line, the
+  topbar Plans tab, and the `wrote … (N items)` line all overstated by exactly
+  the number dropped. Harmless while nothing compared them; now that
+  `plans-library` checks its card count against that number, one unreadable file
+  would have reported the gallery as a corrupt write and refused to open it
+
 ### Added
 
 - **`bin/plan-agent-plans-index`** — bare-name entry point for
