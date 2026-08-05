@@ -230,6 +230,76 @@ ok('extractNextSteps recovers a wish-list card carrying an extra CSS class', () 
   );
 });
 
+console.log('-- integration: DOM extraction of phases and Decisions --');
+
+/** A phased spec with a Decisions ledger and one already-completed step. */
+const PHASED_SPEC = `# Plan: Phased extraction fixture
+
+## Objective
+Prove the extractor reads phases and decisions back out of the DOM.
+
+## Decisions
+- Headings beat a frontmatter range list — they survive step insertion.
+- The ledger renders so a resumed session can see it.
+
+## Steps
+
+### Phase: Groundwork
+
+1. [x] Split on the headings. Why: they corrupt step text otherwise. Verify: no verify holds a hash.
+
+### Phase: Surfacing
+
+2. Wrap the cards. Why: extraction reads the wrapper. Verify: names come back in order.
+3. Show the ledger. Why: it must be visible. Verify: the card exists.
+
+## Acceptance Criteria
+- Phases extract.
+
+## Verification
+Render, extract, compare.
+`;
+
+const phasedSpec = parseSpecMarkdown(PHASED_SPEC);
+const phasedHtml = renderPlanHtml(phasedSpec, { fileName: 'phased.html', planPath: 'docs/plans/phased.html' });
+
+ok('extractSections reads phase names in document order off the data-phase wrappers', () => {
+  const back = extractSections(phasedHtml);
+  assert.deepEqual(back.phases, [
+    { name: 'Groundwork', firstStep: 1, lastStep: 1 },
+    { name: 'Surfacing', firstStep: 2, lastStep: 3 },
+  ]);
+  // A completed card inside a phase group still counts toward the range — the
+  // `completed` class is a second word in class="step-card completed".
+  assert.match(phasedHtml, /<div class="step-card completed" id="step-1"/);
+  for (const s of back.steps) {
+    for (const name of ['Groundwork', 'Surfacing']) {
+      assert.ok(!s.action.includes(name), `phase name leaked into an action: ${s.action}`);
+    }
+  }
+  assert.deepEqual(back, phasedSpec.sections, 'full sections must round-trip');
+});
+
+ok('extractSections reads the Decisions card back as bullets', () => {
+  assert.deepEqual(extractSections(phasedHtml).decisions, phasedSpec.sections.decisions);
+});
+
+ok('an unphased plan with no Decisions card extracts both as null', () => {
+  const back = extractSections(makePlan({}));
+  assert.equal(back.phases, null, 'no phase wrappers → null');
+  assert.equal(back.decisions, null, 'no Decisions card → null');
+});
+
+ok('resolveSpec re-emits phases and Decisions for a digest-free phased plan', () => {
+  const spec = resolveSpec(phasedHtml);
+  assert.match(spec, /### Phase: Groundwork/);
+  assert.match(spec, /### Phase: Surfacing/);
+  assert.match(spec, /## Decisions/);
+  // The printed spec must itself re-render to the same DOM, which is the
+  // property that makes extract → edit → re-render safe.
+  assert.deepEqual(parseSpecMarkdown(spec).sections, phasedSpec.sections);
+});
+
 ok('unguardScriptClose is the inverse of the guard', () => {
   const raw = 'a </script> b </SCRIPT x';
   assert.equal(unguardScriptClose('a <\\/script> b <\\/SCRIPT x'), raw);

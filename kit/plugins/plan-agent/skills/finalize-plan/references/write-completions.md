@@ -8,13 +8,17 @@ Loaded at Step 5. Covers Step 5 (spec and legacy modes), Step 5f, and Step 6.
 
 Edit `<stem>.md` only — never the HTML. The renderer derives everything the old HTML surgery wrote by hand: the three status representations (`<html data-status>`, the `plan-status` meta tag, the visible badge), criteria `checked` attributes, `.step-card completed` classes and `done` chips, the completion checklist (cc1–cc3 plus `all-complete`), and the Completion Report markup.
 
+**5a0 — Phase gate (phased specs only).** If `## Steps` carries `### Phase: <name>` headings, list every phase holding at least one step with no `[x]` marker. **If that list is non-empty, this plan is not completable:** set `status: in-progress` in 5a, skip 5c entirely (never mass-mark the steps of a phase that was never implemented), and record one bullet per unfinished phase in 5d. A spec with no phase headings skips this and behaves exactly as before.
+
+The failure mode this closes: `build` stops at its first phase boundary by design, so a plan that ran correctly and stopped early looks — to a criteria-and-evidence check alone — a lot like a plan that is done. Naming the phase is what tells the user which one to resume.
+
 **5a — Status frontmatter.** Set `status: completed` in the YAML frontmatter (add the key, or the whole frontmatter block, if absent).
 
 **5b — Acceptance criteria.** Flip bullets under `## Acceptance Criteria` to `- [x] <text>`:
 - User chose **check all**: flip every bullet.
 - User chose **only auto-check verified**: flip only criteria marked `verified` in Step 3b (plus any flagged by Step 2's drift reconciliation). Leave the rest as `- [ ] <text>` (normalize plain `- ` bullets to `- [ ]` so the remaining work is visible). **Downgrade rule:** if any criterion remains unchecked, set `status: in-progress` in 5a instead of `completed`.
 
-**5c — Steps.** Mark every step done by inserting the marker after the number: `1. <action>…` → `1. [x] <action>…` (skip steps that already carry `[x]`).
+**5c — Steps.** Mark every step done by inserting the marker after the number: `1. <action>…` → `1. [x] <action>…` (skip steps that already carry `[x]`). **Skipped entirely when 5a0's phase gate fired** — the unmarked steps are the record of where the work stopped.
 
 **5d — Completion report.** If every criterion was verified and checked and the objective test did not fail, remove any existing `## Completion Report` section and add nothing. Otherwise write (or replace) the section — one `- <item> — <reason>` bullet per finding, the em dash separating item from reason:
 
@@ -24,6 +28,7 @@ Edit `<stem>.md` only — never the HTML. The renderer derives everything the ol
 - <unverified criterion text> — No matching file found in codebase
 - Implementation evidence gap — 3/5 tokens found; missing: AuthProvider, useAuth
 - Objective-verification test failed — npm test -- objective exited with code 1
+- Unfinished phase "Render" — steps 4-6 carry no [x]; resume with /plan-agent:build <stem>.md
 ```
 
 Each item names the specific criterion, token gap, or test — never a generic summary. Place the section after `## Acceptance Criteria`.

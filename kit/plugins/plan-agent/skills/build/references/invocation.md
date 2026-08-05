@@ -13,7 +13,7 @@ already exists and routes elsewhere when there is none.
 ## Invocation & Arguments
 
 - **Command:** `/plan-agent:build [<plan path>] [<objective>] [--type <kind>]
-  [--dir <path>]` — `$ARGUMENTS` carries an optional plan path (`.md` spec or
+  [--dir <path>] [--continue]` — `$ARGUMENTS` carries an optional plan path (`.md` spec or
   `.html`; an `.html` resolves to its sibling `.md`), an optional free-text
   objective, an optional plan type, and an optional plans-directory override.
 - **Parse flags first.** Strip `--dir <path>`, `--type <kind>`, and any other
@@ -35,6 +35,9 @@ already exists and routes elsewhere when there is none.
   at Step 1, that plan already carries its own `type:` — ignore the flag and say
   so in one line rather than rewriting frontmatter the user did not ask you to
   touch.
+- **`--continue`** — a valueless flag that suppresses the phase checkpoint
+  offer in Step 2, so a phased plan runs end to end in one session. Ignored by
+  a plan that declares no `### Phase:` headings, which never stops anyway.
 - **Objective versus path.** The test applies to that **first positional token
   only**: it is an objective unless that token carries an `.md`/`.html` suffix
   or a `/`.

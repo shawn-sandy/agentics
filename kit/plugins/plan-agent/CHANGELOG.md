@@ -1,6 +1,71 @@
 # Changelog
 
 
+## 8.6.0 — phase checkpoints and a Decisions ledger (2026-08-05)
+
+A long *sequential* plan — step seven depending on a choice made in step two —
+could not be implemented across more than one context window. `workflow` fans
+out across subagents, which does nothing for a chain that cannot be split, and
+`right-sizing.md` told the author a plan needing more than ten steps "is
+probably two plans — split it" while offering no mechanism to split with. Two
+optional spec sections and a checkpoint loop close that.
+
+### Added
+
+- **`### Phase: <name>` groupings inside `## Steps`.** Each heading groups the
+  run of steps below it; the renderer wraps those step cards in
+  `<div class="phase-group" data-phase="…">` under an `<h3>`. Numbering stays
+  **flat and global** — phases group it, they never restart it — so adding
+  phases to an already in-progress plan keeps every `[x]` marker valid and
+  `build` still resumes at the first unmarked step rather than at a phase start.
+  Carried at all four sites the format is bidirectional across:
+  `parseSpecMarkdown`, `buildDigest`, `extractSections`, and the renderer.
+  A heading with no steps under it is a spec error — it has nothing to anchor
+  to and would vanish on the next round trip.
+- **`## Decisions`** — the settled-choices ledger, one bullet per decision,
+  rendered as a card after Context with its own sidebar nav entry. Distinct
+  from `## Completion Report`, which records gaps rather than choices. This is
+  what a resumed session reads instead of re-deriving — or contradicting — what
+  an earlier context window already decided.
+- **`build` treats each phase boundary as a checkpoint.** It implements one
+  phase, runs that phase's `Verify:` lines, appends what the phase settled to
+  `## Decisions`, re-renders, then offers `Compact and continue` (recommended),
+  `Stop here — resume later`, or `Continue without compacting`. The compact
+  branch **prints** the `/compact` command with focus instructions naming the
+  spec path and the finished phase and then stops — `/compact` is a CLI
+  built-in the user types, not a tool a skill can call. Compaction is safe
+  mid-plan precisely because the durable state (step markers, `status:`, the
+  ledger) lives in the spec rather than in the conversation.
+- **`build --continue`** pushes straight through every boundary. A spec that
+  declares no phases never stops and is unaffected by any of this.
+
+### Changed
+
+- **`finalize-plan` will not complete a checkpointed plan.** A spec carrying
+  phase headings stays `in-progress` while any phase still holds an unmarked
+  step, with each unfinished phase named as a `## Completion Report` bullet and
+  the step-marking pass (5c) skipped. `build` stops at its first boundary by
+  design, so this is the difference between a plan that finished and one that
+  paused.
+- **`right-sizing.md` gains a Phased profile** and no longer sends the author
+  to a mechanism that does not exist. `section-catalog.md` documents both new
+  sections; `implementation-plan/SKILL.md` lists them among what the renderer
+  handles.
+
+### Notes
+
+- **Do not author a phase heading in a plan rendered by plan-agent < 8.6.0.**
+  Older parsers fold a `###` line between two steps into the preceding step's
+  `Verify:` text with no error raised.
+- No new shared CSS. The plan stylesheet is emitted verbatim into every
+  rendered plan, so one new rule would rewrite the bytes of every committed
+  plan; phase and Decisions styling is local to the elements that use it.
+  `tests/plugins/test-plan-phases.mjs` pins an unphased render to a sha256 to
+  keep it that way.
+- Parent/child plan files stay out of scope. Phase boundaries are shaped so
+  they can be extracted into child files later.
+
+
 ## 8.5.1 — plans-library delegates to the gallery generator (2026-08-04)
 
 ### Fixed

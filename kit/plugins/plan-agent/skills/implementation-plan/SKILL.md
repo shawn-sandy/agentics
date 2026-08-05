@@ -245,6 +245,14 @@ Echo the resolved objective and effective flags after Step 0.
   collapsible follow-up cards with Copy-prompt buttons (bullet = card;
   fenced block in the bullet = paste-ready prompt). See
   `section-catalog.md` for the syntax.
+- **Phase groups** — optional `### Phase: <name>` headings inside `## Steps`
+  render each run of step cards inside a `data-phase` wrapper under an `<h3>`.
+  Pure grouping over the same flat numbering, so every `[x]` marker stays
+  valid; `build` treats each boundary as a checkpoint. See `right-sizing.md`
+  for when a plan earns them.
+- **Decisions ledger** — an optional `## Decisions` spec section renders as a
+  card after Context, with its own sidebar nav entry. Bullets, one settled
+  choice each — what a resumed session reads instead of re-deriving.
 - **Effort level** — low/medium/high badge from step and file counts
   (low: ≤3 steps and ≤2 files; high: ≥7 steps or ≥6 files). Override with
   the `effort:` frontmatter key when the interview tier justifies it.
@@ -329,9 +337,10 @@ EOF
       `reference/SKELETON.md` is a copyable starter. Required always:
       title, Objective, Steps (action + `Why:` + `Verify:` per item),
       Acceptance Criteria, Verification. Optional by judgment: Context,
-      Files, Tests (filled in Step 5c), Next Steps (rendered as collapsible
-      follow-up cards), the frontmatter keys, and the markdown-only sections
-      (Unresolved Questions, Resources).
+      Decisions (the settled-choices ledger), Files, Tests (filled in
+      Step 5c), `### Phase:` groupings inside Steps, Next Steps (rendered as
+      collapsible follow-up cards), the frontmatter keys, and the
+      markdown-only sections (Unresolved Questions, Resources).
    3. Write it to `$PLANS_DIR/<verb-target>.md` — kebab-case `verb-target`
       filename (`add-dark-mode-toggle.md`, `fix-login-redirect.md`). The
       rendered plan will live at the same stem with `.html`.

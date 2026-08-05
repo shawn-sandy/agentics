@@ -44,6 +44,37 @@ missing either.
 completed card with a `done` chip. Author new steps without the marker;
 tools insert it as implementation progresses.
 
+#### `### Phase: <name>` *(optional, inside Steps)*
+
+Groups a run of steps under a checkpoint. Each heading renders an `<h3>`
+inside a `data-phase` wrapper around that run's step cards, and
+`/plan-agent:build` stops at each boundary to offer compaction — the
+mechanism for implementing a long plan across several context windows:
+
+```markdown
+## Steps
+
+### Phase: Parse
+
+1. Teach the splitter about headings. Why: … Verify: …
+2. Re-emit them from the digest. Why: … Verify: …
+
+### Phase: Render
+
+3. Group the step cards. Why: … Verify: …
+```
+
+The numbering stays **flat and global** — phases group it, they never
+restart it. That is what keeps `[x]` markers valid when phases are added to
+an already in-progress plan, and it is why `build` resumes at the first
+unmarked step rather than at a phase start. A heading with no steps under it
+is a spec error: it has nothing to anchor to and would vanish on the next
+round trip.
+
+Do not author a phase heading between two steps in a plan rendered by
+plan-agent < 8.6.0 — older parsers fold it into the preceding step's
+`Verify:` text with no error raised.
+
 ### `## Acceptance Criteria`
 
 One bullet per criterion; each a single-line falsifiable statement.
@@ -73,6 +104,26 @@ judge the plan: a bug's discovery story, a constraint that shaped the
 approach, an issue link. A self-evident chore (dependency bump, rename) can
 omit it. Paragraphs separated by blank lines. When the plan was seeded from
 an issue, cite the issue URL here.
+
+### `## Decisions`
+
+The settled-choices ledger. One bullet per decision, each naming the choice
+**and its reason** — a resumed session reads this instead of re-deriving, so
+a bullet that states only the outcome invites the next context window to
+re-litigate it:
+
+```markdown
+## Decisions
+
+- Phase boundaries are `### Phase:` headings, not a frontmatter range list — headings survive step insertion.
+- `build` stops at a boundary by default and takes `--continue` to push through.
+```
+
+Renders as a card after Context, with its own sidebar nav entry. Earns its
+place on any plan long enough to be phased, and on any plan where a reviewer
+would otherwise ask "why this way?" twice. Distinct from
+`## Completion Report`, which records **gaps**, not choices — do not merge
+them. `/plan-agent:build` appends to this section at each phase boundary.
 
 ### `## Files`
 
