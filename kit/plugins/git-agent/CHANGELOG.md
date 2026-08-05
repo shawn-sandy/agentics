@@ -60,6 +60,13 @@
 - **Nits may not be batched into a blocking fix's commit.** "I'm already
   pushing" is the rationalization that erodes the filter one finding at a time,
   so it is refused explicitly rather than left to judgement.
+- **Three guardrail bullets collapse into one.** Wrong findings, non-blocking
+  findings, and re-fired reviews were the same policy at three generalities —
+  reply once, do not commit, do not polish. `ship-autonomous`'s core sat one
+  word under the 600-word ceiling that `test-skill-split-git-social.sh`
+  enforces, so the new rule paid for itself by merging them rather than by
+  raising the ceiling. Nothing was dropped; the full severity table lives in
+  `references/pr-events.md`, which is where the ceiling is meant to push it.
 - **An "LGTM otherwise" / "approve with minor suggestions" / "ready to merge"
   verdict now routes to Step 7** instead of opening another fix round.
 - Thread resolution is scoped: resolve only threads you replied to, never one
