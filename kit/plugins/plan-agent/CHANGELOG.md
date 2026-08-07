@@ -20,11 +20,13 @@ at the first matching rule.
 - **Argument precedence is explicit and total** (`references/invocation.md`).
   Rule 0 strips `--dir`, `--type`, and `--continue` with their values, leaving a
   **rest string**; every later rule reads that, never raw `$ARGUMENTS`. Rule 1
-  classifies the rest string as a path only when it is a **single
-  whitespace-free token** carrying an `.md`/`.html` suffix or a `/` — the
-  whitespace clause is the fix, since a real path cannot contain a space. Rule 2
-  takes everything else as a free-text objective, and **the whole rest string is
-  the objective**, not its first token. Rule 3 handles an empty rest string. No
+  classifies the rest string as a path when it **names an existing file**, or
+  failing that when it is a **single whitespace-free token** carrying an
+  `.md`/`.html` suffix or a `/`. The shape test is what fixes the reported
+  misparse; the existence test in front of it is what keeps a path that *does*
+  contain a space from being caught by it (see the separate bullet below).
+  Rule 2 takes everything else as a free-text objective, and **the whole rest
+  string is the objective**, not its first token. Rule 3 handles an empty rest string. No
   rule falls through on failure: a missing path still stops rather than
   authoring a plan because of a typo.
 - **A lone discovery candidate is adopted, not offered.** One match
@@ -78,7 +80,7 @@ at the first matching rule.
 
 ### Added
 
-- **Resolution test table** (`references/resolve-plan.md`) — seven rows, one per
+- **Resolution test table** (`references/resolve-plan.md`) — eight rows, one per
   case the ladder must handle, each naming its rest string, the rule it takes,
   and the outcome. `tests/plugins/test-build-skill.sh` check 21 asserts every
   row's content and the ladder's `0 → 1 → 2 → 3` ordering, so a reverted rule
