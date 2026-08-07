@@ -344,11 +344,16 @@ EOF
       it does not apply to Tier 2 doc/plan/metadata work, which has nothing
       to fail. When the call is close — Tier 1 with no runner, config-only
       edits, a spike — ask once via `AskUserQuestion` rather than guessing,
-      and say which you'd pick. `--tdd` and `--no-tdd` skip the decision.
-      Read `guidelines/red-green-verify.md` before drafting the phases;
-      it owns the per-phase step content, the 8-iteration GREEN cap, the
-      DOM-assertion rule for UI work, and the foreground Node driver that
-      replaces `&`/`nohup` (blocked by permissions).
+      and say which you'd pick. Under `--quick`, Step 0b never ran: do one
+      cheap runner check (a `test` script, a pytest config, a `*_test.go`)
+      and treat no hit as no RGV rather than inferring from nothing.
+      `--no-tdd` suppresses the shape; `--tdd` forces it even with no
+      runner, and then RED's first step stands the runner up so the added
+      scope is visible in the plan. Read `guidelines/red-green-verify.md`
+      before drafting the phases; it owns the per-phase step content, the
+      8-iteration GREEN cap, the UI-only scoping of the browser steps, the
+      user-asked-to-ship condition on SHIP, and the foreground Node driver
+      that replaces `&`/`nohup` (blocked by permissions).
    2. Read `guidelines/section-catalog.md` and
       `guidelines/writing-style.md`, then draft the spec —
       `reference/SKELETON.md` is a copyable starter. Required always:

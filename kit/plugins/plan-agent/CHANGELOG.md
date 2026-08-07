@@ -22,11 +22,14 @@ needed.
   re-running after every edit, capped at **8 iterations** — the cap is written
   into the phase's last step, because a loop with no cap in the spec has
   nothing to stop it, and the step says report the exact blocker rather than
-  success. VERIFY runs the full suite plus lint, then a live browser pass
-  checking layout, touch targets ≥ 44×44px, and zero hydration warnings. SHIP
-  is entered only when the first three are green, and the PR body carries the
-  RED failure output, the GREEN passing run, and the browser assertions as
-  evidence.
+  success. VERIFY runs the full suite, lint, and typecheck where the project
+  has one, then — **on UI plans only** — a live browser pass checking layout,
+  touch targets ≥ 44×44px, and zero hydration warnings; a backend or library
+  plan has no affected pages and omits the step. SHIP is entered only when the
+  first three are green **and the user asked to ship**: `build` Step 6 commits
+  only on request, and a SHIP phase that committed unconditionally would
+  override that from inside the plan. Its PR body carries the RED failure
+  output, the GREEN passing run, and the browser assertions as evidence.
 - **UI work asserts on real DOM state, never screenshots.** RED adds a
   browser-verification step driving the browser MCP tools —
   `mcp__Claude_Browser__read_page` refs,
@@ -50,14 +53,20 @@ needed.
   Tier 2 doc/plan/metadata work is skipped: there is nothing to fail, and a RED
   phase over a `grep -q` check is theatre. Genuinely close calls (Tier 1 with
   no runner, config-only edits, spikes) trigger one `AskUserQuestion` rather
-  than a guess.
+  than a guess. `--quick` skips Step 0b entirely, so the runner signal was
+  never established there: one cheap check stands in, and no hit means no RGV
+  rather than an inference from nothing. `--tdd` overrides that — it forces the
+  shape even with no runner, and RED's first step then stands the runner up so
+  the added scope is visible in the plan instead of discovered mid-build.
 - **Step 5c** now states that on a red-green-verify plan the `## Tests` bullets
   name the same files the RED steps author — the section is the catalogue, the
   phase is the schedule — so the two cannot drift into separate test lists.
 - **`right-sizing.md`** gains a calibration row and a note that phases now have
   two unrelated uses: context budget (the Phased profile) and discipline (this
-  shape). Same headings, same flat numbering; a plan is phased for one reason
-  or the other, not both.
+  shape). They cannot share one heading run — `### Phase: Parse` beside
+  `### Phase: RED` leaves a reader unable to tell what a boundary means — so
+  RGV wins the headings and the context seams live inside it. If that makes
+  GREEN too large for one window, the objective was two plans.
 
 
 ## 8.6.0 — phase checkpoints and a Decisions ledger (2026-08-05)

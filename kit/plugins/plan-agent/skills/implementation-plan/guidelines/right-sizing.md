@@ -80,8 +80,16 @@ genuinely different — phases are for one objective that is simply long.
 Phases have a second, unrelated use: the RED/GREEN/VERIFY/SHIP shape in
 `red-green-verify.md` groups by discipline rather than by context budget, and
 applies to plans of any size that touch code with a test runner behind it. Same
-headings, same flat numbering — a plan is phased for one reason or the other,
-not both.
+headings, same flat numbering.
+
+The two rationales cannot share one heading run — a plan does not get
+`### Phase: Parse` and `### Phase: RED` side by side, because the reader cannot
+tell what a boundary means. When long *sequential* work also wants the RGV
+discipline, **RGV wins the headings** and the context seams live inside it:
+run RED for the whole plan, then GREEN in the order the dependencies demand,
+and let `build` stop at the four RGV boundaries. If that makes GREEN too large
+for one context window, the objective is genuinely two plans — split it, and
+give each its own four phases.
 
 For a **spike** (time-boxed investigation), the steps are the questions to
 answer and the verify lines are the evidence to collect; acceptance criteria
@@ -99,5 +107,5 @@ code.
 | Tests | objective only / 1 unit | Tier 1, applicable types | full Tier 1 spread | full Tier 1 spread |
 | `glance` | no | yes | yes | yes |
 | `workflow` key | no | rarely | when parallelizable | usually `never` |
-| Red-green-verify | rarely | when code + a runner | when code + a runner | when code + a runner |
+| Red-green-verify | rarely | when code + a runner | when code + a runner | wins the headings; see above |
 | Interview rounds | 1 | 1–2 | 1–3 | 1–3 |

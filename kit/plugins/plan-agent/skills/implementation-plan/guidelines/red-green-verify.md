@@ -26,8 +26,22 @@ is theatre.
 - A spike, where the steps are questions and the evidence is findings.
 
 Offer "structure as red-green-verify" against "single-pass steps with the
-normal Tests section", and say which you'd pick. `--tdd` and `--no-tdd`
-settle it without asking.
+normal Tests section", and say which you'd pick.
+
+**When Step 0b did not run** (`--quick` skips exploration entirely, so
+"found a runner" was never established): do not infer the shape from
+nothing. Check for a runner with a single cheap read — a `test` script in
+`package.json`, a `pytest.ini`/`pyproject.toml`, a `*_test.go` — and treat a
+hit as the Step 0b signal. No hit under `--quick` means no RGV: the caller
+asked for speed, and standing up a test runner is not a silent addition to
+their scope.
+
+**`--tdd` with no runner** is the one case that overrides all of the above,
+because the caller asked for the shape explicitly. Author the phases, and
+make **step 1 of RED stand up the runner** — naming it in `## Files` and in
+`## Tests` — so the scope addition is visible in the plan rather than
+discovered during implementation. `--no-tdd` suppresses the shape
+unconditionally and needs no runner check.
 
 ## The four phases
 
@@ -47,16 +61,24 @@ write test files only; no implementation source.
 - Every RED step's file also appears as a `## Tests` bullet — same files,
   two views. The Tests section is the catalogue; RED is when they get
   written.
-- **UI work adds a browser-verification step** here: a script driving the
-  browser MCP tools that asserts on real DOM state —
-  `mcp__Claude_Browser__read_page` refs,
-  `mcp__Claude_Browser__javascript_tool` computed styles,
-  `mcp__Claude_Browser__read_console_messages`. Either connected surface
-  works: `mcp__claude-in-chrome__*` exposes the same calls, and this
-  plugin's `prototype` skill and Step 7 use that one. Write whichever the
-  target repo has. Never a screenshot as the assertion — a screenshot is
-  evidence for a human; it fails silently for an agent, and has come back
-  blank.
+- **UI work adds a browser-verification step** here, asserting on real DOM
+  state. Two ways to write it, and they are not interchangeable:
+  - **An agent-driven pass** — the step names the MCP calls the implementing
+    agent makes: `mcp__Claude_Browser__read_page` for refs,
+    `mcp__Claude_Browser__javascript_tool` for computed styles,
+    `mcp__Claude_Browser__read_console_messages` for warnings.
+    (`mcp__claude-in-chrome__*` exposes the same calls — this plugin's
+    `prototype` skill and Step 7 use that one. Name whichever the target
+    repo has.) These are model-side tool calls: **no `.mjs` file can invoke
+    them.** The `Verify:` line is the assertion the agent reports, with its
+    measured value.
+  - **A committed script** — when the check must run in CI or without an
+    agent, it is a Playwright/Puppeteer test, not an MCP call. Then it is a
+    normal RED test file with a `Run:` command, and it belongs in `## Tests`
+    like any other.
+
+  Never a screenshot as the assertion — that is evidence for a human; it
+  fails silently for an agent, and has come back blank.
 
 ### `### Phase: GREEN`
 
@@ -74,23 +96,35 @@ The minimum implementation that turns the RED tests green.
 
 ### `### Phase: VERIFY`
 
-- Full suite plus lint, as one step each, with the exact commands.
-- A live browser pass over affected pages: layout holds, interactive
-  targets ≥ 44×44px, **zero hydration warnings in the console**. Assert
-  computed values via `mcp__Claude_Browser__javascript_tool` (or the
-  `claude-in-chrome` equivalent); report the numbers.
+- Full suite plus lint, as one step each, with the exact commands. Add a
+  typecheck step when the project has one (`tsc --noEmit`, `mypy`, `go vet`)
+  — a green suite over code that does not typecheck is not verified.
+- **Only when the plan touches UI:** a live browser pass over affected
+  pages — layout holds, interactive targets ≥ 44×44px, **zero hydration
+  warnings in the console**. Assert computed values via
+  `mcp__Claude_Browser__javascript_tool` (or the `claude-in-chrome`
+  equivalent) and report the numbers. A backend, CLI, or library plan has no
+  affected pages; omit this step rather than inventing one, exactly as RED
+  scopes its browser step.
 - This is also what `## Verification` describes in prose. Keep them
   consistent — the section is the end-to-end statement, the phase is the
   steps that produce it.
 
 ### `### Phase: SHIP`
 
-Entered only when all three prior phases are green.
+Entered only when all three prior phases are green — **and only when the
+user asked to ship.** `build` Step 6 stops after implementing and commits
+only on request; a SHIP phase that commits unconditionally would override
+that from inside the plan, turning "implement this" into "implement, commit,
+and open a PR". Author the phase when the objective is to land the change;
+omit it otherwise and let VERIFY be the last phase. When in doubt, omit —
+a missing SHIP phase costs one follow-up prompt, an unwanted one costs a
+commit the user did not ask for.
 
 - Commit, then open the PR.
 - The PR body carries the **evidence**: the RED failure output, the GREEN
-  passing run, and the browser assertions with their measured values. A PR
-  body that says "tests pass" is not evidence.
+  passing run, and — for UI plans — the browser assertions with their
+  measured values. A PR body that says "tests pass" is not evidence.
 - A failing GitHub Actions check is not a code defect until proven one.
   Check for a billing or quota block first — `gh run view <id> --log-failed`
   on a quota-blocked run reports no test failure at all. Write that check
