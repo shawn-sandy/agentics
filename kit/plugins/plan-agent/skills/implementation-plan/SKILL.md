@@ -3,7 +3,7 @@ name: implementation-plan
 model: claude-fable-5
 description: "Generates HTML implementation-plan documents. Produces a self-contained .html plan file with steps, acceptance criteria, and metadata. Use when the user asks to create or generate an HTML plan file."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, WebFetch, WebSearch, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
-argument-hint: "<issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]"
+argument-hint: "<issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--tdd|--no-tdd] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]"
 ---
 
 ## Plan Agent — Planning
@@ -47,6 +47,9 @@ file when the step calls for it, not all up front):
   place, and the exact syntax the renderer parses. Read when authoring.
 - `right-sizing.md` — minimal / standard / deep profiles and the
   calibration table. Read after the objective is settled, before drafting.
+- `red-green-verify.md` — the RED/GREEN/VERIFY/SHIP phase shape, when a plan
+  requires it, and the foreground-driver rule for servers. Read when the
+  Step 2 detection says it applies or is close.
 - `writing-style.md` — tone, plain language, objective-vs-glance. Read when
   authoring.
 
@@ -108,7 +111,9 @@ Parse `$ARGUMENTS` (or the derived text) in this order:
 Flags: `--quick` (= `--no-clarify --no-align --no-interview`),
 `--no-clarify`, `--no-align`, `--no-interview`, `--workflow` (always
 generate the workflow prompt: set `workflow: always` in the spec
-frontmatter), `--from-prompt <path>` (prompt-source mode, below),
+frontmatter), `--tdd` / `--no-tdd` (force or suppress the
+RED/GREEN/VERIFY/SHIP phase shape, skipping the Step 2 detection either
+way), `--from-prompt <path>` (prompt-source mode, below),
 `--type <kind>`, `--template <name>` (`default` only;
 variants ship later as renderer style shells), `--dir <path>`,
 `--priority <level>` (written as a `priority:` frontmatter key; preserved
@@ -332,6 +337,18 @@ EOF
    1. Read `guidelines/planning-principles.md` and
       `guidelines/right-sizing.md`; classify the work (minimal / standard /
       deep) and decide which optional sections earn their place.
+
+      Then decide whether the plan is **red-green-verify** — steps grouped
+      into `### Phase: RED` / `GREEN` / `VERIFY` / `SHIP`. It applies when
+      the steps touch application source *and* Step 0b found a test runner;
+      it does not apply to Tier 2 doc/plan/metadata work, which has nothing
+      to fail. When the call is close — Tier 1 with no runner, config-only
+      edits, a spike — ask once via `AskUserQuestion` rather than guessing,
+      and say which you'd pick. `--tdd` and `--no-tdd` skip the decision.
+      Read `guidelines/red-green-verify.md` before drafting the phases;
+      it owns the per-phase step content, the 8-iteration GREEN cap, the
+      DOM-assertion rule for UI work, and the foreground Node driver that
+      replaces `&`/`nohup` (blocked by permissions).
    2. Read `guidelines/section-catalog.md` and
       `guidelines/writing-style.md`, then draft the spec —
       `reference/SKELETON.md` is a copyable starter. Required always:
@@ -423,7 +440,9 @@ EOF
    objective is accomplished in the running application), then whichever of
    unit/integration/E2E the steps warrant (Tier 1 only, never empty stubs).
    Follow test-path conventions detected in Step 0b; default to
-   `__tests__/<feature>.<type>.test.ts`.
+   `__tests__/<feature>.<type>.test.ts`. On a red-green-verify plan these
+   bullets name the same files the RED phase steps author — the section is
+   the catalogue, the phase is the schedule. Do not let the two drift.
 
 5d. **Render** — Run the render command from the top of this file, writing
    `<stem>.html` beside the spec. On exit 1, fix the reported spec problem

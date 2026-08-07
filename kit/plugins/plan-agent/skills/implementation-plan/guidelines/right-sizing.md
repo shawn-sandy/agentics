@@ -77,6 +77,12 @@ Then:
 Splitting into separate plan files is still the answer when the objectives are
 genuinely different — phases are for one objective that is simply long.
 
+Phases have a second, unrelated use: the RED/GREEN/VERIFY/SHIP shape in
+`red-green-verify.md` groups by discipline rather than by context budget, and
+applies to plans of any size that touch code with a test runner behind it. Same
+headings, same flat numbering — a plan is phased for one reason or the other,
+not both.
+
 For a **spike** (time-boxed investigation), the steps are the questions to
 answer and the verify lines are the evidence to collect; acceptance criteria
 state what "we learned enough" means. Keep it Tier 2 unless the spike ships
@@ -93,4 +99,5 @@ code.
 | Tests | objective only / 1 unit | Tier 1, applicable types | full Tier 1 spread | full Tier 1 spread |
 | `glance` | no | yes | yes | yes |
 | `workflow` key | no | rarely | when parallelizable | usually `never` |
+| Red-green-verify | rarely | when code + a runner | when code + a runner | when code + a runner |
 | Interview rounds | 1 | 1–2 | 1–3 | 1–3 |
