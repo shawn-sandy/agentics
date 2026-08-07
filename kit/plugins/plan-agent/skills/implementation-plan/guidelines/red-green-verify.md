@@ -143,16 +143,18 @@ backgrounding, and its exit code is the `Verify:` line.
 ```js
 // scripts/verify-<feature>.mjs — foreground; exit code is the assertion
 import { spawn } from 'node:child_process'
+const url = 'http://localhost:3000/health'
 const srv = spawn('npm', ['run', 'dev'], { stdio: 'inherit' })
 try {
   let res
   for (let i = 0; i < 60; i++) {
-    try { res = await fetch('http://localhost:3000/health'); break }
-    catch { await new Promise(r => setTimeout(r, 500)) }
+    // A booting server answers 503 before it answers 200, and fetch does not
+    // throw on either — so poll until res.ok, not until the first response.
+    try { res = await fetch(url, { signal: AbortSignal.timeout(1000) }) } catch {}
+    if (res?.ok) break
+    await new Promise(r => setTimeout(r, 500))   // also bounds a hung request
   }
-  // Two distinct failures — never collapse them into one message.
-  if (!res) throw new Error('server never answered within 30s')
-  if (!res.ok) throw new Error(`server up but unhealthy: ${res.status}`)
+  if (!res?.ok) throw new Error(`never healthy in 30s (last: ${res?.status ?? 'no response'})`)
   // …assert the objective here…
 } finally { srv.kill() }
 ```
