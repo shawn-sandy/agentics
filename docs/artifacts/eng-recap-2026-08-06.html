@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Red-green-verify plans — plan-agent 8.7.0</title>
+<style>
+  :root{
+    --ground:#FAFAFB; --raise:#FFFFFF; --ink:#15181D; --muted:#5A626E;
+    --rule:#E3E6EB; --accent:#1F6F5C; --accent-soft:#E8F1EE;
+    --red:#A6382F; --green:#2C6E49; --verify:#35618C; --ship:#7A5C2E;
+    --code-bg:#F4F5F7;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#0F1216; --raise:#151920; --ink:#E4E8EE; --muted:#949CA9;
+      --rule:#242931; --accent:#5CBFA4; --accent-soft:#16241F;
+      --red:#E0796D; --green:#6FBF8F; --verify:#7FAEDC; --ship:#C4A063;
+      --code-bg:#161B22;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0F1216; --raise:#151920; --ink:#E4E8EE; --muted:#949CA9;
+    --rule:#242931; --accent:#5CBFA4; --accent-soft:#16241F;
+    --red:#E0796D; --green:#6FBF8F; --verify:#7FAEDC; --ship:#C4A063;
+    --code-bg:#161B22;
+  }
+  :root[data-theme="light"]{
+    --ground:#FAFAFB; --raise:#FFFFFF; --ink:#15181D; --muted:#5A626E;
+    --rule:#E3E6EB; --accent:#1F6F5C; --accent-soft:#E8F1EE;
+    --red:#A6382F; --green:#2C6E49; --verify:#35618C; --ship:#7A5C2E;
+    --code-bg:#F4F5F7;
+  }
+
+  body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+    line-height:1.62;-webkit-font-smoothing:antialiased;margin:0;
+    padding:clamp(1.5rem,4vw,4rem) clamp(1rem,5vw,2rem) 6rem;}
+  .wrap{max-width:74ch;margin:0 auto;display:flex;flex-direction:column;gap:3.25rem;}
+  .prose{max-width:66ch;}
+  p{margin:0 0 1rem;}
+  p:last-child{margin-bottom:0;}
+  a{color:var(--accent);text-underline-offset:2px;}
+  a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px;}
+
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--muted);margin:0 0 .75rem;}
+  h1{font-size:clamp(1.85rem,4.5vw,2.6rem);line-height:1.12;letter-spacing:-.022em;
+    font-weight:680;margin:0 0 .9rem;text-wrap:balance;}
+  h2{font-size:1.3rem;letter-spacing:-.014em;font-weight:640;margin:0 0 1.1rem;
+    text-wrap:balance;}
+  h3{font-size:.97rem;font-weight:650;margin:1.9rem 0 .55rem;letter-spacing:-.005em;}
+  .lede{font-size:1.06rem;color:var(--muted);max-width:62ch;}
+
+  section{border-top:1px solid var(--rule);padding-top:1.9rem;}
+  section.plain{border-top:none;padding-top:0;}
+
+  /* stat strip — full-bleed escape from the prose column */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));
+    gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:3px;
+    overflow:hidden;}
+  .stat{background:var(--raise);padding:.95rem 1.1rem;}
+  .stat b{display:block;font-family:var(--mono);font-size:1.5rem;font-weight:620;
+    letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.15;}
+  .stat span{display:block;font-family:var(--mono);font-size:.66rem;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:.3rem;}
+
+  code{font-family:var(--mono);font-size:.855em;background:var(--code-bg);
+    padding:.13em .38em;border-radius:3px;}
+  pre{background:var(--code-bg);border:1px solid var(--rule);border-radius:4px;
+    padding:.95rem 1.1rem;overflow-x:auto;margin:0 0 1rem;}
+  pre code{background:none;padding:0;font-size:.8rem;line-height:1.6;}
+
+  .scroll{overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:33rem;}
+  th,td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--rule);
+    vertical-align:top;}
+  th{font-family:var(--mono);font-size:.66rem;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--muted);font-weight:500;
+    border-bottom:1px solid var(--ink);}
+  td code{font-size:.8rem;white-space:nowrap;}
+
+  /* phase chips — the only place the four semantic hues appear */
+  .chip{font-family:var(--mono);font-size:.66rem;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;padding:.16em .5em;border-radius:2px;
+    border:1px solid currentColor;white-space:nowrap;}
+  .c-red{color:var(--red);} .c-green{color:var(--green);}
+  .c-verify{color:var(--verify);} .c-ship{color:var(--ship);}
+
+  /* phases are a real sequence, so they carry ordinals; sections do not */
+  ol.phases{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0;}
+  ol.phases>li{display:grid;grid-template-columns:2.1rem 1fr;gap:1rem;
+    padding:1.05rem 0;border-bottom:1px solid var(--rule);}
+  ol.phases>li:last-child{border-bottom:none;}
+  .ord{font-family:var(--mono);font-size:.78rem;color:var(--muted);
+    font-variant-numeric:tabular-nums;padding-top:.2rem;}
+  .phase-body p{margin:.45rem 0 0;font-size:.93rem;}
+
+  ul{margin:0 0 1rem;padding-left:1.15rem;}
+  li{margin-bottom:.5rem;}
+  li:last-child{margin-bottom:0;}
+  ul.tight li{margin-bottom:.3rem;}
+
+  .note{border:1px solid var(--rule);border-left:3px solid var(--accent);
+    background:var(--raise);border-radius:0 3px 3px 0;padding:.9rem 1.1rem;
+    font-size:.9rem;}
+  .note strong{color:var(--accent);}
+
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:.35rem 1.1rem;
+    font-size:.88rem;align-items:baseline;}
+  .kv dt{font-family:var(--mono);font-size:.72rem;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--muted);}
+  .kv dd{margin:0;}
+
+  figure{margin:1.4rem 0 0;}
+  pre.mermaid{background:var(--code-bg);border:1px solid var(--rule);border-radius:4px;padding:.95rem 1.1rem;overflow-x:auto;font-family:var(--mono);font-size:.76rem;line-height:1.55;color:var(--muted);white-space:pre;margin:0;}
+  .mermaid-diagram{background:var(--raise);border:1px solid var(--rule);
+    border-radius:4px;padding:1.1rem;overflow-x:auto;}
+  figcaption{font-family:var(--mono);font-size:.7rem;color:var(--muted);
+    margin-top:.6rem;letter-spacing:.03em;}
+
+  .status{font-family:var(--mono);font-size:.66rem;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--muted);border:1px solid var(--rule);
+    padding:.16em .5em;border-radius:2px;}
+
+  footer{border-top:1px solid var(--rule);padding-top:1.4rem;font-size:.82rem;
+    color:var(--muted);font-family:var(--mono);}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="prose">
+  <p class="eyebrow">plan-agent 8.7.0 &middot; merged 1b4f657</p>
+  <h1>Red-green-verify plans</h1>
+  <p class="lede">The <code>implementation-plan</code> skill now decides whether a plan
+  should force its tests to fail before any implementation exists — and shapes the
+  plan's steps into RED / GREEN / VERIFY / SHIP phases when it should.</p>
+</header>
+
+<section class="plain">
+  <div class="stats">
+    <div class="stat"><b>6</b><span>files</span></div>
+    <div class="stat"><b>+291</b><span>insertions</span></div>
+    <div class="stat"><b>4</b><span>commits</span></div>
+    <div class="stat"><b>13</b><span>threads resolved</span></div>
+    <div class="stat"><b>2</b><span>open items</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>At a glance</h2>
+  <div class="prose">
+    <p>A plan could name its tests and still be implemented backwards: build the
+    feature, then write a test that passes against whatever got built. That test
+    proves the implementation matches itself, not the objective. Nothing in the spec
+    format forced the failure to come first.</p>
+    <p><strong>No renderer, parser, or <code>build</code> change was needed.</strong>
+    <code>### Phase:</code> groupings, per-step <code>Verify:</code> markers, and
+    <code>build</code> stopping at each phase boundary all shipped in 8.6.0. This
+    release is the guidance that uses them — five markdown files and a version bump.
+    That is why the diff is 291 lines and touches no <code>.mjs</code>.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Architecture and code paths</h2>
+  <div class="prose">
+    <p>Nothing executes here. The deliverable is text the model reads at a specific
+    point in a workflow, so the "code path" is the read order — and the contract it
+    has to keep with machinery that already exists.</p>
+  </div>
+
+  <h3>Where the decision happens</h3>
+  <div class="prose">
+    <p>Detection lives in <code>SKILL.md</code> Step&nbsp;2, sub-step&nbsp;1 — after
+    right-sizing classifies the work, before any step is drafted. It has to be there:
+    phases are headings inside <code>## Steps</code>, so the shape must be settled
+    before the steps exist.</p>
+  </div>
+
+  <figure>
+    <pre class="mermaid">
+flowchart TD
+    A["Step 2.1<br/>classify the work"] --> B{"--tdd or --no-tdd<br/>passed?"}
+    B -->|"--no-tdd"| S["single-pass steps"]
+    B -->|"--tdd"| F["force phases<br/>RED step 1 stands up the runner"]
+    B -->|neither| C{"steps touch<br/>application source?"}
+    C -->|"no — Tier 2"| S
+    C -->|yes| D{"Step 0b ran?"}
+    D -->|"no — --quick"| E{"cheap runner probe<br/>test script / pytest.ini / *_test.go"}
+    E -->|hit| G["red-green-verify"]
+    E -->|miss| S
+    D -->|yes| H{"runner found?"}
+    H -->|yes| G
+    H -->|"no / borderline"| I["AskUserQuestion once"]
+    I --> G
+    I --> S
+    </pre>
+    <figcaption>Diagram source (mermaid) &mdash; renders in the hosted artifact. The two branches that did not exist in the first commit: the
+    <code>--quick</code> probe and the <code>--tdd</code> override. Both were review findings.</figcaption>
+  </figure>
+
+  <h3>What a detected plan emits</h3>
+  <div class="prose">
+    <p>Four <code>### Phase:</code> headings inside <code>## Steps</code>, over
+    <strong>flat global numbering</strong>. That flatness is load-bearing: it is what
+    keeps <code>[x]</code> markers valid when phases are added to an in-progress plan,
+    and why <code>build</code> resumes at the first unmarked step rather than at a
+    phase start.</p>
+  </div>
+
+  <ol class="phases">
+    <li>
+      <span class="ord">01</span>
+      <div class="phase-body">
+        <span class="chip c-red">Phase: RED</span>
+        <p>Test files only, no implementation source. The <code>Verify:</code> line
+        demands the failure <em>output</em>, not a claim. Failing <em>for the right
+        reason</em> is the assertion — a test that errors on a missing import has not
+        gone red, it has not run.</p>
+      </div>
+    </li>
+    <li>
+      <span class="ord">02</span>
+      <div class="phase-body">
+        <span class="chip c-green">Phase: GREEN</span>
+        <p>Minimum change that passes, re-running after every edit. The
+        <strong>8-iteration cap is written into the phase's last step</strong> — a cap
+        that lives only in the guideline has nothing to stop the loop. That step says
+        report the exact blocker, never success.</p>
+      </div>
+    </li>
+    <li>
+      <span class="ord">03</span>
+      <div class="phase-body">
+        <span class="chip c-verify">Phase: VERIFY</span>
+        <p>Full suite, lint, and typecheck where the project has one. The browser pass
+        — layout, targets &ge;&nbsp;44&times;44px, zero hydration warnings — is
+        <strong>UI-only</strong>. A backend or library plan omits it rather than
+        inventing an affected page.</p>
+      </div>
+    </li>
+    <li>
+      <span class="ord">04</span>
+      <div class="phase-body">
+        <span class="chip c-ship">Phase: SHIP</span>
+        <p>Conditional on the user having asked to ship. <code>build</code> Step&nbsp;6
+        commits only on request; a SHIP phase that committed unconditionally would
+        override that from inside the plan. When in doubt, omit — a missing SHIP costs
+        one prompt, an unwanted one costs a commit nobody asked for.</p>
+      </div>
+    </li>
+  </ol>
+
+  <h3>The read order</h3>
+  <div class="prose">
+    <p>Start at <code>SKILL.md</code> Step&nbsp;2.1 for the trigger, then
+    <code>guidelines/red-green-verify.md</code> for everything the phases contain.
+    <code>right-sizing.md</code> only arbitrates a collision (below). Do not start in
+    the guideline — it reads as unconditional until you have seen the gate.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Decisions</h2>
+
+  <h3>Guidance, not machinery</h3>
+  <div class="prose">
+    <p>Every phase mechanism already existed. Adding a renderer flag or a
+    <code>build</code> mode would have duplicated rules in two places and bumped two
+    skills. The plan document carries the discipline, and <code>build</code> enforces
+    it for free by walking steps and stopping at boundaries.</p>
+  </div>
+
+  <h3>Detected, not flagged</h3>
+  <div class="prose">
+    <p>An opt-in flag would be forgotten. Always-on would force a RED phase onto
+    docs-only plans, where a <code>grep -q</code> check is the only thing that could
+    fail. Detection keys on the Tier 1 signal Step 5c already computes, and asks once
+    when the call is genuinely close.</p>
+  </div>
+
+  <h3>Both browser MCP surfaces, prefixed</h3>
+  <div class="prose">
+    <p>A reviewer asked to drop <code>mcp__Claude_Browser__*</code> for
+    <code>mcp__claude-in-chrome__*</code>, on the premise the former appears nowhere
+    else in the repo. It does — <code>git-agent/skills/ship-autonomous/SKILL.md:4</code>
+    declares five of its tools. The repo uses both. The real point inside the finding
+    was precision: bare <code>read_page</code> is ambiguous with two servers connected,
+    so the names now carry their prefix and the guideline says to write whichever the
+    target repo has.</p>
+  </div>
+
+  <h3>Agent-driven checks and committed scripts are not interchangeable</h3>
+  <div class="prose">
+    <p>The first draft said "a script driving the MCP tools." Those are model-side
+    calls; no <code>.mjs</code> file can invoke <code>read_page</code>. The RED bullet
+    now splits explicitly: an <strong>agent-driven pass</strong> (the step names the
+    calls, the <code>Verify:</code> line is the reported measurement) or a
+    <strong>committed script</strong> (Playwright/Puppeteer, which is then an ordinary
+    RED test with a <code>Run:</code> command).</p>
+  </div>
+
+  <h3>RGV wins the headings</h3>
+  <div class="prose">
+    <p>Phases now have two unrelated rationales — context budget (the Phased profile)
+    and discipline (this shape). They cannot share one heading run:
+    <code>### Phase: Parse</code> beside <code>### Phase: RED</code> leaves a reader
+    unable to tell what a boundary means. RGV takes the headings; context seams live
+    inside it. If that makes GREEN too large for one window, the objective was two
+    plans.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Tradeoffs and rejected options</h2>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr><th>Rejected</th><th>Why</th><th>What would revisit it</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Enforce in <code>build</code> — refuse GREEN before a recorded RED failure</td>
+          <td>Duplicates the rules in two skills and bumps both. <code>build</code> already walks steps and stops at boundaries.</td>
+          <td>Evidence that plans get restructured mid-implementation to skip RED.</td>
+        </tr>
+        <tr>
+          <td>Always-on for every plan</td>
+          <td>Forces a RED phase onto docs-only work with nothing runnable to fail.</td>
+          <td>Never — Tier 2 has no failure to author.</td>
+        </tr>
+        <tr>
+          <td>Opt-in <code>--tdd</code> only</td>
+          <td>MINOR bump and zero risk, but a flag nobody remembers is a feature nobody uses.</td>
+          <td>If detection proves noisy in practice.</td>
+        </tr>
+        <tr>
+          <td>Align the GREEN cap to <code>tdd-loop</code>'s five iterations</td>
+          <td>Eight is what this workflow specified; the two skills are independent.</td>
+          <td>A deliberate cross-plugin reconciliation.</td>
+        </tr>
+        <tr>
+          <td><code>AbortController</code> + <code>setTimeout</code> in the driver sample</td>
+          <td>Guards against Node&nbsp;&lt;18, which reached EOL in April&nbsp;2025. Three extra lines for no live runtime.</td>
+          <td>A consumer pinned to an EOL Node.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Learnings</h2>
+  <div class="prose">
+    <p>Three things were walked, not weighed — they only surfaced by running the thing.</p>
+  </div>
+
+  <h3>The poll loop did not poll</h3>
+  <div class="prose">
+    <p>The shipped Node driver went through two wrong versions. First it declared
+    <code>res</code> with <code>var</code> inside a <code>try</code> in the loop — it
+    worked by hoisting, but on timeout printed
+    <code>server never came up: undefined</code>. Fixing the scoping exposed the real
+    bug underneath: <code>fetch</code> resolves for 503, so the loop broke on the first
+    transient response and reported "unhealthy" against a server that was merely still
+    booting.</p>
+    <p>A poll loop that stops at the first answer is not polling. Both versions looked
+    correct on the page and only failed against a dev server with a realistic boot
+    sequence.</p>
+  </div>
+
+<pre><code>let res
+for (let i = 0; i &lt; 60; i++) {
+  // A booting server answers 503 before it answers 200, and fetch does not
+  // throw on either — so poll until res.ok, not until the first response.
+  try { res = await fetch(url, { signal: AbortSignal.timeout(1000) }) } catch {}
+  if (res?.ok) break
+  await new Promise(r =&gt; setTimeout(r, 500))   // also bounds a hung request
+}
+if (!res?.ok) throw new Error(`never healthy in 30s (last: ${res?.status ?? 'no response'})`)</code></pre>
+
+  <h3>A reviewer's premise is not a finding</h3>
+  <div class="prose">
+    <p>Two bots independently claimed <code>mcp__Claude_Browser__*</code> appears
+    nowhere else in the repo. One <code>grep</code> disproved it. The finding still had
+    a real point inside it — but acting on the stated premise would have switched the
+    guideline to the wrong surface. Verify the premise before acting on the conclusion.</p>
+  </div>
+
+  <h3>Three bots, one PR, no memory between runs</h3>
+  <div class="prose">
+    <p>Copilot, Codex, and CodeRabbit each re-reviewed on every push, re-firing against
+    older commits after fixes had landed. CodeRabbit hit its own rate limit. The
+    productive shape was one triage pass on merit — four of ten findings were real
+    defects, the rest polish — then a single fix commit, then stop. Copilot's last
+    three runs all returned "no new comments."</p>
+  </div>
+</section>
+
+<section>
+  <h2>Tests and verification</h2>
+  <div class="prose">
+    <p>No test files ship in this diff — it is guidance. Verification drove the three
+    real surfaces instead.</p>
+  </div>
+
+  <h3>The driver sample, extracted verbatim and run</h3>
+  <div class="prose">
+    <p>Pulled out of the shipped markdown with <code>awk</code> on the fence — not
+    retyped — and run against a dev server that binds after 1.2s then 503s three times:</p>
+  </div>
+<pre><code>&gt; dev
+&gt; node server.mjs
+[dev] listening on 3000
+[dev] 503 #1
+[dev] 503 #2
+[dev] 503 #3
+[dev] 200 #4
+EXIT=0</code></pre>
+  <div class="prose">
+    <p>Failure paths: permanently-unhealthy server &rarr;
+    <code>never healthy in 30s (last: 503)</code> at 31s elapsed, child killed, port
+    freed. Crashing dev script &rarr; <code>(last: no response)</code>. Exit codes
+    deterministic at <code>1</code> / <code>0</code>, which is what lets the guideline
+    claim the exit code <em>is</em> the <code>Verify:</code> line.</p>
+  </div>
+
+  <h3>The render pipeline</h3>
+  <ul>
+    <li>Three-phase non-UI plan (no SHIP — the new omit path) &rarr; renders, exit 0, round-trips.</li>
+    <li>Four-phase UI plan at <code>status: in-progress</code> &rarr; four <code>data-phase</code> wrappers, 3 completed step cards matching 3 <code>[x]</code> markers.</li>
+    <li>Zero browser-step leakage into the CLI plan — the three <code>browser</code> greps are all renderer JS comments.</li>
+    <li>Probe: empty <code>### Phase: SHIP</code> heading &rarr; <code>phase "SHIP" has no steps under it</code>, exit 1.</li>
+    <li>Probe: RED step missing <code>Verify:</code> &rarr; <code>step 1 is missing its "Why:" or "Verify:" part</code>.</li>
+  </ul>
+
+  <h3>The agent surface</h3>
+  <div class="prose">
+    <p>Loaded the plugin headlessly and asked it to read back the three rules the
+    review round added. It returned them unprompted by their wording — the strongest
+    available evidence that a guidance change works.</p>
+  </div>
+<pre><code>SHIP: Only when all three prior phases are green **and** the user explicitly
+      asked to ship — otherwise omit it and let VERIFY be last.
+VERIFY-BROWSER: Only when the plan touches UI — backend/CLI/library plans omit it.
+QUICK: One cheap runner check; no hit means no RGV — unless --tdd was passed,
+      which overrides and makes RED step 1 stand up the runner.</code></pre>
+
+  <div class="note">
+    <strong>Knowingly untested.</strong> No end-to-end run of
+    <code>implementation-plan</code> producing an RGV plan from a bare objective — the
+    interactive path needs <code>AskUserQuestion</code>. Detection was verified by
+    reading back the rules, not by observing a plan get classified. Also unrun:
+    <code>test-skill-behavior-baselines.sh</code>, which spawns headless
+    <code>claude</code> sessions and exceeded the timeout; it covers five unrelated
+    skills.
+  </div>
+</section>
+
+<section>
+  <h2>Review follow-ups and tech debt</h2>
+
+  <h3>Tracked <span class="status">issue 530</span></h3>
+  <div class="prose">
+    <p><strong>1. <code>extract-plan-spec.mjs</code> silently drops all progress state.</strong>
+    A spec with <code>1. [x] …</code> and <code>- [x] …</code> renders correctly to
+    HTML, but extracting back returns bare <code>1.</code> and <code>- </code> bullets.
+    Reproduced identically on an <em>unphased</em> plan, so it is pre-existing, not a
+    regression from the phase work. Impact is narrow today — the <code>.md</code> spec
+    is the source of truth and extract only runs for legacy HTML-only plans — but
+    <code>build</code> resumes at the first unmarked step, so a legacy in-progress plan
+    re-specced this way silently redoes finished work. Phased RGV plans are explicitly
+    designed to span context windows, which is exactly when resumption happens.</p>
+    <p><strong>2. RED evidence does not survive a phase checkpoint.</strong>
+    <code>references/phase-checkpoints.md</code> persists step markers and the Decisions
+    ledger at a boundary, not captured stdout — but SHIP requires the exact RED failure
+    output in the PR body. A session that compacts after RED cannot produce it.</p>
+  </div>
+
+  <h3>Untracked</h3>
+  <ul>
+    <li><code>tests/plugins/test-build-plan-html.mjs</code> reports "87 plans round-tripped cleanly." That phrasing reads as fidelity it does not assert for progress markers — tighten the assertion or the wording.</li>
+    <li>The driver sample hard-codes port 3000 and <code>npm run dev</code>. Fine for an illustration, but every copy needs two edits and the prose does not say so.</li>
+    <li><code>implementation-plan</code> Step&nbsp;7 still backgrounds its preview server with <code>python3 -m http.server &lt;port&gt; &amp;</code> — the exact pattern the new guideline says permissions block. Left alone as out of scope; it now contradicts guidance shipped in the same file.</li>
+  </ul>
+
+  <div class="note">
+    <strong>Known ceiling.</strong> Detection reads a runner's <em>presence</em>, never
+    its health. A repo with a <code>test</code> script that has not passed in months
+    still reads as RGV-eligible. Upgrade path: probe exit status rather than existence —
+    but that costs a subprocess in Step&nbsp;2, which is why it was not done.
+  </div>
+</section>
+
+<section>
+  <h2>Files touched</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Path</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>guidelines/red-green-verify.md</code></td>
+          <td><span class="status">new</span> 172 lines. The four phases, the applies/skip/ask rules, the foreground Node driver, the UI-only scoping. Everything else points here.</td>
+        </tr>
+        <tr>
+          <td><code>skills/implementation-plan/SKILL.md</code></td>
+          <td>Detection in Step&nbsp;2.1; <code>--tdd</code>/<code>--no-tdd</code> in the flag list and <code>argument-hint</code>; guidelines-library entry; Step&nbsp;5c note tying <code>## Tests</code> to the RED steps.</td>
+        </tr>
+        <tr>
+          <td><code>guidelines/right-sizing.md</code></td>
+          <td>Calibration row, and the precedence rule for when both phasing rationales apply.</td>
+        </tr>
+        <tr>
+          <td><code>kit/plugins/plan-agent/README.md</code></td>
+          <td>Flag table rows, the detection paragraph, and both argument summaries — the second one at line 586 was missed in the first commit.</td>
+        </tr>
+        <tr>
+          <td><code>kit/plugins/plan-agent/CHANGELOG.md</code></td>
+          <td>8.7.0 entry.</td>
+        </tr>
+        <tr>
+          <td><code>.claude-plugin/marketplace.json</code></td>
+          <td>8.6.0 &rarr; 8.7.0. Version lives only here for relative-path plugins; a CI guard fails the PR if it does not exceed base.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <dl class="kv">
+    <dt>merge</dt><dd><code>1b4f657</code> &middot; squashed from 4 commits</dd>
+    <dt>pr</dt><dd><a href="https://github.com/shawn-sandy/agentics/pull/529">shawn-sandy/agentics#529</a></dd>
+    <dt>follow-up</dt><dd><a href="https://github.com/shawn-sandy/agentics/issues/530">issue #530</a></dd>
+  </dl>
+</footer>
+
+</div>
+</body>
+</html>
