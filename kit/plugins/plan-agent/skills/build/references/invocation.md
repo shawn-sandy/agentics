@@ -42,6 +42,15 @@ option **together with its value** from `$ARGUMENTS`. What survives is the
 `--dir tmp/plans` alone therefore leaves an **empty** rest string — that is a
 bare `build` that takes Rule 3, not an objective named `--dir` and not a halt.
 
+**A value-taking flag with no value is an error**, named as such: `--dir` with
+nothing after it, or with another recognized flag after it, is
+"`--dir` requires a path", never a silent drop and never a token left in the
+rest string. This matches `--type`'s treatment below, and it exists because the
+alternatives are both live bugs: dropping the flag silently resolves the
+default plans directory while the user believes they overrode it, and leaving
+`--dir` in the rest string hands Rule 2 a one-token objective that authors an
+entire plan named after a flag.
+
 - **`--type <kind>`** — one of `feature`, `fix`, `refactor`, `docs`, `chore`;
   anything else is an error naming the valid set, never a silent fallback.
   Forwarded to `implementation-plan` on both Step 1b paths so the authored plan

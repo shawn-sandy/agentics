@@ -70,7 +70,7 @@ resolved two opposite ways in two runs because the fallback was undefined.
 | Discovery, no candidates | Report and stop | There is nothing to build and no default can invent an objective |
 | Proposal-versus-direct (Step 1b) | `Straight to plan authoring` | Writes one artifact instead of two and skips a research loop the user did not ask for |
 | Spec already `status: completed` | Do not re-implement; report and stop | Redoing finished work is destructive; declining it is not |
-| Dirty working tree | Proceed when the only changes are plan artifacts, else report and stop | The artifact exclusion above already covers the chained case |
+| Dirty working tree | Read `git status --porcelain`. Every remaining entry `??` (untracked) → **list them and proceed**. Any tracked file modified, added, renamed, or deleted → report and stop | Deterministic on the status code, so two runs cannot disagree. A modified tracked file is work in progress that the plan's diff would tangle with; stray untracked files are the logs, caches, and editor droppings every real repo carries, and stopping on those halts every headless run for nothing |
 | Phase checkpoint (Step 2) | Stop at the boundary | Already the interactive default; `--continue` is the explicit opt-out |
 
 **Preconditions — check before writing anything:**

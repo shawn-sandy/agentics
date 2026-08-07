@@ -47,6 +47,22 @@ at the first matching rule.
   `CI/CD`, `i18n/l10n` are indistinguishable from relative filenames. That stop
   now names the misparse and offers both repairs (add a suffix, or reword)
   instead of listing paths tried.
+- **A value-taking flag with no value is a named error.** `--dir` with nothing
+  after it is "`--dir` requires a path", matching `--type`'s existing treatment.
+  Both silent alternatives were live bugs: dropping the flag resolves the
+  default plans directory while the user believes they overrode it, and leaving
+  `--dir` in the rest string hands Rule 2 a one-token objective that authors an
+  entire plan named after a flag. Caught by driving `/plan-agent:build --dir`
+  headless, which did exactly the first of those.
+- **The dirty-tree headless default is now deterministic on `git status
+  --porcelain`.** Every remaining entry `??` → list them and proceed; any
+  tracked file modified, added, renamed, or deleted → report and stop. The
+  previous "only changes are plan artifacts, else stop" wording required a
+  judgment call, and three headless runs against an identical untracked
+  zero-byte file split two-to-one on it — the same undefined-fallback failure
+  this release removes from the discovery gate, surviving at the dirty-tree
+  gate. Stopping on stray logs and editor droppings also halts every headless
+  run in a real repo for nothing.
 
 ### Added
 

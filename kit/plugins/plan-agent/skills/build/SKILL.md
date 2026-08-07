@@ -20,8 +20,8 @@ spec.
 
 ## References
 
-- `references/invocation.md` — activation, flags, the argument precedence ladder
-- `references/resolve-plan.md` — Steps 0-1, headless defaults, the test table
+- `references/invocation.md` — activation, flags, argument precedence
+- `references/resolve-plan.md` — Steps 0-1
 - `references/author-plan-chain.md` — Step 1b
 - `references/phase-checkpoints.md` — Step 2, phased specs
 - `references/completion-gates.md` — Steps 3-5
@@ -57,9 +57,7 @@ command anyway so a parse failure surfaces here rather than silently.
 
 Read `references/resolve-plan.md` now and follow its Step 1. A missing path stops:
 never implement a different plan, and do not enter Step 1b.
-**When `AskUserQuestion` is unavailable, take the gate's named default and log
-the assumption** rather than halting — the single exception is a
-multi-candidate discovery with nothing `in-progress`, where no default is safe.
+Headless, take each gate's named default and log it.
 Already `status: completed` → ask; do not silently redo finished work.
 
 ## Step 1b — Author a plan first (the no-plan chain)
