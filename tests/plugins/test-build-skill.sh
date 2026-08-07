@@ -32,6 +32,17 @@ for f in "$SKILL_DIR"/references/*.md "$SKILL"; do
 done
 ALLTEXT="$(cat "${SKILL_FILES[@]}")"
 
+# Assertions grep a variable via `grep PAT <<<"$VAR"`, never `printf ... | grep`.
+# `grep -q` exits on its first match and closes the pipe; the writer then dies
+# with EPIPE, and `set -o pipefail` promotes that failure to the pipeline's exit
+# status — so a check goes RED exactly when its pattern is FOUND. It is a race
+# against how much the writer has flushed, so it hides until a file grows: this
+# fired on GNU/Linux CI at ~34KB of ALLTEXT while passing on macOS at the same
+# size and at the previous commit. On negative assertions it is worse than a
+# false red — a real regression makes grep match, the pipeline reports failure,
+# and the guard silently reports "no regression". A here-string is materialised
+# before grep runs, so there is no pipe to break.
+
 owner() { # owner <start-regex> — the file carrying that heading, core as fallback
   local pat="$1" f
   for f in "${SKILL_FILES[@]}"; do
@@ -123,11 +134,11 @@ flatten() { tr '\n' ' ' | tr -s ' '; }
 SOT="$(section '^\*\*The markdown spec is the source of truth' '^## Invocation' | flatten)"
 GATES="$(section '^## Step 3 —' '^## Step 6 —' | flatten)"
 MISSING=""
-printf '%s' "$GATES" | grep -q 'flip back to `- \[ \]`' || MISSING="$MISSING undo-rule"
-printf '%s' "$SOT" | grep -qi "browser-only persistence" || MISSING="$MISSING browser-persistence-ban"
-printf '%s' "$GATES" | grep -qi "delete the section" || MISSING="$MISSING completion-report-teardown"
-printf '%s' "$GATES" | grep -qi "three status representations" || MISSING="$MISSING status-representations"
-printf '%s' "$GATES" | grep -qi "no per-card run command" || MISSING="$MISSING per-card-run-note"
+grep -q 'flip back to `- \[ \]`' <<<"$GATES" || MISSING="$MISSING undo-rule"
+grep -qi "browser-only persistence" <<<"$SOT" || MISSING="$MISSING browser-persistence-ban"
+grep -qi "delete the section" <<<"$GATES" || MISSING="$MISSING completion-report-teardown"
+grep -qi "three status representations" <<<"$GATES" || MISSING="$MISSING status-representations"
+grep -qi "no per-card run command" <<<"$GATES" || MISSING="$MISSING per-card-run-note"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
@@ -136,7 +147,7 @@ else
 fi
 
 echo "7. status: completed is gated behind end-to-end verification, not the criteria gate..."
-if printf '%s' "$ALLTEXT" | grep -q 'Do not set `status: completed` here'; then
+if grep -q 'Do not set `status: completed` here' <<<"$ALLTEXT"; then
   echo "  PASS"
 else
   echo "  FAIL: the criteria gate does not forbid marking completed before Step 4 runs"
@@ -152,7 +163,7 @@ echo "8. implementation-plan delegates and carries no second copy of any gate...
 FLAT="$(tr '\n' ' ' < "$IMPL" | tr -s ' ')"
 DUPES=""
 for gate in "acceptance criteria gate (mandatory" "end-to-end verification gate (mandatory" "completion checklist gate (mandatory"; do
-  printf '%s' "$FLAT" | grep -qi "$gate" && DUPES="$DUPES [$gate]"
+  grep -qi "$gate" <<<"$FLAT" && DUPES="$DUPES [$gate]"
 done
 if grep -q 'Skill(skill: "plan-agent:build"' "$IMPL" && [ -z "$DUPES" ]; then
   echo "  PASS"
@@ -200,17 +211,17 @@ INVOKE="$(section '^## Invocation' '^## Step 0' | flatten)"
 echo "10. Step 1b carries the chain and delegates to both authoring skills..."
 MISSING=""
 [ -n "$CHAIN" ] || MISSING="$MISSING step-1b-section"
-printf '%s' "$CHAIN" | grep -qF 'Skill(skill: "plan-agent:build-proposal"' || MISSING="$MISSING build-proposal-call"
-printf '%s' "$CHAIN" | grep -qF 'Skill(skill: "plan-agent:implementation-plan"' || MISSING="$MISSING implementation-plan-call"
-printf '%s' "$CHAIN" | grep -qi 'objective check' || MISSING="$MISSING objective-check-first"
-printf '%s' "$CHAIN" | grep -qi 'proposal-versus-direct gate' || MISSING="$MISSING proposal-gate"
-printf '%s' "$CHAIN" | grep -qi 'by path' || MISSING="$MISSING return-by-path"
+grep -qF 'Skill(skill: "plan-agent:build-proposal"' <<<"$CHAIN" || MISSING="$MISSING build-proposal-call"
+grep -qF 'Skill(skill: "plan-agent:implementation-plan"' <<<"$CHAIN" || MISSING="$MISSING implementation-plan-call"
+grep -qi 'objective check' <<<"$CHAIN" || MISSING="$MISSING objective-check-first"
+grep -qi 'proposal-versus-direct gate' <<<"$CHAIN" || MISSING="$MISSING proposal-gate"
+grep -qi 'by path' <<<"$CHAIN" || MISSING="$MISSING return-by-path"
 # build-proposal answers a Tier 0 idea directly and writes no document, so the
 # chain must have somewhere to go when the proposal stage produces no artifact.
-printf '%s' "$CHAIN" | grep -qi 'No proposal written' || MISSING="$MISSING tier0-no-artifact-fallthrough"
+grep -qi 'No proposal written' <<<"$CHAIN" || MISSING="$MISSING tier0-no-artifact-fallthrough"
 # --dir names where the *plan* goes, so the proposal branch must forward it to
 # implementation-plan even though it withholds it from build-proposal.
-printf '%s' "$CHAIN" | grep -qi 'is forwarded here' || MISSING="$MISSING dir-not-forwarded-to-plan-authoring"
+grep -qi 'is forwarded here' <<<"$CHAIN" || MISSING="$MISSING dir-not-forwarded-to-plan-authoring"
 # Since plan-agent 6.0.0 build-proposal converges on a saved prompt, not a
 # proposal doc. The chain interpolates whatever it reports without parsing it, so
 # a stale artifact name here silently chains a path that was never written.
@@ -224,14 +235,14 @@ printf '%s' "$CHAIN" | grep -qi 'is forwarded here' || MISSING="$MISSING dir-not
 # never limited to the first token. A flag value is not a positional token, so
 # the flag form is the fix. Asserting the flag rather than the placeholder alone
 # is what keeps a revert to prose from passing.
-printf '%s' "$CHAIN" | grep -qF -- '--from-prompt <prompt path>' || MISSING="$MISSING prompt-path-chained-behind-flag"
-if printf '%s' "$CHAIN" | grep -qi 'from the proposal at <'; then
+grep -qF -- '--from-prompt <prompt path>' <<<"$CHAIN" || MISSING="$MISSING prompt-path-chained-behind-flag"
+if grep -qi 'from the proposal at <' <<<"$CHAIN"; then
   MISSING="$MISSING stale-proposal-doc-path"
 fi
 # The prose handoff is the conversion-mode bug itself. Fail on its return even if
 # `--from-prompt` is also present somewhere, since the first `.md`-suffixed
 # positional token still wins the scan.
-if printf '%s' "$CHAIN" | grep -qi 'proposal prompt at <prompt path>'; then
+if grep -qi 'proposal prompt at <prompt path>' <<<"$CHAIN"; then
   MISSING="$MISSING prompt-path-as-bare-positional"
 fi
 # Both Step 1b paths forward --type, or a plan authored through the chain gets
@@ -247,11 +258,11 @@ CHAIN_PROPOSAL="$(section '^3\. \*\*Proposal path' '^4\. \*\*Direct path' | flat
 CHAIN_DIRECT="$(section '^4\. \*\*Direct path' '^5\. \*\*Return path' | flatten)"
 [ -n "$CHAIN_PROPOSAL" ] || MISSING="$MISSING proposal-branch-not-found"
 [ -n "$CHAIN_DIRECT" ] || MISSING="$MISSING direct-branch-not-found"
-printf '%s' "$CHAIN_PROPOSAL" | grep -qF -- '--type' || MISSING="$MISSING type-not-forwarded-on-proposal-path"
-printf '%s' "$CHAIN_DIRECT" | grep -qF -- '--type' || MISSING="$MISSING type-not-forwarded-on-direct-path"
+grep -qF -- '--type' <<<"$CHAIN_PROPOSAL" || MISSING="$MISSING type-not-forwarded-on-proposal-path"
+grep -qF -- '--type' <<<"$CHAIN_DIRECT" || MISSING="$MISSING type-not-forwarded-on-direct-path"
 # Tier 0 writes neither artifact, and the abandonment contract must cover both.
-printf '%s' "$CHAIN" | grep -qi 'no artifact of either kind' || MISSING="$MISSING tier0-neither-artifact"
-printf '%s' "$CHAIN" | grep -qi 'leave \*\*both\*\* artifacts in place' || MISSING="$MISSING abandonment-covers-both"
+grep -qi 'no artifact of either kind' <<<"$CHAIN" || MISSING="$MISSING tier0-neither-artifact"
+grep -qi 'leave \*\*both\*\* artifacts in place' <<<"$CHAIN" || MISSING="$MISSING abandonment-covers-both"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
@@ -261,19 +272,19 @@ fi
 
 echo "11. Discovery: a lone match auto-selects, several are offered capped at three..."
 MISSING=""
-printf '%s' "$INVOKE" | grep -qi 'auto-select it' || MISSING="$MISSING lone-candidate-not-adopted"
-printf '%s' "$INVOKE" | grep -qF 'None of these — author a new plan' || MISSING="$MISSING author-new-option"
-printf '%s' "$INVOKE" | grep -qi 'at most the top three' || MISSING="$MISSING three-candidate-cap"
-printf '%s' "$INVOKE" | grep -qi 'suppressed' || MISSING="$MISSING suppressed-count"
-printf '%s' "$INVOKE" | grep -qi 'never descend into `archive/`' || MISSING="$MISSING archive-descent"
-printf '%s' "$STEP1" | grep -qi 'discovery is skipped entirely' || MISSING="$MISSING objective-skips-discovery"
+grep -qi 'auto-select it' <<<"$INVOKE" || MISSING="$MISSING lone-candidate-not-adopted"
+grep -qF 'None of these — author a new plan' <<<"$INVOKE" || MISSING="$MISSING author-new-option"
+grep -qi 'at most the top three' <<<"$INVOKE" || MISSING="$MISSING three-candidate-cap"
+grep -qi 'suppressed' <<<"$INVOKE" || MISSING="$MISSING suppressed-count"
+grep -qi 'never descend into `archive/`' <<<"$INVOKE" || MISSING="$MISSING archive-descent"
+grep -qi 'discovery is skipped entirely' <<<"$STEP1" || MISSING="$MISSING objective-skips-discovery"
 # Regression guard for the reported halt. Before 9.0.0 the offer applied to a
 # candidate set of size one ("one candidate is still offered, not adopted"), so
 # `--dir tmp/plans` stopped on a directory holding exactly the plan the user
 # meant — and headless it stopped outright. Refusing a set with no ambiguity in
 # it buys nothing; the cap on the multi-match offer is what prevents a wrong
 # pickup, and that is asserted above.
-if printf '%s' "$INVOKE$STEP1" | grep -qi 'offer, never a silent pickup'; then
+if grep -qi 'offer, never a silent pickup' <<<"$INVOKE$STEP1"; then
   MISSING="$MISSING lone-candidate-offer-rule-returned"
 fi
 if [ -z "$MISSING" ]; then
@@ -301,13 +312,13 @@ fi
 if [ -n "$PRECOND_LN" ] && [ -n "$GUARD_LN" ] && [ "$GUARD_LN" -gt "$PRECOND_LN" ]; then
   MISSING="$MISSING guard-still-in-preconditions-block"
 fi
-printf '%s' "$STEP1" | grep -qi 'ahead of Step 1b' || MISSING="$MISSING guard-chain-ordering-unstated"
+grep -qi 'ahead of Step 1b' <<<"$STEP1" || MISSING="$MISSING guard-chain-ordering-unstated"
 # The Step 8 callback re-enters this skill with the just-authored plan
 # uncommitted; without an exclusion the hoisted guard fires at exactly the
 # moment the hoist exists to avoid, and headless it stops the chain.
-printf '%s' "$STEP1" | grep -qi 'never pre-existing work' || MISSING="$MISSING plan-artifacts-not-excluded"
-printf '%s' "$STEP1" | grep -qi 'already `status: completed`' || MISSING="$MISSING completed-plan-precondition"
-printf '%s' "$STEP1" | grep -qi 'resume from the first unmarked step' || MISSING="$MISSING resume-precondition"
+grep -qi 'never pre-existing work' <<<"$STEP1" || MISSING="$MISSING plan-artifacts-not-excluded"
+grep -qi 'already `status: completed`' <<<"$STEP1" || MISSING="$MISSING completed-plan-precondition"
+grep -qi 'resume from the first unmarked step' <<<"$STEP1" || MISSING="$MISSING resume-precondition"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
@@ -319,14 +330,14 @@ echo "13. Every non-implementing Step 8 choice terminates the outer chain..."
 # Both answers route execution elsewhere: proceeding would build work the user
 # declined (Exit) or race the workflow they just launched (Run as workflow).
 MISSING=""
-printf '%s' "$CHAIN" | grep -qF "\`Exit — I'll implement later\` → **stop.**" || MISSING="$MISSING exit-stops"
-printf '%s' "$CHAIN" | grep -qF '`Run as workflow` → **stop.**' || MISSING="$MISSING workflow-stops"
-printf '%s' "$CHAIN" | grep -qi 'status: todo' || MISSING="$MISSING exit-leaves-todo"
+grep -qF "\`Exit — I'll implement later\` → **stop.**" <<<"$CHAIN" || MISSING="$MISSING exit-stops"
+grep -qF '`Run as workflow` → **stop.**' <<<"$CHAIN" || MISSING="$MISSING workflow-stops"
+grep -qi 'status: todo' <<<"$CHAIN" || MISSING="$MISSING exit-leaves-todo"
 # `Skill()` is synchronous: the nested build has already finished by the time
 # control returns, so re-entering the preconditions would offer to redo work
 # that just completed or restart a run the user chose to stop.
-printf '%s' "$CHAIN" | grep -qiF '`Implement now` → **stop and report.**' || MISSING="$MISSING implement-now-not-terminal"
-printf '%s' "$CHAIN" | grep -qi 're-enter Steps 1-2' || MISSING="$MISSING no-precondition-reentry"
+grep -qiF '`Implement now` → **stop and report.**' <<<"$CHAIN" || MISSING="$MISSING implement-now-not-terminal"
+grep -qi 're-enter Steps 1-2' <<<"$CHAIN" || MISSING="$MISSING no-precondition-reentry"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
@@ -347,25 +358,25 @@ echo "15. The objective-versus-path grammar is whole-string, not first-token..."
 MISSING=""
 echo "$ATLINE" | grep -qw Skill || MISSING="$MISSING allowed-tools-Skill"
 grep -q '^argument-hint:.*<objective>' "$SKILL" || MISSING="$MISSING argument-hint-objective"
-printf '%s' "$INVOKE" | grep -qi 'suffix' || MISSING="$MISSING suffix-rule"
+grep -qi 'suffix' <<<"$INVOKE" || MISSING="$MISSING suffix-rule"
 # Without a flags-first pass, `--dir tmp/plans` classifies as an objective:
 # the leftover carries neither a suffix nor a slash.
-printf '%s' "$INVOKE" | grep -qi 'strip flags first' || MISSING="$MISSING flags-not-stripped-first"
-printf '%s' "$INVOKE" | grep -qi 'rest string' || MISSING="$MISSING rest-string-undefined"
+grep -qi 'strip flags first' <<<"$INVOKE" || MISSING="$MISSING flags-not-stripped-first"
+grep -qi 'rest string' <<<"$INVOKE" || MISSING="$MISSING rest-string-undefined"
 # The reported bug. Applying suffix-or-slash to the FIRST TOKEN read `A/B` out of
 # `A/B testing for checkout` and turned the whole objective into a filename. A
 # path is one filesystem name, so whitespace anywhere in the rest string is what
 # disqualifies it — asserting the whitespace clause is what stops a revert to the
 # token rule, since both phrasings mention a suffix and a slash.
-printf '%s' "$INVOKE" | grep -qi 'single whitespace-free token' || MISSING="$MISSING whitespace-rule-missing"
-printf '%s' "$INVOKE" | grep -qi 'whitespace in the rest string disqualifies it' || MISSING="$MISSING whitespace-disqualifier-unstated"
-if printf '%s' "$INVOKE" | grep -qi 'test applies to the \*\*first positional token'; then
+grep -qi 'single whitespace-free token' <<<"$INVOKE" || MISSING="$MISSING whitespace-rule-missing"
+grep -qi 'whitespace in the rest string disqualifies it' <<<"$INVOKE" || MISSING="$MISSING whitespace-disqualifier-unstated"
+if grep -qi 'test applies to the \*\*first positional token' <<<"$INVOKE"; then
   MISSING="$MISSING first-token-classification-returned"
 fi
 # The whole rest string is the objective, not a prefix of it.
-printf '%s' "$INVOKE" | grep -qi 'whole rest string is the objective' || MISSING="$MISSING objective-truncated-to-token"
+grep -qi 'whole rest string is the objective' <<<"$INVOKE" || MISSING="$MISSING objective-truncated-to-token"
 # A bare `A/B` is still path-shaped and still stops; the stop has to say why.
-printf '%s' "$INVOKE" | grep -qi 'misparse' || MISSING="$MISSING slash-misparse-note"
+grep -qi 'misparse' <<<"$INVOKE" || MISSING="$MISSING slash-misparse-note"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
@@ -377,11 +388,11 @@ echo "16. The two non-chaining no-plan branches still stop..."
 # A mistyped filename must not author a whole plan, and an HTML-only legacy plan
 # needs its spec reconstructed rather than a new plan written on top of it.
 MISSING=""
-printf '%s' "$STEP1" | grep -qi 'say which paths were tried' || MISSING="$MISSING missing-path-stop"
-printf '%s' "$STEP1" | grep -qi 'mistyped filename' || MISSING="$MISSING typo-rationale"
-printf '%s' "$STEP1" | grep -qi 'this skill edits specs, not HTML' || MISSING="$MISSING html-only-stop"
+grep -qi 'say which paths were tried' <<<"$STEP1" || MISSING="$MISSING missing-path-stop"
+grep -qi 'mistyped filename' <<<"$STEP1" || MISSING="$MISSING typo-rationale"
+grep -qi 'this skill edits specs, not HTML' <<<"$STEP1" || MISSING="$MISSING html-only-stop"
 # Exactly one branch may route into the chain.
-ENTER_REFUSALS="$(printf '%s' "$STEP1" | { grep -oi 'do not enter Step 1b' || true; } | wc -l | tr -d ' ')"
+ENTER_REFUSALS="$({ grep -oi 'do not enter Step 1b' <<<"$STEP1" || true; } | wc -l | tr -d ' ')"
 if [ "$ENTER_REFUSALS" -ne 2 ]; then
   MISSING="$MISSING both-branches-must-refuse-the-chain"
 fi
@@ -394,7 +405,7 @@ fi
 
 echo "17. The chain is command-only and the ambient route-away contract survives..."
 MISSING=""
-printf '%s' "$INVOKE" | grep -qi 'only from the slash command' || MISSING="$MISSING command-only-scoping"
+grep -qi 'only from the slash command' <<<"$INVOKE" || MISSING="$MISSING command-only-scoping"
 ROUTE_AWAYS="$(printf '%s\n' "$ALLTEXT" | { grep -c 'stop and route to' || true; })"
 [ "$ROUTE_AWAYS" -eq 1 ] || MISSING="$MISSING route-away-instruction"
 if [ -z "$MISSING" ]; then
@@ -416,25 +427,25 @@ echo "18. Every gate names a headless default and logs it instead of halting..."
 FLATSKILL="$(printf '%s\n' "$ALLTEXT" | flatten)"
 DEFAULTS="$(section '^## When `AskUserQuestion` is unavailable' '^\*\*Preconditions' | flatten)"
 MISSING=""
-printf '%s' "$FLATSKILL" | grep -qi 'AskUserQuestion` is unavailable' || MISSING="$MISSING unavailable-case-unstated"
-printf '%s' "$DEFAULTS" | grep -qi 'named default' || MISSING="$MISSING defaults-not-named"
-printf '%s' "$DEFAULTS" | grep -qF 'Assumption:' || MISSING="$MISSING assumption-not-logged"
-printf '%s' "$DEFAULTS" | grep -qi 'never halt merely because' || MISSING="$MISSING halting-still-the-rule"
+grep -qi 'AskUserQuestion` is unavailable' <<<"$FLATSKILL" || MISSING="$MISSING unavailable-case-unstated"
+grep -qi 'named default' <<<"$DEFAULTS" || MISSING="$MISSING defaults-not-named"
+grep -qF 'Assumption:' <<<"$DEFAULTS" || MISSING="$MISSING assumption-not-logged"
+grep -qi 'never halt merely because' <<<"$DEFAULTS" || MISSING="$MISSING halting-still-the-rule"
 # The clarified wording must not re-introduce the flat "never stop" reading: some
 # tabled defaults ARE "report and stop", and taking one is following the table.
-printf '%s' "$DEFAULTS" | grep -qi 'follow the table' || MISSING="$MISSING table-not-authoritative"
+grep -qi 'follow the table' <<<"$DEFAULTS" || MISSING="$MISSING table-not-authoritative"
 # Each gate the skill can reach headless needs a row, or the undefined-fallback
 # bug returns for whichever one was left out.
 for gate in 'one candidate' 'several candidates' 'no candidates' \
             'Proposal-versus-direct' 'status: completed' 'Dirty working tree' 'Phase checkpoint'; do
-  printf '%s' "$DEFAULTS" | grep -qiF "$gate" || MISSING="$MISSING no-default-for[$gate]"
+  grep -qiF "$gate" <<<"$DEFAULTS" || MISSING="$MISSING no-default-for[$gate]"
 done
 # The one gate where picking is genuinely unsafe must still stop, and must say
 # so — otherwise "never halt" reads as license to implement an arbitrary plan.
-printf '%s' "$DEFAULTS" | grep -qi 'report the ranked list and stop' || MISSING="$MISSING unsafe-gate-not-excepted"
-printf '%s' "$DEFAULTS" | grep -qi 'a plan the user never chose' || MISSING="$MISSING unsafe-gate-rationale"
+grep -qi 'report the ranked list and stop' <<<"$DEFAULTS" || MISSING="$MISSING unsafe-gate-not-excepted"
+grep -qi 'a plan the user never chose' <<<"$DEFAULTS" || MISSING="$MISSING unsafe-gate-rationale"
 # The pre-9.0.0 blanket ban contradicts the table; both cannot ship.
-if printf '%s' "$FLATSKILL" | grep -qi 'never resolve a gate by picking'; then
+if grep -qi 'never resolve a gate by picking' <<<"$FLATSKILL"; then
   MISSING="$MISSING blanket-no-picking-ban-returned"
 fi
 if [ -z "$MISSING" ]; then
@@ -473,7 +484,7 @@ done
 for doc in \
   "$ROOT/kit/plugins/plan-agent/skills/build/references/invocation.md" \
   "$ROOT/kit/plugins/plan-agent/skills/implementation-plan/SKILL.md"; do
-  if printf '%s' "$(cat "$doc" | flatten)" | grep -qiE 'append(ing)? a default'; then
+  if grep -qiE 'append(ing)? a default' <<<"$(cat "$doc" | flatten)"; then
     MISSING="$MISSING $(basename "$doc")-teaches-append"
   fi
 done
@@ -492,9 +503,9 @@ echo "20. The conversion scan is defined as positional, excluding flag values...
 IPSKILL="$ROOT/kit/plugins/plan-agent/skills/implementation-plan/SKILL.md"
 IPFLAT="$(cat "$IPSKILL" | flatten)"
 MISSING=""
-printf '%s' "$IPFLAT" | grep -qi 'not a recognized flag' || MISSING="$MISSING flag-values-not-excluded"
-printf '%s' "$IPFLAT" | grep -qi 'first \*\*positional\*\* token ending in' || MISSING="$MISSING scan-not-called-positional"
-if printf '%s' "$IPFLAT" | grep -qi 'first non-flag token ending in `.md`'; then
+grep -qi 'not a recognized flag' <<<"$IPFLAT" || MISSING="$MISSING flag-values-not-excluded"
+grep -qi 'first \*\*positional\*\* token ending in' <<<"$IPFLAT" || MISSING="$MISSING scan-not-called-positional"
+if grep -qi 'first non-flag token ending in `.md`' <<<"$IPFLAT"; then
   MISSING="$MISSING md-rule-still-says-non-flag"
 fi
 if [ -z "$MISSING" ]; then
@@ -511,7 +522,7 @@ echo "21. The resolution test table covers all eight argument cases..."
 # behaviour revert also a red test — a reverted rule leaves a row asserting the
 # opposite of what the ladder above it says.
 TABLE_FILE="$(owner '^## Resolution test table')"
-tbl_row() { sed -n '/^## Resolution test table/,$p' "$TABLE_FILE" | grep -E "^\| $1 \|" | head -1; }
+tbl_row() { sed -n '/^## Resolution test table/,$p' "$TABLE_FILE" | grep -m1 -E "^\| $1 \|"; }
 MISSING=""
 
 ROW_COUNT="$(sed -n '/^## Resolution test table/,$p' "$TABLE_FILE" | { grep -cE '^\| [0-9]+ \|' || true; })"
@@ -548,12 +559,12 @@ tbl_row 7 | grep -qi 'stop' || MISSING="$MISSING row7-omits-the-unsafe-gate-exce
 # callback re-enters with the new path and misclassifies it again.
 tbl_row 8 | grep -qi 'exists' || MISSING="$MISSING row8-existence-not-decisive"
 tbl_row 8 | grep -qi 'whitespace' || MISSING="$MISSING row8-not-the-whitespace-path-case"
-printf '%s' "$INVOKE" | grep -qi 'names an existing file' || MISSING="$MISSING existence-test-absent"
-printf '%s' "$INVOKE" | grep -qi 'before any shape test' || MISSING="$MISSING existence-test-not-ordered-first"
-printf '%s' "$INVOKE" | grep -qi 'whitespace only disqualifies a string that does not exist' || MISSING="$MISSING whitespace-rule-unqualified"
+grep -qi 'names an existing file' <<<"$INVOKE" || MISSING="$MISSING existence-test-absent"
+grep -qi 'before any shape test' <<<"$INVOKE" || MISSING="$MISSING existence-test-not-ordered-first"
+grep -qi 'whitespace only disqualifies a string that does not exist' <<<"$INVOKE" || MISSING="$MISSING whitespace-rule-unqualified"
 # Value-taking flags: BOTH flags, and both failure shapes.
-printf '%s' "$INVOKE" | grep -qiF -- '`--dir` and `--type` alike' || MISSING="$MISSING missing-value-not-both-flags"
-printf '%s' "$INVOKE" | grep -qiF -- '--dir --continue' || MISSING="$MISSING flag-shaped-value-not-covered"
+grep -qiF -- '`--dir` and `--type` alike' <<<"$INVOKE" || MISSING="$MISSING missing-value-not-both-flags"
+grep -qiF -- '--dir --continue' <<<"$INVOKE" || MISSING="$MISSING flag-shaped-value-not-covered"
 
 # The ladder must be ordered path -> objective -> discovery. Objective before
 # discovery is what keeps an explicit objective from being answered with a list
