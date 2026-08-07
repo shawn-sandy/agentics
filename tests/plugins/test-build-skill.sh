@@ -419,7 +419,10 @@ MISSING=""
 printf '%s' "$FLATSKILL" | grep -qi 'AskUserQuestion` is unavailable' || MISSING="$MISSING unavailable-case-unstated"
 printf '%s' "$DEFAULTS" | grep -qi 'named default' || MISSING="$MISSING defaults-not-named"
 printf '%s' "$DEFAULTS" | grep -qF 'Assumption:' || MISSING="$MISSING assumption-not-logged"
-printf '%s' "$DEFAULTS" | grep -qi 'do not halt on a gate that has one' || MISSING="$MISSING halting-still-the-rule"
+printf '%s' "$DEFAULTS" | grep -qi 'never halt merely because' || MISSING="$MISSING halting-still-the-rule"
+# The clarified wording must not re-introduce the flat "never stop" reading: some
+# tabled defaults ARE "report and stop", and taking one is following the table.
+printf '%s' "$DEFAULTS" | grep -qi 'follow the table' || MISSING="$MISSING table-not-authoritative"
 # Each gate the skill can reach headless needs a row, or the undefined-fallback
 # bug returns for whichever one was left out.
 for gate in 'one candidate' 'several candidates' 'no candidates' \
@@ -501,7 +504,7 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "21. The resolution test table covers all seven argument cases..."
+echo "21. The resolution test table covers all eight argument cases..."
 # The ladder is prose, so the table is the executable-ish part of it: one row per
 # case the classifier must handle, each naming the rule it takes and the outcome.
 # Asserting per-row content (not just a row count) is what makes a silent
@@ -512,7 +515,7 @@ tbl_row() { sed -n '/^## Resolution test table/,$p' "$TABLE_FILE" | grep -E "^\|
 MISSING=""
 
 ROW_COUNT="$(sed -n '/^## Resolution test table/,$p' "$TABLE_FILE" | { grep -cE '^\| [0-9]+ \|' || true; })"
-[ "$ROW_COUNT" -eq 7 ] || MISSING="$MISSING row-count-is-$ROW_COUNT-not-7"
+[ "$ROW_COUNT" -eq 8 ] || MISSING="$MISSING row-count-is-$ROW_COUNT-not-8"
 
 # 1-2: a path resolves or stops. Never discovery, never the authoring chain.
 tbl_row 1 | grep -qiE '\.md.*implement' || MISSING="$MISSING row1-existing-path-not-implemented"
@@ -539,6 +542,19 @@ tbl_row 7 | grep -qi 'unavailable' || MISSING="$MISSING row7-not-the-headless-ca
 tbl_row 7 | grep -qF 'Assumption:' || MISSING="$MISSING row7-default-not-logged"
 tbl_row 7 | grep -qi 'stop' || MISSING="$MISSING row7-omits-the-unsafe-gate-exception"
 
+# Row 8: an existing file wins over the shape test. Without existence-first, a
+# plans directory containing a space sends real spec paths to Rule 2, which
+# authors a new plan into that same directory — and Step 8's `Implement now`
+# callback re-enters with the new path and misclassifies it again.
+tbl_row 8 | grep -qi 'exists' || MISSING="$MISSING row8-existence-not-decisive"
+tbl_row 8 | grep -qi 'whitespace' || MISSING="$MISSING row8-not-the-whitespace-path-case"
+printf '%s' "$INVOKE" | grep -qi 'names an existing file' || MISSING="$MISSING existence-test-absent"
+printf '%s' "$INVOKE" | grep -qi 'before any shape test' || MISSING="$MISSING existence-test-not-ordered-first"
+printf '%s' "$INVOKE" | grep -qi 'whitespace only disqualifies a string that does not exist' || MISSING="$MISSING whitespace-rule-unqualified"
+# Value-taking flags: BOTH flags, and both failure shapes.
+printf '%s' "$INVOKE" | grep -qiF -- '`--dir` and `--type` alike' || MISSING="$MISSING missing-value-not-both-flags"
+printf '%s' "$INVOKE" | grep -qiF -- '--dir --continue' || MISSING="$MISSING flag-shaped-value-not-covered"
+
 # The ladder must be ordered path -> objective -> discovery. Objective before
 # discovery is what keeps an explicit objective from being answered with a list
 # of unrelated todo plans; path first is what keeps a real filename out of Rule 2.
@@ -549,7 +565,7 @@ ORDER="$(grep -oE '^### Rule [0-3] —' "$LADDER_FILE" | grep -oE '[0-3]' | tr -
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
-  echo "  FAIL: the resolution test table does not pin all seven cases:$MISSING"
+  echo "  FAIL: the resolution test table does not pin all eight cases:$MISSING"
   FAILURES=$((FAILURES + 1))
 fi
 

@@ -39,10 +39,11 @@ the `planAgent.plansDirectory` / `plansDirectory` setting (project-local
 
 Then classify `$ARGUMENTS` with the precedence ladder in `invocation.md`:
 
-1. **Rule 1 — path.** Resolve as given, then by basename under the plans
-   directory. Neither exists → **stop**, say which paths were tried, and add
-   the misparse note when the token was slash-bearing with no `.md`/`.html`
-   suffix. **Do not enter Step 1b**: chaining on a mistyped filename would
+1. **Rule 1 — path.** An existing file wins outright, whitespace included;
+   otherwise the shape test applies. Resolve as given, then by basename under
+   the plans directory. Neither exists → **stop**, say which paths were tried,
+   and add the misparse note when the token was slash-bearing with no
+   `.md`/`.html` suffix. **Do not enter Step 1b**: chaining on a mistyped filename would
    author a whole plan because of a typo. An `.html` with no sibling spec stops
    the same way — this skill edits specs, not HTML, and again **do not enter
    Step 1b**.
@@ -59,9 +60,12 @@ Then classify `$ARGUMENTS` with the precedence ladder in `invocation.md`:
 
 A headless or otherwise non-interactive run has no way to ask. Each gate below
 therefore carries a **named default**: take it, and log it on one line as
-`Assumption: <what was chosen> — <why>`. Do not halt on a gate that has one.
-An unlogged default is the real failure mode — the same missing tool once
-resolved two opposite ways in two runs because the fallback was undefined.
+`Assumption: <what was chosen> — <why>`. **Never halt merely because
+`AskUserQuestion` is unavailable — follow the table.** Some of its defaults are
+themselves "report and stop", and taking one of those is following the table,
+not halting on the missing tool. An unlogged or improvised default is the real
+failure mode: the same missing tool once resolved two opposite ways in two runs
+because the fallback was undefined.
 
 | Gate | Default | Why it is the safest |
 |------|---------|----------------------|
@@ -96,3 +100,4 @@ resolved plans directory unless `--dir` says otherwise.
 | 5 | `--dir tmp/plans` *(4 open specs there)* | *(empty)* | 3 — discovery | Offer the newest three plus `None of these — author a new plan`, stating that 1 was suppressed |
 | 6 | *(nothing)* *(no open specs)* | *(empty)* | 3 — discovery | Ask for an objective, then Step 1b |
 | 7 | any of rows 4-6, `AskUserQuestion` unavailable | — | 3 — discovery | Take the row's named default from the table above and log `Assumption: …`. Row 5 with no `in-progress` candidate is the sole stop |
+| 8 | `my plans/add-foo.md` *(exists; plans dir has a space)* | `my plans/add-foo.md` | 1 — path | Whitespace, but the file **exists**, so test (1) wins and it implements. Shape-testing first would send a real spec to Rule 2, author a new plan into the same directory, and let Step 8's `Implement now` callback misclassify it again — authoring without converging |

@@ -47,8 +47,20 @@ at the first matching rule.
   `CI/CD`, `i18n/l10n` are indistinguishable from relative filenames. That stop
   now names the misparse and offers both repairs (add a suffix, or reword)
   instead of listing paths tried.
+- **An existing file beats the shape test.** Rule 1 tests the complete rest
+  string against the filesystem *before* the whitespace/suffix/slash shape
+  test. Without that ordering a plans directory containing a space
+  (`--dir "my plans"`) makes every real spec path — `my plans/add-foo.md` —
+  fail the whitespace rule and fall to Rule 2, which authors a *new* plan into
+  that same directory; `implementation-plan` Step 8's `Implement now` callback
+  then re-enters with the new path and misclassifies it again, authoring
+  without converging. The filesystem is ground truth, so `A/B testing for
+  checkout` still reaches Rule 2 while `my plans/add-foo.md` resolves as a
+  path.
 - **A value-taking flag with no value is a named error.** `--dir` with nothing
-  after it is "`--dir` requires a path", matching `--type`'s existing treatment.
+  after it is "`--dir` requires a path"; `--type` with nothing after it names
+  the valid set. Covers the flag-shaped-value case too — `--dir --continue`
+  must not consume `--continue` as a directory.
   Both silent alternatives were live bugs: dropping the flag resolves the
   default plans directory while the user believes they overrode it, and leaving
   `--dir` in the rest string hands Rule 2 a one-token objective that authors an

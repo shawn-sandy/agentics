@@ -42,10 +42,13 @@ option **together with its value** from `$ARGUMENTS`. What survives is the
 `--dir tmp/plans` alone therefore leaves an **empty** rest string — that is a
 bare `build` that takes Rule 3, not an objective named `--dir` and not a halt.
 
-**A value-taking flag with no value is an error**, named as such: `--dir` with
-nothing after it, or with another recognized flag after it, is
-"`--dir` requires a path", never a silent drop and never a token left in the
-rest string. This matches `--type`'s treatment below, and it exists because the
+**A value-taking flag with no value is an error**, named as such. This covers
+`--dir` and `--type` alike, and both failure shapes: nothing after the flag, or
+another recognized flag after it (`--dir --continue` must not consume
+`--continue` as a directory). `--dir` with no value is "`--dir` requires a
+path"; `--type` with no value is "`--type` requires one of feature, fix,
+refactor, docs, chore" — never a silent drop and never a token left in the rest
+string. `--type` with an *invalid* value errors the same way (below). It exists because the
 alternatives are both live bugs: dropping the flag silently resolves the
 default plans directory while the user believes they overrode it, and leaving
 `--dir` in the rest string hands Rule 2 a one-token objective that authors an
@@ -70,13 +73,29 @@ entire plan named after a flag.
 
 ### Rule 1 — Path (the rest string names a plan file)
 
-The rest string is a plan path when it is a **single whitespace-free token**
-that **either** carries an `.md`/`.html` suffix **or** contains a `/`.
+The rest string is a plan path when **either** test passes, in this order:
 
-Both halves matter. The suffix-or-slash test alone is what read
-`A/B testing for checkout` as a filename: it was applied to the *first token*
-(`A/B`) instead of to the whole string. A real path is one filesystem name, so
-**any whitespace in the rest string disqualifies it** and sends it to Rule 2.
+1. **It names an existing file.** Test the complete rest string against the
+   filesystem **first, before any shape test**. The filesystem is ground truth:
+   if the string is a file, it is a path, whatever it looks like.
+2. **It is a single whitespace-free token** carrying an `.md`/`.html` suffix or
+   a `/`.
+
+The shape test in (2) is what corrects the original bug: suffix-or-slash was
+applied to the *first token* (`A/B` out of `A/B testing for checkout`) instead
+of to the whole string. A path is one filesystem name, so **any whitespace in
+the rest string disqualifies it** under (2) and sends it to Rule 2.
+
+**But whitespace only disqualifies a string that does not exist on disk** —
+which is why (1) runs first and is not merely an optimization. A plans
+directory containing a space (`--dir "my plans"`, or a `plansDirectory` setting
+with one) produces real spec paths like `my plans/add-foo.md`. Shape-testing
+those reads them as prose and sends an existing plan to Rule 2, which authors a
+*new* plan — into the same whitespace-bearing directory. `implementation-plan`
+Step 8's `Implement now` callback then re-enters this skill with that path, it
+misclassifies again, and the chain authors plans without converging. Test (1)
+closes that loop: `A/B testing for checkout` is not a file and still reaches
+Rule 2, while `my plans/add-foo.md` resolves as what it is.
 
 Resolve it, in order:
 
