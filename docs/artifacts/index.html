@@ -5,9 +5,19 @@
   Static variables (substituted by the plans-library skill and the
   build-index.sh / build-artifacts-index.sh generators):
     GALLERY_TITLE    — Heading noun: "Plans" or "Artifacts"
+    GALLERY_SUB      — Serif line under the heading
     GALLERY_ENTRIES  — Repeated <a> blocks, one per item
     PLAN_COUNT       — Total number of items displayed
     GENERATED_AT     — Date and time of gallery generation
+    HREF_HOME / HREF_PLANS / HREF_PROTOTYPES / HREF_ARTIFACTS / HREF_SOCIAL
+                     — Topbar tab targets, each computed relative to THIS page's
+                       own output directory (the plans gallery is not always at
+                       docs/plans — plansDirectory is configurable)
+    COUNT_PLANS / COUNT_PROTOTYPES / COUNT_ARTIFACTS / COUNT_SOCIAL
+                     — Topbar tab counts, read off disk by the generator
+    CUR_HOME / CUR_PLANS / CUR_PROTOTYPES / CUR_ARTIFACTS / CUR_SOCIAL
+                     — Exactly one is replaced with aria-current="page";
+                       the rest with the empty string
 
   Two contracts constrain edits here:
 
@@ -20,6 +30,15 @@
      attribute rather than baked into the markup the generator emits.
   2. The driver also patches the two count strings, `<p>N items</p>` and
      `<span>N items</span>`. Keep both shapes verbatim.
+
+  The same driver is why row status is styled off [data-status] rather than the
+  prototype's .s-completed / .s-in-progress / .s-todo classes: CARD_RE matches
+  the opening anchor tag with the class attribute's closing quote included, so
+  a second class in that attribute makes every card invisible to the merge.
+
+  Nothing in this file may spell that opening tag out literally, comments
+  included — the driver reads the page as text, so a literal in the chrome
+  becomes the "first card" and the splice eats everything down to the last one.
 -->
 <html lang="en">
   <head>
@@ -57,6 +76,7 @@
         --radius: 4px;
         --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
         --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
         color-scheme: light;
       }
       /* Written twice: an explicit choice has to beat the OS preference, and
@@ -122,6 +142,74 @@
       .wrap { max-width: 1200px; margin: 0 auto; }
       :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
+      /* Visually hidden, still announced — carries the status text for the
+         aria-hidden glyph in each row. */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* ── Topbar ──────────────────────────────────────────────────────
+         Full-bleed against the body padding rather than restructuring every
+         section into a wrapper: the negative margins cancel `body`'s padding
+         so the bar spans the viewport while the content below stays inset. */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        margin: -2rem -1.5rem 1.5rem;
+        border-bottom: 1px solid var(--rule);
+        /* Opaque first: a browser without color-mix drops the second
+           declaration, and a transparent sticky bar over scrolled text is
+           unreadable. */
+        background: var(--paper);
+        background: color-mix(in srgb, var(--paper) 88%, transparent);
+        backdrop-filter: blur(12px);
+      }
+      .topbar-in {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        min-height: 48px;
+        flex-wrap: wrap;
+      }
+      .mark {
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+        color: var(--ink);
+      }
+      .mark::before { content: "\25A4 "; color: var(--accent); }
+      .tabs { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-left: auto; }
+      .tabs a {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.04em;
+        padding: 0.4rem 0.6rem;
+        border-radius: 3px;
+        text-decoration: none;
+        color: var(--ink-2);
+      }
+      .tabs a:hover { color: var(--ink); background: var(--sunk); }
+      .tabs a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+      .tabs a .n { color: var(--ink-3); margin-left: 0.3rem; }
+      /* --ink-3 on the current tab's accent-soft chip measures 4.46:1, just
+         under AA — the count takes the tab's own colour there instead. */
+      .tabs a[aria-current="page"] .n { color: var(--accent); }
+
       /* Every structural label speaks in mono. */
       .lbl {
         font-family: var(--mono);
@@ -150,11 +238,15 @@
         letter-spacing: -0.035em;
         line-height: 1.12;
       }
+      /* Serif under a mono heading — the one line on the page written to be
+         read as a sentence rather than scanned as data. */
       .gallery-header p {
-        font-family: var(--mono);
-        font-size: 0.7rem;
-        color: var(--ink-3);
-        margin-bottom: 0.3rem;
+        font-family: var(--prose);
+        font-size: 1.0625rem;
+        color: var(--ink-2);
+        max-width: 52ch;
+        line-height: 1.6;
+        margin-top: 0.5rem;
       }
       .theme-toggle {
         margin-left: auto;
@@ -293,21 +385,6 @@
         border-color: var(--accent-line);
       }
 
-      .view-toggle { display: flex; }
-      .view-btn {
-        min-width: 44px;
-        min-height: 44px;
-        padding: 0.4rem 0.7rem;
-        background: var(--panel);
-        border: 1px solid var(--rule);
-        color: var(--ink-2);
-        cursor: pointer;
-        font-size: 0.9rem;
-      }
-      .view-btn:first-child { border-radius: var(--radius) 0 0 var(--radius); }
-      .view-btn:last-child { border-radius: 0 var(--radius) var(--radius) 0; border-left: 0; }
-      .view-btn.active { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
-
       .visible-count {
         max-width: 1200px;
         margin: 0 auto 0.75rem;
@@ -317,15 +394,16 @@
         min-height: 1rem;
       }
 
-      /* ── Grid ────────────────────────────────────────────────────── */
+      /* ── Row list ────────────────────────────────────────────────────
+         One column of rows, not a card grid: every row is a direct grid item
+         so the merge driver's splice region stays a flat run of anchors with
+         nothing (no <li>, no wrapper) between them. */
       .gallery-grid {
         max-width: 1200px;
         margin: 0 auto;
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
-        gap: 0.75rem;
+        grid-template-columns: 1fr;
       }
-      .gallery-grid.list-view { grid-template-columns: 1fr; }
 
       /* Separators are inserted by script and always span the full row. */
       .gallery-sep {
@@ -347,60 +425,88 @@
       .gallery-sep.flight .rule { background: var(--signal-line); }
 
       .gallery-card {
-        display: block;
-        background: var(--panel);
-        border: 1px solid var(--rule);
-        border-radius: var(--radius);
-        padding: 0.9rem 1rem;
+        display: grid;
+        grid-template-columns: 1.25rem minmax(0, 1fr) 9rem 3.5rem;
+        gap: 0.25rem 0.9rem;
+        align-items: baseline;
+        padding: 0.65rem 0.5rem;
         text-decoration: none;
         color: inherit;
-        transition: border-color 0.15s, transform 0.15s;
+        border-bottom: 1px solid var(--rule-soft);
       }
-      .gallery-card:hover { border-color: var(--accent-line); transform: translateY(-1px); }
-      @media (prefers-reduced-motion: reduce) {
-        .gallery-card { transition: none; }
-        .gallery-card:hover { transform: none; }
-      }
-      .card-badges { display: flex; gap: 0.35rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
-      .status-chip,
-      .type-chip,
-      .effort-chip,
-      .proto-chip {
+      .gallery-card:hover { background: var(--sunk); }
+      /* The artifacts gallery carries no status on any card — collapse the
+         glyph column rather than rendering an empty one. */
+      .gallery-card[data-status=""] { grid-template-columns: minmax(0, 1fr) 9rem 3.5rem; }
+
+      /* Status is a glyph, not a coloured pill — the row stays quiet and the
+         one accent keeps its meaning. Selected on [data-status] because the
+         class attribute is the merge driver's splice key (see the top of this
+         file). The prototype's .5 opacity on the queued glyph is dropped: it
+         puts --ink-3 under 4.5:1 against the page. */
+      .glyph {
         font-family: var(--mono);
-        font-size: 0.58rem;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        padding: 0.12rem 0.45rem;
-        border-radius: 3px;
-        border: 1px solid var(--rule);
-        background: var(--sunk);
+        font-size: 0.8rem;
+        text-align: center;
         color: var(--ink-3);
+      }
+      .gallery-card[data-status="completed"] .glyph { color: var(--moss); }
+      .gallery-card[data-status="in-progress"] .glyph { color: var(--signal); }
+
+      .r-title { font-size: 0.95rem; line-height: 1.4; color: var(--ink); }
+      .gallery-card[data-status="completed"] .r-title { color: var(--ink-2); }
+      .gallery-card[data-status="in-progress"] .r-title { font-weight: 600; }
+      .r-meta {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        color: var(--ink-3);
+        overflow: hidden;
+        text-overflow: ellipsis;
         white-space: nowrap;
       }
-      /* Status is the only thing that gets a colour — everything else is
-         carried by form, so the cards stay scannable rather than becoming a
-         chart of eight competing hues. */
-      .status-in-progress { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
-      .status-completed { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
-      .proto-chip { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-line); }
-      .card-title {
-        font-weight: 600;
-        font-size: 0.95rem;
-        line-height: 1.4;
-        margin-bottom: 0.4rem;
-        color: var(--ink);
+      .r-meta .hi { color: var(--signal); }
+      /* A plan that has a prototype is worth spotting in a scan. Inline text,
+         never an <a> — the row is already one anchor. */
+      .r-meta .proto-chip { color: var(--accent); }
+      .r-date {
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        color: var(--ink-3);
+        text-align: right;
       }
-      .card-meta {
+
+      /* ── In flight ───────────────────────────────────────────────────
+         A band applied to the rows in place, not a separate container: the
+         merge driver would destroy anything wrapped around them. */
+      .gallery-card[data-status="in-progress"] {
+        border-left: 2px solid var(--signal);
+        padding-left: 0.85rem;
+      }
+      .r-steps {
+        grid-column: 2 / -1;
         display: flex;
-        gap: 0.6rem;
-        flex-wrap: wrap;
         align-items: center;
+        gap: 0.6rem;
         font-family: var(--mono);
         font-size: 0.65rem;
         color: var(--ink-3);
       }
-      .card-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+      /* Drawn by script from data-steps-done / data-steps-total; the
+         "N / M steps" text beside it is server-rendered and survives with
+         JavaScript off. */
+      .bar { display: flex; gap: 2px; flex: 0 0 7rem; }
+      .bar i { flex: 1; height: 4px; border-radius: 1px; background: var(--rule); }
+      .bar i.on { background: var(--accent); }
+
+      @media (max-width: 700px) {
+        /* The four status buttons overflow one row at 375px, and .seg clips
+           rather than scrolls — so "Shipped" lost its count until this. */
+        .seg { flex-wrap: wrap; }
+        .gallery-card { grid-template-columns: 1.25rem minmax(0, 1fr) 3.5rem; }
+        .gallery-card[data-status=""] { grid-template-columns: minmax(0, 1fr) 3.5rem; }
+        .r-meta { grid-column: 2 / -1; }
+        .gallery-card[data-status=""] .r-meta { grid-column: 1 / -1; }
+      }
 
       .no-results {
         display: none;
@@ -440,10 +546,26 @@
     </style>
   </head>
   <body>
+    <header class="topbar">
+      <div class="topbar-in">
+        <a class="mark" href="../index.html">agentics</a>
+        <nav class="tabs" aria-label="Collections">
+          <a href="../index.html" >Home</a>
+          <a href="../plans/index.html" >Plans<span class="n">98</span></a>
+          <a href="../prototypes/index.html" >Prototypes<span class="n">2</span></a>
+          <a href="index.html" aria-current="page">Artifacts<span class="n">18</span></a>
+          <a href="../media/social/index.html" >Social<span class="n">36</span></a>
+        </nav>
+      </div>
+    </header>
+
     <div class="gallery-header">
       <div>
         <h1>Artifacts Library</h1>
-        <p>17 items &mdash; click any card to open it</p>
+        <!-- The bare <p> and the leading number are load-bearing: the merge
+             driver's COUNT_RE rewrites `<p>N items`. The prose after it is
+             free text. -->
+        <p>18 items &mdash; pages published from a working session, newest first.</p>
       </div>
       <button
         class="theme-toggle"
@@ -506,224 +628,124 @@
           </div>
         </div>
       </details>
-
-      <div class="view-toggle">
-        <button
-          class="view-btn active"
-          id="gridBtn"
-          title="Grid view"
-          aria-label="Grid view"
-          aria-pressed="true"
-        >
-          &#9638;
-        </button>
-        <button
-          class="view-btn"
-          id="listBtn"
-          title="List view"
-          aria-label="List view"
-          aria-pressed="false"
-        >
-          &#9776;
-        </button>
-      </div>
     </div>
 
     <div class="visible-count" id="visibleCount" aria-live="polite"></div>
 
-    <div class="gallery-grid" id="galleryGrid"><a class="gallery-card" href="team-recap-standalone-2026-08-01.html"
-   data-status="" data-type="artifact" data-effort="" data-title="confirmation gates and skill splits in plan-agent">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Confirmation gates and skill splits in plan-agent</div>
-  <div class="card-meta">
-    <span class="card-date">2026-08-01</span>
-    <span class="card-file">team-recap-standalone-2026-08-01.html</span>
-  </div>
+    <div class="gallery-grid" id="galleryGrid"><a class="gallery-card" href="eng-recap-2026-08-06.html"
+   data-status="" data-type="artifact" data-effort="" data-month="2026-08" data-title="red-green-verify plans — plan-agent 8.7.0">
+  <span class="r-title">Red-green-verify plans — plan-agent 8.7.0</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-08-06</span>
+</a>
+<a class="gallery-card" href="team-recap-standalone-2026-08-01.html"
+   data-status="" data-type="artifact" data-effort="" data-month="2026-08" data-title="confirmation gates and skill splits in plan-agent">
+  <span class="r-title">Confirmation gates and skill splits in plan-agent</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-08-01</span>
 </a>
 <a class="gallery-card" href="team-recap-2026-07-31.html"
-   data-status="" data-type="artifact" data-effort="" data-title="plans and their tracking tickets, linked end to end">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Plans and their tracking tickets, linked end to end</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-31</span>
-    <span class="card-file">team-recap-2026-07-31.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="plans and their tracking tickets, linked end to end">
+  <span class="r-title">Plans and their tracking tickets, linked end to end</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-31</span>
 </a>
 <a class="gallery-card" href="eng-recap-2026-07-30.html"
-   data-status="" data-type="artifact" data-effort="" data-title="six monolithic skill bodies split into cores plus references">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Six monolithic skill bodies split into cores plus references</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-30</span>
-    <span class="card-file">eng-recap-2026-07-30.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="six monolithic skill bodies split into cores plus references">
+  <span class="r-title">Six monolithic skill bodies split into cores plus references</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-30</span>
 </a>
 <a class="gallery-card" href="pr-470-recap-standalone-2026-07-27.html"
-   data-status="" data-type="artifact" data-effort="" data-title="build can now author the plan it implements — pr #470">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">build can now author the plan it implements — PR #470</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-27</span>
-    <span class="card-file">pr-470-recap-standalone-2026-07-27.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="build can now author the plan it implements — pr #470">
+  <span class="r-title">build can now author the plan it implements — PR #470</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="team-recap-2026-07-27-2.html"
-   data-status="" data-type="artifact" data-effort="" data-title="context engineering plans for the marketplace plugins">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Context engineering plans for the marketplace plugins</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-27</span>
-    <span class="card-file">team-recap-2026-07-27-2.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="context engineering plans for the marketplace plugins">
+  <span class="r-title">Context engineering plans for the marketplace plugins</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="team-recap-2026-07-27.html"
-   data-status="" data-type="artifact" data-effort="" data-title="chaining plan authoring into the build skill">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Chaining plan authoring into the build skill</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-27</span>
-    <span class="card-file">team-recap-2026-07-27.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="chaining plan authoring into the build skill">
+  <span class="r-title">Chaining plan authoring into the build skill</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="team-recap-2026-07-26.html"
-   data-status="" data-type="artifact" data-effort="" data-title="plan and prototype linking with drift detection">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Plan and prototype linking with drift detection</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-26</span>
-    <span class="card-file">team-recap-2026-07-26.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="plan and prototype linking with drift detection">
+  <span class="r-title">Plan and prototype linking with drift detection</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-26</span>
 </a>
 <a class="gallery-card" href="lint-gate-team-recap-2026-07-24.html"
-   data-status="" data-type="artifact" data-effort="" data-title="git-agent&#x27;s pre-commit lint gate and where it is inert">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">git-agent&#x27;s pre-commit lint gate and where it is inert</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-24</span>
-    <span class="card-file">lint-gate-team-recap-2026-07-24.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="git-agent&#x27;s pre-commit lint gate and where it is inert">
+  <span class="r-title">git-agent&#x27;s pre-commit lint gate and where it is inert</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-24</span>
 </a>
 <a class="gallery-card" href="team-recap-2026-07-23.html"
-   data-status="" data-type="artifact" data-effort="" data-title="why ship-autonomous falls back to ci polling locally">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Why ship-autonomous falls back to CI polling locally</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-23</span>
-    <span class="card-file">team-recap-2026-07-23.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="why ship-autonomous falls back to ci polling locally">
+  <span class="r-title">Why ship-autonomous falls back to CI polling locally</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-23</span>
 </a>
 <a class="gallery-card" href="team-recap-command-for-artifact-tools-2026-07-23.html"
-   data-status="" data-type="artifact" data-effort="" data-title="team recap command for artifact-tools">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Team recap command for artifact-tools</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-23</span>
-    <span class="card-file">team-recap-command-for-artifact-tools-2026-07-23.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="team recap command for artifact-tools">
+  <span class="r-title">Team recap command for artifact-tools</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-23</span>
 </a>
 <a class="gallery-card" href="doctor-session-2026-07-21.html"
-   data-status="" data-type="artifact" data-effort="" data-title="claude code health check — session dossier">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Claude Code Health Check — Session Dossier</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-21</span>
-    <span class="card-file">doctor-session-2026-07-21.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="claude code health check — session dossier">
+  <span class="r-title">Claude Code Health Check — Session Dossier</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-21</span>
 </a>
 <a class="gallery-card" href="ship-autonomous-4-1-0-2026-07-16.html"
-   data-status="" data-type="artifact" data-effort="" data-title="ship-autonomous 4.1.0 — what changed">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">ship-autonomous 4.1.0 — what changed</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-16</span>
-    <span class="card-file">ship-autonomous-4-1-0-2026-07-16.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="ship-autonomous 4.1.0 — what changed">
+  <span class="r-title">ship-autonomous 4.1.0 — what changed</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-16</span>
 </a>
 <a class="gallery-card" href="session-model-pinning-report-2026-07-13.html"
-   data-status="" data-type="artifact" data-effort="" data-title="session report — per-skill model pinning">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Session Report — Per-Skill Model Pinning</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-13</span>
-    <span class="card-file">session-model-pinning-report-2026-07-13.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="session report — per-skill model pinning">
+  <span class="r-title">Session Report — Per-Skill Model Pinning</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-13</span>
 </a>
 <a class="gallery-card" href="team-defaults-session-review-2026-07-13.html"
-   data-status="" data-type="artifact" data-effort="" data-title="session review: team-defaults plugin">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Session review: team-defaults plugin</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-13</span>
-    <span class="card-file">team-defaults-session-review-2026-07-13.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="session review: team-defaults plugin">
+  <span class="r-title">Session review: team-defaults plugin</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-13</span>
 </a>
 <a class="gallery-card" href="ultra-review-guide-2026-07-10.html"
-   data-status="" data-type="artifact" data-effort="" data-title="ultra code review, explained — pr #382 as the worked example">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Ultra code review, explained — PR #382 as the worked example</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-10</span>
-    <span class="card-file">ultra-review-guide-2026-07-10.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="ultra code review, explained — pr #382 as the worked example">
+  <span class="r-title">Ultra code review, explained — PR #382 as the worked example</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-10</span>
 </a>
 <a class="gallery-card" href="implementation-plan-reference-2026-07-07.html"
-   data-status="" data-type="artifact" data-effort="" data-title="implementation-plan — feature reference">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">implementation-plan — Feature Reference</div>
-  <div class="card-meta">
-    <span class="card-date">2026-07-07</span>
-    <span class="card-file">implementation-plan-reference-2026-07-07.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="2026-07" data-title="implementation-plan — feature reference">
+  <span class="r-title">implementation-plan — Feature Reference</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date">2026-07-07</span>
 </a>
 <a class="gallery-card" href="session-recap-export-session-skill.html"
-   data-status="" data-type="artifact" data-effort="" data-title="session recap: export-session skill">
-  <div class="card-badges">
-    <span class="type-chip type-artifact">artifact</span>
-  </div>
-  <div class="card-title">Session Recap: export-session skill</div>
-  <div class="card-meta">
-    
-    <span class="card-file">session-recap-export-session-skill.html</span>
-  </div>
+   data-status="" data-type="artifact" data-effort="" data-month="" data-title="session recap: export-session skill">
+  <span class="r-title">Session Recap: export-session skill</span>
+  <span class="r-meta">artifact</span>
+  <span class="r-date"></span>
 </a></div>
 
     <div class="no-results" id="noResults">No items match your search.</div>
 
     <div class="gallery-footer">
-      <span>17 items</span>
-      <span>Generated 2026-08-01 12:48</span>
+      <span>18 items</span>
+      <span>Generated 2026-08-06 23:05</span>
     </div>
 
     <script>
@@ -868,22 +890,28 @@
           applyFilters();
         });
 
-      var gridBtn = document.getElementById("gridBtn");
-      var listBtn = document.getElementById("listBtn");
-      gridBtn.addEventListener("click", function () {
-        grid.classList.remove("list-view");
-        gridBtn.classList.add("active");
-        gridBtn.setAttribute("aria-pressed", "true");
-        listBtn.classList.remove("active");
-        listBtn.setAttribute("aria-pressed", "false");
-      });
-      listBtn.addEventListener("click", function () {
-        grid.classList.add("list-view");
-        listBtn.classList.add("active");
-        listBtn.setAttribute("aria-pressed", "true");
-        gridBtn.classList.remove("active");
-        gridBtn.setAttribute("aria-pressed", "false");
-      });
+      /* The step bar is drawn here rather than emitted: a dozen <i> tags per
+         in-flight card would bloat every generated index, and the bar is
+         decorative — the "N / M steps" text beside it is server-rendered and
+         is what a reader without JavaScript (or a screen reader) gets. */
+      function drawStepBars() {
+        for (var i = 0; i < cards.length; i++) {
+          var slot = cards[i].querySelector(".r-steps");
+          if (!slot) continue;
+          var done = parseInt(cards[i].getAttribute("data-steps-done"), 10);
+          var total = parseInt(cards[i].getAttribute("data-steps-total"), 10);
+          if (isNaN(done) || isNaN(total) || total < 1) continue;
+          var bar = document.createElement("span");
+          bar.className = "bar";
+          bar.setAttribute("aria-hidden", "true");
+          for (var s = 0; s < total; s++) {
+            var seg = document.createElement("i");
+            if (s < done) seg.className = "on";
+            bar.appendChild(seg);
+          }
+          slot.insertBefore(bar, slot.firstChild);
+        }
+      }
 
       var themeBtn = document.getElementById("themeToggle");
       function resolvedTheme() {
@@ -909,6 +937,7 @@
       syncThemeButton();
 
       wireStatusCounts();
+      drawStepBars();
       applyFilters();
     </script>
   </body>
