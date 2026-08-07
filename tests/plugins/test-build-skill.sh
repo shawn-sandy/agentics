@@ -104,7 +104,7 @@ fi
 
 echo "4. allowed-tools declares ToolSearch and ExitPlanMode (deferred-tool bootstrap)..."
 ATLINE="$(grep -m1 '^allowed-tools:' "$SKILL" || true)"
-if echo "$ATLINE" | grep -qw ToolSearch && echo "$ATLINE" | grep -qw ExitPlanMode \
+if grep -qw ToolSearch <<<"$ATLINE" && grep -qw ExitPlanMode <<<"$ATLINE" \
   && grep -qF '**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.' "$SKILL"; then
   echo "  PASS"
 else
@@ -356,7 +356,7 @@ fi
 
 echo "15. The objective-versus-path grammar is whole-string, not first-token..."
 MISSING=""
-echo "$ATLINE" | grep -qw Skill || MISSING="$MISSING allowed-tools-Skill"
+grep -qw Skill <<<"$ATLINE" || MISSING="$MISSING allowed-tools-Skill"
 grep -q '^argument-hint:.*<objective>' "$SKILL" || MISSING="$MISSING argument-hint-objective"
 grep -qi 'suffix' <<<"$INVOKE" || MISSING="$MISSING suffix-rule"
 # Without a flags-first pass, `--dir tmp/plans` classifies as an objective:
@@ -522,43 +522,48 @@ echo "21. The resolution test table covers all eight argument cases..."
 # behaviour revert also a red test — a reverted rule leaves a row asserting the
 # opposite of what the ladder above it says.
 TABLE_FILE="$(owner '^## Resolution test table')"
-tbl_row() { sed -n '/^## Resolution test table/,$p' "$TABLE_FILE" | grep -m1 -E "^\| $1 \|"; }
+# One awk process, no pipe: `sed | grep -m1` let grep exit first and hand sed a
+# SIGPIPE, failing the pipeline under pipefail even when the row was present.
+tbl_row() { awk -v n="$1" '/^## Resolution test table/ { t = 1 } t && $0 ~ ("^\\| " n " \\|") { print; exit }' "$TABLE_FILE"; }
+# row_has <n> <grep args...> — assert row n matches. The row is materialised by
+# command substitution before grep runs, so no pipe exists on either side.
+row_has() { local n="$1"; shift; grep -q "$@" <<<"$(tbl_row "$n")"; }
 MISSING=""
 
 ROW_COUNT="$(sed -n '/^## Resolution test table/,$p' "$TABLE_FILE" | { grep -cE '^\| [0-9]+ \|' || true; })"
 [ "$ROW_COUNT" -eq 8 ] || MISSING="$MISSING row-count-is-$ROW_COUNT-not-8"
 
 # 1-2: a path resolves or stops. Never discovery, never the authoring chain.
-tbl_row 1 | grep -qiE '\.md.*implement' || MISSING="$MISSING row1-existing-path-not-implemented"
-tbl_row 2 | grep -qi 'stop' || MISSING="$MISSING row2-missing-path-does-not-stop"
-tbl_row 2 | grep -qi 'no discovery' || MISSING="$MISSING row2-falls-through-to-discovery"
-tbl_row 2 | grep -qi 'no Step 1b' || MISSING="$MISSING row2-typo-authors-a-plan"
+row_has 1 -iE '\.md.*implement' || MISSING="$MISSING row1-existing-path-not-implemented"
+row_has 2 -i 'stop' || MISSING="$MISSING row2-missing-path-does-not-stop"
+row_has 2 -i 'no discovery' || MISSING="$MISSING row2-falls-through-to-discovery"
+row_has 2 -i 'no Step 1b' || MISSING="$MISSING row2-typo-authors-a-plan"
 
 # 3: the reported misparse. Verbatim, because the string is the bug report.
-tbl_row 3 | grep -qF 'A/B testing for checkout' || MISSING="$MISSING row3-missing-reported-input"
-tbl_row 3 | grep -qi 'objective' || MISSING="$MISSING row3-still-classified-as-path"
-tbl_row 3 | grep -qi 'whitespace' || MISSING="$MISSING row3-omits-the-disqualifier"
+row_has 3 -F 'A/B testing for checkout' || MISSING="$MISSING row3-missing-reported-input"
+row_has 3 -i 'objective' || MISSING="$MISSING row3-still-classified-as-path"
+row_has 3 -i 'whitespace' || MISSING="$MISSING row3-omits-the-disqualifier"
 
 # 4-6: the three discovery outcomes. Row 4 is the other reported bug.
-tbl_row 4 | grep -qF -- '--dir tmp/plans' || MISSING="$MISSING row4-missing-reported-input"
-tbl_row 4 | grep -qi 'auto-select' || MISSING="$MISSING row4-lone-match-not-adopted"
-tbl_row 4 | grep -qi 'no halt' || MISSING="$MISSING row4-halt-not-ruled-out"
-tbl_row 5 | grep -qi 'three' || MISSING="$MISSING row5-offer-not-capped"
-tbl_row 5 | grep -qi 'suppressed' || MISSING="$MISSING row5-suppressed-count-unreported"
-tbl_row 6 | grep -qi 'objective' || MISSING="$MISSING row6-does-not-ask-for-objective"
-tbl_row 6 | grep -qi 'Step 1b' || MISSING="$MISSING row6-does-not-author"
+row_has 4 -F -- '--dir tmp/plans' || MISSING="$MISSING row4-missing-reported-input"
+row_has 4 -i 'auto-select' || MISSING="$MISSING row4-lone-match-not-adopted"
+row_has 4 -i 'no halt' || MISSING="$MISSING row4-halt-not-ruled-out"
+row_has 5 -i 'three' || MISSING="$MISSING row5-offer-not-capped"
+row_has 5 -i 'suppressed' || MISSING="$MISSING row5-suppressed-count-unreported"
+row_has 6 -i 'objective' || MISSING="$MISSING row6-does-not-ask-for-objective"
+row_has 6 -i 'Step 1b' || MISSING="$MISSING row6-does-not-author"
 
 # 7: headless. Takes a default and says which; the one unsafe gate still stops.
-tbl_row 7 | grep -qi 'unavailable' || MISSING="$MISSING row7-not-the-headless-case"
-tbl_row 7 | grep -qF 'Assumption:' || MISSING="$MISSING row7-default-not-logged"
-tbl_row 7 | grep -qi 'stop' || MISSING="$MISSING row7-omits-the-unsafe-gate-exception"
+row_has 7 -i 'unavailable' || MISSING="$MISSING row7-not-the-headless-case"
+row_has 7 -F 'Assumption:' || MISSING="$MISSING row7-default-not-logged"
+row_has 7 -i 'stop' || MISSING="$MISSING row7-omits-the-unsafe-gate-exception"
 
 # Row 8: an existing file wins over the shape test. Without existence-first, a
 # plans directory containing a space sends real spec paths to Rule 2, which
 # authors a new plan into that same directory — and Step 8's `Implement now`
 # callback re-enters with the new path and misclassifies it again.
-tbl_row 8 | grep -qi 'exists' || MISSING="$MISSING row8-existence-not-decisive"
-tbl_row 8 | grep -qi 'whitespace' || MISSING="$MISSING row8-not-the-whitespace-path-case"
+row_has 8 -i 'exists' || MISSING="$MISSING row8-existence-not-decisive"
+row_has 8 -i 'whitespace' || MISSING="$MISSING row8-not-the-whitespace-path-case"
 grep -qi 'names an existing file' <<<"$INVOKE" || MISSING="$MISSING existence-test-absent"
 grep -qi 'before any shape test' <<<"$INVOKE" || MISSING="$MISSING existence-test-not-ordered-first"
 grep -qi 'whitespace only disqualifies a string that does not exist' <<<"$INVOKE" || MISSING="$MISSING whitespace-rule-unqualified"
