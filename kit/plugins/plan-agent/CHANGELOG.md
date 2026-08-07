@@ -1,6 +1,72 @@
 # Changelog
 
 
+## 9.0.0 — build resolves its arguments by explicit precedence (2026-08-06)
+
+`build` classified `$ARGUMENTS` by testing the **first positional token** for an
+`.md`/`.html` suffix or a `/`. A path is one filesystem name, so that test was
+never safe on prose: `/plan-agent:build A/B testing for checkout` read `A/B` as
+a relative filename, failed to resolve it, and stopped — the objective became a
+path. Separately, `--dir tmp/plans` with no plan named stripped to a bare
+`build`, found exactly one open spec in that directory, and refused to adopt it,
+because discovery was written as "an offer, never a silent pickup" and applied
+that rule to a candidate set of size one.
+
+Both are resolution defects, so resolution is now a numbered ladder that stops
+at the first matching rule.
+
+### Changed
+
+- **Argument precedence is explicit and total** (`references/invocation.md`).
+  Rule 0 strips `--dir`, `--type`, and `--continue` with their values, leaving a
+  **rest string**; every later rule reads that, never raw `$ARGUMENTS`. Rule 1
+  classifies the rest string as a path only when it is a **single
+  whitespace-free token** carrying an `.md`/`.html` suffix or a `/` — the
+  whitespace clause is the fix, since a real path cannot contain a space. Rule 2
+  takes everything else as a free-text objective, and **the whole rest string is
+  the objective**, not its first token. Rule 3 handles an empty rest string. No
+  rule falls through on failure: a missing path still stops rather than
+  authoring a plan because of a typo.
+- **A lone discovery candidate is adopted, not offered.** One match
+  auto-selects and echoes why; several are offered capped at three plus
+  `None of these — author a new plan` with the suppressed count; zero asks for
+  an objective. The offer exists to prevent picking the wrong plan out of many,
+  and a set with no ambiguity in it has nothing to prevent — that mismatch is
+  what halted `--dir tmp/plans`.
+- **Headless runs take a named default and log it** rather than stopping at
+  every gate (`references/resolve-plan.md`). 8.x resolved the undefined-fallback
+  bug by making *every* gate stop when `AskUserQuestion` is unavailable, which
+  made headless runs useless. Each gate now carries a row in a defaults table —
+  discovery at each cardinality, the proposal-versus-direct gate, the
+  completed-spec precondition, the dirty-tree guard, and the phase checkpoint —
+  taken and logged as `Assumption: <choice> — <why>`. **One exception stops:**
+  multi-candidate discovery with nothing `in-progress`, where every candidate is
+  equally plausible and picking wrong writes source for a plan the user never
+  chose.
+- **A single-token slash-bearing objective still classifies as a path** — `A/B`,
+  `CI/CD`, `i18n/l10n` are indistinguishable from relative filenames. That stop
+  now names the misparse and offers both repairs (add a suffix, or reword)
+  instead of listing paths tried.
+
+### Added
+
+- **Resolution test table** (`references/resolve-plan.md`) — seven rows, one per
+  case the ladder must handle, each naming its rest string, the rule it takes,
+  and the outcome. `tests/plugins/test-build-skill.sh` check 21 asserts every
+  row's content and the ladder's `0 → 1 → 2 → 3` ordering, so a reverted rule
+  leaves a row asserting the opposite of the prose above it and the suite goes
+  red. Checks 11, 15, and 18 were rewritten against the new contract, each
+  carrying a negative assertion that fails if the 8.x wording returns.
+
+### Migration
+
+Anything that passed a plan path or ran bare is unaffected. Two behaviours
+change: a multi-word objective whose first word contains a `/` now authors a
+plan instead of stopping, and a plans directory holding exactly one open spec
+now builds it instead of asking. Pass the spec path explicitly to pin which plan
+a bare `build` picks up.
+
+
 ## 8.7.0 — red-green-verify plans (2026-08-06)
 
 A plan could name its tests and still be implemented in the wrong order: write

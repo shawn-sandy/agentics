@@ -259,24 +259,27 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "11. Discovery is an offer, capped at three, and skipped when an objective is given..."
+echo "11. Discovery: a lone match auto-selects, several are offered capped at three..."
 MISSING=""
-printf '%s' "$STEP1" | grep -qi 'offer, never a silent pickup' || MISSING="$MISSING offer-not-pickup"
-printf '%s' "$STEP1" | grep -qF 'None of these — author a new plan' || MISSING="$MISSING author-new-option"
-printf '%s' "$STEP1" | grep -qi 'at most the top three' || MISSING="$MISSING three-candidate-cap"
-printf '%s' "$STEP1" | grep -qi 'how many were suppressed' || MISSING="$MISSING suppressed-count"
-printf '%s' "$STEP1" | grep -qi 'skip discovery entirely' || MISSING="$MISSING objective-skips-discovery"
-# The skip must be stated *before* the offer is described, or a reader following
-# the branch top-to-bottom runs the offer with an objective in hand.
-SKIP_AT="$(printf '%s' "$STEP1" | { grep -boi 'skip discovery entirely' || true; } | head -1 | cut -d: -f1)"
-OFFER_AT="$(printf '%s' "$STEP1" | { grep -boi 'offer, never a silent pickup' || true; } | head -1 | cut -d: -f1)"
-if [ -n "$SKIP_AT" ] && [ -n "$OFFER_AT" ] && [ "$SKIP_AT" -ge "$OFFER_AT" ]; then
-  MISSING="$MISSING skip-stated-after-offer"
+printf '%s' "$INVOKE" | grep -qi 'auto-select it' || MISSING="$MISSING lone-candidate-not-adopted"
+printf '%s' "$INVOKE" | grep -qF 'None of these — author a new plan' || MISSING="$MISSING author-new-option"
+printf '%s' "$INVOKE" | grep -qi 'at most the top three' || MISSING="$MISSING three-candidate-cap"
+printf '%s' "$INVOKE" | grep -qi 'suppressed' || MISSING="$MISSING suppressed-count"
+printf '%s' "$INVOKE" | grep -qi 'never descend into `archive/`' || MISSING="$MISSING archive-descent"
+printf '%s' "$STEP1" | grep -qi 'discovery is skipped entirely' || MISSING="$MISSING objective-skips-discovery"
+# Regression guard for the reported halt. Before 9.0.0 the offer applied to a
+# candidate set of size one ("one candidate is still offered, not adopted"), so
+# `--dir tmp/plans` stopped on a directory holding exactly the plan the user
+# meant — and headless it stopped outright. Refusing a set with no ambiguity in
+# it buys nothing; the cap on the multi-match offer is what prevents a wrong
+# pickup, and that is asserted above.
+if printf '%s' "$INVOKE$STEP1" | grep -qi 'offer, never a silent pickup'; then
+  MISSING="$MISSING lone-candidate-offer-rule-returned"
 fi
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
-  echo "  FAIL: discovery is not an objective-gated three-candidate offer:$MISSING"
+  echo "  FAIL: discovery does not auto-select a lone match or cap the offer:$MISSING"
   FAILURES=$((FAILURES + 1))
 fi
 
@@ -340,15 +343,28 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "15. The objective-versus-path grammar rule is stated, misparse included..."
+echo "15. The objective-versus-path grammar is whole-string, not first-token..."
 MISSING=""
 echo "$ATLINE" | grep -qw Skill || MISSING="$MISSING allowed-tools-Skill"
 grep -q '^argument-hint:.*<objective>' "$SKILL" || MISSING="$MISSING argument-hint-objective"
 printf '%s' "$INVOKE" | grep -qi 'suffix' || MISSING="$MISSING suffix-rule"
 # Without a flags-first pass, `--dir tmp/plans` classifies as an objective:
-# the token carries neither a suffix nor a slash.
-printf '%s' "$INVOKE" | grep -qi 'Parse flags first' || MISSING="$MISSING flags-not-parsed-first"
-printf '%s' "$INVOKE" | grep -qi 'first positional token' || MISSING="$MISSING positional-token-rule"
+# the leftover carries neither a suffix nor a slash.
+printf '%s' "$INVOKE" | grep -qi 'strip flags first' || MISSING="$MISSING flags-not-stripped-first"
+printf '%s' "$INVOKE" | grep -qi 'rest string' || MISSING="$MISSING rest-string-undefined"
+# The reported bug. Applying suffix-or-slash to the FIRST TOKEN read `A/B` out of
+# `A/B testing for checkout` and turned the whole objective into a filename. A
+# path is one filesystem name, so whitespace anywhere in the rest string is what
+# disqualifies it — asserting the whitespace clause is what stops a revert to the
+# token rule, since both phrasings mention a suffix and a slash.
+printf '%s' "$INVOKE" | grep -qi 'single whitespace-free token' || MISSING="$MISSING whitespace-rule-missing"
+printf '%s' "$INVOKE" | grep -qi 'whitespace in the rest string disqualifies it' || MISSING="$MISSING whitespace-disqualifier-unstated"
+if printf '%s' "$INVOKE" | grep -qi 'test applies to the \*\*first positional token'; then
+  MISSING="$MISSING first-token-classification-returned"
+fi
+# The whole rest string is the objective, not a prefix of it.
+printf '%s' "$INVOKE" | grep -qi 'whole rest string is the objective' || MISSING="$MISSING objective-truncated-to-token"
+# A bare `A/B` is still path-shaped and still stops; the stop has to say why.
 printf '%s' "$INVOKE" | grep -qi 'misparse' || MISSING="$MISSING slash-misparse-note"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
@@ -388,21 +404,40 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "18. Gates stop rather than self-resolve when AskUserQuestion is unavailable..."
+echo "18. Every gate names a headless default and logs it instead of halting..."
 # Found by running the skill headless: with no AskUserQuestion, one run adopted
 # the lone discovery candidate ("it was the only one") and another stopped at the
 # proposal gate — the same missing tool resolved two opposite ways, because the
-# fallback was undefined. Silent adoption is the exact behaviour the offer exists
-# to remove, so the rule has to be stated, not inferred.
+# fallback was undefined. Blanket-stopping fixed the inconsistency by making
+# every headless run useless, so 9.0.0 names a per-gate default instead. The
+# defaults must be enumerated (a prose "pick something sensible" is the undefined
+# fallback again) and the choice must be logged, or the run silently diverges
+# from what an interactive one would have done.
 FLATSKILL="$(printf '%s\n' "$ALLTEXT" | flatten)"
+DEFAULTS="$(section '^## When `AskUserQuestion` is unavailable' '^\*\*Preconditions' | flatten)"
 MISSING=""
 printf '%s' "$FLATSKILL" | grep -qi 'AskUserQuestion` is unavailable' || MISSING="$MISSING unavailable-case-unstated"
-printf '%s' "$FLATSKILL" | grep -qi 'stops and reports the choice' || MISSING="$MISSING no-stop-and-report-rule"
-printf '%s' "$FLATSKILL" | grep -qi 'never resolve a gate by picking' || MISSING="$MISSING no-picking-ban"
+printf '%s' "$DEFAULTS" | grep -qi 'named default' || MISSING="$MISSING defaults-not-named"
+printf '%s' "$DEFAULTS" | grep -qF 'Assumption:' || MISSING="$MISSING assumption-not-logged"
+printf '%s' "$DEFAULTS" | grep -qi 'do not halt on a gate that has one' || MISSING="$MISSING halting-still-the-rule"
+# Each gate the skill can reach headless needs a row, or the undefined-fallback
+# bug returns for whichever one was left out.
+for gate in 'one candidate' 'several candidates' 'no candidates' \
+            'Proposal-versus-direct' 'status: completed' 'Dirty working tree' 'Phase checkpoint'; do
+  printf '%s' "$DEFAULTS" | grep -qiF "$gate" || MISSING="$MISSING no-default-for[$gate]"
+done
+# The one gate where picking is genuinely unsafe must still stop, and must say
+# so — otherwise "never halt" reads as license to implement an arbitrary plan.
+printf '%s' "$DEFAULTS" | grep -qi 'report the ranked list and stop' || MISSING="$MISSING unsafe-gate-not-excepted"
+printf '%s' "$DEFAULTS" | grep -qi 'a plan the user never chose' || MISSING="$MISSING unsafe-gate-rationale"
+# The pre-9.0.0 blanket ban contradicts the table; both cannot ship.
+if printf '%s' "$FLATSKILL" | grep -qi 'never resolve a gate by picking'; then
+  MISSING="$MISSING blanket-no-picking-ban-returned"
+fi
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
-  echo "  FAIL: the AskUserQuestion-unavailable fallback is not stated in build/SKILL.md:$MISSING"
+  echo "  FAIL: the AskUserQuestion-unavailable defaults are not enumerated:$MISSING"
   FAILURES=$((FAILURES + 1))
 fi
 
@@ -463,6 +498,58 @@ if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
   echo "  FAIL: the .md conversion scan is still ambiguous about flag values:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "21. The resolution test table covers all seven argument cases..."
+# The ladder is prose, so the table is the executable-ish part of it: one row per
+# case the classifier must handle, each naming the rule it takes and the outcome.
+# Asserting per-row content (not just a row count) is what makes a silent
+# behaviour revert also a red test — a reverted rule leaves a row asserting the
+# opposite of what the ladder above it says.
+TABLE_FILE="$(owner '^## Resolution test table')"
+tbl_row() { sed -n '/^## Resolution test table/,$p' "$TABLE_FILE" | grep -E "^\| $1 \|" | head -1; }
+MISSING=""
+
+ROW_COUNT="$(sed -n '/^## Resolution test table/,$p' "$TABLE_FILE" | { grep -cE '^\| [0-9]+ \|' || true; })"
+[ "$ROW_COUNT" -eq 7 ] || MISSING="$MISSING row-count-is-$ROW_COUNT-not-7"
+
+# 1-2: a path resolves or stops. Never discovery, never the authoring chain.
+tbl_row 1 | grep -qiE '\.md.*implement' || MISSING="$MISSING row1-existing-path-not-implemented"
+tbl_row 2 | grep -qi 'stop' || MISSING="$MISSING row2-missing-path-does-not-stop"
+tbl_row 2 | grep -qi 'no discovery' || MISSING="$MISSING row2-falls-through-to-discovery"
+tbl_row 2 | grep -qi 'no Step 1b' || MISSING="$MISSING row2-typo-authors-a-plan"
+
+# 3: the reported misparse. Verbatim, because the string is the bug report.
+tbl_row 3 | grep -qF 'A/B testing for checkout' || MISSING="$MISSING row3-missing-reported-input"
+tbl_row 3 | grep -qi 'objective' || MISSING="$MISSING row3-still-classified-as-path"
+tbl_row 3 | grep -qi 'whitespace' || MISSING="$MISSING row3-omits-the-disqualifier"
+
+# 4-6: the three discovery outcomes. Row 4 is the other reported bug.
+tbl_row 4 | grep -qF -- '--dir tmp/plans' || MISSING="$MISSING row4-missing-reported-input"
+tbl_row 4 | grep -qi 'auto-select' || MISSING="$MISSING row4-lone-match-not-adopted"
+tbl_row 4 | grep -qi 'no halt' || MISSING="$MISSING row4-halt-not-ruled-out"
+tbl_row 5 | grep -qi 'three' || MISSING="$MISSING row5-offer-not-capped"
+tbl_row 5 | grep -qi 'suppressed' || MISSING="$MISSING row5-suppressed-count-unreported"
+tbl_row 6 | grep -qi 'objective' || MISSING="$MISSING row6-does-not-ask-for-objective"
+tbl_row 6 | grep -qi 'Step 1b' || MISSING="$MISSING row6-does-not-author"
+
+# 7: headless. Takes a default and says which; the one unsafe gate still stops.
+tbl_row 7 | grep -qi 'unavailable' || MISSING="$MISSING row7-not-the-headless-case"
+tbl_row 7 | grep -qF 'Assumption:' || MISSING="$MISSING row7-default-not-logged"
+tbl_row 7 | grep -qi 'stop' || MISSING="$MISSING row7-omits-the-unsafe-gate-exception"
+
+# The ladder must be ordered path -> objective -> discovery. Objective before
+# discovery is what keeps an explicit objective from being answered with a list
+# of unrelated todo plans; path first is what keeps a real filename out of Rule 2.
+LADDER_FILE="$(owner '^### Rule 1 —')"
+ORDER="$(grep -oE '^### Rule [0-3] —' "$LADDER_FILE" | grep -oE '[0-3]' | tr -d '\n')"
+[ "$ORDER" = "0123" ] || MISSING="$MISSING ladder-order-is-$ORDER-not-0123"
+
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: the resolution test table does not pin all seven cases:$MISSING"
   FAILURES=$((FAILURES + 1))
 fi
 

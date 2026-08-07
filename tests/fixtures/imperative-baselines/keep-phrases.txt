@@ -1,6 +1,6 @@
 kit/plugins/plan-agent/skills/build/SKILL.md	Never `checked` attributes in the HTML, never a JS
 kit/plugins/plan-agent/skills/build/SKILL.md	never hand-edit the HTML to compensate
-kit/plugins/plan-agent/skills/build/SKILL.md	**Never resolve a gate by picking for the user.**
+kit/plugins/plan-agent/skills/build/SKILL.md	multi-candidate discovery with nothing `in-progress`, where no default is safe.
 kit/plugins/plan-agent/skills/build/SKILL.md	implement a different plan, and do not enter Step 1b
 kit/plugins/plan-agent/skills/build/SKILL.md	do not silently redo finished work.
 kit/plugins/plan-agent/skills/build/SKILL.md	Never clean either one up.
