@@ -1,6 +1,74 @@
 # Changelog
 
 
+## 8.7.0 — red-green-verify plans (2026-08-06)
+
+A plan could name its tests and still be implemented in the wrong order: write
+the feature, then write a test that passes against whatever got built. That
+test proves the implementation matches itself, not the objective. Nothing in
+the spec format forced the failure to come first.
+
+The machinery to fix that already shipped in 8.6.0 — `### Phase:` groupings,
+per-step `Verify:` markers, and `build` stopping at each boundary. This release
+adds the guidance that uses them, so no parser, renderer, or `build` change was
+needed.
+
+### Added
+
+- **`guidelines/red-green-verify.md`** — the RED/GREEN/VERIFY/SHIP phase shape.
+  RED authors executable tests and demands the failure output as the `Verify:`
+  line, failing *for the right reason* (a test that errors on a missing import
+  has not gone red, it has not run). GREEN implements the minimum that passes,
+  re-running after every edit, capped at **8 iterations** — the cap is written
+  into the phase's last step, because a loop with no cap in the spec has
+  nothing to stop it, and the step says report the exact blocker rather than
+  success. VERIFY runs the full suite, lint, and typecheck where the project
+  has one, then — **on UI plans only** — a live browser pass checking layout,
+  touch targets ≥ 44×44px, and zero hydration warnings; a backend or library
+  plan has no affected pages and omits the step. SHIP is entered only when the
+  first three are green **and the user asked to ship**: `build` Step 6 commits
+  only on request, and a SHIP phase that committed unconditionally would
+  override that from inside the plan. Its PR body carries the RED failure
+  output, the GREEN passing run, and the browser assertions as evidence.
+- **UI work asserts on real DOM state, never screenshots.** RED adds a
+  browser-verification step driving the browser MCP tools —
+  `mcp__Claude_Browser__read_page` refs,
+  `mcp__Claude_Browser__javascript_tool` computed styles,
+  `mcp__Claude_Browser__read_console_messages`. Either connected surface
+  works; `mcp__claude-in-chrome__*` exposes the same calls, and this
+  plugin's `prototype` skill and `implementation-plan` Step 7 use that one.
+  A screenshot is evidence for a human; it fails silently for an agent.
+- **The foreground Node driver.** `&` and `nohup` are blocked by permissions,
+  so a step saying "background the dev server, then curl it" cannot run. The
+  guideline ships a driver shape instead: spawn the server as a child, poll
+  until it answers, assert, `kill()` in a `finally`. Its exit code *is* the
+  `Verify:` line.
+- **`--tdd` / `--no-tdd`** — force or suppress the shape, skipping detection.
+
+### Changed
+
+- **Step 2 detects whether a plan requires the shape.** It applies when the
+  steps touch application source *and* Step 0b found a test runner — the same
+  Tier 1 signal Step 5c already classifies on, plus a way to actually run red.
+  Tier 2 doc/plan/metadata work is skipped: there is nothing to fail, and a RED
+  phase over a `grep -q` check is theatre. Genuinely close calls (Tier 1 with
+  no runner, config-only edits, spikes) trigger one `AskUserQuestion` rather
+  than a guess. `--quick` skips Step 0b entirely, so the runner signal was
+  never established there: one cheap check stands in, and no hit means no RGV
+  rather than an inference from nothing. `--tdd` overrides that — it forces the
+  shape even with no runner, and RED's first step then stands the runner up so
+  the added scope is visible in the plan instead of discovered mid-build.
+- **Step 5c** now states that on a red-green-verify plan the `## Tests` bullets
+  name the same files the RED steps author — the section is the catalogue, the
+  phase is the schedule — so the two cannot drift into separate test lists.
+- **`right-sizing.md`** gains a calibration row and a note that phases now have
+  two unrelated uses: context budget (the Phased profile) and discipline (this
+  shape). They cannot share one heading run — `### Phase: Parse` beside
+  `### Phase: RED` leaves a reader unable to tell what a boundary means — so
+  RGV wins the headings and the context seams live inside it. If that makes
+  GREEN too large for one window, the objective was two plans.
+
+
 ## 8.6.0 — phase checkpoints and a Decisions ledger (2026-08-05)
 
 A long *sequential* plan — step seven depending on a choice made in step two —

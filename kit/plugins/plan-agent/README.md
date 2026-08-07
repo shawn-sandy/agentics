@@ -92,7 +92,7 @@ Passing a `.md` plan path enters **conversion mode**: the markdown is treated as
 **Full invocation syntax:**
 
 ```
-/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
+/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--tdd|--no-tdd] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
 ```
 
 **Flags:**
@@ -109,6 +109,8 @@ Passing a `.md` plan path enters **conversion mode**: the markdown is treated as
 | `--dir <path>` | Override directory resolution; write the plan to this path |
 | `--priority <level>` | Write `priority` to plan HTML metadata (`low`, `medium`, `high`, `critical`) |
 | `--workflow` | Always generate a workflow prompt, bypassing the complexity heuristic (writes `workflow: always`) |
+| `--tdd` | Force the RED/GREEN/VERIFY/SHIP phase shape, skipping the Step 2 detection |
+| `--no-tdd` | Suppress it — draft single-pass steps with the normal Tests section |
 
 **Examples with flags:**
 
@@ -122,6 +124,8 @@ Passing a `.md` plan path enters **conversion mode**: the markdown is treated as
 ```
 
 **Smart defaults when flags are absent:** `--type` is inferred from the leading verb (`add`/`create`/`build` → `feature`; `fix`/`patch` → `fix`; `refactor`/`rename` → `refactor`; `document`/`docs` → `docs`). All skip-flags (`--quick`, `--no-clarify`, `--no-align`, `--no-interview`) and `--workflow` are opt-in only and are never inferred automatically.
+
+**Red-green-verify detection:** unlike the skip-flags, the RED/GREEN/VERIFY/SHIP shape *is* inferred. Step 2 applies it when the plan's steps touch application source and Step 0b found a test runner; it skips it for docs, plans, and metadata work, which has nothing to fail. Borderline cases — Tier 1 with no runner, config-only edits, spikes — trigger a single `AskUserQuestion` rather than a guess. `--tdd` and `--no-tdd` settle it without asking. See `guidelines/red-green-verify.md` for the per-phase step content, the 8-iteration GREEN cap, the DOM-assertion rule for UI work, and the foreground Node driver that replaces `&`/`nohup`.
 
 The skill enforces the full Steps 1–8 workflow:
 
@@ -515,6 +519,7 @@ plan-agent/
         planning-principles.md — What every good plan says (falsifiable done, what/why/verify)
         section-catalog.md     — Section menu: purpose, when it earns its place, exact spec syntax
         right-sizing.md        — Minimal / standard / deep depth profiles
+        red-green-verify.md    — RED/GREEN/VERIFY/SHIP phases, when a plan requires them
         writing-style.md       — Tone, plain language, objective-vs-glance
       reference/
         SKELETON.html       — Legacy full-plan HTML template (kept for reference/tests)
@@ -578,11 +583,11 @@ plan-agent/
 
 Command-invocable via `/plan-agent:implementation-plan <objective>` and model-invocable on plan-document intent (scoped to artifact requests — does not trigger on generic planning questions).
 
-- **Invocation & Arguments** — on command invocation, reads `$ARGUMENTS` and parses objective + flags (`--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--type`/`--template`/`--dir`/`--priority`); on model invocation, derives the objective from conversation context and runs the full workflow by default
+- **Invocation & Arguments** — on command invocation, reads `$ARGUMENTS` and parses objective + flags (`--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--tdd`/`--no-tdd`/`--type`/`--template`/`--dir`/`--priority`); on model invocation, derives the objective from conversation context and runs the full workflow by default
 - **Workflow Steps 1–8** — Clarify, Create, Frontmatter, Rename, Align, Interview (Step 5b), Commit, Status, Open
 - **Implement-now handoff** (Step 8) — `Implement now` delegates to the `build` skill, which owns the implementation loop and its three gates. `implementation-plan` itself never writes source files; its Scope Constraint is never lifted
 - **Markdown-spec pipeline** — the agent authors a compact Markdown plan spec (the committed source of truth) and renders it deterministically with the bundled `plan-agent-render` (a `bin/` wrapper around `scripts/build-plan-html.mjs`); the renderer owns all presentation (CSS, JS, meta tags, derived implement/goal/workflow prompts, effort level, file-tree) *and* all progress state: `- [x]` criteria bullets, `[x]` step markers, and an optional `## Completion Report` section render as checked boxes, completed step cards, the derived completion checklist, and the report list — status/checkbox changes are Markdown edits plus a re-render, never HTML surgery
-- **Guidelines library** — `guidelines/planning-principles.md`, `section-catalog.md`, `right-sizing.md`, and `writing-style.md` drive judgment-based structure: the required core (objective, steps, acceptance criteria, verification) is always present, everything else earns its place per plan (`minimal`/`adr`/`spike` ship as right-sizing guidance, not extra templates)
+- **Guidelines library** — `guidelines/planning-principles.md`, `section-catalog.md`, `right-sizing.md`, `red-green-verify.md`, and `writing-style.md` drive judgment-based structure: the required core (objective, steps, acceptance criteria, verification) is always present, everything else earns its place per plan (`minimal`/`adr`/`spike` ship as right-sizing guidance, not extra templates)
 - **Spec starter** — `reference/SKELETON.md` is the copyable spec skeleton in the exact format the renderer parses
 
 ### `build` Skill
