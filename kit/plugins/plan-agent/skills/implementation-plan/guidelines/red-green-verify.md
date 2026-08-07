@@ -48,10 +48,15 @@ write test files only; no implementation source.
   two views. The Tests section is the catalogue; RED is when they get
   written.
 - **UI work adds a browser-verification step** here: a script driving the
-  `Claude_Browser` MCP tools that asserts on real DOM state — `read_page`
-  refs, `javascript_tool` computed styles, `read_console_messages`. Never a
-  screenshot as the assertion. A screenshot is evidence for a human; it
-  fails silently for an agent, and has come back blank.
+  browser MCP tools that asserts on real DOM state —
+  `mcp__Claude_Browser__read_page` refs,
+  `mcp__Claude_Browser__javascript_tool` computed styles,
+  `mcp__Claude_Browser__read_console_messages`. Either connected surface
+  works: `mcp__claude-in-chrome__*` exposes the same calls, and this
+  plugin's `prototype` skill and Step 7 use that one. Write whichever the
+  target repo has. Never a screenshot as the assertion — a screenshot is
+  evidence for a human; it fails silently for an agent, and has come back
+  blank.
 
 ### `### Phase: GREEN`
 
@@ -72,7 +77,8 @@ The minimum implementation that turns the RED tests green.
 - Full suite plus lint, as one step each, with the exact commands.
 - A live browser pass over affected pages: layout holds, interactive
   targets ≥ 44×44px, **zero hydration warnings in the console**. Assert
-  computed values via `javascript_tool`; report the numbers.
+  computed values via `mcp__Claude_Browser__javascript_tool` (or the
+  `claude-in-chrome` equivalent); report the numbers.
 - This is also what `## Verification` describes in prose. Keep them
   consistent — the section is the end-to-end statement, the phase is the
   steps that produce it.
@@ -105,11 +111,14 @@ backgrounding, and its exit code is the `Verify:` line.
 import { spawn } from 'node:child_process'
 const srv = spawn('npm', ['run', 'dev'], { stdio: 'inherit' })
 try {
+  let res
   for (let i = 0; i < 60; i++) {
-    try { var res = await fetch('http://localhost:3000/health'); break }
+    try { res = await fetch('http://localhost:3000/health'); break }
     catch { await new Promise(r => setTimeout(r, 500)) }
   }
-  if (!res?.ok) throw new Error(`server never came up: ${res?.status}`)
+  // Two distinct failures — never collapse them into one message.
+  if (!res) throw new Error('server never answered within 30s')
+  if (!res.ok) throw new Error(`server up but unhealthy: ${res.status}`)
   // …assert the objective here…
 } finally { srv.kill() }
 ```

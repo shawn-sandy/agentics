@@ -28,10 +28,13 @@ needed.
   RED failure output, the GREEN passing run, and the browser assertions as
   evidence.
 - **UI work asserts on real DOM state, never screenshots.** RED adds a
-  browser-verification step driving the `Claude_Browser` MCP tools —
-  `read_page` refs, `javascript_tool` computed styles,
-  `read_console_messages`. A screenshot is evidence for a human; it fails
-  silently for an agent.
+  browser-verification step driving the browser MCP tools —
+  `mcp__Claude_Browser__read_page` refs,
+  `mcp__Claude_Browser__javascript_tool` computed styles,
+  `mcp__Claude_Browser__read_console_messages`. Either connected surface
+  works; `mcp__claude-in-chrome__*` exposes the same calls, and this
+  plugin's `prototype` skill and `implementation-plan` Step 7 use that one.
+  A screenshot is evidence for a human; it fails silently for an agent.
 - **The foreground Node driver.** `&` and `nohup` are blocked by permissions,
   so a step saying "background the dev server, then curl it" cannot run. The
   guideline ships a driver shape instead: spawn the server as a child, poll
