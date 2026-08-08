@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Objective smoke test for the artifact-tools plugin.
 # Asserts the plugin is complete, valid, and installable: manifest without a
-# version key, four skills with required frontmatter, the bundled transcript
+# version key, five skills with required frontmatter, the bundled transcript
 # extractor, marketplace registration agreeing with the CHANGELOG, and the
 # documented safety contracts (blocking scrub gate, cap-and-summarize,
 # fallback, artifact-url).
@@ -44,10 +44,10 @@ assert "version" not in m, "version key present — it overrides marketplace.jso
 EOF
 ok
 
-# 2. All four skills validate against their real YAML frontmatter block.
+# 2. All five skills validate against their real YAML frontmatter block.
 #    Parsing the opening block (not grepping the whole file) is what stops prose
 #    or a code sample further down from satisfying a frontmatter requirement.
-for skill in diff-artifact session-artifact plan-artifact prompt-artifact; do
+for skill in diff-artifact session-artifact plan-artifact prompt-artifact teach-artifact; do
   f="$PLUGIN/skills/$skill/SKILL.md"
   [ -f "$f" ] || fail "$skill/SKILL.md missing"
   python3 - "$f" "$skill" <<'EOF' || fail "frontmatter validation failed"
@@ -116,12 +116,13 @@ DIFF="$PLUGIN/skills/diff-artifact/SKILL.md"
 SESSION="$PLUGIN/skills/session-artifact/SKILL.md"
 PLAN="$PLUGIN/skills/plan-artifact/SKILL.md"
 PROMPT="$PLUGIN/skills/prompt-artifact/SKILL.md"
+TEACH="$PLUGIN/skills/teach-artifact/SKILL.md"
 
 # Blocking scrub gate, asserted by ORDER rather than mere keyword presence —
 # a skill that published first and documented the gate afterwards would satisfy
 # a presence-only check while shipping unscanned content.
 # (plan-artifact is excluded by design: it republishes prose already written.)
-for f in "$DIFF" "$SESSION" "$PROMPT"; do
+for f in "$DIFF" "$SESSION" "$PROMPT" "$TEACH"; do
   python3 - "$f" <<'EOF' || fail "scrub-gate ordering check failed"
 import re, sys
 path = sys.argv[1]
@@ -213,12 +214,12 @@ grep -qF 'writeText' "$PROMPT_PAGE" || fail "prompt-page.md: copy button lost it
 grep -qF '.artifact-url' "$PROMPT_PUB" || fail "prompt-publishing.md: library sidecar missing"
 ok
 
-# All four document the fallback and the artifact-url republish mechanic. For the
+# All five document the fallback and the artifact-url republish mechanic. For the
 # two split skills the mechanic lives in its publishing reference, so the pair is
 # checked together — the core must still name the fallback, and the reference must
 # still carry the artifact-url write.
 declare -A PUB_REF=( ["$DIFF"]="$DIFF_PUB" ["$PROMPT"]="$PROMPT_PUB" )
-for f in "$DIFF" "$SESSION" "$PLAN" "$PROMPT"; do
+for f in "$DIFF" "$SESSION" "$PLAN" "$PROMPT" "$TEACH"; do
   name="$(basename "$(dirname "$f")")"
   url_src="${PUB_REF[$f]:-$f}"
   grep -qF 'artifact-url:' "$url_src" || fail "$name: artifact-url frontmatter write not documented"
@@ -260,8 +261,8 @@ EOF
 ok
 
 # 7. Republish keys are distinct across the session-record writers.
-# session-artifact, product-doc, and team-recap all key off the SAME per-session
-# record file, so a shared key silently republishes one page over another's URL.
+# All five writers key off the SAME per-session record file, so a shared key
+# silently republishes one page over another's URL.
 python3 - "$PLUGIN" <<'EOF' || fail "republish keys collide across artifact-tools commands"
 import pathlib, sys
 root = pathlib.Path(sys.argv[1])
@@ -273,6 +274,7 @@ owners = {
     "commands/product-doc.md": "product-artifact-url",
     "commands/team-recap.md": "team-artifact-url",
     "commands/eng-recap.md": "eng-artifact-url",
+    "skills/teach-artifact/SKILL.md": "teach-artifact-url",
 }
 for rel, key in owners.items():
     text = (root / rel).read_text(encoding="utf-8")
@@ -471,6 +473,52 @@ opted = [
 assert opted == ["eng-recap"], (
     f"expected only eng-recap to opt in to the diff budget, got {opted}"
 )
+EOF
+ok
+
+# 10. The teaching spine must not collapse into a second team-recap.
+# teach-artifact reads the same two sources as the three recap commands and
+# publishes through the same pipeline, so the ONLY thing making it a distinct
+# skill is its section list. A drafted page can drift; a spine that has already
+# drifted is the failure worth catching in CI, since every future page inherits
+# it. Both sides are parsed identically — `N. **Name**` — because team-recap's
+# sections are written that way, which is what makes the comparison meaningful
+# rather than a shape mismatch that can never fire.
+python3 - "$PLUGIN" <<'EOF' || fail "the teaching spine overlaps team-recap's section list"
+import pathlib, re, sys
+root = pathlib.Path(sys.argv[1])
+spine_rel = "references/teach-framing.md"
+spine_text = (root / spine_rel).read_text(encoding="utf-8")
+recap_text = (root / "commands" / "team-recap.md").read_text(encoding="utf-8")
+
+def names(text):
+    # Normalized so "Decisions" and "**decisions**." are one name; a rename that
+    # only changes case or punctuation must not buy a pass.
+    return {re.sub(r'[^a-z ]', '', n.lower()).strip()
+            for n in re.findall(r'^\d+\.\s+\*\*(.+?)\*\*', text, re.M)}
+
+# The whole spine file is scanned, not just the section under the spine heading:
+# a pasted recap list parked anywhere in this file is the same defect, and
+# scoping the scan is exactly how it would be evaded.
+spine = names(spine_text)
+recap = names(recap_text.split("## Sections", 1)[-1])
+
+assert len(recap) >= 5, "team-recap's section list did not parse — the comparison is vacuous"
+assert len(spine) >= 5, (
+    f"{spine_rel}: spine has {len(spine)} sections, expected the five-part list")
+assert "mental model" in spine, (
+    f"{spine_rel}: no mental-model section — the one heading no recap has")
+
+# Equality and containment catch a wholesale paste in either direction; the
+# overlap floor catches the slower drift, where the spine keeps its name and
+# quietly refills with recap sections one at a time. Current overlap is 0.
+shared = spine & recap
+assert spine != recap, f"{spine_rel}: spine is team-recap's section list verbatim"
+assert not spine <= recap, f"{spine_rel}: every spine section is a team-recap section"
+assert not recap <= spine, f"{spine_rel}: spine contains all of team-recap's sections"
+assert len(shared) < 3, (
+    f"{spine_rel}: {len(shared)} sections shared with team-recap {sorted(shared)} — "
+    "this is a recap wearing a new name")
 EOF
 ok
 

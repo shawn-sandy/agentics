@@ -1,8 +1,8 @@
 # artifact-tools
 
-Publish the four things teams review most — code diffs, working sessions,
-implementation plans, and saved prompts — as live claude.ai artifact pages,
-without leaving Claude Code.
+Publish the things teams review most — code diffs, working sessions,
+implementation plans, saved prompts, and explanations of how a system works — as
+live claude.ai artifact pages, without leaving Claude Code.
 
 ## Overview
 
@@ -11,11 +11,12 @@ URL that update in place on republish. This plugin adds the publish endpoints fo
 the work already happening in a session, plus the one generator nothing else in
 the kit provides: an annotated diff walkthrough.
 
-`diff-artifact`, `session-artifact`, and `prompt-artifact` scrub for secrets
-before publishing — a publish is external sharing, and each carries raw code or
-raw prompt text. (`plan-artifact` publishes prose you already wrote, so it has no
-scrub gate.) All four record the returned URL so later sessions republish to the
-*same* link, and all four fall back to local HTML when publishing is unavailable.
+`diff-artifact`, `session-artifact`, `prompt-artifact`, and `teach-artifact`
+scrub for secrets before publishing — a publish is external sharing, and each
+carries raw code or raw prompt text. (`plan-artifact` publishes prose you already
+wrote, so it has no scrub gate.) All five record the returned URL so later
+sessions republish to the *same* link, and all five fall back to local HTML when
+publishing is unavailable.
 
 ## Features
 
@@ -25,10 +26,14 @@ scrub gate.) All four record the returned URL so later sessions republish to the
 | `session-artifact` | A reviewer-first session recap: Summary, Decisions (with rationale), Learnings, Files touched |
 | `plan-artifact` | A `plan-agent` HTML plan, republished to a stable URL as steps check off |
 | `prompt-artifact` | A prompt saved by `plan-agent:prompt` — one prompt, or the whole library with `--library` — behind a verbatim copy button |
+| `teach-artifact` | A teaching page built from this session or a PR — mental model, how it works today, one path walked end to end, why it is built this way, where to look next |
 
 Skills activate automatically when your request matches — "publish this diff for
 review", "share a recap of this session", "publish this plan", "share this
-prompt".
+prompt", "publish a page explaining how this works".
+
+`social-media-tools:write-guide` produces long-form Markdown you keep in the
+repository; `teach-artifact` produces a shareable page.
 
 | Command | What it does |
 |---------|--------------|
@@ -62,6 +67,8 @@ Share a recap of this session             → session-artifact
 Publish docs/plans/add-dark-mode.html     → plan-artifact
 Share docs/prompts/task-refactor.md       → prompt-artifact (single)
 Publish my prompt library --library       → prompt-artifact (library mode)
+Publish a page teaching how this works    → teach-artifact
+Publish an explainer for PR #455          → teach-artifact (PR mode)
 /artifact-tools:product-doc               → recap for product + stakeholders
 /artifact-tools:product-doc #453          → same recap, sourced from a PR
 /artifact-tools:team-recap                → visual recap for the whole team
@@ -85,7 +92,8 @@ artifact-tools/
 │   └── eng-recap.md       # engineering framing over session-artifact
 ├── references/
 │   ├── titles.md          # shared artifact-title rules, read by every skill
-│   └── recap-core.md      # the recap workflow, read by all three commands
+│   ├── recap-core.md      # the recap workflow, read by all three commands
+│   └── teach-framing.md   # the teaching spine, read by teach-artifact
 └── skills/
     ├── diff-artifact/
     │   └── SKILL.md
@@ -95,7 +103,9 @@ artifact-tools/
     │       └── export_session.py
     ├── plan-artifact/
     │   └── SKILL.md
-    └── prompt-artifact/
+    ├── prompt-artifact/
+    │   └── SKILL.md
+    └── teach-artifact/
         └── SKILL.md
 ```
 
@@ -269,9 +279,43 @@ a newline directly after `<pre>` (the parser eats it, costing the first line
 break) and indenting the `<pre>` to match surrounding markup (which indents every
 copied line).
 
+### teach-artifact
+
+The one page here that is not a report. The other four answer *what changed*;
+this one answers *how this works*, taking the change only as raw material and the
+system as the subject — for a new teammate, or the same teammate in six months.
+
+Sources and machinery are borrowed whole: the same session-or-PR resolution, the
+same blocking scrub gate, the same publishing path and republish record as the
+three recap commands, via `references/recap-core.md`. It opts into that file's
+20-file diff budget, as only `eng-recap` otherwise does, because teaching how
+something works needs the real signatures and error paths that commit bodies
+never carry.
+
+What is its own is the frame, in `references/teach-framing.md`: a five-part spine
+fixed for both sources — mental model, how it works today, one path walked end to
+end, why it is built this way rather than the obvious alternative, where to look
+next — plus two diagram rules. The mental-model section earns a diagram by
+default, inverting the core's rule that a diagram is earned only where something
+changed, since a system that did not move this week is the one most in need of a
+picture. And every diagram carries a prose sentence beside its caption, because
+the documented fallback ships diagram blocks as plain text when the browser pane
+is unavailable, and content living only inside an image is content that can
+disappear.
+
+The overlap risk is `team-recap`, and it is guarded rather than trusted:
+`tests/plugins/test-artifact-tools.sh` parses the spine out of
+`references/teach-framing.md` and fails the build if it collapses into that
+command's section list. Its republish key is `teach-artifact-url:`, the fifth
+distinct key on the shared record.
+
+`social-media-tools:write-guide` is the neighbour worth distinguishing: it
+produces long-form Markdown you keep in the repository, while `teach-artifact`
+produces a shareable page.
+
 ## Security
 
-`diff-artifact`, `session-artifact`, and `prompt-artifact` run
+`diff-artifact`, `session-artifact`, `prompt-artifact`, and `teach-artifact` run
 `social-media-tools:security-scrub` before every publish. A `BLOCKED` verdict is a
 hard stop with no override. If the scrub skill is unavailable, the skills say so
 and ask before continuing — they never skip the gate silently.
