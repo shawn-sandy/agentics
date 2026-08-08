@@ -172,7 +172,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.22.0",
+      "version": "2.22.1",
       "description": "Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack, plus a write-guide skill that writes long-form internal developer explainer guides to docs/",
       "category": "productivity",
       "tags": [
@@ -265,8 +265,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/artifact-tools"
       },
-      "version": "1.11.0",
-      "description": "Publish diffs, sessions, plans, and prompts as live claude.ai artifact pages — an annotated diff walkthrough with per-hunk reviewer notes, a reviewer-first session recap, plan HTML republished to a stable URL, and saved prompts published singly or as a filterable library with verbatim copy buttons — plus three audience framings over the session recap: product-doc for stakeholders, team-recap for the whole team, and eng-recap for engineers, with architecture, code paths, tradeoffs, learnings, tests, and review follow-ups drawn from a capped read of the PR diff — with a blocking secret-scrub gate and a local-HTML fallback",
+      "version": "1.12.0",
+      "description": "Publish diffs, sessions, plans, prompts, and teaching pages as live claude.ai artifact pages — an annotated diff walkthrough with per-hunk reviewer notes, a reviewer-first session recap, plan HTML republished to a stable URL, saved prompts published singly or as a filterable library with verbatim copy buttons, and a teach-artifact explainer that answers how a system works rather than what changed — plus three audience framings over the session recap: product-doc for stakeholders, team-recap for the whole team, and eng-recap for engineers, with architecture, code paths, tradeoffs, learnings, tests, and review follow-ups drawn from a capped read of the PR diff — with a blocking secret-scrub gate and a local-HTML fallback",
       "category": "development",
       "tags": [
         "artifacts",

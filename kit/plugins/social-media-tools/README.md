@@ -35,6 +35,9 @@ No path in this plugin auto-posts — human review is always required before any
 | `share-explanation` | Skill | Explain how a project file, component, or concept works — reads the source, synthesizes the underlying principles, and generates a card + copy |
 | `/social-media-tools:digest` | Command | Interactive discovery scan with multi-select candidate review |
 
+`write-guide` produces long-form Markdown you keep in the repository; when you
+want a shareable page instead, use `artifact-tools:teach-artifact`.
+
 ## Installation
 
 ### Via Marketplace (recommended)

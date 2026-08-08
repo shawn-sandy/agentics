@@ -40,6 +40,7 @@ WRITE_HEAVY=(
   artifact-tools/skills/plan-artifact/SKILL.md
   artifact-tools/skills/prompt-artifact/SKILL.md
   artifact-tools/skills/session-artifact/SKILL.md
+  artifact-tools/skills/teach-artifact/SKILL.md
   code-testing-agent/skills/tdd-loop/SKILL.md
   content-tools/skills/artifact-to-post/SKILL.md
   git-agent/agents/agent-merge.md

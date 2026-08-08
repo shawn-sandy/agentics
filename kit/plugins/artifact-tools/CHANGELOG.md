@@ -5,6 +5,51 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-08-07
+
+### Added
+
+- **`teach-artifact` — the first page in this plugin that teaches instead of
+  reports.** The other four answer *what changed*; this one answers *how this
+  works*, treating the change as raw material and the system as the subject. It
+  reads the same two sources as the recap commands (this session, or a pull
+  request) and publishes through the same pipeline.
+- **Zero new gathering code.** `references/recap-core.md` is reused unchanged for
+  source resolution, PR gathering, the blocking `security-scrub` gate, the page
+  build, publishing, and the republish record. The skill supplies framing only.
+  It opts into that file's 20-file diff budget — as only `eng-recap` otherwise
+  does — because teaching how something works needs the real signatures and error
+  paths that commit bodies never carry.
+- **`references/teach-framing.md`,** the frame that makes it a distinct skill
+  rather than a fourth recap: one spine fixed for both sources (mental model, how
+  it works today, one path walked end to end, why it is built this way, where to
+  look next), plus two diagram rules. The mental-model section earns a diagram by
+  *default*, inverting the core's earned-diagram rule, since a system that did
+  not move this week is the one most in need of a picture. Every diagram carries
+  a prose sentence beside its caption, because the documented fallback ships
+  diagram blocks as plain text when the browser pane is unavailable — content
+  living only inside an image is content that can disappear.
+- **PR mode inherits no recap sections.** The core sorts unresolved review
+  threads into "the calling command's open-items section" and keeps a
+  **Learnings** heading in PR mode; a teaching page declares neither, so
+  `teach-framing.md` opts out of both explicitly and says where that signal goes
+  instead — an unresolved thread arguing about how something *should* work is
+  evidence for **Why it is built this way**, never a heading of its own. Without
+  the carve-out those inherited rules had no slot to land in, and satisfying
+  them would have broken the fixed spine.
+- **The overlap with `team-recap` is guarded, not trusted.**
+  `tests/plugins/test-artifact-tools.sh` now parses the spine out of
+  `teach-framing.md` and fails the build if it drifts — the five sections are
+  pinned by name and order, duplicates are rejected, both diagram rules must
+  still be stated, and the spine may not equal, contain, or be contained by
+  `team-recap`'s section list — the single largest risk in this work, moved
+  from something a reviewer has to notice to something the build catches. The
+  same file's skill-validation and scrub-gate loops now cover five skills instead
+  of four, so the new skill cannot ship untested while the suite reports green.
+- **Republish key `teach-artifact-url:`,** the fifth distinct key on the shared
+  per-session (or per-PR) record. The skill states outright that it never writes
+  the four belonging to its siblings.
+
 ## [1.11.0] - 2026-08-02
 
 ### Fixed

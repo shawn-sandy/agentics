@@ -1,6 +1,16 @@
 # Changelog — social-media-tools
 
 
+## v2.22.1 — 2026-08-07 — `write-guide` names its neighbour
+
+### Changed
+
+- **README states the boundary with `artifact-tools:teach-artifact`,** which
+  landed in artifact-tools 1.12.0 and teaches from the same material:
+  `write-guide` produces long-form Markdown you keep in the repository,
+  `teach-artifact` produces a shareable page. The two read as duplicates
+  otherwise, and the distinction only works if both sides say it.
+
 ## v2.22.0 — 2026-08-02 — `export-session`'s script invocation becomes a `bin/` command
 
 ### Fixed
