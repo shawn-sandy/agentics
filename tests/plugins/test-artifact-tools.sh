@@ -492,20 +492,32 @@ spine_text = (root / spine_rel).read_text(encoding="utf-8")
 recap_text = (root / "commands" / "team-recap.md").read_text(encoding="utf-8")
 
 def names(text):
+    # A LIST, not a set: duplicates are a defect this check has to see. Set-ifying
+    # here would let `1. **Mental model**` appear twice and normalize away, so a
+    # six-item spine would satisfy a five-item assertion.
     # Normalized so "Decisions" and "**decisions**." are one name; a rename that
     # only changes case or punctuation must not buy a pass.
-    return {re.sub(r'[^a-z ]', '', n.lower()).strip()
-            for n in re.findall(r'^\d+\.\s+\*\*(.+?)\*\*', text, re.M)}
+    return [re.sub(r'[^a-z ]', '', n.lower()).strip()
+            for n in re.findall(r'^\d+\.\s+\*\*(.+?)\*\*', text, re.M)]
 
 # The whole spine file is scanned, not just the section under the spine heading:
 # a pasted recap list parked anywhere in this file is the same defect, and
-# scoping the scan is exactly how it would be evaded.
-spine = names(spine_text)
-recap = names(recap_text.split("## Sections", 1)[-1])
+# scoping the scan is exactly how it would be evaded. The cost is that ANY
+# numbered bold list in this file counts as spine sections — deliberate, and the
+# reason the exact-count assertion below is the right strictness.
+listed = names(spine_text)
+spine = set(listed)
+recap = set(names(recap_text.split("## Sections", 1)[-1]))
 
 assert len(recap) >= 5, "team-recap's section list did not parse — the comparison is vacuous"
-assert len(spine) >= 5, (
-    f"{spine_rel}: spine has {len(spine)} sections, expected the five-part list")
+dupes = sorted({n for n in listed if listed.count(n) > 1})
+assert not dupes, f"{spine_rel}: duplicated spine section(s) {dupes}"
+# Exactly five, not "at least" — the spine's whole claim is that it is FIXED.
+# A floor would let sections be appended without anyone touching this file,
+# which is precisely the drift the rest of this check exists to catch. Growing
+# the spine is a deliberate act; it should cost one edit here.
+assert len(listed) == 5, (
+    f"{spine_rel}: spine has {len(listed)} sections, expected exactly 5")
 assert "mental model" in spine, (
     f"{spine_rel}: no mental-model section — the one heading no recap has")
 

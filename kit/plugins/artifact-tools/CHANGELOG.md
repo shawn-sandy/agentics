@@ -29,6 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a prose sentence beside its caption, because the documented fallback ships
   diagram blocks as plain text when the browser pane is unavailable — content
   living only inside an image is content that can disappear.
+- **PR mode inherits no recap sections.** The core sorts unresolved review
+  threads into "the calling command's open-items section" and keeps a
+  **Learnings** heading in PR mode; a teaching page declares neither, so
+  `teach-framing.md` opts out of both explicitly and says where that signal goes
+  instead — an unresolved thread arguing about how something *should* work is
+  evidence for **Why it is built this way**, never a heading of its own. Without
+  the carve-out those inherited rules had no slot to land in, and satisfying
+  them would have broken the fixed spine.
 - **The overlap with `team-recap` is guarded, not trusted.**
   `tests/plugins/test-artifact-tools.sh` now parses the spine out of
   `teach-framing.md` and fails the build if it equals, contains, or is contained

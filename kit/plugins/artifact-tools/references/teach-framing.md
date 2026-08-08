@@ -34,6 +34,17 @@ declare. A source that cannot fill one is a signal the subject is too thin to
 teach: say so under the heading rather than dropping it, because a missing
 section reads as a system with no such part.
 
+**PR mode inherits no recap sections.** `recap-core.md` sorts unresolved review
+threads into "the calling command's open-items section" and keeps a **Learnings**
+heading in PR mode. This page declares neither, deliberately — open items and
+dead ends are what a recap is for, and adding either heading would break the
+fixed spine the reviewer test below depends on. Read both signals anyway and
+spend them inside the spine: an unresolved thread arguing about how something
+*should* work is evidence for **Why it is built this way**, and a resolved one
+usually names the alternative that lost. If a thread carries nothing a reader
+needs in order to understand the system, drop it — that is the correct outcome
+here, not a gap. Never let it grow a heading of its own.
+
 ## Diagrams
 
 Two rules, both departures from `recap-core.md`.

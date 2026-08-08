@@ -37,7 +37,9 @@ Read `references/recap-core.md` and follow it end to end. Two overrides:
    were summarized rather than read.
 2. **Take the sections from `references/teach-framing.md`,** not from the core's
    omit-empty default. That file's spine is fixed for both sources and every one of
-   its sections is always kept.
+   its sections is always kept. It also overrides the core's two PR-mode section
+   rules — this page has no open-items section and no **Learnings** heading for
+   review threads to land in, and that file says where their signal goes instead.
 
 ## Audience
 
