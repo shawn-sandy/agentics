@@ -36,20 +36,20 @@
   <style>
     /* ── Design tokens — the same palette the generated plans use ──── */
     :root {
-      --paper: #fcfcfa;
+      --paper: #fbfbfd;
       --panel: #ffffff;
-      --sunk: #f5f4f1;
-      --ink: #16151c;
-      --ink-2: #4b4858;
-      --ink-3: #6e6a80;
-      --rule: #e6e3ec;
-      --accent: #4a2fe0;
-      --accent-soft: #efebfe;
-      --accent-line: #c9befb;
+      --sunk: #f4f4f8;
+      --ink: #14141c;
+      --ink-2: #494959;
+      --ink-3: #63637a;
+      --rule: #e4e4ee;
+      --accent: #3730c4;
+      --accent-soft: #eeedfb;
+      --accent-line: #c6c2f0;
       --radius: 4px;
       --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
-      --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+      --ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      --prose: var(--ui);
       color-scheme: light;
 
       /* This gallery's own names, aliased onto the shared set. var() resolves
@@ -65,30 +65,30 @@
        plain CSS cannot share a block between an attribute selector and a
        media query. Keep the two lists in sync. */
     :root[data-theme="dark"] {
-      --paper: #121118;
-      --panel: #1a1922;
-      --sunk: #201f29;
-      --ink: #edebf3;
-      --ink-2: #b3afc4;
-      --ink-3: #8b87a0;
-      --rule: #2c2a38;
-      --accent: #a594ff;
-      --accent-soft: #221f36;
-      --accent-line: #4a4270;
+      --paper: #0f0f16;
+      --panel: #17171f;
+      --sunk: #1d1d27;
+      --ink: #ecebf2;
+      --ink-2: #b2b0c2;
+      --ink-3: #8a889c;
+      --rule: #2a2a36;
+      --accent: #a8a2f5;
+      --accent-soft: #1f1d33;
+      --accent-line: #454070;
       color-scheme: dark;
     }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
-        --paper: #121118;
-        --panel: #1a1922;
-        --sunk: #201f29;
-        --ink: #edebf3;
-        --ink-2: #b3afc4;
-        --ink-3: #8b87a0;
-        --rule: #2c2a38;
-        --accent: #a594ff;
-        --accent-soft: #221f36;
-        --accent-line: #4a4270;
+        --paper: #0f0f16;
+        --panel: #17171f;
+        --sunk: #1d1d27;
+        --ink: #ecebf2;
+        --ink-2: #b2b0c2;
+        --ink-3: #8a889c;
+        --rule: #2a2a36;
+        --accent: #a8a2f5;
+        --accent-soft: #1f1d33;
+        --accent-line: #454070;
         color-scheme: dark;
       }
     }
