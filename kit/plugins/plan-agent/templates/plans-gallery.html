@@ -55,74 +55,74 @@
     <style>
       /* ── Design tokens — the same palette the generated plans use ──── */
       :root {
-        --paper: #fcfcfa;
+        --paper: #fbfbfd;
         --panel: #ffffff;
-        --sunk: #f5f4f1;
-        --ink: #16151c;
-        --ink-2: #4b4858;
-        --ink-3: #6e6a80;
-        --rule: #e6e3ec;
-        --rule-soft: #f0eef4;
-        --accent: #4a2fe0;
-        --accent-soft: #efebfe;
-        --accent-line: #c9befb;
+        --sunk: #f4f4f8;
+        --ink: #14141c;
+        --ink-2: #494959;
+        --ink-3: #63637a;
+        --rule: #e4e4ee;
+        --rule-soft: #f0f0f6;
+        --accent: #3730c4;
+        --accent-soft: #eeedfb;
+        --accent-line: #c6c2f0;
         --on-accent: #ffffff;
-        --moss: #2f6b45;
-        --moss-soft: #edf5ef;
-        --moss-line: #c3ddcd;
-        --signal: #a8420c;
-        --signal-soft: #fbf0e9;
-        --signal-line: #e8c9b4;
+        --moss: #2c6a44;
+        --moss-soft: #ecf4ef;
+        --moss-line: #c0dccb;
+        --signal: #8a5209;
+        --signal-soft: #fbf3e6;
+        --signal-line: #e8d3ac;
         --radius: 4px;
         --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
-        --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+        --ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+        --prose: var(--ui);
         color-scheme: light;
       }
       /* Written twice: an explicit choice has to beat the OS preference, and
          plain CSS cannot share a block between an attribute selector and a
          media query. Keep the two lists in sync. */
       :root[data-theme="dark"] {
-        --paper: #121118;
-        --panel: #1a1922;
-        --sunk: #201f29;
-        --ink: #edebf3;
-        --ink-2: #b3afc4;
-        --ink-3: #8b87a0;
-        --rule: #2c2a38;
-        --rule-soft: #24232e;
-        --accent: #a594ff;
-        --accent-soft: #221f36;
-        --accent-line: #4a4270;
-        --on-accent: #16151c;
-        --moss: #7bc098;
-        --moss-soft: #1b2a21;
-        --moss-line: #2f4a39;
-        --signal: #e8a278;
-        --signal-soft: #2b2019;
-        --signal-line: #4d3826;
+        --paper: #0f0f16;
+        --panel: #17171f;
+        --sunk: #1d1d27;
+        --ink: #ecebf2;
+        --ink-2: #b2b0c2;
+        --ink-3: #8a889c;
+        --rule: #2a2a36;
+        --rule-soft: #22222c;
+        --accent: #a8a2f5;
+        --accent-soft: #1f1d33;
+        --accent-line: #454070;
+        --on-accent: #14141c;
+        --moss: #7cc099;
+        --moss-soft: #17271e;
+        --moss-line: #2e4838;
+        --signal: #e0a86a;
+        --signal-soft: #271e12;
+        --signal-line: #4a3820;
         color-scheme: dark;
       }
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) {
-          --paper: #121118;
-          --panel: #1a1922;
-          --sunk: #201f29;
-          --ink: #edebf3;
-          --ink-2: #b3afc4;
-          --ink-3: #8b87a0;
-          --rule: #2c2a38;
-          --rule-soft: #24232e;
-          --accent: #a594ff;
-          --accent-soft: #221f36;
-          --accent-line: #4a4270;
-          --on-accent: #16151c;
-          --moss: #7bc098;
-          --moss-soft: #1b2a21;
-          --moss-line: #2f4a39;
-          --signal: #e8a278;
-          --signal-soft: #2b2019;
-          --signal-line: #4d3826;
+          --paper: #0f0f16;
+          --panel: #17171f;
+          --sunk: #1d1d27;
+          --ink: #ecebf2;
+          --ink-2: #b2b0c2;
+          --ink-3: #8a889c;
+          --rule: #2a2a36;
+          --rule-soft: #22222c;
+          --accent: #a8a2f5;
+          --accent-soft: #1f1d33;
+          --accent-line: #454070;
+          --on-accent: #14141c;
+          --moss: #7cc099;
+          --moss-soft: #17271e;
+          --moss-line: #2e4838;
+          --signal: #e0a86a;
+          --signal-soft: #271e12;
+          --signal-line: #4a3820;
           color-scheme: dark;
         }
       }
@@ -206,8 +206,10 @@
       .tabs a:hover { color: var(--ink); background: var(--sunk); }
       .tabs a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
       .tabs a .n { color: var(--ink-3); margin-left: 0.3rem; }
-      /* --ink-3 on the current tab's accent-soft chip measures 4.46:1, just
-         under AA — the count takes the tab's own colour there instead. */
+      /* --ink-3 on the current tab's accent-soft chip clears AA since the 9.1.0
+         palette (5.04:1 light, 4.75:1 dark; it was 4.46:1 before). The count
+         still takes the tab's own colour — the chip reads as one unit that way,
+         which is now a look rather than a contrast workaround. */
       .tabs a[aria-current="page"] .n { color: var(--accent); }
 
       /* Every structural label speaks in mono. */

@@ -1,6 +1,72 @@
 # Changelog
 
 
+## 9.1.0 — the plan document reads as one system (2026-08-08)
+
+The 7.5.0 shell fixed the contrast and the structure but left the page loud.
+Six hues competed for the same eye — a violet accent, moss, a burnt-orange
+signal, red, and two purples — over a warm cream ground that belonged to none
+of them. `--mono` was doing four jobs at once: the 2.2rem headline, every
+section heading, every structural label, and code. Prose was Georgia, so a
+corpus carrying 3,000+ inline code spans rendered as a serif/mono collision on
+every line. This is a presentation-only pass: no markup changed, no token was
+added or retired, and `extractSections()` output is byte-identical.
+
+### Changed
+
+- **Three hues, not six.** `--purple` and `--wish-*` now resolve to the accent
+  family, so the sixth and fifth hues are gone. What remains is one accent
+  (indigo `#3730c4` / `#a8a2f5`) plus two semantic states — `--moss` for done,
+  `--signal` for attention — and `--red` for failure. Every token name is
+  unchanged; only the values moved.
+- **A neutral that was chosen.** The warm cream `#fcfcfa` sat under a cool
+  violet accent and read as a mismatch. Neutrals are now faintly indigo-biased
+  (`--paper: #fbfbfd`, dark `#0f0f16`) so the ground and the accent belong to
+  the same family. Every pair `tests/plugins/test-plan-redesign.mjs` measures
+  still clears 4.5:1 in both palettes.
+- **Two type roles, not three.** `--prose` resolves to `--ui`; `--mono` is
+  demoted to code and data only. The title and the section headings are sans,
+  carrying their emphasis through weight and tracking. No webfont: the CSP
+  blocks font CDNs, and inlining a face as a data URI would add six figures of
+  bytes to each of ~100 committed plan files.
+- **Code spans stopped shouting.** `code.md` carried a fill *and* a border, so
+  a paragraph with six of them read as a barcode. Tint only now, no border, a
+  hair smaller than its surroundings.
+- **The objective is a lead statement, not a slab.** The filled panel put
+  saturated colour directly above the Implement row, opening every plan on two
+  competing fills. One accent rule replaces it.
+- **The Implement prompt is neutral-surfaced.** It was `--moss`, which means
+  "done" everywhere else — a green call-to-action on an unstarted plan said the
+  opposite of what it meant. Accent on the label, neutral behind the text.
+- **State reads before controls.** The header action row orders status and
+  effort first and pushes the buttons right, via CSS `order` rather than moving
+  nodes the extractor and the gallery both walk.
+- **Step actions are emphasised body, not headings.** At 600 across a full
+  line, a twelve-step plan read as twelve headlines.
+- **Reading text sits in `--ink`.** Section prose was `--ink-2`, one step back
+  from the labels around it.
+
+### Fixed
+
+- **Prompt rows broke words mid-token.** Four rows carried
+  `word-break: break-all`, which split `add-plan-phase-checkpoints.md` after
+  `checkpoint` and `in-progress` after `in-progres`. All four now use
+  `overflow-wrap: anywhere`, which only breaks a word when it cannot fit.
+- **Files under a subdirectory rendered bold.** The nested `<ul>` is a child of
+  the `font-weight: 600` directory row and inherited it, so half the file tree
+  was bold for no reason.
+- **Six divergent copies of the mono stack.** Rules hardcoded
+  `"Fira Code"` variants instead of `var(--mono)`, so the file tree and the
+  prompt rows could resolve to a different face than the rest of the page.
+
+### Notes
+
+- All 87 plans under `docs/plans/` that satisfy the plan DOM contract were
+  re-rendered through the new shell with `scripts/rerender-plans.mjs`. The 12
+  it reports as unreadable are review documents that already predated the 7.5.0
+  shell; this release does not change them.
+
+
 ## 9.0.0 — build resolves its arguments by explicit precedence (2026-08-06)
 
 `build` classified `$ARGUMENTS` by testing the **first positional token** for an
