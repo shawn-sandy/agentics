@@ -39,8 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   them would have broken the fixed spine.
 - **The overlap with `team-recap` is guarded, not trusted.**
   `tests/plugins/test-artifact-tools.sh` now parses the spine out of
-  `teach-framing.md` and fails the build if it equals, contains, or is contained
-  by `team-recap`'s section list — the single largest risk in this work, moved
+  `teach-framing.md` and fails the build if it drifts — the five sections are
+  pinned by name and order, duplicates are rejected, both diagram rules must
+  still be stated, and the spine may not equal, contain, or be contained by
+  `team-recap`'s section list — the single largest risk in this work, moved
   from something a reviewer has to notice to something the build catches. The
   same file's skill-validation and scrub-gate loops now cover five skills instead
   of four, so the new skill cannot ship untested while the suite reports green.

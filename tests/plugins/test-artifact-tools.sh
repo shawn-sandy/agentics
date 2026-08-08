@@ -496,8 +496,11 @@ def names(text):
     # here would let `1. **Mental model**` appear twice and normalize away, so a
     # six-item spine would satisfy a five-item assertion.
     # Normalized so "Decisions" and "**decisions**." are one name; a rename that
-    # only changes case or punctuation must not buy a pass.
-    return [re.sub(r'[^a-z ]', '', n.lower()).strip()
+    # only changes case or punctuation must not buy a pass. Punctuation collapses
+    # to a SPACE rather than to nothing -- deleting it outright would make
+    # "Before-and-after" normalize to "beforeandafter" while "Before and after"
+    # stays "before and after", so a hyphen alone would evade the overlap check.
+    return [re.sub(r'\s+', ' ', re.sub(r'[^a-z]+', ' ', n.lower())).strip()
             for n in re.findall(r'^\d+\.\s+\*\*(.+?)\*\*', text, re.M)]
 
 # The whole spine file is scanned, not just the section under the spine heading:
@@ -512,14 +515,30 @@ recap = set(names(recap_text.split("## Sections", 1)[-1]))
 assert len(recap) >= 5, "team-recap's section list did not parse — the comparison is vacuous"
 dupes = sorted({n for n in listed if listed.count(n) > 1})
 assert not dupes, f"{spine_rel}: duplicated spine section(s) {dupes}"
-# Exactly five, not "at least" — the spine's whole claim is that it is FIXED.
-# A floor would let sections be appended without anyone touching this file,
-# which is precisely the drift the rest of this check exists to catch. Growing
-# the spine is a deliberate act; it should cost one edit here.
-assert len(listed) == 5, (
-    f"{spine_rel}: spine has {len(listed)} sections, expected exactly 5")
-assert "mental model" in spine, (
-    f"{spine_rel}: no mental-model section — the one heading no recap has")
+
+# The spine pinned by name and order, not merely counted. Same shape as
+# EXPECTED_CAP above: teach-framing.md defines the spine, the README and
+# CHANGELOG describe it, and every page inherits it, so a rename or an added
+# section is a deliberate act that should cost one edit here. A floor ("at least
+# five") would let sections be appended without anyone touching this guard,
+# which is the drift the rest of this check exists to catch.
+EXPECTED = ["mental model", "how it works today", "one path end to end",
+            "why it is built this way", "where to look next"]
+missing = [n for n in EXPECTED if n not in spine]
+assert listed == EXPECTED, (
+    f"{spine_rel}: spine is {listed}, expected {EXPECTED}"
+    + (f" — missing {missing}" if missing else ""))
+
+# The two diagram rules, which the README and the acceptance criteria both
+# promise. The second is the load-bearing one: the documented fallback ships
+# diagram blocks as PLAIN TEXT when the browser pane is unavailable, so a
+# relationship carried only by the picture is a relationship that disappears.
+assert re.search(r'(?i)mental model earns a diagram by default', spine_text), (
+    f"{spine_rel}: the mental-model section no longer earns a diagram by default")
+assert any(re.search(r'(?i)caption', ln) and re.search(r'(?i)prose', ln)
+           for ln in spine_text.splitlines()), (
+    f"{spine_rel}: no rule requiring every diagram to carry BOTH a caption and "
+    "a prose sentence")
 
 # Equality and containment catch a wholesale paste in either direction; the
 # overlap floor catches the slower drift, where the spine keeps its name and
