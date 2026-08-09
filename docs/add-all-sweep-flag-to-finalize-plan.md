@@ -66,6 +66,8 @@ The `tests/plugins/test-finalize-all-flag.sh` smoke test asserts that the routin
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
+| `408b79f` | 2026-07-02 | feat(plan-agent): add --all sweep flag to finalize-plan (2.13.0) (#366) |
+| `58f9092` | 2026-07-02 | fix(plan-agent): trim finalize-plan skill description to 200-char budget (2.13.1) (#367) |
 | `7ded3be` | 2026-08-05 | feat(plan-agent): phase checkpoints and a Decisions ledger for plan specs (8.6.0) (#528) |
 | `5650823` | 2026-08-02 | fix(plan-agent): invoke bundled scripts via bin/ on PATH (8.3.0) (#519) |
 | `e274327` | 2026-08-01 | refactor(plan-agent): split five skills into cores plus references (#505) |

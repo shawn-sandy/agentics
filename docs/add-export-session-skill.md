@@ -10,7 +10,7 @@
 ## What shipped
 
 - Created `kit/plugins/social-media-tools/skills/export-session/` with `SKILL.md` and `scripts/export_session.py`.
-- The bundled Python script parses JSONL transcripts, keeps user/assistant turns, skips sidechains, tool results, and harness-injected messages (`<system-reminder>`, `<local-command-*>`, `<command-*>`), and writes `<date>-<slug>.md` with YAML frontmatter under `{plansDirectory}/sessions/`.
+- The bundled Python script parses JSONL transcripts, keeps user/assistant turns (with `tool_use` blocks rendered as inline `*[tool: <name>]*` markers), skips tool-result-only user records and harness-injected messages (`<system-reminder>`, `<local-command-*>`, `<command-*>`), and writes `<date>-<slug>-<session-id[:8]>.md` with YAML frontmatter under `{plansDirectory}/sessions/`.
 - Skill uses `${CLAUDE_PLUGIN_ROOT}` (later converted to a `bin/` wrapper as `social-export-session`) to invoke the script without loading the transcript into Claude's context.
 - No standalone `session-tools` plugin remains — the skill folded into `social-media-tools` which already owns session-derived content via `share-session`.
 - Bumped `social-media-tools` to `2.14.0` in `.claude-plugin/marketplace.json` with a CHANGELOG entry.
@@ -34,7 +34,7 @@ The skill resolves the output directory from `plansDirectory` in `.claude/settin
 
 **Transcript resolution** tries the user's explicit path or session ID first. If none is given, it finds the most recent `.jsonl` file under `~/.claude/projects/<project-slug>/`. When a worktree path doesn't match a project directory, it lists `~/.claude/projects/` and picks the entry matching the main repo path.
 
-**Conversion** is deliberately off-loaded to the bundled Python script (`social-export-session`) so large transcripts never enter Claude's context. The script walks the JSONL line-by-line, selecting only `user` and `assistant` role entries whose content is plain text (not tool calls or tool results). It strips harness-injected noise — `<system-reminder>`, `<local-command-*>`, and `<command-*>` — and writes the output as `<date>-<slug>.md` with YAML frontmatter including `type: session-export`, the session ID, and a timestamp.
+**Conversion** is deliberately off-loaded to the bundled Python script (`social-export-session`) so large transcripts never enter Claude's context. The script walks the JSONL line-by-line, selecting `user` and `assistant` role entries. Tool-result-only user records (records whose content consists entirely of `tool_result` blocks) are skipped. For assistant messages, `tool_use` blocks are retained as inline `*[tool: <name>]*` markers rather than dropped, so the reader can see which tools were called. Harness-injected noise — `<system-reminder>`, `<local-command-*>`, and `<command-*>` — is stripped. The output filename is `<date>-<slug>-<session-id[:8]>.md` with YAML frontmatter including `type: session-export`, the session ID, and a `date: <YYYY-MM-DD>` field.
 
 The skill itself calls the script via Bash and reports the output path. The `allow-tools: Bash, Read` declaration ensures no permission prompt interrupts the run.
 
@@ -52,12 +52,13 @@ The skill itself calls the script via Bash and reports the output path. The `all
 /social-media-tools:export-session ~/.claude/projects/my-project/abc123.jsonl
 ```
 
-Output appears under `docs/plans/sessions/<date>-<slug>.md` (or the configured `plansDirectory/sessions/`).
+Output appears under `docs/plans/sessions/<date>-<slug>-<session-id[:8]>.md` (or the configured `plansDirectory/sessions/`). The eight-character session ID suffix makes filenames unique even when two sessions start with the same first user message.
 
 ## Commit history
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
+| `11765e1` | 2026-07-02 | feat(social-media-tools): add export-session skill (2.14.0) (#368) |
 | `4a01a79` | 2026-08-03 | fix: replace eight unrunnable ${CLAUDE_PLUGIN_ROOT} Bash commands with bin/ wrappers (#520) |
 | `1ea0a36` | 2026-07-27 | fix(docs): make session-record links relative to their directory (#472) |
 
