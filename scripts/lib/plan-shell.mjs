@@ -37,37 +37,43 @@ export const CSS = `/* ── Design tokens ────────────
      below clears 4.5:1 on the surfaces it is used against in BOTH
      palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
   :root {
-    --paper:      #fcfcfa;
+    --paper:      #fbfbfd;
     --panel:      #ffffff;
-    --sunk:       #f5f4f1;
-    --ink:        #16151c;
-    --ink-2:      #4b4858;
-    --ink-3:      #6e6a80;
-    --rule:       #e6e3ec;
-    --rule-soft:  #f0eef4;
-    --accent:     #4a2fe0;
-    --accent-soft:#efebfe;
-    --accent-line:#c9befb;
+    --sunk:       #f4f4f8;
+    --ink:        #14141c;
+    --ink-2:      #494959;
+    --ink-3:      #63637a;
+    --rule:       #e4e4ee;
+    --rule-soft:  #f0f0f6;
+    --accent:     #3730c4;
+    --accent-soft:#eeedfb;
+    --accent-line:#c6c2f0;
     --on-accent:  #ffffff;
-    --moss:       #2f6b45;
-    --moss-soft:  #edf5ef;
-    --moss-line:  #c3ddcd;
-    --signal:     #a8420c;
-    --signal-soft:#fbf0e9;
-    --signal-line:#e8c9b4;
+    --moss:       #2c6a44;
+    --moss-soft:  #ecf4ef;
+    --moss-line:  #c0dccb;
+    --signal:     #8a5209;
+    --signal-soft:#fbf3e6;
+    --signal-line:#e8d3ac;
     --red:        #b42318;
     --red-bg:     #fdf1f0;
     --red-border: #edc4bf;
-    --purple:     #7b2d9e;
-    --purple-bg:  #f9f0fd;
-    --purple-border:#dcb8ee;
-    --wish-bg:    #fbf5fe;
-    --wish-border:#dcb8ee;
+    --purple:     #3730c4;
+    --purple-bg:  #eeedfb;
+    --purple-border:#c6c2f0;
+    --wish-bg:    #f4f4f8;
+    --wish-border:#c6c2f0;
     --radius:     4px;
-    --shadow:     0 1px 2px rgba(22,21,28,.05);
+    --shadow:     0 1px 2px rgba(20,20,28,.05);
     --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
-    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --prose: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    /* Prose is the UI stack on purpose. It used to be Georgia, which collided
+       with the mono code spans that saturate plan prose — the corpus carries
+       3,000+ of them, so a serif/mono clash was the page's dominant texture.
+       No webfont: the Artifact CSP blocks font CDNs, and inlining a face as a
+       data URI would add six figures of bytes to each of ~100 committed plan
+       files. Character comes from scale, weight, and tracking instead. */
+    --prose: var(--ui);
   }
 
   /* Dark palette. Written twice on purpose: an explicit choice
@@ -76,62 +82,62 @@ export const CSS = `/* ── Design tokens ────────────
      media query. Keep the two lists in sync — the redesign test asserts
      both selectors define the same token names. */
   :root[data-theme="dark"] {
-    --paper:      #121118;
-    --panel:      #1a1922;
-    --sunk:       #201f29;
-    --ink:        #edebf3;
-    --ink-2:      #b3afc4;
-    --ink-3:      #8b87a0;
-    --rule:       #2c2a38;
-    --rule-soft:  #24232e;
-    --accent:     #a594ff;
-    --accent-soft:#221f36;
-    --accent-line:#4a4270;
-    --on-accent:  #16151c;
-    --moss:       #7bc098;
-    --moss-soft:  #1b2a21;
-    --moss-line:  #2f4a39;
-    --signal:     #e8a278;
-    --signal-soft:#2b2019;
-    --signal-line:#4d3826;
+    --paper:      #0f0f16;
+    --panel:      #17171f;
+    --sunk:       #1d1d27;
+    --ink:        #ecebf2;
+    --ink-2:      #b2b0c2;
+    --ink-3:      #8a889c;
+    --rule:       #2a2a36;
+    --rule-soft:  #22222c;
+    --accent:     #a8a2f5;
+    --accent-soft:#1f1d33;
+    --accent-line:#454070;
+    --on-accent:  #14141c;
+    --moss:       #7cc099;
+    --moss-soft:  #17271e;
+    --moss-line:  #2e4838;
+    --signal:     #e0a86a;
+    --signal-soft:#271e12;
+    --signal-line:#4a3820;
     --red:        #f4998f;
-    --red-bg:     #2b1a19;
-    --red-border: #4d2b27;
-    --purple:     #d9a6f0;
-    --purple-bg:  #251b2d;
-    --purple-border:#4a3557;
-    --wish-bg:    #251b2d;
-    --wish-border:#4a3557;
+    --red-bg:     #2a1918;
+    --red-border: #4c2a26;
+    --purple:     #a8a2f5;
+    --purple-bg:  #1f1d33;
+    --purple-border:#454070;
+    --wish-bg:    #1f1d33;
+    --wish-border:#454070;
     --shadow:     0 1px 2px rgba(0,0,0,.4);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --paper:      #121118;
-      --panel:      #1a1922;
-      --sunk:       #201f29;
-      --ink:        #edebf3;
-      --ink-2:      #b3afc4;
-      --ink-3:      #8b87a0;
-      --rule:       #2c2a38;
-      --rule-soft:  #24232e;
-      --accent:     #a594ff;
-      --accent-soft:#221f36;
-      --accent-line:#4a4270;
-      --on-accent:  #16151c;
-      --moss:       #7bc098;
-      --moss-soft:  #1b2a21;
-      --moss-line:  #2f4a39;
-      --signal:     #e8a278;
-      --signal-soft:#2b2019;
-      --signal-line:#4d3826;
+      --paper:      #0f0f16;
+      --panel:      #17171f;
+      --sunk:       #1d1d27;
+      --ink:        #ecebf2;
+      --ink-2:      #b2b0c2;
+      --ink-3:      #8a889c;
+      --rule:       #2a2a36;
+      --rule-soft:  #22222c;
+      --accent:     #a8a2f5;
+      --accent-soft:#1f1d33;
+      --accent-line:#454070;
+      --on-accent:  #14141c;
+      --moss:       #7cc099;
+      --moss-soft:  #17271e;
+      --moss-line:  #2e4838;
+      --signal:     #e0a86a;
+      --signal-soft:#271e12;
+      --signal-line:#4a3820;
       --red:        #f4998f;
-      --red-bg:     #2b1a19;
-      --red-border: #4d2b27;
-      --purple:     #d9a6f0;
-      --purple-bg:  #251b2d;
-      --purple-border:#4a3557;
-      --wish-bg:    #251b2d;
-      --wish-border:#4a3557;
+      --red-bg:     #2a1918;
+      --red-border: #4c2a26;
+      --purple:     #a8a2f5;
+      --purple-bg:  #1f1d33;
+      --purple-border:#454070;
+      --wish-bg:    #1f1d33;
+      --wish-border:#454070;
       --shadow:     0 1px 2px rgba(0,0,0,.4);
     }
   }
@@ -162,11 +168,16 @@ export const CSS = `/* ── Design tokens ────────────
      so the bare <code> carrying file paths and copyable prompts keeps its own
      layout — those live inside chips and rows that already style themselves.
      No backticks in this comment: the whole stylesheet is a JS template. */
+  /* Deliberately quiet. A plan paragraph routinely carries five or six of
+     these; with a fill AND a border each they turned running prose into a
+     barcode, which was the loudest thing on the page. Tint only, no border,
+     and a hair smaller than the surrounding text. */
   code.md {
     background: var(--sunk);
-    border: 1px solid var(--rule);
-    border-radius: 4px;
-    padding: .08em .35em;
+    border-radius: 3px;
+    padding: .1em .3em;
+    font-size: .85em;
+    color: var(--ink);
     /* Long paths must wrap rather than force the card into a sideways scroll. */
     overflow-wrap: anywhere;
   }
@@ -241,22 +252,34 @@ export const CSS = `/* ── Design tokens ────────────
   .plan-header-top {
     display: block;
   }
+  /* Sans, not mono. A 2.2rem monospaced headline read as a terminal dump
+     rather than a document title; the weight and the tight tracking carry
+     the emphasis instead. */
   .plan-title {
-    font-family: var(--mono);
-    font-size: clamp(1.6rem, 4vw, 2.2rem);
-    font-weight: 600;
-    letter-spacing: -.035em;
-    line-height: 1.14;
+    font-size: clamp(1.7rem, 4vw, 2.35rem);
+    font-weight: 700;
+    letter-spacing: -.028em;
+    line-height: 1.12;
     color: var(--ink);
-    max-width: 26ch;
+    max-width: 24ch;
     text-wrap: balance;
   }
+  /* State reads before controls. The markup order is fixed by the renderer
+     (buttons, then badges), so the visual order is set here rather than by
+     moving nodes the extractor and the gallery both walk. */
   .plan-header-actions {
     display: flex;
     align-items: center;
-    gap: .6rem;
+    gap: .5rem;
     flex-wrap: wrap;
-    margin-top: .75rem;
+    margin-top: 1rem;
+  }
+  .plan-header-actions .status-badge { order: 1; }
+  .plan-header-actions .effort-badge { order: 2; }
+  .plan-header-actions .save-pdf-btn { order: 3; margin-left: auto; }
+  .plan-header-actions .theme-toggle { order: 4; }
+  @media (max-width: 560px) {
+    .plan-header-actions .save-pdf-btn { margin-left: 0; }
   }
 
   /* Status badge */
@@ -340,8 +363,8 @@ export const CSS = `/* ── Design tokens ────────────
     flex-shrink: 0;
     transition: filter .15s, box-shadow .15s;
   }
-  .save-pdf-btn:hover { filter: brightness(.85); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-  .save-pdf-btn:active { filter: brightness(.75); }
+  .save-pdf-btn:hover { filter: brightness(1.12); }
+  .save-pdf-btn:active { filter: brightness(.92); }
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
@@ -560,20 +583,26 @@ export const CSS = `/* ── Design tokens ────────────
   }
 
   /* ── Objective card — executive summary ────────────────────────── */
+  /* A lead statement, not a slab. The filled panel put a saturated block of
+     colour directly above the green Implement row, so the page opened on two
+     competing fills before a word of content. One accent rule carries the
+     same "this is the point" signal at a fraction of the noise. */
   .objective-card {
-    background: var(--accent-soft);
-    border: 1px solid var(--accent-line);
-    border-left: 3px solid var(--accent);
-    border-radius: 0 var(--radius) var(--radius) 0;
-    padding: 1.35rem 1.5rem;
-    margin-bottom: 2.5rem;
+    background: transparent;
+    border: 0;
+    border-left: 2px solid var(--accent);
+    border-radius: 0;
+    padding: .1rem 0 .1rem 1.25rem;
+    margin-bottom: 2rem;
     color: var(--ink);
   }
   .objective-card > p {
-    font-family: var(--prose);
-    font-size: 1.1rem;
-    line-height: 1.55;
+    font-size: 1.15rem;
+    line-height: 1.5;
+    letter-spacing: -.011em;
     color: var(--ink);
+    max-width: 62ch;
+    text-wrap: pretty;
   }
   .objective-card .section-label,
   .plan-glance-label {
@@ -589,11 +618,12 @@ export const CSS = `/* ── Design tokens ────────────
   /* ── At a glance — the plain-language register of the same goal, nested
         inside #objective so the reader meets one summary, not two. ────── */
   .plan-glance {
-    margin-top: 1.1rem;
-    padding-top: .9rem;
-    border-top: 1px solid var(--accent-line);
+    margin-top: 1rem;
+    padding-top: .85rem;
+    border-top: 1px solid var(--rule);
+    max-width: 66ch;
   }
-  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .9rem; line-height: 1.65; }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .92rem; line-height: 1.65; }
 
   /* ── Progress bar ──────────────────────────────────────────────── */
   .progress-wrap {
@@ -637,10 +667,9 @@ export const CSS = `/* ── Design tokens ────────────
   }
   .section-card:first-of-type { border-top: none; }
   .section-card h2 {
-    font-family: var(--mono);
-    font-size: .95rem;
-    font-weight: 600;
-    letter-spacing: -.01em;
+    font-size: 1.05rem;
+    font-weight: 650;
+    letter-spacing: -.015em;
     color: var(--ink);
     margin-bottom: 1.25rem;
     display: flex;
@@ -656,10 +685,11 @@ export const CSS = `/* ── Design tokens ────────────
   }
   .section-card p {
     margin-bottom: .75rem;
-    color: var(--ink-2);
-    font-family: var(--prose);
-    font-size: 1.02rem;
-    line-height: 1.7;
+    /* Reading text sits in the primary ink. It was --ink-2, which set every
+       paragraph of the document one step back from the labels around it. */
+    color: var(--ink);
+    font-size: .975rem;
+    line-height: 1.68;
     max-width: 68ch;
   }
   .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
@@ -701,9 +731,16 @@ export const CSS = `/* ── Design tokens ────────────
   }
   .step-card.completed .step-number { color: var(--moss); }
   .step-body { flex: 1; min-width: 0; }
+  /* Emphasised body, not a heading. At 600 across a full-width line the
+     action out-shouted the section headings above it, and a plan of twelve
+     steps read as twelve headlines. */
   .step-action {
-    font-weight: 600;
-    margin-bottom: .3rem;
+    /* 500, not 550: the system stack has no variable axis here, so 550 snaps
+       to semibold and the step reads as a heading again. */
+    font-weight: 500;
+    font-size: .95rem;
+    line-height: 1.6;
+    margin-bottom: .35rem;
     display: flex;
     align-items: baseline;
     gap: .45rem;
@@ -1047,27 +1084,33 @@ export const CSS = `/* ── Design tokens ────────────
     align-items: flex-start;
     gap: .6rem;
     margin-bottom: 1.5rem;
-    padding: .45rem .75rem;
-    background: var(--moss-soft);
-    border: 1px solid var(--moss-line);
+    padding: .55rem .8rem;
+    /* Not moss: moss means "done" everywhere else on the page, so a green
+       call-to-action on an unstarted plan said the opposite of what it meant.
+       Not a tinted slab either — this prompt runs to eight wrapped lines of
+       monospace, and any fill that large outshouted the objective above it.
+       Neutral surface, accent only on the label. */
+    background: var(--sunk);
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
     font-size: .8rem;
   }
   .plan-implement-label {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .1em;
+    font-family: var(--mono);
+    font-size: .62rem;
+    font-weight: 600;
+    letter-spacing: .14em;
     text-transform: uppercase;
-    color: var(--moss);
+    color: var(--accent);
     flex-shrink: 0;
-    margin-top: .1rem;
+    margin-top: .2rem;
   }
   .plan-implement code {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .82rem;
     color: var(--ink);
     flex: 1;
-    word-break: break-all;
+    overflow-wrap: anywhere;
   }
   .copy-cmd-btn {
     display: inline-flex;
@@ -1115,11 +1158,11 @@ export const CSS = `/* ── Design tokens ────────────
     width: 2.4rem;
   }
   .plan-source code {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .82rem;
     color: var(--ink);
     flex: 1;
-    word-break: break-all;
+    overflow-wrap: anywhere;
   }
   .copy-src-btn {
     display: inline-flex;
@@ -1167,11 +1210,11 @@ export const CSS = `/* ── Design tokens ────────────
     border-radius: var(--radius);
   }
   .plan-workflow code {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .82rem;
     color: var(--ink);
     flex: 1;
-    word-break: break-all;
+    overflow-wrap: anywhere;
   }
   .copy-workflow-btn {
     display: inline-flex;
@@ -1221,11 +1264,11 @@ export const CSS = `/* ── Design tokens ────────────
     border-radius: var(--radius);
   }
   .plan-goal code {
-    font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace;
+    font-family: var(--mono);
     font-size: .82rem;
     color: var(--ink);
     flex: 1;
-    word-break: break-all;
+    overflow-wrap: anywhere;
   }
   .copy-goal-btn {
     display: inline-flex;
@@ -1363,18 +1406,20 @@ export const CSS = `/* ── Design tokens ────────────
      ═════════════════════════════════════════════════════════════════ */
 
   /* ── Files file-tree ────────────────────────────────────────────── */
-  .file-tree { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .85rem; }
+  .file-tree { font-family: var(--mono); font-size: .85rem; }
   .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
   .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
   .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
   .file-list li.file-dir { color: var(--ink); font-weight: 600; }
-  .file-list li.file-dir > ul { flex-basis: 100%; } /* nested dir list takes its own row inside the flex li */
+  /* The nested list is a CHILD of the bold directory row, so without this it
+     inherits the 600 and every file under a subdirectory renders bold. */
+  .file-list li.file-dir > ul { flex-basis: 100%; font-weight: 400; color: var(--ink-2); }
   .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
   .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
   .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
   .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
   .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
-  .file-note { font-size: .75rem; color: var(--ink-3); font-style: italic; font-family: system-ui, sans-serif; }
+  .file-note { font-size: .75rem; font-weight: 400; color: var(--ink-3); font-style: italic; font-family: var(--ui); }
 
   /* ── Flow / pipeline diagram ────────────────────────────────────── */
   .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
@@ -1392,7 +1437,7 @@ export const CSS = `/* ── Design tokens ────────────
   .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
   .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
   .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
-  .compare-list li { font-family: ui-monospace, "SF Mono", "Fira Code", Consolas, monospace; font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
+  .compare-list li { font-family: var(--mono); font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
 
   /* ── Bar chart (value via inline --val) ─────────────────────────── */
   .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
