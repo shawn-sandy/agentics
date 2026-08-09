@@ -4,7 +4,7 @@
 
 <!-- generated:start -->
 
-**Status:** Shipped 2026-07-27 **Plan:** [add-all-sweep-flag-to-finalize-plan.md](plans/add-all-sweep-flag-to-finalize-plan.md)
+**Status:** Shipped 2026-07-02 **Plan:** [add-all-sweep-flag-to-finalize-plan.md](plans/add-all-sweep-flag-to-finalize-plan.md)
 **Type:** feature
 
 ## What shipped

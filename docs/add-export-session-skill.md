@@ -4,7 +4,7 @@
 
 <!-- generated:start -->
 
-**Status:** Shipped 2026-07-27 **Plan:** [add-export-session-skill.md](plans/add-export-session-skill.md)
+**Status:** Shipped 2026-07-02 **Plan:** [add-export-session-skill.md](plans/add-export-session-skill.md)
 **Type:** feature
 
 ## What shipped

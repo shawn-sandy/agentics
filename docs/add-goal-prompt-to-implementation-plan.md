@@ -4,7 +4,7 @@
 
 <!-- generated:start -->
 
-**Status:** Shipped 2026-07-27 **Plan:** [add-goal-prompt-to-implementation-plan.md](plans/add-goal-prompt-to-implementation-plan.md)
+**Status:** Shipped 2026-06-18 **Plan:** [add-goal-prompt-to-implementation-plan.md](plans/add-goal-prompt-to-implementation-plan.md)
 **Type:** feature
 
 ## What shipped
