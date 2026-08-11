@@ -36,7 +36,7 @@ Running this command is the approval for **one squash merge of a fully green
 PR** — it replaces the `merge` skill's `AskUserQuestion` prompt, which a
 background agent cannot show. Anything else — a **required** check pending or
 failing, conflicts, `CHANGES_REQUESTED`, a `mergeStateStatus` outside
-`CLEAN` / `UNSTABLE` / `HAS_HOOKS`, a failing lint gate — comes back as a
+`CLEAN` / `UNSTABLE` / `HAS_HOOKS` — comes back as a
 report, not a merge. A *non-required* check that is pending or failing is
 reported alongside the merge, not treated as a block. The agent never passes
 `--delete-branch`.
