@@ -117,11 +117,19 @@ def read_staged(root, rel):
     Which files the gate reads decides the verdict just as much as their
     contents, so an unstaged edit to `package.json` or `.claude/lint-gate.json`
     could otherwise switch the gate off for a commit whose staged version still
-    enables it. Untracked files fall back to the working tree — there is no
-    staged version to prefer."""
-    out = git(root, "show", ":" + rel.replace(os.sep, "/"))
+    enables it."""
+    posix = rel.replace(os.sep, "/")
+    out = git(root, "show", ":" + posix)
     if out and out.returncode == 0:
         return out.stdout
+    # Absent from the index, which means one of two opposite things. Never
+    # tracked: fall back to disk, since there is no staged version to prefer.
+    # Tracked at HEAD but not in the index: this commit deletes it, so it must
+    # read as absent — `git rm --cached` on a config would otherwise leave the
+    # working-tree copy selecting the checks for a commit that removes it.
+    at_head = git(root, "cat-file", "-e", "HEAD:" + posix)
+    if at_head and at_head.returncode == 0:
+        return None
     return read_live(root, rel)
 
 
@@ -246,7 +254,8 @@ def run_check(check, base, timeout):
             capture_output=True, text=True, timeout=timeout,
         )
     except Exception:
-        return None  # runner missing or timed out — never strand the commit
+        return None  # runner missing or timed out; the caller decides whether
+                     # that is a no-op (primary) or a degraded block (baseline)
 
 
 def output_of(result):
@@ -295,7 +304,7 @@ def materialize(root, treeish, dest, workdir):
         with tarfile.open(tar) as tf:
             try:
                 tf.extractall(dest, filter="data")
-            except TypeError:  # filter= predates neither 3.11.4 nor 3.12
+            except TypeError:  # filter= was added in 3.11.4/3.12; older runtimes
                 tf.extractall(dest)
     except Exception:
         return False
@@ -327,12 +336,15 @@ def link_deps(root, dest, rels):
     than it accepts would let a hoisted-workspace repo materialize without its
     dependencies, fail the check on a missing binary, and read that 127 as
     "could not run" — silently passing a real failure."""
-    for rel in set(rels) | {a for rel in rels for a in ancestors(rel)}:
+    targets = set()
+    for rel in rels:
+        targets |= ancestors(rel)
+    for target in sorted(targets):
         for name in DEP_LINKS:
-            src = os.path.join(root, rel, name) if rel else os.path.join(root, name)
+            src = os.path.join(root, target, name) if target else os.path.join(root, name)
             if not os.path.exists(src):
                 continue
-            dst = os.path.join(dest, rel, name) if rel else os.path.join(dest, name)
+            dst = os.path.join(dest, target, name) if target else os.path.join(dest, name)
             if os.path.exists(dst) or os.path.islink(dst):
                 continue
             try:

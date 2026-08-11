@@ -585,6 +585,32 @@ printf '%s' '{"scripts":{}}' > "$REPO/package.json"                # unstaged on
 fire "git commit -m 'x'" "$REPO"
 check_rc 2 "an unstaged package.json edit cannot disable the gate"
 
+# Absent from the index means two opposite things, and only one of them should
+# fall back to disk. A config staged for deletion still sits in the working
+# tree, and reading it there let a file the commit *removes* pick the checks —
+# here a passing `true` that suppressed the real, newly-failing lint script.
+REPO=$(make_repo pin_deleted "")
+write_grep_linter "$REPO"
+mkdir -p "$REPO/.claude" "$REPO/src"
+printf '%s' '{"commands":["true"]}' > "$REPO/.claude/lint-gate.json"
+printf 'var ok = 1;\n' > "$REPO/src/a.js"
+commit_all "$REPO"
+printf 'var b = BADCODE;\n' > "$REPO/src/bad.js"
+git -C "$REPO" add -A
+git -C "$REPO" rm --cached -q .claude/lint-gate.json   # deleted in index, still on disk
+fire "git commit -m 'x'" "$REPO"
+check_rc 2 "a config staged for deletion stops selecting the checks"
+has_out "bad\.js" "detection applies once the config is gone from the index"
+
+# The opposite case must still work: a genuinely untracked config is honoured,
+# since there is no staged version to prefer.
+REPO=$(make_repo pin_untracked "$FAILING")
+mkdir -p "$REPO/.claude"
+commit_all "$REPO"
+printf '%s' '{"commands":["true"]}' > "$REPO/.claude/lint-gate.json"   # never tracked
+fire "git commit -m 'x'" "$REPO"
+check_rc 0 "an untracked config still replaces detection"
+
 # A project virtualenv is where ruff usually lives, and it is not on PATH.
 REPO=$(make_repo venv_ruff "")
 touch "$REPO/pyproject.toml"

@@ -1,5 +1,34 @@
 # Changelog — git-agent
 
+## v4.14.3 — 2026-08-10 — a file staged for deletion stops choosing the checks
+
+### Fixed
+
+- **`read_staged` fell back to disk for a file the commit deletes.** Absent
+  from the index means two opposite things: never tracked, where falling back
+  to the working tree is right because there is no staged version to prefer;
+  or tracked at HEAD and removed from the index, where the file will not exist
+  after the commit and must read as absent. Conflating them meant a
+  `git rm --cached .claude/lint-gate.json` left the working-tree copy selecting
+  the checks for the very commit that removes it — a passing `true` command
+  there suppressed the real, newly-failing lint script and the commit landed.
+  HEAD is now consulted to tell the two apart. This was the same class as
+  4.14.2's fix, one level further down: not the file's contents, but whether
+  the file counts as present at all.
+
+### Changed
+
+- Two comments were wrong and are corrected: the `tarfile` fallback branch
+  fires on runtimes that *predate* `filter=` (3.11.4/3.12), which the previous
+  wording inverted; and `run_check` returning `None` is no longer always a
+  no-op, since the degraded-baseline callers block on it.
+- `link_deps` builds its target set before iterating rather than shadowing the
+  loop variable inside a comprehension. No behaviour change — a comprehension
+  has its own scope and is evaluated before the loop starts — but it read as a
+  bug and tripped a lint rule.
+- 93 checks to 96, covering the deletion case and the untracked case that must
+  keep falling back to disk.
+
 ## v4.14.2 — 2026-08-10 — index-pin what the gate reads, not just what it judges
 
 ### Fixed
