@@ -218,6 +218,86 @@ Examples:
 /git-agent:create-issue bug --no-open    # create but skip browser
 ```
 
+## The commit lint gate
+
+`hooks/lint-before-commit.py` is a `PreToolUse` hook on `Bash`. It runs the host
+project's own checks before a `git commit` lands and blocks the commit (exit 2)
+when the commit **introduces** a failure, feeding the new records back so they
+can be fixed without a round-trip.
+
+Escape hatch: create `.claude/no-lint-gate` at the repo root. It overrides
+everything below, including the config file.
+
+### Only new failures block
+
+The gate compares the staged index against `HEAD`. A repo whose `HEAD` already
+fails lint still accepts commits that add no new failures — you are never asked
+to fix 40 errors you did not write before you can commit one line.
+
+Both sides are materialized as throwaway trees from `git archive`, so the
+verdict is pinned to **what is being committed**: unstaged edits neither block a
+commit nor change the result. Comparison is linter-agnostic — output lines are
+path-stripped and digit-masked into a multiset, and a record counts as new only
+when its count rises. That absorbs the line-number shift an edit causes further
+down a file without needing a parser per tool, so a project that wraps its
+linter in a shell script works the same as one that does not.
+
+The host's dependency directories (`node_modules`, `.venv`, `target`, `vendor`,
+and Yarn PnP's `.pnp.cjs`) are symlinked into both trees, since a fresh checkout
+has none and a check that fails for want of a binary would read as "HEAD was
+already broken". One accepted limitation follows: a failure caused purely by a
+dependency change staged in the commit reads as pre-existing.
+
+When a baseline cannot be established — no `git archive`, a timeout, an
+unwritable temp dir — the gate falls back to blocking on the **whole** check
+output and says so. It never degrades to skipping; a silent pass is the one
+failure mode that would make it untrustworthy.
+
+### What it detects
+
+Detection walks up from the commit's directory to the git root and stops at the
+first directory with a matching manifest, so a commit from `packages/api` runs
+that package's check rather than the repository root's. The git root is a hard
+ceiling — the walk never escapes into a parent project.
+
+| Manifest | Check |
+|----------|-------|
+| `package.json` | `scripts.lint`, then `scripts.typecheck`, via the lockfile's runner (npm, pnpm, yarn, bun) |
+| `pyproject.toml` | `ruff check .`, falling back to `flake8` — found in the project's `.venv`/`venv` as well as on `PATH` |
+| `go.mod` | `go vet ./...` |
+| `Cargo.toml` | `cargo clippy --quiet` |
+
+`package.json` wins where a directory carries more than one. A check that cannot
+run is never a block: missing dependencies, a linter absent from `PATH`, exit
+127, no manifest, and an exhausted time budget are all silent no-ops.
+
+An unborn branch is the one case that does block. With no `HEAD` there is
+nothing to compare against, so every failure is new by definition and the gate
+falls back to blocking on the whole check output — your first commit is gated.
+
+### Overriding detection
+
+Name your own commands in `.claude/lint-gate.json` at the repo root. When the
+file is present it **replaces** built-in detection outright rather than adding
+to it:
+
+```json
+{ "commands": ["make lint", "make typecheck"] }
+```
+
+Commands run in a shell at the repo root. A malformed file disables the gate
+rather than silently falling back to the detection it was meant to replace.
+
+The config is read from the **staged** version when it differs from disk, as
+`package.json` is — which files decide the verdict is the same lever as their
+contents, so an unstaged edit must not be able to switch the gate off for a
+commit whose staged version still enables it. `.claude/no-lint-gate` is
+deliberately the exception: it is a local escape hatch and is always read from
+the working tree, so you can disable the gate without committing anything.
+
+All checks share one deadline, so a config naming more commands than the two
+built-in scripts still cannot outlast the hook timeout.
+
 ## Background subagents
 
 The skills above run synchronously in the foreground — your session waits for them to complete. The agents in `agents/` are background subagents that run independently while you keep working.
@@ -293,9 +373,10 @@ plugins/git-agent/
 │   ├── agent-commit.md
 │   ├── agent-pr.md
 │   └── agent-ship.md
-├── hooks.json                    # UserPromptSubmit wiring for the merge? shorthand
+├── hooks.json                    # Hook wiring; declared by plugin.json's "hooks" key
 ├── hooks/
-│   └── merge-shorthand.py        # Routes the literal prompt `merge?` to skills/merge
+│   ├── merge-shorthand.py        # Routes the literal prompt `merge?` to skills/merge
+│   └── lint-before-commit.py     # Blocks a commit that introduces a lint failure
 ├── commands/
 │   ├── commit-bg.md
 │   ├── merge-bg.md

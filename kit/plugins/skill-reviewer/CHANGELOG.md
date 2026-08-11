@@ -2,6 +2,21 @@
 
 
 
+## v2.5.1 — 2026-08-10 — the plugin's hook actually registers
+
+### Fixed
+
+- **`hooks.json` was never read.** It sits at the plugin root, which is not a
+  discovery path — the documented one is `hooks/hooks.json`. Measured with a
+  controlled A/B: identical deliberately-corrupt JSON is reported by
+  `claude plugin validate` at `hooks/hooks.json` ("At runtime this breaks the
+  entire plugin load") and passes unread at the plugin root. `plugin.json` now
+  declares `"hooks": "./hooks.json"` explicitly, which is the same mechanism by
+  which plugins pointing at a non-standard hooks filename do fire.
+- Consequence for this plugin: the `PostToolUse` hook that warns when a
+  SKILL.md `description:` exceeds the skill-listing budget was not firing for
+  installed users. Its logic is unchanged.
+
 ## v2.5.0 — 2026-08-02 — Two dead script invocations become `bin/` commands
 
 ### Fixed

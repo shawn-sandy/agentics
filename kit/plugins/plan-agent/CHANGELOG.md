@@ -1,6 +1,26 @@
 # Changelog
 
 
+## 9.1.1 — the plugin's hooks actually register (2026-08-10)
+
+### Fixed
+
+- **`hooks.json` was never read.** It sits at the plugin root, which is not a
+  discovery path — the documented one is `hooks/hooks.json`. Measured with a
+  controlled A/B: identical deliberately-corrupt JSON is reported by
+  `claude plugin validate` at `hooks/hooks.json` ("At runtime this breaks the
+  entire plugin load") and passes unread at the plugin root. `plugin.json` now
+  declares `"hooks": "./hooks.json"` explicitly, which is the same mechanism by
+  which plugins pointing at a non-standard hooks filename do fire.
+- Consequence for this plugin: `hooks/dispatch.py` — and with it the plan HTML
+  re-render, the filename validator, and the plans-index rebuild — was not
+  running for installed users. The "re-render the HTML from the spec"
+  instruction in generated plans stays load-bearing regardless, since the
+  desktop app drops plugin hooks separately from this defect.
+- Registration is unchanged otherwise: still exactly one `PostToolUse` entry
+  pointing at `dispatch.py`, so the four hooks continue to share one interpreter
+  and one timeout budget.
+
 ## 9.1.0 — the plan document reads as one system (2026-08-08)
 
 The 7.5.0 shell fixed the contrast and the structure but left the page loud.
