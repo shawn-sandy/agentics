@@ -46,6 +46,60 @@ check_rc() { # expected label
 PASSING='{"scripts":{"lint":"true"}}'
 FAILING='{"scripts":{"lint":"echo LINT_BROKE >&2; exit 1"}}'
 
+REAL_GIT=$(command -v git)
+
+# Commits everything in $1 so the repo has a HEAD to use as a lint baseline.
+# Repos built by make_repo alone are deliberately left unborn — with no HEAD
+# there is nothing to compare against, which is what sections 2-14 exercise.
+commit_all() {
+  git -C "$1" add -A
+  git -C "$1" -c user.email=t@t -c user.name=t commit -q -m "base"
+}
+
+# A lint script that reports one record per BAD marker found, so the baseline
+# comparison sees output that actually varies with the tree it runs against.
+# `grep -r` does not descend symlinks, so the linked node_modules is skipped.
+write_grep_linter() {
+  cat > "$1/lint.sh" <<'SH'
+#!/bin/sh
+found=$(grep -rn BADCODE . --include='*.js' 2>/dev/null | sort)
+[ -n "$found" ] && { echo "$found" >&2; exit 1; }
+exit 0
+SH
+  printf '%s' '{"scripts":{"lint":"sh lint.sh"}}' > "$1/package.json"
+  mkdir -p "$1/node_modules"
+}
+
+# Fake toolchain binaries, so ecosystem detection is exercised without needing
+# ruff/go/cargo actually installed on the machine running the suite.
+FAKEBIN="$TMPROOT/fakebin"
+mkdir -p "$FAKEBIN"
+for tool in ruff flake8 go cargo cargo-clippy; do
+  printf '#!/bin/sh\necho "%s_BROKE" >&2\nexit 1\n' "$(printf '%s' "$tool" | tr 'a-z-' 'A-Z_')" \
+    > "$FAKEBIN/$tool"
+  chmod +x "$FAKEBIN/$tool"
+done
+
+# A git that refuses `archive`, so the baseline worktrees cannot be materialized.
+NOARCHIVE="$TMPROOT/noarchive"
+mkdir -p "$NOARCHIVE"
+cat > "$NOARCHIVE/git" <<SH
+#!/bin/sh
+for a in "\$@"; do [ "\$a" = "archive" ] && exit 1; done
+exec "$REAL_GIT" "\$@"
+SH
+chmod +x "$NOARCHIVE/git"
+
+# fire() with PATH prefixed by \$1. Used to inject fake toolchains and the
+# archive-refusing git without leaking either into the rest of the suite.
+fire_with_path() {
+  local extra="$1"; shift
+  local saved="$PATH"
+  PATH="$extra:$PATH"
+  fire "$@"
+  PATH="$saved"
+}
+
 echo "1. Files exist and hook is executable..."
 for f in "$HOOK" "$HOOKS_JSON"; do
   if [ -f "$f" ]; then echo "  PASS: $f"
@@ -187,8 +241,9 @@ PY
 done
 
 echo "13. Per-check timeouts fit inside the declared hook timeout..."
-# Two checks run sequentially; if 2 x PER_CHECK_TIMEOUT exceeds the hooks.json
-# timeout, the host kills the gate mid-run and the commit slips through.
+# Worst case is every check failing and paying for its baseline, plus one
+# materialization per side. If that exceeds the hooks.json timeout the host kills
+# the gate mid-run and the commit slips through.
 if python3 - "$ROOT" <<'PY'
 import importlib.util, json, os, sys
 root = sys.argv[1]
@@ -198,7 +253,8 @@ mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
 cfg = json.load(open(os.path.join(root, "kit/plugins/git-agent/hooks.json")))["hooks"]
 declared = [h.get("timeout", 0) for e in cfg["PreToolUse"] for h in e["hooks"]
             if "lint-before-commit.py" in h.get("command", "")]
-budget = len(mod.SCRIPTS) * mod.PER_CHECK_TIMEOUT
+budget = (len(mod.SCRIPTS) * (mod.PER_CHECK_TIMEOUT + mod.BASELINE_TIMEOUT)
+          + 2 * mod.MATERIALIZE_TIMEOUT)
 sys.exit(0 if declared and budget <= declared[0] else 1)
 PY
 then echo "  PASS: combined check budget fits the hook timeout"
@@ -223,6 +279,200 @@ sys.exit(0 if (
 PY
 then echo "  PASS: PreToolUse/Bash wiring intact, merge-shorthand preserved"
 else echo "  FAIL: hooks.json wiring is wrong"; FAILURES=$((FAILURES + 1)); fi
+
+has_out() { # needle label
+  if printf '%s' "$OUT" | grep -q "$1"; then echo "  PASS: $2"
+  else echo "  FAIL: $2 (out=$(printf %q "$OUT"))"; FAILURES=$((FAILURES + 1)); fi
+}
+lacks_out() { # needle label
+  if printf '%s' "$OUT" | grep -q "$1"; then
+    echo "  FAIL: $2 (out=$(printf %q "$OUT"))"; FAILURES=$((FAILURES + 1))
+  else echo "  PASS: $2"; fi
+}
+
+echo "15. The nearest package is linted, not the repository root..."
+# A commit issued from sub/pkg must run that package's script. Reading only the
+# root manifest checks the wrong code and lets the real failure through.
+ROOTMARK='{"scripts":{"lint":"echo ROOT_LINT >&2; exit 1"}}'
+NESTMARK='{"scripts":{"lint":"echo NESTED_LINT >&2; exit 1"}}'
+REPO=$(make_repo mono "$ROOTMARK")
+mkdir -p "$REPO/sub/pkg" && printf '%s' "$NESTMARK" > "$REPO/sub/pkg/package.json"
+fire "git commit -m 'x'" "$REPO/sub/pkg"
+check_rc 2 "commit from sub/pkg blocks"
+has_out "NESTED_LINT" "the nested package's script ran"
+lacks_out "ROOT_LINT" "the root script did not run"
+
+fire "git commit -m 'x'" "$REPO"
+check_rc 2 "commit from the root blocks"
+has_out "ROOT_LINT" "the root script ran for a root commit"
+
+# node_modules is routinely hoisted to the workspace root. A nested package with
+# no local copy is still installed, and must not fall through to the root script.
+REPO=$(make_repo hoisted "$ROOTMARK")
+mkdir -p "$REPO/sub/pkg" && printf '%s' "$NESTMARK" > "$REPO/sub/pkg/package.json"
+fire "git commit -m 'x'" "$REPO/sub/pkg"
+check_rc 2 "hoisted node_modules still resolves the nested package"
+has_out "NESTED_LINT" "hoisted deps do not fall through to the root"
+
+# A nested directory with no matching script falls through to the root's.
+REPO=$(make_repo fallthrough "$ROOTMARK")
+mkdir -p "$REPO/sub/pkg"
+printf '%s' '{"scripts":{"build":"true"}}' > "$REPO/sub/pkg/package.json"
+fire "git commit -m 'x'" "$REPO/sub/pkg"
+check_rc 2 "a nested package without a lint script falls through"
+has_out "ROOT_LINT" "fallthrough reaches the root script"
+
+# The git root is the walk's ceiling — escaping it would lint an unrelated
+# parent project whose manifest has nothing to do with this repo.
+OUTSIDE=$(make_repo outside "$ROOTMARK")
+mkdir -p "$OUTSIDE/inner" && git -C "$OUTSIDE/inner" init -q
+fire "git commit -m 'x'" "$OUTSIDE/inner"
+check_rc 0 "the walk stops at the git root"
+
+echo "16. Non-Node ecosystems are gated too..."
+for eco in "pyproject.toml:ruff:RUFF_BROKE" "go.mod:go:GO_BROKE" "Cargo.toml:cargo:CARGO_BROKE"; do
+  manifest="${eco%%:*}"; rest="${eco#*:}"; tool="${rest%%:*}"; marker="${rest##*:}"
+  REPO=$(make_repo "eco_${tool}" "")
+  touch "$REPO/$manifest"
+  fire_with_path "$FAKEBIN" "git commit -m 'x'" "$REPO"
+  check_rc 2 "$manifest with a failing linter blocks"
+  has_out "$marker" "$manifest surfaces the linter's output"
+
+  # Same fixture, toolchain absent: a missing linter is not a code problem.
+  fire "git commit -m 'x'" "$REPO"
+  check_rc 0 "$manifest without its toolchain is a no-op"
+done
+
+# flake8 is the documented fallback when ruff is absent.
+REPO=$(make_repo eco_flake8 "")
+touch "$REPO/pyproject.toml"
+mkdir -p "$TMPROOT/flakeonly" && cp "$FAKEBIN/flake8" "$TMPROOT/flakeonly/"
+fire_with_path "$TMPROOT/flakeonly" "git commit -m 'x'" "$REPO"
+check_rc 2 "pyproject.toml falls back to flake8 when ruff is absent"
+has_out "FLAKE8_BROKE" "flake8 output is fed back"
+
+# package.json wins where a directory carries more than one manifest.
+REPO=$(make_repo eco_both "$FAILING")
+touch "$REPO/go.mod"
+fire_with_path "$FAKEBIN" "git commit -m 'x'" "$REPO"
+check_rc 2 "package.json + go.mod still blocks"
+has_out "LINT_BROKE" "package.json wins over go.mod"
+lacks_out "GO_BROKE" "go vet did not also run"
+
+echo "17. .claude/lint-gate.json replaces built-in detection..."
+REPO=$(make_repo cfg "$PASSING")
+mkdir -p "$REPO/.claude"
+printf '%s' '{"commands":["echo CONFIG_BROKE >&2; exit 1"]}' > "$REPO/.claude/lint-gate.json"
+fire "git commit -m 'x'" "$REPO"
+check_rc 2 "a failing config command blocks even though package.json lint passes"
+has_out "CONFIG_BROKE" "config command output is fed back"
+
+# Replacement, not addition: the package.json script must not also run.
+REPO=$(make_repo cfg_replaces "$FAILING")
+mkdir -p "$REPO/.claude"
+printf '%s' '{"commands":["true"]}' > "$REPO/.claude/lint-gate.json"
+fire "git commit -m 'x'" "$REPO"
+check_rc 0 "a passing config command suppresses the failing built-in script"
+
+# Malformed config disables the gate rather than silently falling back to the
+# detection the author meant to replace.
+REPO=$(make_repo cfg_bad "$FAILING")
+mkdir -p "$REPO/.claude"
+printf '%s' '{ not json' > "$REPO/.claude/lint-gate.json"
+fire "git commit -m 'x'" "$REPO"
+check_rc 0 "a malformed config is a silent no-op"
+
+REPO=$(make_repo cfg_optout "$PASSING")
+mkdir -p "$REPO/.claude"
+printf '%s' '{"commands":["echo CONFIG_BROKE >&2; exit 1"]}' > "$REPO/.claude/lint-gate.json"
+touch "$REPO/.claude/no-lint-gate"
+fire "git commit -m 'x'" "$REPO"
+check_rc 0 ".claude/no-lint-gate still overrides the config"
+
+echo "18. Only failures the commit introduces block it..."
+# HEAD already fails. An unrelated commit must land — this is the defect that
+# made the gate untrustworthy in any repo it did not grow up in.
+REPO=$(make_repo base_pre "")
+write_grep_linter "$REPO"
+mkdir -p "$REPO/src" && printf 'var a = BADCODE;\n' > "$REPO/src/a.js"
+commit_all "$REPO"
+printf 'var ok = 1;\n' > "$REPO/src/clean.js"
+git -C "$REPO" add -A
+fire "git commit -m 'x'" "$REPO"
+check_rc 0 "a pre-existing failure does not block an unrelated commit"
+
+# The same repo, now staging a genuinely new failure.
+printf 'var b = BADCODE;\n' > "$REPO/src/b.js"
+git -C "$REPO" add -A
+fire "git commit -m 'x'" "$REPO"
+check_rc 2 "a newly-staged failure blocks"
+has_out "b\.js" "the block message names the new failure"
+lacks_out "a\.js" "the pre-existing failure is not reported as new"
+
+# Editing above a pre-existing error shifts its line number. A naive text diff
+# reads every shifted record as new; the digit-masked counts must not.
+REPO=$(make_repo base_shift "")
+write_grep_linter "$REPO"
+mkdir -p "$REPO/src" && printf 'var a = 1;\nvar b = BADCODE;\n' > "$REPO/src/a.js"
+commit_all "$REPO"
+printf '// header\n// header2\nvar a = 1;\nvar b = BADCODE;\n' > "$REPO/src/a.js"
+git -C "$REPO" add -A
+fire "git commit -m 'x'" "$REPO"
+check_rc 0 "a line-number shift is not mistaken for a new failure"
+
+# The verdict is the staged index, not the working tree.
+REPO=$(make_repo base_unstaged "")
+write_grep_linter "$REPO"
+mkdir -p "$REPO/src" && printf 'var ok = 1;\n' > "$REPO/src/a.js"
+commit_all "$REPO"
+printf 'var b = BADCODE;\n' > "$REPO/src/unstaged.js"   # written, never staged
+fire "git commit -m 'x'" "$REPO"
+check_rc 0 "an unstaged failure does not block"
+
+git -C "$REPO" add -A
+fire "git commit -m 'x'" "$REPO"
+check_rc 2 "the same failure blocks once staged"
+
+# Baseline unavailable: fall back to whole-project blocking, never to skipping.
+# Silently passing here would be the one degradation that hides real failures.
+REPO=$(make_repo base_nowt "")
+write_grep_linter "$REPO"
+mkdir -p "$REPO/src" && printf 'var a = BADCODE;\n' > "$REPO/src/a.js"
+commit_all "$REPO"
+fire_with_path "$NOARCHIVE" "git commit -m 'x'" "$REPO"
+check_rc 2 "an unusable baseline blocks rather than passing"
+has_out "baseline could not be established" "the fallback says why it blocked"
+
+echo "19. The commit regex bails before any filesystem probing..."
+# This hook runs on every Bash call in every repo, so detection must never move
+# ahead of the cheap bail. Asserted behaviourally rather than by reading source.
+if python3 - "$ROOT" <<'PY'
+import importlib.util, io, json, os, subprocess, sys
+spec = importlib.util.spec_from_file_location(
+    "hook", os.path.join(sys.argv[1], "kit/plugins/git-agent/hooks/lint-before-commit.py"))
+mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+
+touched = []
+mod.os.path.exists = lambda p: touched.append(("exists", p))
+mod.subprocess.run = lambda *a, **k: touched.append(("run", a))
+real_open = mod.open if hasattr(mod, "open") else open
+import builtins
+builtins_open = builtins.open
+builtins.open = lambda *a, **k: (touched.append(("open", a)), builtins_open(*a, **k))[1]
+try:
+    for cmd in ["git status", "ls -la", "git log --grep commit", "git commit-tree x"]:
+        sys.stdin = io.StringIO(json.dumps(
+            {"tool_name": "Bash", "tool_input": {"command": cmd}, "cwd": sys.argv[1]}))
+        if mod.main() != 0:
+            print("non-zero exit for", cmd); sys.exit(1)
+finally:
+    builtins.open = builtins_open
+if touched:
+    print("filesystem touched before the bail:", touched[:3]); sys.exit(1)
+sys.exit(0)
+PY
+then echo "  PASS: a non-commit payload touches no manifest, config, or worktree"
+else echo "  FAIL: the gate probes the filesystem before the commit regex bails"; FAILURES=$((FAILURES + 1)); fi
 
 echo
 if [ "$FAILURES" -eq 0 ]; then echo "All checks passed."; exit 0

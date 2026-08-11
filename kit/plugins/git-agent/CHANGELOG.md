@@ -1,5 +1,87 @@
 # Changelog — git-agent
 
+## v4.14.0 — 2026-08-10 — the commit lint gate is trustworthy outside the repo it grew up in
+
+### Fixed
+
+- **Pre-existing failures no longer block unrelated commits.** The gate ran the
+  host repo's whole `scripts.lint` and blocked on any non-zero exit, so walking
+  into a repo with 40 errors you did not write meant every commit was refused
+  until you fixed them or created `.claude/no-lint-gate`. It now compares the
+  staged index against `HEAD` and blocks only on records the commit introduces.
+  Four approaches were weighed; baseline comparison is the only one correct
+  regardless of which linter the host repo uses — passing staged paths as
+  arguments does nothing because `eslint .` ignores them, and parsing output for
+  staged filenames needs a format guess per linter.
+- **The comparison is linter-agnostic, with no per-tool parser.** Output lines
+  are ANSI-stripped, path-stripped, and digit-masked into a multiset; a record
+  is new when its count *rises*. Masking absorbs the line-number shift an edit
+  causes further down a file, and counting keeps that masking from hiding a
+  genuine new occurrence, since adding one always raises its key's count. This
+  is what closes the "normalize across eslint/tsc/ruff/go vet/clippy" question —
+  `--format json` was rejected because it cannot be injected into a repo whose
+  lint script wraps the tool.
+- **The verdict is pinned to the index, not the working tree.** Both sides are
+  materialized from `git archive` via stdlib `tarfile` — no `git worktree`
+  bookkeeping to leak on a crash — so the gate now checks what is being
+  committed. Unstaged edits stop being linted, which is a no-op for
+  `commit-agent` since its Step 2 runs `git add -A`. Materialization is skipped
+  entirely when the working tree already matches the index, so the common path
+  pays nothing.
+- **Monorepos lint the package they are committing.** `repo_root()` resolved the
+  git toplevel and then read only the *root* `package.json`; a commit from
+  `sub/pkg/` ran the root script and the nested package's own script never
+  executed. Detection now walks up from the commit's directory to the git root —
+  a hard ceiling, so it never escapes into a parent project's manifest — and
+  stops at the first matching one. `node_modules` is looked up through ancestors
+  too, so a hoisted workspace install does not push resolution back to the root.
+- **Path comparison uses `realpath` on both sides.** `git rev-parse
+  --show-toplevel` resolves symlinks and `os.path.abspath` does not, so on macOS
+  any commit under `/tmp` (a link to `/private/tmp`) looked like it sat outside
+  its own repository and fell back to root resolution.
+- **The hook registers at all.** `hooks.json` sits at the plugin root, which is
+  not a discovery path — the documented one is `hooks/hooks.json`. Measured with
+  a controlled A/B: identical deliberately-corrupt JSON is reported by
+  `claude plugin validate` at `hooks/hooks.json` ("At runtime this breaks the
+  entire plugin load") and passes unread at the root. `plugin.json` now declares
+  `"hooks": "./hooks.json"` explicitly, the same mechanism by which `ponytail` —
+  whose config is at a non-standard filename — does fire. `plan-agent` and
+  `skill-reviewer` carry the same one-line fix; `plan-interview` is no longer in
+  this marketplace.
+
+### Added
+
+- **Non-Node ecosystems.** Detection was `package.json` only, so Python, Go, and
+  Rust projects were silent no-ops regardless of what they had configured. Added
+  `pyproject.toml` (`ruff check .`, falling back to `flake8`), `go.mod`
+  (`go vet ./...`), and `Cargo.toml` (`cargo clippy --quiet`), reusing the same
+  nearest-manifest walk and the same could-not-run guards. `package.json` wins
+  where a directory carries more than one. The Rust probe is `cargo-clippy`
+  rather than `cargo`, since probing `cargo` would claim a toolchain that cannot
+  actually run the check.
+- **`.claude/lint-gate.json`** names a repo's own commands
+  (`{"commands": ["make lint"]}`). When present it *replaces* built-in detection
+  outright rather than adding to it — the only precedence a reader can predict
+  without tracing the code. A malformed file disables the gate rather than
+  falling back to the detection it was meant to replace.
+
+### Changed
+
+- **Timeout re-budgeted.** Worst case is now every check paying for its baseline
+  plus one materialization per side: `2 × (120 + 60) + 2 × 30 = 420s`, inside a
+  hook timeout raised from 200s to 480s. The baseline gets a smaller budget than
+  the primary run (60s vs 120s) because a baseline timeout degrades to
+  whole-project blocking, which is the safe direction. Test 13 asserts the
+  arithmetic rather than trusting the numbers to stay in sync.
+- **Every could-not-run path was re-audited** against a single rule: exit 0 or
+  fall back to whole-project blocking, never silently pass a real failure.
+- `tests/plugins/test-lint-before-commit.sh` grew from 38 checks to 78, adding
+  nearest-package resolution, each ecosystem in both present and absent-toolchain
+  states, the config override, baseline pass/block/line-shift/unstaged/fallback,
+  and a behavioural assertion — via monkeypatched `os.path.exists`, `open`, and
+  `subprocess.run` — that a non-commit payload touches the filesystem zero times
+  before the commit regex bails.
+
 ## v4.13.0 — 2026-08-05 — `merge` reads `mergeStateStatus` instead of hand-gating threads
 
 ### Changed
