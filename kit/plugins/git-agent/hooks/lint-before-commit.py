@@ -72,6 +72,9 @@ MATERIALIZE_TIMEOUT = 30
 # name any number of commands, and only a shared deadline keeps that inside the
 # declared hook timeout.
 TOTAL_BUDGET = 2 * (PER_CHECK_TIMEOUT + BASELINE_TIMEOUT) + 2 * MATERIALIZE_TIMEOUT
+# Too little left to learn anything from a check, so stop rather than start one
+# that cannot finish.
+MIN_CHECK_BUDGET = 5
 COULD_NOT_RUN = 127  # shell convention for command-not-found
 # Evidence that dependencies are installed. `.pnp.cjs` covers Yarn PnP, which
 # resolves bins without ever creating node_modules.
@@ -188,7 +191,9 @@ def checks_for_dir(root, d, read):
         return [Check(n, list(run) + [n], False, rel) for n in found]
 
     for manifest, tools in ECOSYSTEMS:
-        if not os.path.exists(os.path.join(d, manifest)):
+        # Presence comes from the same tree as package.json's contents, or an
+        # unstaged add or removal of go.mod would still change which checks run.
+        if read(os.path.join(rel, manifest) if rel else manifest) is None:
             continue
         for probe, label, argv in tools:
             local = venv_tool(d, probe) or venv_tool(root, probe)
@@ -425,6 +430,14 @@ def gate(root, cwd, workdir):
 
     head_root = None
     for check in checks:
+        # Clamping each run to what remains is not a ceiling on its own: every
+        # clamp has a floor, so N configured commands could still add N seconds
+        # apiece past the deadline. Refusing to start a check we cannot finish
+        # is what keeps the total inside the timeout declared in hooks.json —
+        # and being killed by the harness mid-run is the one outcome with no
+        # exit code at all, which lets the commit through unexamined.
+        if deadline - time.monotonic() < MIN_CHECK_BUDGET:
+            return 0  # unrun checks are could-not-run, like a timeout or a 127
         primary = run_check(check, index_root, budget(PER_CHECK_TIMEOUT))
         if primary is None or primary.returncode in (0, COULD_NOT_RUN):
             continue  # passed, or could not run at all — only a real finding blocks

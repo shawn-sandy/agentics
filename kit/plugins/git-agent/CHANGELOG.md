@@ -1,5 +1,36 @@
 # Changelog — git-agent
 
+## v4.14.4 — 2026-08-10 — the last two index-pinning gaps, and a budget that holds
+
+### Fixed
+
+- **Ecosystem manifests were still selected from the working tree.**
+  `pyproject.toml`, `go.mod`, and `Cargo.toml` presence came from
+  `os.path.exists` while `package.json` and the config had moved to the staged
+  tree, so an unstaged `rm go.mod` switched the Go gate off for a commit that
+  keeps it. Presence now comes from the same read as everything else, which
+  finishes the job 4.14.2 and 4.14.3 started.
+- **`TOTAL_BUDGET` was not actually a ceiling.** Each run was clamped to the
+  time remaining, but every clamp has a floor, so N configured commands could
+  add N seconds apiece past the deadline. The gate now refuses to start a check
+  it cannot finish and returns 0 — unrun checks are could-not-run, like a
+  timeout or a 127. Being killed by the harness mid-run is the one outcome with
+  no exit code at all, which lets the commit through unexamined, so bounding
+  the total matters more than squeezing in a last check.
+
+### Changed
+
+- **README corrected on a point where it said the opposite of the code.** It
+  listed "an unborn branch" among the silent no-ops; an unborn branch is in
+  fact the one case that always blocks, since with no `HEAD` there is nothing
+  to compare against and every failure is new by definition. Section 2 of the
+  test suite has asserted the blocking behaviour throughout. The no-op list now
+  reads: missing dependencies, a linter absent from `PATH`, exit 127, no
+  manifest, and an exhausted time budget.
+- 96 checks to 100. The new ecosystem test uses a linter that reports what it
+  finds rather than failing identically in both trees — a constant-failing fake
+  reads as a pre-existing failure and would have passed while proving nothing.
+
 ## v4.14.3 — 2026-08-10 — a file staged for deletion stops choosing the checks
 
 ### Fixed

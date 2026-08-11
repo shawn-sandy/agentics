@@ -611,6 +611,41 @@ printf '%s' '{"commands":["true"]}' > "$REPO/.claude/lint-gate.json"   # never t
 fire "git commit -m 'x'" "$REPO"
 check_rc 0 "an untracked config still replaces detection"
 
+# Ecosystem manifests are selected from the same tree as everything else: an
+# unstaged `rm go.mod` must not switch the Go gate off for a commit that keeps
+# it. FAKEBIN's linters fail identically in both trees, which reads as a
+# pre-existing failure and proves nothing here, so this uses a `go` that
+# reports what it actually finds.
+GREPBIN="$TMPROOT/grepbin"
+mkdir -p "$GREPBIN"
+cat > "$GREPBIN/go" <<'SH'
+#!/bin/sh
+found=$(grep -rn BADCODE . --include='*.go' 2>/dev/null | sort)
+[ -n "$found" ] && { echo "$found" >&2; exit 1; }
+exit 0
+SH
+chmod +x "$GREPBIN/go"
+REPO=$(make_repo pin_eco "")
+touch "$REPO/go.mod"
+printf 'package main\n' > "$REPO/main.go"
+commit_all "$REPO"
+printf 'var x = BADCODE\n' > "$REPO/bad.go"  # a new failure, staged
+git -C "$REPO" add -A
+rm "$REPO/go.mod"                            # removed on disk, still in the index
+fire_with_path "$GREPBIN" "git commit -m 'x'" "$REPO"
+check_rc 2 "an unstaged manifest removal cannot disable an ecosystem gate"
+has_out "bad\.go" "the ecosystem gate still named the new failure"
+
+# And the reverse: a manifest that exists only on disk is not yet part of the
+# commit, so it must not start gating one.
+REPO=$(make_repo pin_eco_add "")
+printf 'placeholder\n' > "$REPO/README.md"
+commit_all "$REPO"
+touch "$REPO/Cargo.toml"                     # untracked, never staged
+git -C "$REPO" add README.md
+fire_with_path "$FAKEBIN" "git commit -m 'x'" "$REPO"
+check_rc 0 "an unstaged manifest addition does not gate the commit"
+
 # A project virtualenv is where ruff usually lives, and it is not on PATH.
 REPO=$(make_repo venv_ruff "")
 touch "$REPO/pyproject.toml"
@@ -629,7 +664,40 @@ if PATH="$MINPATH" command -v ruff >/dev/null 2>&1 || \
   echo "  FAIL: MINPATH leaks a real toolchain"; FAILURES=$((FAILURES + 1))
 else echo "  PASS: MINPATH hides every probed toolchain"; fi
 
-echo "21. The commit regex bails before any filesystem probing..."
+echo "21. The total budget is a ceiling, not a per-check clamp..."
+# Clamping each run to what remains still lets N configured commands add N
+# seconds apiece past the deadline, and being killed by the harness mid-run is
+# the one outcome with no exit code — the commit proceeds unexamined. Driven
+# through the module with the budget forced to zero, so the assertion is about
+# the guard rather than about waiting out a real 420s deadline.
+REPO=$(make_repo budget_cap "")
+mkdir -p "$REPO/.claude"
+python3 -c '
+import json, sys
+cmds = ["sleep 2" for _ in range(20)]
+json.dump({"commands": cmds}, open(sys.argv[1], "w"))' "$REPO/.claude/lint-gate.json"
+commit_all "$REPO"
+printf 'scratch\n' > "$REPO/untracked.txt"
+if python3 - "$ROOT" "$REPO" <<'PY'
+import importlib.util, os, sys, time
+spec = importlib.util.spec_from_file_location(
+    "hook", os.path.join(sys.argv[1], "kit/plugins/git-agent/hooks/lint-before-commit.py"))
+mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+mod.TOTAL_BUDGET = 0            # deadline already blown when the loop starts
+start = time.monotonic()
+rc = mod.gate(sys.argv[2], sys.argv[2], os.path.join(sys.argv[2], "wd"))
+elapsed = time.monotonic() - start
+# 20 x `sleep 2` would take ~40s if the loop kept starting clamped checks.
+if rc != 0:
+    print("expected exit 0 when the budget is exhausted, got", rc); sys.exit(1)
+if elapsed > 10:
+    print("ran checks past the deadline: %.1fs" % elapsed); sys.exit(1)
+sys.exit(0)
+PY
+then echo "  PASS: an exhausted budget stops before starting another check"
+else echo "  FAIL: checks keep starting after the deadline"; FAILURES=$((FAILURES + 1)); fi
+
+echo "22. The commit regex bails before any filesystem probing..."
 # This hook runs on every Bash call in every repo, so detection must never move
 # ahead of the cheap bail. Asserted behaviourally rather than by reading source.
 if python3 - "$ROOT" <<'PY'

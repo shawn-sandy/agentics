@@ -269,7 +269,11 @@ ceiling — the walk never escapes into a parent project.
 
 `package.json` wins where a directory carries more than one. A check that cannot
 run is never a block: missing dependencies, a linter absent from `PATH`, exit
-127, and an unborn branch are all silent no-ops.
+127, no manifest, and an exhausted time budget are all silent no-ops.
+
+An unborn branch is the one case that does block. With no `HEAD` there is
+nothing to compare against, so every failure is new by definition and the gate
+falls back to blocking on the whole check output — your first commit is gated.
 
 ### Overriding detection
 
