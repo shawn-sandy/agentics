@@ -266,15 +266,27 @@ def materialize(root, treeish, dest, workdir):
     return True
 
 
+def ancestors(rel):
+    """Every directory between `rel` and the repo root, root ("") included."""
+    out = {""}
+    while rel:
+        out.add(rel)
+        rel = os.path.dirname(rel)
+    return out
+
+
 def link_deps(root, dest, rels):
     """A fresh checkout has no dependencies, so a check there would fail on a
     missing binary and read as 'HEAD was already broken' — which would pass
     every real failure. Accepted limitation: a dependency change staged in the
     commit is not reflected on the HEAD side, so a failure caused purely by a
     dependency bump reads as pre-existing.
-    ponytail: two levels only (repo root and the check's own directory); walk
-    every directory if a repo turns up that installs deeper than that."""
-    for rel in rels:
+    Every ancestor of every check is linked, not just the check's own directory:
+    `deps_installed` accepts an install anywhere up the tree, so linking less
+    than it accepts would let a hoisted-workspace repo materialize without its
+    dependencies, fail the check on a missing binary, and read that 127 as
+    "could not run" — silently passing a real failure."""
+    for rel in set(rels) | {a for rel in rels for a in ancestors(rel)}:
         for name in DEP_LINKS:
             src = os.path.join(root, rel, name) if rel else os.path.join(root, name)
             if not os.path.exists(src):
@@ -365,6 +377,17 @@ def gate(root, cwd, workdir):
         before = run_check(check, head_root, BASELINE_TIMEOUT)
         if before is None:
             return block(check.label, body, degraded=True)
+        # The check passed at HEAD and fails now: the commit broke it, whatever
+        # the output looks like. Deciding this on exit status rather than on
+        # records closes every normalization blind spot at once — a check that
+        # fails silently, and one whose only difference is a digit the mask
+        # erases ("0 problems" vs "3 problems"), both reach here with nothing
+        # the record comparison can call new.
+        if before.returncode == 0:
+            return block(
+                check.label,
+                body or f"`{check.label}` exited {primary.returncode} with no output.",
+            )
         new = new_records(body, index_root, output_of(before), head_root)
         if new:
             return block(check.label, "\n".join(new))

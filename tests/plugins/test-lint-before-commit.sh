@@ -443,7 +443,99 @@ fire_with_path "$NOARCHIVE" "git commit -m 'x'" "$REPO"
 check_rc 2 "an unusable baseline blocks rather than passing"
 has_out "baseline could not be established" "the fallback says why it blocked"
 
-echo "19. The commit regex bails before any filesystem probing..."
+echo "19. A degraded baseline never silently passes a real failure..."
+# Both cases below reached exit 0 before this section existed. They are the one
+# failure mode that makes the gate worthless: the commit is broken, HEAD was
+# fine, and the gate waves it through.
+
+# Dependencies are gitignored in every real repo, so `git archive` never carries
+# them — only link_deps can. Linking fewer directories than deps_installed
+# accepts means the materialized tree fails on a missing binary, and that 127
+# reads as "could not run". Two layouts: hoisted to the root, and installed at
+# an intermediate workspace directory.
+for layout in root:../../node_modules intermediate:../node_modules; do
+  where="${layout%%:*}"; marker="${layout##*:}"
+  REPO=$(make_repo "deps_$where" "")
+  mkdir -p "$REPO/packages/api/src"
+  printf 'node_modules/\n' > "$REPO/.gitignore"
+  case "$where" in
+    root) mkdir -p "$REPO/node_modules"; echo m > "$REPO/node_modules/.marker" ;;
+    intermediate) mkdir -p "$REPO/packages/node_modules"; echo m > "$REPO/packages/node_modules/.marker" ;;
+  esac
+  cat > "$REPO/packages/api/lint.sh" <<SH
+#!/bin/sh
+[ -f $marker/.marker ] || { echo "deps missing" >&2; exit 127; }
+found=\$(grep -rn BADCODE src --include='*.js' 2>/dev/null | sort)
+[ -n "\$found" ] && { echo "\$found" >&2; exit 1; }
+exit 0
+SH
+  printf '%s' '{"scripts":{"lint":"sh lint.sh"}}' > "$REPO/packages/api/package.json"
+  printf 'var ok = 1;\n' > "$REPO/packages/api/src/a.js"
+  commit_all "$REPO"
+  printf 'var b = BADCODE;\n' > "$REPO/packages/api/src/bad.js"
+  git -C "$REPO" add -A
+  echo scratch > "$REPO/untracked.txt"   # forces the index to be materialized
+  fire "git commit -m 'x'" "$REPO/packages/api"
+  check_rc 2 "deps $where: a new failure blocks when deps are gitignored"
+  has_out "bad\.js" "deps $where: the new failure is named, not a missing-binary error"
+done
+
+# A check that passed at HEAD and fails now was broken by this commit, whatever
+# its output looks like. Both cases below produce nothing the record comparison
+# can call new: one fails silently, the other differs only in a masked digit.
+REPO=$(make_repo flip_silent "")
+printf 'exit 0\n' > "$REPO/lint.sh"
+printf '%s' '{"scripts":{"lint":"sh lint.sh"}}' > "$REPO/package.json"
+mkdir -p "$REPO/node_modules"
+commit_all "$REPO"
+printf 'exit 1\n' > "$REPO/lint.sh"
+git -C "$REPO" add -A
+fire "git commit -m 'x'" "$REPO"
+check_rc 2 "a silently-failing check that passed at HEAD blocks"
+has_out '`lint` failed' "the block message names the check that broke"
+
+# The same flip through a config command, which carries no runner banner, so the
+# output really is empty and the message has nothing but the exit status to
+# report. `test` is silent by design: HEAD has no src/bad.js, the index does.
+REPO=$(make_repo flip_empty "$PASSING")
+mkdir -p "$REPO/.claude" "$REPO/src"
+printf '%s' '{"commands":["test ! -f src/bad.js"]}' > "$REPO/.claude/lint-gate.json"
+commit_all "$REPO"
+printf 'var b = 1;\n' > "$REPO/src/bad.js"
+git -C "$REPO" add -A
+fire "git commit -m 'x'" "$REPO"
+check_rc 2 "a check failing with genuinely empty output still blocks"
+has_out "no output" "the block message reports the exit status when there is no output"
+
+REPO=$(make_repo flip_digits "")
+mkdir -p "$REPO/src" "$REPO/node_modules"
+cat > "$REPO/lint.sh" <<'SH'
+#!/bin/sh
+n=$(grep -rc BADCODE src/*.js 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
+echo "$n problems found"
+[ "$n" -gt 0 ] && exit 1
+exit 0
+SH
+printf '%s' '{"scripts":{"lint":"sh lint.sh"}}' > "$REPO/package.json"
+printf 'var ok = 1;\n' > "$REPO/src/a.js"
+commit_all "$REPO"
+printf 'var b = BADCODE;\n' > "$REPO/src/bad.js"
+git -C "$REPO" add -A
+fire "git commit -m 'x'" "$REPO"
+check_rc 2 "a summary-only linter blocks when its count rises from zero"
+
+# The exit-status shortcut must not swallow the whole point of the gate: when
+# HEAD was already failing, a commit that adds nothing new still lands.
+REPO=$(make_repo flip_preexisting "")
+write_grep_linter "$REPO"
+mkdir -p "$REPO/src" && printf 'var a = BADCODE;\n' > "$REPO/src/a.js"
+commit_all "$REPO"
+printf 'var ok = 1;\n' > "$REPO/src/clean.js"
+git -C "$REPO" add -A
+fire "git commit -m 'x'" "$REPO"
+check_rc 0 "a check already failing at HEAD still allows an unrelated commit"
+
+echo "20. The commit regex bails before any filesystem probing..."
 # This hook runs on every Bash call in every repo, so detection must never move
 # ahead of the cheap bail. Asserted behaviourally rather than by reading source.
 if python3 - "$ROOT" <<'PY'

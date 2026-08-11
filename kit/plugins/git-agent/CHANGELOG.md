@@ -1,5 +1,33 @@
 # Changelog — git-agent
 
+## v4.14.1 — 2026-08-10 — two degraded-baseline paths that silently passed real failures
+
+### Fixed
+
+- **Hoisted workspace dependencies were never linked into the materialized
+  trees.** `link_deps` iterated only the set of check directories, so a check
+  in `packages/api` linked `packages/api/node_modules` and nothing else — not
+  the repo root, not any intermediate workspace directory. `deps_installed`
+  accepts an install anywhere up the tree, so linking less than it accepts left
+  the materialized tree without dependencies; the check then failed on a
+  missing binary and that 127 read as "could not run". Net effect: in a
+  monorepo with hoisted, gitignored `node_modules` — the ordinary layout — a
+  brand-new lint failure was **let through**. `link_deps` now links every
+  ancestor of every check, root included.
+- **A check that flipped from passing to failing could produce nothing the
+  record comparison would call new.** Two ways in: a check that fails silently,
+  and one whose only difference is a digit the mask erases (`0 problems` vs
+  `3 problems` normalize to the same record, so the counts match). Both exited
+  0. The gate now decides on exit status first — if HEAD passed and the index
+  fails, the commit broke it, whatever the output looks like — which closes
+  every normalization blind spot at once rather than one at a time. When the
+  failing check produced no output, the block message reports its exit status.
+- Both defects shared a root cause worth naming: the original fixtures used
+  shell built-ins and committed their `node_modules`, so no test ever exercised
+  a check that genuinely needed dependencies or a linter that reports only a
+  summary. Section 19 covers both layouts, both flip cases, and asserts the
+  pre-existing-failure path still lands — 78 checks to 88.
+
 ## v4.14.0 — 2026-08-10 — the commit lint gate is trustworthy outside the repo it grew up in
 
 ### Fixed
