@@ -1,5 +1,53 @@
 # Changelog — git-agent
 
+## v4.14.2 — 2026-08-10 — index-pin what the gate reads, not just what it judges
+
+### Fixed
+
+- **An unstaged edit could switch the gate off.** `.claude/lint-gate.json` and
+  `package.json` were read from the working tree while the verdict was computed
+  from the index, so an unstaged edit that emptied the config or dropped
+  `scripts.lint` disabled the gate for a commit whose staged version still
+  enabled it — contradicting the index-pinning guarantee outright. Which files
+  decide the verdict is the same lever as their contents; both are now read
+  from the staged tree whenever it differs from disk. `.claude/no-lint-gate`
+  stays a working-tree read on purpose: it is a local escape hatch, and needing
+  to commit it to use it would defeat the point.
+- **Python linters installed only in a project virtualenv were invisible.**
+  `shutil.which` probes `PATH`, which a non-activated `.venv` is not on — the
+  most common Python layout, where the new Python gate would therefore have
+  been a silent no-op. `.venv`/`venv` (`bin` and `Scripts`) are now probed
+  ahead of `PATH`, and the resolved binary is invoked by absolute path.
+- **A config could outlast the hook timeout.** The 480s budget was arithmetic
+  over the two built-in scripts, but a config may name any number of commands,
+  each paying for a primary and a baseline run. The harness killing the hook
+  mid-run lets the commit through, so all checks now share one `TOTAL_BUDGET`
+  deadline and each run is clamped to what remains. Test 13 asserts the
+  enforced deadline rather than re-deriving the sum.
+- **`mkdtemp` was outside the exception handler,** so an unwritable or full
+  temp directory raised a traceback on every commit instead of taking the
+  documented could-not-run path.
+
+### Changed
+
+- The absent-toolchain assertions run with a sanitized `PATH` containing only
+  `git`, `python3`, and `sh`. Prefixing the caller's `PATH` meant a machine
+  with Go, Cargo, or Ruff installed ran the *real* tool, so those cases tested
+  nothing there and could fail outright — the suite was green here only because
+  this machine has none of them. A check now pins that the sanitized `PATH`
+  really does hide every probed toolchain.
+- 88 checks to 93.
+
+### Not changed
+
+- **`tarfile.extractall` without a member filter on Python < 3.11.4** was
+  raised as a path-traversal and symlink risk. Declined: `git archive` builds
+  the tar from a git tree, which cannot contain `..` components, and the gate
+  already executes the repo's own lint script by design — so any repo able to
+  exploit the extraction can simply run code through `scripts.lint`. Validating
+  members would not change the threat model, only its appearance. `filter="data"`
+  is still used wherever the runtime supports it.
+
 ## v4.14.1 — 2026-08-10 — two degraded-baseline paths that silently passed real failures
 
 ### Fixed

@@ -23,6 +23,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 from collections import Counter, namedtuple
 
 # `git commit`, allowing global options in between. The value-taking options are
@@ -67,6 +68,10 @@ MAX_OUTPUT = 4000  # keep the blocked-tool message readable
 PER_CHECK_TIMEOUT = 120
 BASELINE_TIMEOUT = 60
 MATERIALIZE_TIMEOUT = 30
+# A ceiling for the whole run, not the sum of the per-check caps: a config may
+# name any number of commands, and only a shared deadline keeps that inside the
+# declared hook timeout.
+TOTAL_BUDGET = 2 * (PER_CHECK_TIMEOUT + BASELINE_TIMEOUT) + 2 * MATERIALIZE_TIMEOUT
 COULD_NOT_RUN = 127  # shell convention for command-not-found
 # Evidence that dependencies are installed. `.pnp.cjs` covers Yarn PnP, which
 # resolves bins without ever creating node_modules.
@@ -98,6 +103,28 @@ def repo_root(cwd):
     return out.stdout.strip() if out and out.returncode == 0 else None
 
 
+def read_live(root, rel):
+    try:
+        with open(os.path.join(root, rel)) as fh:
+            return fh.read()
+    except Exception:
+        return None
+
+
+def read_staged(root, rel):
+    """A manifest as it will be committed, not as it sits on disk.
+
+    Which files the gate reads decides the verdict just as much as their
+    contents, so an unstaged edit to `package.json` or `.claude/lint-gate.json`
+    could otherwise switch the gate off for a commit whose staged version still
+    enables it. Untracked files fall back to the working tree — there is no
+    staged version to prefer."""
+    out = git(root, "show", ":" + rel.replace(os.sep, "/"))
+    if out and out.returncode == 0:
+        return out.stdout
+    return read_live(root, rel)
+
+
 def runner(root):
     for lockfile, cmd in RUNNERS:
         if os.path.exists(os.path.join(root, lockfile)):
@@ -120,14 +147,26 @@ def deps_installed(root, d):
         cur = parent
 
 
-def checks_for_dir(root, d):
+def venv_tool(root, probe):
+    """A project virtualenv is the usual home for ruff/flake8 and is not on the
+    hook's PATH, so probing PATH alone would leave the Python gate silently off
+    in the most common Python layout."""
+    for venv in (".venv", "venv"):
+        for bindir in ("bin", "Scripts"):
+            path = os.path.join(root, venv, bindir, probe)
+            if os.access(path, os.X_OK):
+                return path
+    return None
+
+
+def checks_for_dir(root, d, read):
     rel = os.path.relpath(d, root)
     rel = "" if rel == "." else rel
 
     # package.json wins where a directory carries more than one manifest.
     try:
-        with open(os.path.join(d, "package.json")) as fh:
-            scripts = json.load(fh).get("scripts") or {}
+        raw = read(os.path.join(rel, "package.json") if rel else "package.json")
+        scripts = json.loads(raw).get("scripts") or {}
     except Exception:
         scripts = {}
     found = [n for n in SCRIPTS if n in scripts]
@@ -144,12 +183,15 @@ def checks_for_dir(root, d):
         if not os.path.exists(os.path.join(d, manifest)):
             continue
         for probe, label, argv in tools:
+            local = venv_tool(d, probe) or venv_tool(root, probe)
+            if local:
+                return [Check(label, [local] + argv[1:], False, rel)]
             if shutil.which(probe):
                 return [Check(label, argv, False, rel)]
     return []
 
 
-def detect(root, cwd):
+def detect(root, cwd, read):
     """Nearest manifest, walking up from the commit's cwd. The git root is the
     walk's hard ceiling — escaping it would lint a parent project's manifest
     that has nothing to do with this repo."""
@@ -165,7 +207,7 @@ def detect(root, cwd):
     if not inside:
         d = root
     while True:
-        checks = checks_for_dir(root, d)
+        checks = checks_for_dir(root, d, read)
         if checks:
             return checks
         if d == root:
@@ -176,16 +218,15 @@ def detect(root, cwd):
         d = parent
 
 
-def config_checks(root):
+def config_checks(root, read):
     """(present, checks). `present` is True whenever the file exists, so a
     malformed config disables the gate rather than silently falling back to
     detection the author meant to replace."""
-    path = os.path.join(root, CONFIG)
-    if not os.path.exists(path):
+    raw = read(CONFIG)
+    if raw is None:
         return False, []
     try:
-        with open(path) as fh:
-            commands = json.load(fh).get("commands") or []
+        commands = json.loads(raw).get("commands") or []
         if isinstance(commands, str):
             commands = [commands]
         commands = [c for c in commands if isinstance(c, str) and c.strip()]
@@ -333,17 +374,31 @@ def block(label, body, degraded=False):
 
 
 def gate(root, cwd, workdir):
-    present, checks = config_checks(root)
-    if not present:
-        checks = detect(root, cwd)
-    if not checks:
-        return 0
-
     # An unborn branch has nothing to compare against, so every failure is new
     # by definition and the gate stays in the working tree.
     baseline = has_head(root)
+    pinned = baseline and not index_matches_worktree(root)
+    # Resolve which checks to run from the same tree that will be judged. When
+    # the trees already agree this is the identical file, so the common path
+    # pays nothing for the guarantee.
+    read = (lambda rel: read_staged(root, rel)) if pinned else (lambda rel: read_live(root, rel))
+
+    present, checks = config_checks(root, read)
+    if not present:
+        checks = detect(root, cwd, read)
+    if not checks:
+        return 0
+
+    # One deadline for the whole run, so a config naming more commands than the
+    # two built-in scripts cannot outlast the timeout declared in hooks.json —
+    # the harness killing this hook mid-run lets the commit through.
+    deadline = time.monotonic() + TOTAL_BUDGET
+
+    def budget(cap):
+        return max(1, min(cap, deadline - time.monotonic()))
+
     index_root, degraded = root, False
-    if baseline and not index_matches_worktree(root):
+    if pinned:
         # Pin the verdict to what is being committed. Comparing a live working
         # tree races against concurrent edits and would judge unstaged work.
         tree = git(root, "write-tree")
@@ -358,7 +413,7 @@ def gate(root, cwd, workdir):
 
     head_root = None
     for check in checks:
-        primary = run_check(check, index_root, PER_CHECK_TIMEOUT)
+        primary = run_check(check, index_root, budget(PER_CHECK_TIMEOUT))
         if primary is None or primary.returncode in (0, COULD_NOT_RUN):
             continue  # passed, or could not run at all — only a real finding blocks
         body = output_of(primary)
@@ -374,7 +429,7 @@ def gate(root, cwd, workdir):
         if head_root is False:
             return block(check.label, body, degraded=True)
 
-        before = run_check(check, head_root, BASELINE_TIMEOUT)
+        before = run_check(check, head_root, budget(BASELINE_TIMEOUT))
         if before is None:
             return block(check.label, body, degraded=True)
         # The check passed at HEAD and fails now: the commit broke it, whatever
@@ -418,7 +473,10 @@ def main():
     if not root or os.path.exists(os.path.join(root, OPT_OUT)):
         return 0
 
-    workdir = tempfile.mkdtemp(prefix="lint-gate-")
+    try:
+        workdir = tempfile.mkdtemp(prefix="lint-gate-")
+    except Exception:
+        return 0  # no temp space: no baseline, and no traceback on every commit
     try:
         return gate(root, cwd, workdir)
     except Exception:

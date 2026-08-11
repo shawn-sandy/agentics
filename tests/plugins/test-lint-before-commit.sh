@@ -100,6 +100,25 @@ fire_with_path() {
   PATH="$saved"
 }
 
+# The absent-toolchain assertions are only meaningful when the toolchain really
+# is absent. Prefixing the caller's PATH leaves a machine with Go, Cargo, or
+# Ruff installed running the *real* tool, so those cases would silently stop
+# testing anything (and can fail outright). MINPATH holds only what the hook
+# itself needs — git to resolve the repo, python3 because fire() runs the hook
+# through it — so every linter is genuinely off the PATH.
+MINPATH="$TMPROOT/minpath"
+mkdir -p "$MINPATH"
+for need in git python3 sh; do
+  src=$(command -v "$need" || true)
+  [ -n "$src" ] && ln -sf "$src" "$MINPATH/$need"
+done
+fire_without_toolchain() {
+  local saved="$PATH"
+  PATH="$MINPATH"
+  fire "$@"
+  PATH="$saved"
+}
+
 echo "1. Files exist and hook is executable..."
 for f in "$HOOK" "$HOOKS_JSON"; do
   if [ -f "$f" ]; then echo "  PASS: $f"
@@ -253,9 +272,12 @@ mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
 cfg = json.load(open(os.path.join(root, "kit/plugins/git-agent/hooks.json")))["hooks"]
 declared = [h.get("timeout", 0) for e in cfg["PreToolUse"] for h in e["hooks"]
             if "lint-before-commit.py" in h.get("command", "")]
+# TOTAL_BUDGET is the deadline the hook actually enforces, so assert that
+# rather than re-deriving the sum here — a config naming many commands is
+# bounded by it too, which a per-check sum would not catch.
 budget = (len(mod.SCRIPTS) * (mod.PER_CHECK_TIMEOUT + mod.BASELINE_TIMEOUT)
           + 2 * mod.MATERIALIZE_TIMEOUT)
-sys.exit(0 if declared and budget <= declared[0] else 1)
+sys.exit(0 if declared and budget <= mod.TOTAL_BUDGET <= declared[0] else 1)
 PY
 then echo "  PASS: combined check budget fits the hook timeout"
 else echo "  FAIL: checks can outlast the hook timeout"; FAILURES=$((FAILURES + 1)); fi
@@ -338,8 +360,10 @@ for eco in "pyproject.toml:ruff:RUFF_BROKE" "go.mod:go:GO_BROKE" "Cargo.toml:car
   check_rc 2 "$manifest with a failing linter blocks"
   has_out "$marker" "$manifest surfaces the linter's output"
 
-  # Same fixture, toolchain absent: a missing linter is not a code problem.
-  fire "git commit -m 'x'" "$REPO"
+  # Same fixture, toolchain genuinely absent: a missing linter is not a code
+  # problem. Run with MINPATH so a machine that has the real tool installed
+  # still exercises the absent branch.
+  fire_without_toolchain "git commit -m 'x'" "$REPO"
   check_rc 0 "$manifest without its toolchain is a no-op"
 done
 
@@ -535,7 +559,51 @@ git -C "$REPO" add -A
 fire "git commit -m 'x'" "$REPO"
 check_rc 0 "a check already failing at HEAD still allows an unrelated commit"
 
-echo "20. The commit regex bails before any filesystem probing..."
+echo "20. Which files decide the verdict are read from the index too..."
+# Contents and *selection* are the same lever: an unstaged edit that empties the
+# config or drops scripts.lint would otherwise switch the gate off for a commit
+# whose staged version still enables it. The command is silent by design, so
+# only the exit-status path can catch it.
+REPO=$(make_repo pin_cfg "$PASSING")
+mkdir -p "$REPO/.claude" "$REPO/src"
+printf '%s' '{"commands":["test ! -f src/bad.js"]}' > "$REPO/.claude/lint-gate.json"
+commit_all "$REPO"
+printf 'var b = 1;\n' > "$REPO/src/bad.js"
+git -C "$REPO" add -A
+printf '%s' '{ not json at all' > "$REPO/.claude/lint-gate.json"   # unstaged only
+fire "git commit -m 'x'" "$REPO"
+check_rc 2 "an unstaged config edit cannot disable the gate"
+
+# Same lever through package.json: the staged manifest still declares lint.
+REPO=$(make_repo pin_pkg "")
+write_grep_linter "$REPO"
+mkdir -p "$REPO/src" && printf 'var ok = 1;\n' > "$REPO/src/a.js"
+commit_all "$REPO"
+printf 'var b = BADCODE;\n' > "$REPO/src/bad.js"
+git -C "$REPO" add -A
+printf '%s' '{"scripts":{}}' > "$REPO/package.json"                # unstaged only
+fire "git commit -m 'x'" "$REPO"
+check_rc 2 "an unstaged package.json edit cannot disable the gate"
+
+# A project virtualenv is where ruff usually lives, and it is not on PATH.
+REPO=$(make_repo venv_ruff "")
+touch "$REPO/pyproject.toml"
+mkdir -p "$REPO/.venv/bin"
+printf '#!/bin/sh\necho "VENV_RUFF_BROKE" >&2\nexit 1\n' > "$REPO/.venv/bin/ruff"
+chmod +x "$REPO/.venv/bin/ruff"
+fire_without_toolchain "git commit -m 'x'" "$REPO"
+check_rc 2 "ruff installed only in .venv is still found"
+has_out "VENV_RUFF_BROKE" "the venv linter's output is fed back"
+
+# Guard the guard: MINPATH must really hide a toolchain, or every
+# absent-toolchain assertion above silently stops testing anything.
+if PATH="$MINPATH" command -v ruff >/dev/null 2>&1 || \
+   PATH="$MINPATH" command -v go >/dev/null 2>&1 || \
+   PATH="$MINPATH" command -v cargo-clippy >/dev/null 2>&1; then
+  echo "  FAIL: MINPATH leaks a real toolchain"; FAILURES=$((FAILURES + 1))
+else echo "  PASS: MINPATH hides every probed toolchain"; fi
+
+echo "21. The commit regex bails before any filesystem probing..."
 # This hook runs on every Bash call in every repo, so detection must never move
 # ahead of the cheap bail. Asserted behaviourally rather than by reading source.
 if python3 - "$ROOT" <<'PY'

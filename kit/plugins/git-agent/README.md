@@ -263,7 +263,7 @@ ceiling — the walk never escapes into a parent project.
 | Manifest | Check |
 |----------|-------|
 | `package.json` | `scripts.lint`, then `scripts.typecheck`, via the lockfile's runner (npm, pnpm, yarn, bun) |
-| `pyproject.toml` | `ruff check .`, falling back to `flake8` |
+| `pyproject.toml` | `ruff check .`, falling back to `flake8` — found in the project's `.venv`/`venv` as well as on `PATH` |
 | `go.mod` | `go vet ./...` |
 | `Cargo.toml` | `cargo clippy --quiet` |
 
@@ -283,6 +283,16 @@ to it:
 
 Commands run in a shell at the repo root. A malformed file disables the gate
 rather than silently falling back to the detection it was meant to replace.
+
+The config is read from the **staged** version when it differs from disk, as
+`package.json` is — which files decide the verdict is the same lever as their
+contents, so an unstaged edit must not be able to switch the gate off for a
+commit whose staged version still enables it. `.claude/no-lint-gate` is
+deliberately the exception: it is a local escape hatch and is always read from
+the working tree, so you can disable the gate without committing anything.
+
+All checks share one deadline, so a config naming more commands than the two
+built-in scripts still cannot outlast the hook timeout.
 
 ## Background subagents
 
