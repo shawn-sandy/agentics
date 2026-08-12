@@ -11,7 +11,10 @@
 - `~/.claude/hooks/` is now a default backup target. `settings.json` references
   hook scripts by path, so restoring settings without them left every hook
   pointing at a missing file.
-- `__pycache__/` added to the generated `.gitignore`.
+- `__pycache__/` added to the `.gitignore` rules. Backup now appends missing
+  rules to an existing `.gitignore` rather than only writing one when absent —
+  every pre-`hooks/` repo already has the file, so a create-only check would
+  have committed `hooks/__pycache__`.
 
 ### Changed
 

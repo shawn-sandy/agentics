@@ -66,7 +66,8 @@ Run `git -C <repo-path> rev-parse --is-inside-work-tree`.
   `git init <repo-path>`. On confirmation, run `git init`.
 - If the directory is already a git repo, continue.
 
-Check if a `.gitignore` exists in the repo root. If not, create one:
+Ensure the repo root `.gitignore` contains every rule below — create the file
+if missing, and **append any individual rule it lacks** if it already exists:
 
 ```
 .DS_Store
@@ -76,6 +77,11 @@ Check if a `.gitignore` exists in the repo root. If not, create one:
 .*.swp
 __pycache__/
 ```
+
+Checking only for the file's existence is not enough. Every repo created before
+`hooks/` became a backup target already has a `.gitignore` without
+`__pycache__/`, so those rules would never arrive and the `git add -A` in Step 7
+would commit `hooks/__pycache__` on the next run.
 
 ### Step 3 — Read config and build the file list
 
