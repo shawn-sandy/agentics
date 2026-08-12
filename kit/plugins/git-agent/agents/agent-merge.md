@@ -78,7 +78,7 @@ Everything else in those steps — including `--match-head-commit`, the
 `--required` semantics, the no-branch-protection caveat, and the
 `review-bot-loops` note — applies unchanged.
 
-### Step 5: Report and stop
+### Step 4: Report and stop
 
 Return one report to the parent session containing the PR URL, the per-check
 state summary, the review decision, `mergeStateStatus`, and either the merge
