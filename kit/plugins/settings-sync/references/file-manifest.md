@@ -13,6 +13,7 @@ Files and directories to include in backup/restore operations. Both
 | `~/.claude/rules/` | Directory | Rule files with path-scoped instructions (recursive) |
 | `~/.claude/commands/` | Directory | User-created custom commands (recursive) |
 | `~/.claude/skills/` | Directory | User-created custom skills (recursive) |
+| `~/.claude/hooks/` | Directory | Hook scripts referenced by `settings.json` — without these, restored hooks point at missing files |
 
 ## Opt-in targets
 

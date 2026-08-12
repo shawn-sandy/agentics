@@ -18,6 +18,7 @@ Routine-compatible for automated backups.
 | `rules/` | Included |
 | `commands/` | Included |
 | `skills/` | Included |
+| `hooks/` | Included |
 | `settings.local.json` | Opt-in |
 
 Auto-generated files (sessions, caches, plugins, telemetry) are excluded.
@@ -70,13 +71,29 @@ Triggers when you ask to restore or import your Claude Code settings.
 restore my claude settings from ~/dotfiles/claude-settings
 ```
 
-You can pass the repo path inline:
+You can pass the repo path or a clone URL inline:
 
 ```
-restore my claude settings [repo-path]
+restore my claude settings [repo-path-or-url]
 ```
 
 Always interactive — requires user confirmation before overwriting local files.
+
+### Setting up a new machine
+
+There is no local backup repo on a fresh machine, so pass the **clone URL**:
+
+```
+restore my claude settings from https://github.com/you/claude-settings-backup.git
+```
+
+The repo is cloned to `~/.claude-settings-backup`, and the path is saved to
+`~/.claude/settings-sync.json` for subsequent runs. Restart Claude Code
+afterwards — plugins reinstall themselves from the `enabledPlugins` and
+`extraKnownMarketplaces` entries in the restored `settings.json`.
+
+Do **not** run `settings-backup` first on a new machine. It would copy the
+empty local config over your backup and push it.
 
 ### Routine (automated backup)
 
@@ -136,8 +153,9 @@ runs to `.sync-log` for audit trail.
 
 Activates when the user asks to restore, import, or recover their settings.
 
-Steps: resolve repo path, pull latest, generate file-level diff summary,
-confirm with user, copy files, report.
+Steps: resolve the source (local path or clone URL), clone if needed, pull
+latest, build the file list from the backup repo root (minus control files),
+generate a file-level diff summary, confirm with user, copy files, report.
 
 Always interactive — requires user confirmation before overwriting.
 Warns that changes take effect after restarting Claude Code.
