@@ -118,11 +118,15 @@ rule.
 
 ## Step 3: Re-check, ask, then merge
 
-**Re-run the Step 2 queries first.** `--match-head-commit` only catches a moved
-head — it does not catch a review flipping to `CHANGES_REQUESTED`,
-`mergeStateStatus` flipping to `BLOCKED`, or a check turning red on the same
-commit. Show the user state you fetched just now, not state you remember. If
-anything regressed, go back to Step 2 and ask.
+**Re-fetch the PR state first — both queries, not just one.** Re-run the Step 1
+`gh pr view --json` field set *and* the Step 2 `gh pr checks` queries.
+`mergeable`, `mergeStateStatus`, `reviewDecision`, and `headRefOid` come only
+from `gh pr view`, so re-running the check queries alone would leave you
+deciding on remembered metadata. `--match-head-commit` only catches a moved head
+— it does not catch a review flipping to `CHANGES_REQUESTED`, `mergeStateStatus`
+flipping to `BLOCKED`, or a check turning red on the same commit. Evaluate every
+gate against these fresh responses, and show the user state you fetched just
+now, not state you remember. If anything regressed, go back to Step 2 and ask.
 
 Green checks alone never authorize a merge. Use **AskUserQuestion** to confirm,
 showing the PR URL, the check summary, the review decision, and

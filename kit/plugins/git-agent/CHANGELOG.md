@@ -17,6 +17,17 @@
 - Steps renumbered: re-check/ask/merge is now Step 3, report is Step 4.
   `agent-merge`, `/git-agent:merge-bg`, and the README follow.
 
+### Fixed
+
+- **The Step 3 re-check named the wrong queries.** It said "re-run the Step 2
+  queries", which are the two `gh pr checks` calls — yet the same paragraph
+  claimed the re-check catches a review flipping to `CHANGES_REQUESTED` or
+  `mergeStateStatus` flipping to `BLOCKED`. Those fields come only from Step 1's
+  `gh pr view`, so the re-check could not see them and the merge decision rode
+  on remembered metadata. Step 3 now re-runs **both** queries and evaluates
+  every gate against the fresh responses. Predates this release; the wording was
+  inherited when the step was renumbered.
+
 Merge readiness is unchanged otherwise — required checks, `mergeable`,
 `mergeStateStatus`, `reviewDecision`, the head-pinned squash, and the approval
 prompt all behave exactly as before. A repo that wants lint enforced at merge
