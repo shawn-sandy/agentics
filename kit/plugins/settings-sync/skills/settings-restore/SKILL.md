@@ -62,10 +62,15 @@ If `~/.claude-settings-backup` already exists:
   Remove it or pass a different local path." and **STOP**. Never overwrite it.
 
 If the clone fails (auth, network, bad URL), report git's error and **STOP** —
-but strip URL userinfo first. A clone URL of the form
-`https://user:token@host/repo.git` is echoed back in git's own error text, so
-replace everything between `//` and `@` with `***` before showing or logging
-it.
+but strip URL userinfo first. Git echoes the URL back in its own error text,
+credentials included, so replace the userinfo segment (everything between `//`
+and the last `@` of the authority) with `***`:
+
+```text
+https://alice:ghp_ABC123@github.com/you/backup.git   ->   https://***@github.com/you/backup.git
+```
+
+Apply this to anything written to the screen or to `.sync-log`.
 
 **If the value is a local path**, verify it is a git repo:
 `git -C "<repo-path>" rev-parse --is-inside-work-tree`. If it fails, output:
