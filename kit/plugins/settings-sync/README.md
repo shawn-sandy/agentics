@@ -154,8 +154,8 @@ runs to `.sync-log` for audit trail.
 Activates when the user asks to restore, import, or recover their settings.
 
 Steps: resolve the source (local path or clone URL), clone if needed, pull
-latest, build the file list from the backup's own metadata, generate a
-file-level diff summary, confirm with user, copy files, report.
+latest, build the file list from the backup repo root (minus control files),
+generate a file-level diff summary, confirm with user, copy files, report.
 
 Always interactive — requires user confirmation before overwriting.
 Warns that changes take effect after restarting Claude Code.

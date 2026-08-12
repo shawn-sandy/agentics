@@ -75,10 +75,10 @@ no settings yet that would overwrite the backup with an empty config.
 
 Check if a remote exists: `git -C "<repo-path>" remote get-url origin 2>/dev/null`.
 
-If a remote exists, run `git -C <repo-path> pull --ff-only`.
+If a remote exists, run `git -C "<repo-path>" pull --ff-only`.
 
 - If pull fails, warn: "Could not pull latest — remote may have diverged.
-  Restoring from local copy. Run `git -C <repo-path> pull` manually to sync."
+  Restoring from local copy. Run `git -C "<repo-path>" pull` manually to sync."
   Continue with the local state.
 
 ### Step 3 — Build the file list from the repo
@@ -178,19 +178,22 @@ directory.
 
 ```bash
 # file entry
-rsync -aL "<repo-path>/<file>" ~/.claude/<file>
+rsync -aL "<repo-path>/<file>" "$HOME/.claude/<file>"
 # directory entry — trailing slashes and --delete mirror the backup exactly
-rsync -aL --delete "<repo-path>/<dir>/" ~/.claude/<dir>/
+rsync -aL --delete "<repo-path>/<dir>/" "$HOME/.claude/<dir>/"
 ```
 
 **If rsync is not available (cp fallback):**
 
-For each file target: `cp -fL "<repo-path>/<file>" ~/.claude/<file>`.
+For each file target: `cp -fL "<repo-path>/<file>" "$HOME/.claude/<file>"`.
 For each directory target, remove then replace to mirror rsync `--delete`:
 
 ```bash
-rm -rf ~/.claude/<dir> && cp -aL "<repo-path>/<dir>" ~/.claude/<dir>
+rm -rf "$HOME/.claude/<dir>" && cp -aL "<repo-path>/<dir>" "$HOME/.claude/<dir>"
 ```
+
+Quote both sides. `~` does not expand inside quotes, so use `$HOME` for the
+destination.
 
 Restore executable bits as stored — `hooks/` scripts are invoked directly by
 Claude Code and are inert without them (`-a` preserves this on both paths).
