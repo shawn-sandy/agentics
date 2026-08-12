@@ -1,6 +1,36 @@
 # Changelog
 
 
+## 9.2.0 — build-feature: feature docs that split into plans (2026-08-12)
+
+### Added
+
+- **`build-feature` skill** — the sibling of `build-proposal` with a different
+  seam: a proposal answers *should-we*; a feature doc answers *what are we
+  building, and how does it split into plans?* Command
+  (`/plan-agent:build-feature <feature idea> [--dir <path>] [--tier 0|1|2]`)
+  or model-invocable on feature-doc / break-into-plans intent, with trigger
+  phrases disjoint from both siblings.
+- **Dual deliverable** — a team feature doc at `<features-dir>/<slug>.md`
+  (`--dir` → `planAgent.featuresDirectory` → `docs/features/`; covers context,
+  problem and users, goals with metrics, scope in/out, UX notes, risks) plus,
+  only at convergence, one saved prompt per sub-feature at
+  `<prompts-dir>/feature-<slug>-<sub-slug>.md` via `prompt`'s standard
+  `--out`/`--answers-gathered` path — the `proposal` type stays exclusive to
+  `build-proposal`, and prompts are never written per round because the
+  breakdown can merge or split mid-loop.
+- **Recommend-only breakdown** — each sub-feature carries a rationale, an
+  S/M/L size, its dependency order, and a paste-ready
+  `/plan-agent:implementation-plan … --from-prompt` command. The skill never
+  invokes plan generation itself; a Tier 0 gate routes a plan-sized feature
+  straight to `/plan-agent:implementation-plan` with no artifact written.
+- **`references/feature-doc-shape.md`** — the canonical section order, the
+  breakdown entry format (with the four-backtick fenced prompt skeleton), and
+  the sizing guide. `tests/plugins/test-build-feature.sh` smoke-tests the
+  frontmatter contract, the disjoint description, the dual-deliverable paths,
+  and the recommend-only guarantee; the skill is added to the
+  `test-exitplanmode-guard.sh` whitelist. `build-proposal` ships byte-identical.
+
 ## 9.1.1 — the plugin's hooks actually register (2026-08-10)
 
 ### Fixed

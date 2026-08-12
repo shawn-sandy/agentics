@@ -22,6 +22,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 |-----------|------|-----------|
 | `implementation-plan` | Skill | Command (`/plan-agent:implementation-plan <objective>`) or auto-activates on plan-document intent |
 | `build-proposal` | Skill | Command (`/plan-agent:build-proposal <idea>`) or auto-activates on idea / "should-we" / compare-and-align intent — converges on a saved prompt at `docs/prompts/proposal-<slug>.md` |
+| `build-feature` | Skill | Command (`/plan-agent:build-feature <feature idea>`) or auto-activates on feature-doc / break-into-plans intent — converges on a feature doc at `docs/features/<slug>.md` plus per-sub-feature prompts at `docs/prompts/feature-<slug>-<sub-slug>.md` |
 | `build` | Skill | Command (`/plan-agent:build [<plan>] [<objective>] [--type <kind>]`) or auto-activates on "implement / build this plan" intent — implements a plan and runs its gates; with no plan named, the command form authors one first through proposal → plan → review |
 | `fix` | Command | Typed entry point — `/plan-agent:fix <objective>` runs the `build` chain with `--type fix` |
 | `refactor` | Command | Typed entry point — `/plan-agent:refactor <objective>` runs the `build` chain with `--type refactor` |
@@ -641,6 +642,24 @@ Usage:
 /plan-agent:build-proposal should we adopt DESIGN.md for our component tokens
 /plan-agent:build-proposal compare our state management to Zustand and align
 /plan-agent:build-proposal --dir docs/rfcs how would we add offline support   # --dir names the prompts dir
+```
+
+### `build-feature` Skill
+
+Command-invocable via `/plan-agent:build-feature <feature idea>` and model-invocable on feature-doc / break-into-plans intent. The sibling of `build-proposal` with a different seam: a proposal answers *should-we*; a feature doc answers *what are we building, and how does it split into plans?* Its three-part description shares no trigger phrase with either sibling, so the three never collide on the model-invocation path.
+
+- **Right-sizing triage** — Tier 0 (**plan-sized**: the feature would yield one plan, so it hands the user the exact `/plan-agent:implementation-plan <idea>` command and writes no artifact), Tier 1 (focused: one research pass, short shape), Tier 2 (full shape, deepened over rounds).
+- **Same loop as build-proposal** — Frame → Confirm the ask (Step 1b gate, two-round refine bound) → Fan out research in parallel (codebase `Agent` in flight before the first fetch) → Synthesize the feature's shape and its **seams** → Separate facts from decisions → Resolve decisions (recommendation-first) → Author the doc → Deepen → Converge & hand off.
+- **Dual deliverable** — the team feature doc at `<features-dir>/<slug>.md` (written in place each round; `--dir` → `planAgent.featuresDirectory` via settings precedence → `${PWD}/docs/features/`) plus, **only at convergence**, one saved prompt per sub-feature at `<prompts-dir>/feature-<slug>-<sub-slug>.md`, authored by delegating to `prompt` through its standard path with an explicit `--out` and `--answers-gathered` — no `proposal` type, no changes to the `prompt` skill. Prompts are not written per round because the breakdown can merge or split mid-loop.
+- **Recommend-only breakdown** — the doc's Sub-feature breakdown carries a rationale, S/M/L size, dependency order, prompt path, and a paste-ready `/plan-agent:implementation-plan … --from-prompt <prompt path>` command per sub-feature. Running them, in dependency order, is the user's step — the skill never invokes plan generation itself.
+- **Reference (one level deep)** — `references/feature-doc-shape.md`: the canonical section order, the breakdown entry format with its fenced prompt skeleton, and the S/M/L sizing guide.
+
+Usage:
+
+```text
+/plan-agent:build-feature bulk CSV export for the reports dashboard
+/plan-agent:build-feature --tier 2 offline support across the mobile app
+/plan-agent:build-feature --dir docs/rfcs dark mode          # --dir names the features dir
 ```
 
 ### `finalize-plan` Skill
