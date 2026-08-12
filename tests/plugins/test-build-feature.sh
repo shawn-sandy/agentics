@@ -120,6 +120,12 @@ MISSING=""
 printf '%s' "$STEP8" | grep -qF 'Skill(skill: "plan-agent:prompt"' || MISSING="$MISSING prompt-delegation"
 printf '%s' "$STEP8" | grep -qF -- '--out' || MISSING="$MISSING out-path-contract"
 printf '%s' "$STEP8" | grep -qF -- '--answers-gathered' || MISSING="$MISSING interview-bypass"
+# `--answers-gathered` suppresses prompt's type-confirmation gate, so an unpinned
+# type is inferred with nobody to catch a miss. The leading `task` token pins it.
+printf '%s' "$STEP8" | grep -qF '"plan-agent:prompt", args: "task ' || MISSING="$MISSING task-type-token"
+# The paste-ready command passes the prompt, never the feature doc — feature-wide
+# constraints are unrecoverable downstream unless they travel inside the prompt.
+printf '%s' "$STEP8" | grep -qF 'UX & accessibility notes' || MISSING="$MISSING shared-constraints"
 grep -qF 'feature-<slug>-<sub-slug>.md' "$SKILL" || MISSING="$MISSING prompt-filename"
 grep -q "only at convergence" "$SKILL" || MISSING="$MISSING convergence-only"
 grep -q "docs/features/" "$SKILL" || MISSING="$MISSING features-doc-path"

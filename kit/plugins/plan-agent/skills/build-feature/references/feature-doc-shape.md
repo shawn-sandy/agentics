@@ -49,7 +49,10 @@ later one. Each carries, in this order:
 - **Size** — S / M / L, judged by surface touched, not optimism.
 - **Depends on** — earlier sub-feature names, or `none`.
 - **Prompt file** — `<prompts-dir>/feature-<slug>-<sub-slug>.md` (written at
-  Step 8; cite the path only once the file exists).
+  Step 8; cite the path only once the file exists). Each prompt carries the
+  doc's Goals, Scope, UX & accessibility notes, and Risks alongside the entry
+  — the paste-ready command below passes the prompt, never the doc, so
+  constraints left out here are lost to every downstream plan.
 - **Paste-ready prompt** — a fenced block the user runs verbatim.
 
 ## Entry skeleton

@@ -181,12 +181,25 @@ write the **per-sub-feature saved prompts**, one per sub-feature, by
 delegating to `prompt`:
 
 ```
-Skill(skill: "plan-agent:prompt", args: "--out <prompts-dir>/feature-<slug>-<sub-slug>.md --answers-gathered <that sub-feature's section of the doc>")
+Skill(skill: "plan-agent:prompt", args: "task --out <prompts-dir>/feature-<slug>-<sub-slug>.md --answers-gathered <that sub-feature's breakdown entry, plus the doc's Goals & success metrics, Scope, UX & accessibility notes, and Risks verbatim, plus the feature doc's path>")
 ```
 
+- **The leading `task` token is not optional.** `prompt` skips its
+  type-confirmation gate whenever `--answers-gathered` is present — that is
+  the unattended-caller path — so an unpinned type is *inferred* with nobody
+  to catch a miss, and a sub-feature worded analytically or creatively would
+  select the wrong technique matrix and template. Sub-feature prompts are
+  always implementation work, so pin `task`, exactly as `build-proposal` pins
+  its own type.
 - **`--out` is not optional** — passing the path makes both sides agree by
   construction, so the paths cited in the doc's breakdown are byte-identical
   to the files written.
+- **Carry the feature-wide constraints into every prompt.** The breakdown
+  entry alone is not enough: the paste-ready command hands
+  `implementation-plan` this prompt and a one-line objective, never the
+  feature doc, so goals, scope cuts, UX and accessibility requirements, and
+  risks are unrecoverable downstream unless they travel inside the prompt.
+  Include the doc's path too, so a reader can go back to the source.
 - **`--answers-gathered`** skips `prompt`'s interview; Steps 4–5 already
   resolved every decision. This is `prompt`'s standard authoring path — no
   `proposal` type, no changes to the `prompt` skill.

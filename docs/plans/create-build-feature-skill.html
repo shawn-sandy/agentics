@@ -1874,7 +1874,7 @@ img, video { max-width: 100%; height: auto; }
         Final check
       </h2>
       <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
-      <p>From the repo root: <code class="md">bash tests/plugins/test-build-feature.sh &amp;&amp; bash tests/plugins/test-exitplanmode-guard.sh &amp;&amp; git fetch origin &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs</code> — all three exit 0. Then load the plugin end-to-end: <code class="md">claude --plugin-dir kit/plugins/plan-agent</code> and confirm <code class="md">/plan-agent:build-feature</code> appears in the command list and its help echoes the <code class="md">&lt;feature idea&gt; [--dir &lt;path&gt;] [--tier 1|2]</code> argument hint. Finally, <code class="md">git diff origin/main --stat -- kit/plugins/plan-agent/skills/build-proposal/</code> prints nothing, proving the sibling shipped untouched.</p>
+      <p>From the repo root: <code class="md">bash tests/plugins/test-build-feature.sh &amp;&amp; bash tests/plugins/test-exitplanmode-guard.sh &amp;&amp; git fetch origin &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs</code> — all three exit 0. Then load the plugin end-to-end: <code class="md">claude --plugin-dir kit/plugins/plan-agent</code> and confirm <code class="md">/plan-agent:build-feature</code> appears in the command list and its help echoes the <code class="md">&lt;feature idea&gt; [--dir &lt;path&gt;] [--tier 0|1|2]</code> argument hint. Finally, <code class="md">git diff origin/main --stat -- kit/plugins/plan-agent/skills/build-proposal/</code> prints nothing, proving the sibling shipped untouched.</p>
     </section>
 
     <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">

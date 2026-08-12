@@ -61,7 +61,7 @@ Tier 1 — This plan creates plugin source files (skills are this marketplace's 
 
 ## Verification
 
-From the repo root: `bash tests/plugins/test-build-feature.sh && bash tests/plugins/test-exitplanmode-guard.sh && git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs` — all three exit 0. Then load the plugin end-to-end: `claude --plugin-dir kit/plugins/plan-agent` and confirm `/plan-agent:build-feature` appears in the command list and its help echoes the `<feature idea> [--dir <path>] [--tier 1|2]` argument hint. Finally, `git diff origin/main --stat -- kit/plugins/plan-agent/skills/build-proposal/` prints nothing, proving the sibling shipped untouched.
+From the repo root: `bash tests/plugins/test-build-feature.sh && bash tests/plugins/test-exitplanmode-guard.sh && git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs` — all three exit 0. Then load the plugin end-to-end: `claude --plugin-dir kit/plugins/plan-agent` and confirm `/plan-agent:build-feature` appears in the command list and its help echoes the `<feature idea> [--dir <path>] [--tier 0|1|2]` argument hint. Finally, `git diff origin/main --stat -- kit/plugins/plan-agent/skills/build-proposal/` prints nothing, proving the sibling shipped untouched.
 
 ## Next Steps
 
