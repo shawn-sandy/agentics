@@ -2,7 +2,7 @@
 name: build-feature
 model: claude-fable-5
 description: "Turns a feature idea into a team feature doc that splits into plans. Recommends sized, dependency-ordered sub-features. Use when asked for a feature doc or to break a feature into plans."
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, WebSearch, WebFetch, Skill, Agent, Artifact
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, WebSearch, WebFetch, Skill, Agent
 argument-hint: "<feature idea> [--dir <path>] [--tier 0|1|2]"
 ---
 
@@ -204,8 +204,16 @@ Skill(skill: "plan-agent:prompt", args: "task --out <prompts-dir>/feature-<slug>
   resolved every decision. This is `prompt`'s standard authoring path — no
   `proposal` type, no changes to the `prompt` skill.
 
-Then update the doc's breakdown so each sub-feature cites its prompt path,
-set the doc's `status:` to `converged`, and **stop**. Report the doc path and
+**Verify every prompt file before declaring convergence.** `Skill()` has no
+documented return value, so a failed or partial delegation is silent. After
+the invocations, confirm each `--out` path exists and holds that
+sub-feature's content. Any missing or empty file → leave `status: gathering`,
+name the sub-features whose prompts did not land, and stop; a doc marked
+`converged` while citing a path that was never written is worse than one
+still marked in progress, because the breakdown reads as ready to hand off.
+
+Once every prompt is verified, update the doc's breakdown so each sub-feature
+cites its prompt path, set the doc's `status:` to `converged`, and **stop**. Report the doc path and
 each prompt path. The doc's breakdown carries a paste-ready
 `/plan-agent:implementation-plan` command per sub-feature — running them, in
 dependency order, is the user's step, not this skill's.

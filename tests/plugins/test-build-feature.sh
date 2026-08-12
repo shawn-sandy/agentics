@@ -91,17 +91,31 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "6. Body carries the Tier 0/1/2 gate and all 8 workflow steps (Frame → Converge and hand off)..."
-STEP_COUNT="$(grep -cE '^### Step [1-8] —' "$SKILL" || true)"
-if grep -q "0 — Plan-sized" "$SKILL" \
-  && grep -q "1 — Focused" "$SKILL" \
-  && grep -q "2 — Full" "$SKILL" \
-  && grep -q "Step 1 — Frame" "$SKILL" \
-  && grep -q "Step 8 — Converge and hand off" "$SKILL" \
-  && [ "$STEP_COUNT" -eq 8 ]; then
-  echo "  PASS (8 numbered steps)"
+echo "6. Body carries the Tier 0/1/2 gate and each of Steps 1-8 exactly once..."
+# Each heading must appear exactly once. A bare count of 8 would accept a
+# duplicated Step 3 masking a missing Step 5 — the regression this guards.
+if python3 - "$SKILL" <<'PY'
+import re, sys
+txt = open(sys.argv[1]).read()
+bad = []
+for n in range(1, 9):
+    c = len(re.findall(rf'^### Step {n} — ', txt, re.M))
+    if c != 1:
+        bad.append(f"Step {n} appears {c}x")
+for tier in ("0 — Plan-sized", "1 — Focused", "2 — Full"):
+    if tier not in txt:
+        bad.append(f"missing tier row {tier!r}")
+for anchor in ("Step 1 — Frame", "Step 8 — Converge and hand off"):
+    if anchor not in txt:
+        bad.append(f"missing {anchor!r}")
+if bad:
+    print("   " + "; ".join(bad))
+sys.exit(1 if bad else 0)
+PY
+then
+  echo "  PASS (Steps 1-8 each exactly once)"
 else
-  echo "  FAIL: missing Tier 0/1/2 gate or the 8 numbered steps (found $STEP_COUNT)"
+  echo "  FAIL: Tier gate or step-heading contract broken (details above)"
   FAILURES=$((FAILURES + 1))
 fi
 
@@ -117,6 +131,9 @@ fi
 echo "8. Step 8 dual-delivers: prompt authors the sub-feature prompts, at convergence only..."
 STEP8="$(sed -n '/^### Step 8 —/,/^## Writing Style/p' "$SKILL")"
 MISSING=""
+# Each contract is asserted in the section that owns it — a whole-file grep
+# would pass on a marker that drifted out of Step 8 into unrelated prose.
+RESOLUTION="$(sed -n '/^## Artifact resolution/,/^## Workflow/p' "$SKILL")"
 printf '%s' "$STEP8" | grep -qF 'Skill(skill: "plan-agent:prompt"' || MISSING="$MISSING prompt-delegation"
 printf '%s' "$STEP8" | grep -qF -- '--out' || MISSING="$MISSING out-path-contract"
 printf '%s' "$STEP8" | grep -qF -- '--answers-gathered' || MISSING="$MISSING interview-bypass"
@@ -126,9 +143,12 @@ printf '%s' "$STEP8" | grep -qF '"plan-agent:prompt", args: "task ' || MISSING="
 # The paste-ready command passes the prompt, never the feature doc — feature-wide
 # constraints are unrecoverable downstream unless they travel inside the prompt.
 printf '%s' "$STEP8" | grep -qF 'UX & accessibility notes' || MISSING="$MISSING shared-constraints"
-grep -qF 'feature-<slug>-<sub-slug>.md' "$SKILL" || MISSING="$MISSING prompt-filename"
-grep -q "only at convergence" "$SKILL" || MISSING="$MISSING convergence-only"
-grep -q "docs/features/" "$SKILL" || MISSING="$MISSING features-doc-path"
+printf '%s' "$STEP8" | grep -qF 'feature-<slug>-<sub-slug>.md' || MISSING="$MISSING prompt-filename"
+# Skill() has no return value, so a silent partial handoff must block convergence.
+printf '%s' "$STEP8" | grep -qF 'Verify every prompt file before declaring convergence' || MISSING="$MISSING prompt-verification-gate"
+# These two are the resolution table's contract, not Step 8's.
+printf '%s' "$RESOLUTION" | grep -q "only at convergence" || MISSING="$MISSING convergence-only"
+printf '%s' "$RESOLUTION" | grep -q "docs/features/" || MISSING="$MISSING features-doc-path"
 if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
@@ -146,17 +166,34 @@ else
 fi
 
 echo "10. SKILL.md resolves the features dir via --dir → featuresDirectory → docs/features/, prompts dir separately..."
-MISSING=""
-grep -q "\-\-dir" "$SKILL" || MISSING="$MISSING dir-flag"
-grep -q "planAgent.featuresDirectory" "$SKILL" || MISSING="$MISSING featuresDirectory-setting"
-grep -q "docs/features/" "$SKILL" || MISSING="$MISSING docs-features-default"
-grep -q "promptsDirectory" "$SKILL" || MISSING="$MISSING promptsDirectory-setting"
-grep -q "docs/prompts/" "$SKILL" || MISSING="$MISSING docs-prompts-default"
-grep -q "mkdir -p" "$SKILL" || MISSING="$MISSING mkdir"
-if [ -z "$MISSING" ]; then
+# Presence alone is not the contract — precedence ORDER is what the resolver
+# promises, so assert the three fall-through tiers appear in that order.
+if python3 - "$SKILL" <<'PY'
+import sys
+txt = open(sys.argv[1]).read()
+block = txt[txt.index("## Artifact resolution"):txt.index("## Workflow")]
+bad = []
+order = ["--dir", "planAgent.featuresDirectory", "${PWD}/docs/features/"]
+idx = [block.find(t) for t in order]
+if any(i < 0 for i in idx):
+    bad.append("features resolver missing: " + ", ".join(t for t, i in zip(order, idx) if i < 0))
+elif idx != sorted(idx):
+    bad.append("features precedence out of order (--dir -> featuresDirectory -> docs/features/)")
+# The prompts resolver is independent and must NOT be driven by --dir.
+if "promptsDirectory" not in block or "${PWD}/docs/prompts/" not in block:
+    bad.append("prompts resolver missing promptsDirectory or docs/prompts/ default")
+if "Never overridden by `--dir`" not in block:
+    bad.append("prompts resolver does not state it is independent of --dir")
+if "mkdir -p" not in block:
+    bad.append("no mkdir -p before first write")
+if bad:
+    print("   " + "; ".join(bad))
+sys.exit(1 if bad else 0)
+PY
+then
   echo "  PASS"
 else
-  echo "  FAIL: artifact resolver incomplete in SKILL.md:$MISSING"
+  echo "  FAIL: artifact resolver contract broken (details above)"
   FAILURES=$((FAILURES + 1))
 fi
 
