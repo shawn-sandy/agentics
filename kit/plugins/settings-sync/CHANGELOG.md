@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.1.1 — 2026-08-12 — Fix 1.1.0 release defects and harden the clone path
+
+### Fixed
+
+- **Changelog structure.** The 1.1.0 entry absorbed v1.0.2's heading, leaving a
+  duplicate `### Fixed` section and erasing the v1.0.2 release. Heading restored.
+- **Root README plugin inventory** regenerated — it still advertised 1.0.2 after
+  the 1.1.0 bump.
+- **Restore's deletion warning is now built from the same dynamic list Step 6
+  copies.** It named only `rules/`, `commands/`, and `skills/`, so `hooks/` —
+  and any other directory in the backup — could be `--delete`d without ever
+  appearing in the confirmation preview.
+
+### Security
+
+- `http://` clone URLs are rejected unless the user explicitly confirms.
+  Restored `hooks/` scripts execute on next start, so plaintext transport is a
+  code-injection path, not just an eavesdropping one.
+- Clone failures are scrubbed of URL userinfo before being shown or logged — a
+  token embedded in the clone URL would otherwise be echoed verbatim.
+- Repo entry names are validated as plain relative names before they reach
+  `rm -rf` or `rsync --delete`.
+
+---
+
 ## v1.1.0 — 2026-08-12 — Restore onto a new machine
 
 ### Added
@@ -30,6 +55,10 @@
 - The "not a git repo" error no longer suggests running `settings-backup` to
   recover. On a new machine that would have overwritten the remote backup with
   an empty local config.
+
+---
+
+## v1.0.2 — 2026-06-05 — Use portable plugin-dir path in README
 
 ### Fixed
 

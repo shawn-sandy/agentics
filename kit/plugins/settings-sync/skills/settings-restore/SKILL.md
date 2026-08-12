@@ -40,13 +40,19 @@ Determine the source using this priority order:
 
 If nothing can be resolved, output an error and **STOP**.
 
-**If the value is a URL** (starts with `https://`, `http://`, `git@`, or
-`ssh://`), clone it to `~/.claude-settings-backup` and use that as the repo
+**If the value is a URL** (starts with `https://`, `git@`, `ssh://`, or
+`http://`), clone it to `~/.claude-settings-backup` and use that as the repo
 path:
 
 ```bash
 git clone "<url>" "$HOME/.claude-settings-backup"
 ```
+
+**Reject plaintext `http://` by default.** Restored `hooks/` scripts are
+executed by Claude Code on next start, so an unencrypted clone is a
+code-injection path, not merely an eavesdropping one. Warn and require explicit
+confirmation via `AskUserQuestion` before cloning over `http://`; **STOP** if
+the user declines.
 
 If `~/.claude-settings-backup` already exists:
 
@@ -55,8 +61,11 @@ If `~/.claude-settings-backup` already exists:
   "`~/.claude-settings-backup` already exists and is not a clone of `<url>`.
   Remove it or pass a different local path." and **STOP**. Never overwrite it.
 
-If the clone fails (auth, network, bad URL), report git's error verbatim and
-**STOP**.
+If the clone fails (auth, network, bad URL), report git's error and **STOP** —
+but strip URL userinfo first. A clone URL of the form
+`https://user:token@host/repo.git` is echoed back in git's own error text, so
+replace everything between `//` and `@` with `***` before showing or logging
+it.
 
 **If the value is a local path**, verify it is a git repo:
 `git -C "<repo-path>" rev-parse --is-inside-work-tree`. If it fails, output:
@@ -97,6 +106,12 @@ which belong to the repo and never to `~/.claude/`:
 
 Every entry maps to the same name under `~/.claude/`:
 `<repo-path>/<entry>` → `~/.claude/<entry>`.
+
+**Validate every entry before it is used as a path.** These names come from the
+repo, and Step 6 feeds them to `rm -rf` and `rsync --delete`. Accept an entry
+only if it is a plain relative name — no `/`, no `..`, not starting with `-`
+(which `rsync` and `rm` would read as an option). Skip and report anything else
+rather than expanding the destructive operation outside `~/.claude/`.
 
 Do **not** drive this list from `filesIncluded` in `.settings-sync-meta.json`.
 That array records what the last backup run copied, which is a subset of the
@@ -140,10 +155,12 @@ Restore preview:
   skills/ — not in backup (skipped)
 ```
 
-**Important:** the `--delete` flag (rsync) and `rm -rf` (cp fallback) mean
-files that exist locally in `rules/`, `commands/`, or `skills/` but are **not**
-in the backup will be removed. Always surface these as `- deleted` in the
-preview so the user knows what will be lost.
+**Important:** the `--delete` flag (rsync) and `rm -rf` (cp fallback) mean that
+for **every directory in the Step 3 list**, local files not present in the
+backup are removed. Derive the deleted entries from that same list — never from
+a fixed set of directory names, or a directory added to the backup later
+(`hooks/` among them) would be wiped without ever appearing in the preview.
+Always surface these as `- deleted` so the user knows what will be lost.
 
 ### Step 5 — Confirm with user
 
