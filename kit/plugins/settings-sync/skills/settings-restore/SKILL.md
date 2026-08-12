@@ -42,7 +42,25 @@ If nothing can be resolved, output an error and **STOP**.
 
 **If the value is a URL** (starts with `https://`, `git@`, `ssh://`, or
 `http://`), clone it to `~/.claude-settings-backup` and use that as the repo
-path:
+path.
+
+**First, derive `<safe-url>` — before anything is displayed or logged.** A clone
+URL may carry credentials in its userinfo, and every branch below can emit a
+diagnostic naming the URL. Redact once, here, and use `<safe-url>` in **all**
+user-facing text and `.sync-log` entries; keep the original solely as the
+argument to `git clone`.
+
+Take the authority — the text after `//` up to the next `/`, `?`, or `#` — and
+if it contains `@`, replace everything before its last `@` with `***`. Scope the
+replacement to the authority so a later `@` in a path or query is untouched:
+
+```text
+https://alice:ghp_ABC123@github.com/you/backup.git  ->  https://***@github.com/you/backup.git
+https://github.com/you/backup.git                   ->  unchanged (no userinfo)
+https://github.com/you/repo.git?ref=a@b             ->  unchanged (@ is not in the authority)
+```
+
+Then clone:
 
 ```bash
 git clone "<url>" "$HOME/.claude-settings-backup"
@@ -58,19 +76,14 @@ If `~/.claude-settings-backup` already exists:
 
 - It is a git repo whose `origin` matches the URL → reuse it; Step 2 pulls.
 - It is a git repo with a **different** origin, or not a repo at all → output:
-  "`~/.claude-settings-backup` already exists and is not a clone of `<url>`.
-  Remove it or pass a different local path." and **STOP**. Never overwrite it.
+  "`~/.claude-settings-backup` already exists and is not a clone of
+  `<safe-url>`. Remove it or pass a different local path." and **STOP**. Never
+  overwrite it.
 
 If the clone fails (auth, network, bad URL), report git's error and **STOP** —
-but strip URL userinfo first. Git echoes the URL back in its own error text,
-credentials included, so replace the userinfo segment (everything between `//`
-and the last `@` of the authority) with `***`:
-
-```text
-https://alice:ghp_ABC123@github.com/you/backup.git   ->   https://***@github.com/you/backup.git
-```
-
-Apply this to anything written to the screen or to `.sync-log`.
+but scrub it first. Git echoes the URL back inside its own error text,
+credentials included, so apply the same redaction to that text before showing
+or logging it.
 
 **If the value is a local path**, verify it is a git repo:
 `git -C "<repo-path>" rev-parse --is-inside-work-tree`. If it fails, output:

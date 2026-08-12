@@ -18,8 +18,12 @@
 - `http://` clone URLs are rejected unless the user explicitly confirms.
   Restored `hooks/` scripts execute on next start, so plaintext transport is a
   code-injection path, not just an eavesdropping one.
-- Clone failures are scrubbed of URL userinfo before being shown or logged — a
-  token embedded in the clone URL would otherwise be echoed verbatim.
+- Clone URLs are redacted once at parse time and the redacted form is used in
+  every diagnostic and `.sync-log` entry; the original reaches `git clone` only.
+  A token embedded in the URL was otherwise echoed verbatim — not just by clone
+  failures but by the "directory already exists" error, which fires before any
+  clone is attempted. Redaction is scoped to the authority, so an `@` in a path
+  or query is left alone.
 - Repo entry names are validated as plain relative names before they reach
   `rm -rf` or `rsync --delete`.
 
