@@ -1,6 +1,32 @@
 # Changelog
 
-## v1.0.2 — 2026-06-05 — Use portable plugin-dir path in README
+## v1.1.0 — 2026-08-12 — Restore onto a new machine
+
+### Added
+
+- `settings-restore` accepts a **clone URL** as well as a local path. On a new
+  machine — where no local backup repo exists — the URL is cloned to
+  `~/.claude-settings-backup` and restored from there. Previously the skill
+  hard-stopped, since all three resolution paths required an existing local repo.
+- `~/.claude/hooks/` is now a default backup target. `settings.json` references
+  hook scripts by path, so restoring settings without them left every hook
+  pointing at a missing file.
+- `__pycache__/` added to the generated `.gitignore`.
+
+### Changed
+
+- `settings-restore` builds its file list from the repo root (minus `.git/`,
+  `.gitignore`, `.sync-log`, and `.settings-sync-meta.json`) instead of a
+  hardcoded six-target list. Whatever is in the backup now comes back, so the
+  two skills can no longer drift apart. Verified against a real backup repo
+  where the old list stranded four directories: `plans/`, `reference/`,
+  `scripts/`, and `vscode/`.
+
+### Fixed
+
+- The "not a git repo" error no longer suggests running `settings-backup` to
+  recover. On a new machine that would have overwritten the remote backup with
+  an empty local config.
 
 ### Fixed
 

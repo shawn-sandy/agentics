@@ -74,6 +74,7 @@ Check if a `.gitignore` exists in the repo root. If not, create one:
 *.swo
 *~
 .*.swp
+__pycache__/
 ```
 
 ### Step 3 — Read config and build the file list
@@ -89,6 +90,7 @@ Build the list of sources from the file manifest:
 - `~/.claude/rules/`
 - `~/.claude/commands/`
 - `~/.claude/skills/`
+- `~/.claude/hooks/`
 
 **Conditionally included:**
 - `~/.claude/settings.local.json` — only if `"includeLocalSettings": true`
@@ -143,6 +145,7 @@ For directories (`--delete` is safe here — scoped to the target subdir):
 rsync -aL --delete ~/.claude/rules/ <repo-path>/rules/
 rsync -aL --delete ~/.claude/commands/ <repo-path>/commands/
 rsync -aL --delete ~/.claude/skills/ <repo-path>/skills/
+rsync -aL --delete ~/.claude/hooks/ <repo-path>/hooks/
 ```
 
 **If rsync is not available (cp fallback):**
