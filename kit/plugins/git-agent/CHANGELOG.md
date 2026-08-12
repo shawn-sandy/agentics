@@ -1,5 +1,38 @@
 # Changelog — git-agent
 
+## v4.15.0 — 2026-08-11 — the merge lint gate is gone
+
+### Removed
+
+- **`merge` Step 3, the lint gate.** The skill no longer probes `package.json`
+  for a `lint*` script or runs one before merging. Two gates already cover the
+  same ground from better positions: the `PreToolUse` commit lint gate
+  (`hooks/lint-before-commit.py`) blocks a failing commit before it ever
+  becomes a PR head, and CI runs the project's real checks against the exact
+  commit being merged. Step 3 ran a *third* pass in the local working tree,
+  which is not necessarily the PR head at all — the case `agent-merge` had to
+  guard with a clean-tree + `headRefOid` check, and skip whenever it failed.
+  Removing it drops that guard, the package-manager detection, the `--fix`
+  script filter, and `Bash(jq|npm|pnpm|yarn *)` from `allowed-tools`.
+- Steps renumbered: re-check/ask/merge is now Step 3, report is Step 4.
+  `agent-merge`, `/git-agent:merge-bg`, and the README follow.
+
+### Fixed
+
+- **The Step 3 re-check named the wrong queries.** It said "re-run the Step 2
+  queries", which are the two `gh pr checks` calls — yet the same paragraph
+  claimed the re-check catches a review flipping to `CHANGES_REQUESTED` or
+  `mergeStateStatus` flipping to `BLOCKED`. Those fields come only from Step 1's
+  `gh pr view`, so the re-check could not see them and the merge decision rode
+  on remembered metadata. Step 3 now re-runs **both** queries and evaluates
+  every gate against the fresh responses. Predates this release; the wording was
+  inherited when the step was renumbered.
+
+Merge readiness is unchanged otherwise — required checks, `mergeable`,
+`mergeStateStatus`, `reviewDecision`, the head-pinned squash, and the approval
+prompt all behave exactly as before. A repo that wants lint enforced at merge
+time should make it a required check.
+
 ## v4.14.4 — 2026-08-10 — the last two index-pinning gaps, and a budget that holds
 
 ### Fixed

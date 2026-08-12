@@ -1,7 +1,7 @@
 ---
 name: merge
-description: "Checks whether the branch's PR is ready and merges it when green. Runs the readiness gate, lint, and an approval prompt. Use when the user asks \"merge?\" or if a PR is ready to merge."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(jq *), Bash(npm *), Bash(pnpm *), Bash(yarn *), Read, Grep, Glob, AskUserQuestion, ToolSearch, ExitPlanMode
+description: "Checks whether the branch's PR is ready and merges it when green. Runs the readiness gate and an approval prompt. Use when the user asks \"merge?\" or if a PR is ready to merge."
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, AskUserQuestion, ToolSearch, ExitPlanMode
 model: sonnet
 ---
 
@@ -36,7 +36,7 @@ No PR found → say so and **STOP** (suggest `pr-agent`). `state` is not `OPEN`
 (already `MERGED` or `CLOSED`) → report it and **STOP**.
 
 **On the fallback path, re-query the full field set** before Step 2 — `gh pr
-list` returns none of `mergeable`, `reviewDecision`, or `headRefOid`, and Step 4
+list` returns none of `mergeable`, `reviewDecision`, or `headRefOid`, and Step 3
 cannot pin the merge without `headRefOid`:
 
 ```
@@ -89,12 +89,12 @@ threads do not block, and this skill does not overrule that. An earlier version
 ran a paginated GraphQL `reviewThreads` query and blocked on any unresolved
 node — stricter than every repo it ran against had asked for, and enough for six
 bot nit comments to deadlock an approved PR. `BLOCKED` does not say *why*; name
-it in the Step 4 summary and let the user open the PR.
+it in the Step 3 summary and let the user open the PR.
 
 `--required` is what branch protection actually enforces, so it — not the full
 list — decides whether the merge is blocked. Never infer required-ness yourself
 from a check's name. A non-required check that is pending or failing does not
-block, but **always name it in the Step 4 summary** so the user approves with
+block, but **always name it in the Step 3 summary** so the user approves with
 the full picture rather than a filtered one.
 
 When a repo has no branch protection, `--required` exits non-zero with
@@ -102,7 +102,7 @@ When a repo has no branch protection, `--required` exits non-zero with
 passed*. Do not read it as a failure. `mergeStateStatus` reads `CLEAN` on such a
 repo for the same reason: there is nothing configured to block on. So neither
 signal is a gate here — there is no automated gate at all. Say that plainly in
-the Step 4 summary and let the full check list and the user's judgement carry
+the Step 3 summary and let the full check list and the user's judgement carry
 the decision.
 
 If any of these fails — a **required** check pending or failing, conflicts,
@@ -116,36 +116,17 @@ Automated review bots re-fire on every push. A re-fired review on an
 already-approved PR is not a new blocking concern — see the `review-bot-loops`
 rule.
 
-## Step 3: Lint gate
+## Step 3: Re-check, ask, then merge
 
-Before merging, run the project's lint script:
-
-```
-jq -r '.scripts | to_entries[] | select(.key | test("^lint")) | select(.key + " " + .value | test("--fix|watch") | not) | .key' package.json 2>/dev/null
-```
-
-The filter reads each script's **command**, not just its name — a script named
-`lint` whose value is `eslint --fix .` would rewrite the working tree and change
-the PR head out from under the verified commit.
-
-**Run the first match** with the project's package manager — detect it from the
-lockfile (`pnpm-lock.yaml` → `pnpm`, `yarn.lock` → `yarn`, otherwise `npm`) and
-run `<pm> run <script>`. Listing the candidate scripts is not the gate; actually
-executing one is.
-
-- No match → note in one line that no lint script was found and continue.
-- Non-zero exit → print the failing output verbatim, **do not merge**, and ask.
-  Never auto-apply `--fix`: fixed files would change the head commit.
-- If the detection command itself errors (no `package.json`, no `jq`), treat it
-  as "no lint script" and say which — never let a broken probe read as green.
-
-## Step 4: Re-check, ask, then merge
-
-**Re-run the Step 2 queries first.** Lint can take minutes, and
-`--match-head-commit` only catches a moved head — it does not catch a review
-flipping to `CHANGES_REQUESTED`, `mergeStateStatus` flipping to `BLOCKED`, or a
-check turning red on the same commit. Show the user state you fetched just now, not state you
-remember. If anything regressed, go back to Step 2 and ask.
+**Re-fetch the PR state first — both queries, not just one.** Re-run the Step 1
+`gh pr view --json` field set *and* the Step 2 `gh pr checks` queries.
+`mergeable`, `mergeStateStatus`, `reviewDecision`, and `headRefOid` come only
+from `gh pr view`, so re-running the check queries alone would leave you
+deciding on remembered metadata. `--match-head-commit` only catches a moved head
+— it does not catch a review flipping to `CHANGES_REQUESTED`, `mergeStateStatus`
+flipping to `BLOCKED`, or a check turning red on the same commit. Evaluate every
+gate against these fresh responses, and show the user state you fetched just
+now, not state you remember. If anything regressed, go back to Step 2 and ask.
 
 Green checks alone never authorize a merge. Use **AskUserQuestion** to confirm,
 showing the PR URL, the check summary, the review decision, and
@@ -169,7 +150,7 @@ and ask which one to use.
 **Never pass `--delete-branch`.** Branch deletion is a separate destructive
 action that needs its own explicit yes.
 
-## Step 5: Report
+## Step 4: Report
 
 Print the merge result and the PR URL, then **STOP**.
 

@@ -34,8 +34,6 @@ check "agent merges with a head-pinned squash" \
   grep -qF 'gh pr merge <pr-url> --squash --match-head-commit <headRefOid>' "$AGENT"
 check "agent prefers the dispatched PR over the current branch" \
   grep -q "dispatch prompt names" "$AGENT"
-check "agent guards the lint gate against a drifted tree" \
-  grep -q "headRefOid" "$AGENT"
 check "agent replaces the skill's approval prompt" grep -q "AskUserQuestion.*does not apply" "$AGENT"
 check "agent stops rather than guessing when not green" grep -qF "**report and STOP**" "$AGENT"
 check "command dispatches agent-merge" grep -q "git-agent:agent-merge" "$CMD"

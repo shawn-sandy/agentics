@@ -40,7 +40,7 @@ decision that gate does not cover is a stop-and-report, never a guess.**
 - **Never merge a PR that is not unambiguously green.** A **required** check
   pending or failing, `CONFLICTING` or `UNKNOWN` mergeable state, a
   `mergeStateStatus` outside `CLEAN` / `UNSTABLE` / `HAS_HOOKS`,
-  `CHANGES_REQUESTED`, a failing lint gate, a moved head commit — each one ends
+  `CHANGES_REQUESTED`, a moved head commit — each one ends
   the run in a report. A *non-required* check that is pending or failing is
   reported, not merged around — it does not end the run.
 - **Never pass `--delete-branch`** (or GitLab's `-d` / `--remove-source-branch`).
@@ -58,32 +58,14 @@ decision that gate does not cover is a stop-and-report, never a guess.**
 
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
-### Step 1–4: Run the merge skill's gates
+### Step 1–3: Run the merge skill's gates
 
-Follow `skills/merge/SKILL.md` Steps 1 through 4 verbatim — PR lookup (against
+Follow `skills/merge/SKILL.md` Steps 1 through 3 verbatim — PR lookup (against
 the target PR resolved above), the readiness gate (`gh pr checks --required`,
-`mergeable`, `mergeStateStatus`, `reviewDecision`), the lint gate, and the
-Step 4 re-check — with two substitutions:
+`mergeable`, `mergeStateStatus`, `reviewDecision`), and the Step 3 re-check —
+with one substitution:
 
-- **Guard the lint gate before running it.** The skill's lint gate runs in the
-  working tree, which in the foreground is the PR head. Here it may not be: the
-  parent session keeps editing after dispatch, and you may be on a different
-  branch entirely when a PR was named explicitly. So before running lint,
-  confirm the tree is the commit you are about to merge:
-
-  ```
-  git status --porcelain
-  git rev-parse HEAD
-  ```
-
-  Lint only when the tree is clean **and** `HEAD` equals the PR's
-  `headRefOid`. Otherwise **skip the lint gate and say so in the report** —
-  green lint on uncommitted local edits says nothing about the commit
-  `--match-head-commit` will merge, and reporting it as a passed gate would be
-  a false green. A skipped lint gate is a fact for the report, not a blocker on
-  its own; the CI checks still gate the merge.
-
-- **Step 4's `AskUserQuestion` does not apply.** There is no user to ask. If
+- **Step 3's `AskUserQuestion` does not apply.** There is no user to ask. If
   the re-checked state is green, merge directly:
 
   ```
@@ -96,11 +78,11 @@ Everything else in those steps — including `--match-head-commit`, the
 `--required` semantics, the no-branch-protection caveat, and the
 `review-bot-loops` note — applies unchanged.
 
-### Step 5: Report and stop
+### Step 4: Report and stop
 
 Return one report to the parent session containing the PR URL, the per-check
-state summary, the review decision, `mergeStateStatus`, the lint gate result,
-and either the merge result or the specific reason the merge did not happen.
+state summary, the review decision, `mergeStateStatus`, and either the merge
+result or the specific reason the merge did not happen.
 
 ---
 

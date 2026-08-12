@@ -110,12 +110,9 @@ check_skill() { # pattern label
 check_skill "MERGEABLE" "MERGEABLE readiness gate"
 check_skill "--match-head-commit" "merge pinned to verified head commit"
 check_skill "AskUserQuestion" "explicit approval before merging"
-check_skill 'test("^lint")' "lint gate detection"
-check_skill "Run the first match" "lint gate actually executes the script"
 check_skill "--required" "blocking gate uses required checks only"
 check_skill "no required checks reported" "no-branch-protection case is not read as failure"
 check_skill "--remove-source-branch" "GitLab branch deletion forbidden"
-check_skill "Never auto-apply" "no auto --fix"
 check_skill "Never pass \`--delete-branch\`" "branch deletion forbidden"
 # Distinctive phrasing, not the substring "and ask" — that appears in several
 # unrelated sentences and would pass even if this gate were deleted outright.
@@ -144,7 +141,7 @@ done
 echo "9. allowed-tools covers the tools the steps actually use..."
 FM=$(sed -n '/^allowed-tools:/p' "$SKILL")
 for tool in "AskUserQuestion" "Bash(git \*)" "Bash(gh \*)" "Bash(glab \*)" \
-            "Bash(jq \*)" "ToolSearch" "ExitPlanMode"; do
+            "ToolSearch" "ExitPlanMode"; do
   if printf '%s' "$FM" | grep -qF -- "${tool//\\/}"; then
     echo "  PASS: declares ${tool//\\/}"
   else
