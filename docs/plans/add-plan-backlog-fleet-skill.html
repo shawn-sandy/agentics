@@ -1600,14 +1600,16 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
     <details class="rail-disclosure" open>
-      <summary>5 steps</summary>
+      <summary>7 steps</summary>
       <div class="rail-heading">Steps</div>
       <ul class="rail-steps">
-        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">kit/plugins/plan-agent/skills/build-fleet/SKILL.md</code> as a dispatch-only skill: collect candidates by reusing <code class="md">build</code>&#39;s plans-directory resolution by reference, then issue one <code class="md">Agent</code> call per plan carrying <code class="md">isolation: &quot;worktree&quot;</code> and <code class="md">run_in_background: true</code>, whose prompt chains <code class="md">plan-agent:build</code> into <code class="md">git-agent:ship-autonomous</code>.</span><span class="rail-state">step 1 of 5, done</span></a></li>
-        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Add the blast-radius guards to the Guardrails section — a mandatory confirmation naming how many pull requests will open, <code class="md">--max</code> defaulting to 3, <code class="md">status: completed</code> plans excluded even when named explicitly, a dirty-tree stop, and a headless run that cancels rather than defaulting.</span><span class="rail-state">step 2 of 5, done</span></a></li>
-        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">End the fleet at green PRs and route merging to <code class="md">/git-agent:merge</code>, documenting that the repo&#39;s two merge drivers already resolve the conflicts sibling PRs produce.</span><span class="rail-state">step 3 of 5, done</span></a></li>
-        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Register the skill — bump plan-agent to 9.3.0 in <code class="md">.claude-plugin/marketplace.json</code>, add the CHANGELOG entry, add the README Features row and component section, and regenerate the root table with <code class="md">node scripts/build-readme-table.mjs</code>.</span><span class="rail-state">step 4 of 5, done</span></a></li>
-        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Add <code class="md">tests/plugins/test-build-fleet.sh</code> covering the frontmatter contract, <code class="md">allowed-tools</code>, the verbatim plan-mode guard, the dispatch-only objective, the blast-radius guards, and README plus CHANGELOG registration.</span><span class="rail-state">step 5 of 5, done</span></a></li>
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">kit/plugins/plan-agent/skills/build-fleet/SKILL.md</code> as a dispatch-only skill: collect candidates by reusing <code class="md">build</code>&#39;s plans-directory resolution by reference, then issue one <code class="md">Agent</code> call per plan carrying <code class="md">isolation: &quot;worktree&quot;</code> and <code class="md">run_in_background: true</code>, whose prompt chains <code class="md">plan-agent:build</code> into <code class="md">git-agent:ship-autonomous</code>.</span><span class="rail-state">step 1 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Add the blast-radius guards to the Guardrails section — a mandatory confirmation naming how many pull requests will open, <code class="md">--max</code> defaulting to 3, <code class="md">status: completed</code> plans excluded even when named explicitly, a dirty-tree stop, and a headless run that cancels rather than defaulting.</span><span class="rail-state">step 2 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">End the fleet at green PRs and route merging to <code class="md">/git-agent:merge</code>, documenting that the repo&#39;s two merge drivers already resolve the conflicts sibling PRs produce.</span><span class="rail-state">step 3 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Register the skill — bump plan-agent to 9.3.0 in <code class="md">.claude-plugin/marketplace.json</code>, add the CHANGELOG entry, add the README Features row and component section, and regenerate the root table with <code class="md">node scripts/build-readme-table.mjs</code>.</span><span class="rail-state">step 4 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Add <code class="md">tests/plugins/test-build-fleet.sh</code> covering the frontmatter contract, <code class="md">allowed-tools</code>, the verbatim plan-mode guard, the dispatch-only objective, the blast-radius guards, and README plus CHANGELOG registration.</span><span class="rail-state">step 5 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Replace Step 2&#39;s &quot;dispatch all, dispatch a subset, or cancel&quot; with a real picker — one <code class="md">multiSelect</code> <code class="md">AskUserQuestion</code> over the newest four candidates, stating how many were suppressed, where the ticked boxes are themselves the PR-count confirmation and an explicit plan list skips the picker.</span><span class="rail-state">step 6 of 7, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Resolve the base branch from <code class="md">git symbolic-ref --short refs/remotes/origin/HEAD</code> in Step 1 and carry the value into every agent prompt, asking rather than guessing when <code class="md">origin/HEAD</code> is unset, and document <code class="md">todo</code>-only discovery as deliberate.</span><span class="rail-state">step 7 of 7, done</span></a></li>
       </ul>
     </details>
   </nav>
@@ -1679,7 +1681,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">7 / 7 done</span>
+        <span id="progress-label">9 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill has-progress" id="progress-bar"
@@ -1757,7 +1759,7 @@ img, video { max-width: 100%; height: auto; }
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
-                <div class="step-why">N agents open N pull requests against a shared remote, which is outward-facing and not undoable by editing a file, and worktrees fork from <code class="md">origin/main</code> so uncommitted parent-tree work silently does not travel with them.</div>
+                <div class="step-why">N agents open N pull requests against a shared remote, which is outward-facing and not undoable by editing a file, and worktrees fork from the base branch so uncommitted parent-tree work silently does not travel with them.</div>
               </div>
               <div class="step-note step-verify">
                 <span class="step-note-label">Verify</span>
@@ -1827,6 +1829,46 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
+        <div class="step-card completed" id="step-6">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Replace Step 2&#39;s &quot;dispatch all, dispatch a subset, or cancel&quot; with a real picker — one <code class="md">multiSelect</code> <code class="md">AskUserQuestion</code> over the newest four candidates, stating how many were suppressed, where the ticked boxes are themselves the PR-count confirmation and an explicit plan list skips the picker.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">&quot;a subset&quot; named no mechanism, and <code class="md">AskUserQuestion</code> renders at most four options, a ceiling that almost never binds because <code class="md">--max</code> is 3; asking a second time to confirm a count the user just enumerated by hand is friction without consent value.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">tests/plugins/test-build-fleet.sh</code> check 7 passes, and the skill carries no second confirm-the-count question.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed" id="step-7">
+          <div class="step-card-header">
+            <div class="step-number">7</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Resolve the base branch from <code class="md">git symbolic-ref --short refs/remotes/origin/HEAD</code> in Step 1 and carry the value into every agent prompt, asking rather than guessing when <code class="md">origin/HEAD</code> is unset, and document <code class="md">todo</code>-only discovery as deliberate.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">driving the skill against a <code class="md">master</code>-only fixture showed the hardcoded <code class="md">origin/main</code> would kill all five agents on line 1 of their prompts, and <code class="md">git-agent:ship-autonomous</code> — the skill this one chains into — already detects the default branch rather than assuming it.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">re-drive the same fixture and confirm the run resolves <code class="md">origin/HEAD</code>, reports it unset, and asks for a branch instead of dispatching against <code class="md">origin/main</code>.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -1838,7 +1880,7 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The tests that prove the change does what it promises.</p>
       <div class="objective-test-card">Objective-verification test — <code class="md">tests/plugins/test-build-fleet.sh</code> check 4, &quot;OBJECTIVE: dispatches to build + ship-autonomous, never reimplements them&quot;, asserts the skill delegates to both named skills, uses harness worktree isolation, hand-rolls no <code class="md">git worktree add</code>, and inlines no <code class="md">gh pr merge</code>. It failed on its first run against a draft whose prohibition line was indistinguishable from a use, which confirms the assertion is not tautological.</div>
       <div class="test-list">
-        <div class="test-card">Structural — the same script&#39;s checks 1, 2, 3, 5, and 6 cover the frontmatter contract, <code class="md">allowed-tools</code> completeness, the verbatim plan-mode guard, the five blast-radius guards, and README plus CHANGELOG registration.</div>
+        <div class="test-card">Structural — the same script&#39;s checks 1, 2, 3, 5, 6, and 7 cover the frontmatter contract, <code class="md">allowed-tools</code> completeness, the verbatim plan-mode guard, the five blast-radius guards, README plus CHANGELOG registration, and the plan picker&#39;s <code class="md">multiSelect</code> mode, four-option ceiling, suppressed count, and three cancel paths.</div>
         <div class="test-card">Existing suite, extended by construction — <code class="md">tests/plugins/test-description-budget.sh</code> asserts every shipped SKILL.md fits 200 total and 80 first-sentence characters, which now covers <code class="md">build-fleet</code> at 187 and 74; <code class="md">tests/plugins/test-exitplanmode-guard.sh</code> covers the guard format.</div>
       </div>
     </section>
@@ -1868,15 +1910,23 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac5" checked>
-          <label for="ac5">The fleet never merges a pull request on its own initiative</label>
+          <label for="ac5">The fleet is chosen plan by plan from a picker, not merely approved as a block</label>
         </li>
         <li>
           <input type="checkbox" id="ac6" checked>
-          <label for="ac6">plan-agent&#39;s marketplace version exceeds <code class="md">origin/main</code></label>
+          <label for="ac6">The base branch is resolved at runtime, so the skill works in a <code class="md">master</code> or <code class="md">develop</code> repo</label>
         </li>
         <li>
           <input type="checkbox" id="ac7" checked>
-          <label for="ac7"><code class="md">tests/plugins/test-build-fleet.sh</code> passes</label>
+          <label for="ac7">The fleet never merges a pull request on its own initiative</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac8" checked>
+          <label for="ac8">plan-agent&#39;s marketplace version exceeds <code class="md">origin/main</code></label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9" checked>
+          <label for="ac9"><code class="md">tests/plugins/test-build-fleet.sh</code> passes</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"

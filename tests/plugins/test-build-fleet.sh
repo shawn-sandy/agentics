@@ -59,6 +59,14 @@ fi
 if grep -qi 'gh pr merge' "$SKILL"; then
   OBJ_FAIL="$OBJ_FAIL inlined-merge"
 fi
+# Observed live: a hardcoded base kills every agent on line 1 in a
+# master/develop repo. Prose may name origin/main as an example; the branch
+# command in the dispatch prompt may not.
+if grep 'checkout -b' "$SKILL" | grep -q 'origin/'; then
+  OBJ_FAIL="$OBJ_FAIL hardcoded-base-branch"
+fi
+grep -q 'symbolic-ref --short refs/remotes/origin/HEAD' "$SKILL" \
+  || OBJ_FAIL="$OBJ_FAIL no-base-branch-resolution"
 if [ -z "$OBJ_FAIL" ]; then
   echo "  PASS"
 else
@@ -88,9 +96,25 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
+echo "7. plan picker: multiSelect, four-option ceiling with a suppressed count, cancel paths..."
+PICK_FAIL=""
+grep -qF 'multiSelect: true' "$SKILL" || PICK_FAIL="$PICK_FAIL no-multiselect"
+grep -qF 'at most four options' "$SKILL" || PICK_FAIL="$PICK_FAIL no-option-ceiling"
+grep -qF 'say how many were suppressed' "$SKILL" || PICK_FAIL="$PICK_FAIL no-suppressed-count"
+# The picker is the consent gate, so every way of not answering must cancel.
+for path in 'An empty selection' 'a dismissed question' 'headless run'; do
+  grep -qF "$path" "$SKILL" || PICK_FAIL="$PICK_FAIL no-cancel:${path// /-}"
+done
+if [ -z "$PICK_FAIL" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL:$PICK_FAIL"
+  FAILURES=$((FAILURES + 1))
+fi
+
 echo
 if [ "$FAILURES" -eq 0 ]; then
-  echo "=== PASSED (6 of 6 checks) ==="
+  echo "=== PASSED (7 of 7 checks) ==="
   exit 0
 fi
 echo "=== FAILED ($FAILURES check(s)) ==="

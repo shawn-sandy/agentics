@@ -35,8 +35,12 @@ Seam against its siblings: `build` ships one plan on the current branch;
   explicitly — confirm with the user first.
 - **The fleet stops at green.** Merging is yours; see *Merging* below.
 - A dirty working tree stops the run: report the files and ask. Worktrees fork
-  from `origin/main`, so uncommitted work in the parent tree silently does not
+  from the base branch, so uncommitted work in the parent tree silently does not
   travel with them.
+- **Never hardcode `main` as the base.** Resolve the remote's default branch in
+  Step 1 and pass the resolved name into every agent prompt. A fleet that
+  assumes `origin/main` dies on line 1 in every `master` and `develop` repo,
+  which is exactly the class of repo nobody tests a plugin against.
 
 ## Step 0 — Exit plan mode
 
@@ -56,38 +60,65 @@ directory tree whose frontmatter is `status: todo`, excluding `archive/` and
 
 Read only the frontmatter — the fleet agents read the bodies.
 
+Discovery selects `status: todo` only, where `build` also accepts
+`in-progress`. The narrower rule is deliberate: an `in-progress` plan usually
+already has a branch and a half-finished tree somewhere, and a fleet agent would
+fork a second one from the base branch and redo the work. Name it explicitly to
+override.
+
 ```bash
 git fetch origin
+git symbolic-ref --short refs/remotes/origin/HEAD
 ```
+
+The second command resolves the base branch. It is `origin/main` in this repo
+and `origin/master` or `origin/develop` in plenty of others, so carry the
+resolved value forward — never the literal. Unset (`origin/HEAD` missing) → say
+so and ask which branch to fork from rather than guessing.
 
 No candidates → say so and stop. Do not fall back to authoring a plan; that is
 `build`'s no-plan chain, and a backlog run is not the place to start one.
 
-## Step 2 — Confirm the fleet (mandatory)
+## Step 2 — Pick the fleet (mandatory)
 
-Show the candidate list — plan name, `type:`, and one-line objective — then
-`AskUserQuestion`: dispatch all, dispatch a subset, or cancel. Name the number
-of PRs that will open.
+One `AskUserQuestion` with `multiSelect: true`, over the candidates sorted
+newest `created:` first — `build`'s discovery sort, falling back to file mtime
+for a missing or tied date. One option per plan: name, `type:`, and its
+one-line objective.
 
-Headless (no `AskUserQuestion`): **cancel**. Print the list and the command to
-re-run interactively. Opening pull requests is not a defaultable decision.
+**The ticked boxes are the confirmation.** The question text states that every
+selection opens one pull request, so a second confirm-the-count question would
+ask about something the user just enumerated by hand. An explicit plan list in
+`$ARGUMENTS` skips the picker outright — naming paths is the same consent.
+
+`AskUserQuestion` renders at most four options, so offer the newest four and
+say how many were suppressed rather than silently truncating. A backlog deeper
+than that ships a batch at a time; re-run for the next batch. This ceiling
+almost never binds in practice, because `--max` is 3.
+
+A selection larger than `--max` trims to the newest `--max` and names what it
+dropped. An empty selection, a dismissed question, or a headless run with no
+`AskUserQuestion` all **cancel**: print the list and the command to re-run
+interactively. Opening pull requests is not a defaultable decision.
 
 ## Step 3 — Dispatch
 
-Seed a `TodoWrite` checklist, one entry per plan. Then one `Agent` call per
-confirmed plan, all in a single message so they run concurrently:
+Seed a `TodoWrite` checklist, one entry per selected plan. Then one `Agent`
+call per selected plan, all in a single message so they run concurrently:
 
 - `subagent_type: "general-purpose"`
 - `isolation: "worktree"` — the harness creates the worktree and removes it if
   the agent leaves it unchanged. Never `git worktree add` by hand here.
 - `run_in_background: true`
 - `description`: `"Ship <plan-stem>"`
-- `prompt`: self-contained, embedding the **absolute** spec path:
+- `prompt`: self-contained, with `<base-branch>` replaced by the value Step 1
+  resolved and `<abs-path>` by the spec's **absolute** path. A subagent starts
+  cold in a fresh worktree, so a placeholder it cannot resolve is a dead run:
 
   ```
-  Branch off origin/main, then implement and ship this plan end to end.
+  Branch off <base-branch>, then implement and ship this plan end to end.
 
-  1. git checkout -b <verb-target-YYYY-MM-DD> origin/main
+  1. git checkout -b <verb-target-YYYY-MM-DD> <base-branch>
   2. Skill(skill: "plan-agent:build", args: "<abs-path>")
   3. Skill(skill: "git-agent:ship-autonomous")
 

@@ -16,11 +16,28 @@
 - **Worktree isolation via the harness** — each agent runs with
   `isolation: "worktree"`, which creates the worktree and removes it if left
   unchanged. No `git worktree add` and no cleanup pass to get wrong.
+- **Plan picker** — the fleet is chosen, not just approved: one `multiSelect`
+  `AskUserQuestion` over the newest four candidates (`build`'s discovery sort),
+  stating how many were suppressed. The ticked boxes are themselves the
+  confirmation, because the question states that each selection opens one pull
+  request — a second confirm-the-count question would ask about something the
+  user just enumerated by hand. A deeper backlog ships a batch per run, a
+  selection over `--max` trims to the newest and says what it dropped, and an
+  explicit plan list skips the picker entirely.
 - **Blast-radius guards** — a mandatory confirmation that names how many pull
   requests will open, `--max` defaulting to 3, `status: completed` plans
   excluded even when named explicitly, a dirty-tree stop (worktrees fork from
-  `origin/main`, so uncommitted parent-tree work does not travel), and a
+  the base branch, so uncommitted parent-tree work does not travel), and a
   headless run that cancels instead of defaulting.
+- **Resolved base branch, never a hardcoded `main`** — Step 1 reads
+  `git symbolic-ref --short refs/remotes/origin/HEAD` and carries the value
+  into every agent prompt; an unset `origin/HEAD` asks rather than guessing.
+  Caught by driving the skill against a `master`-only repo, where the earlier
+  hardcoded `origin/main` killed all five agents on line 1 of their prompts.
+- **`todo`-only discovery, documented as deliberate** — `build` also accepts
+  `in-progress`; the fleet does not, because such a plan usually already has a
+  branch and a half-finished tree that a second worktree would redo. Name it
+  explicitly to override.
 - **Stops at green** — the fleet ends at green PRs. A background agent cannot
   answer `ship-autonomous`'s merge gate, and auto-merging N sibling PRs is the
   one step in the chain with no cheap undo, so merging stays a human step via

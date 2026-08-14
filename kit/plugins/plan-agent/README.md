@@ -637,6 +637,14 @@ the review triage.
   discovers every `status: todo` spec under the plans directory, skipping
   `archive/` and `artifacts/`. Only frontmatter is read here; the fleet agents
   read the bodies
+- **Picker** — a single `multiSelect` `AskUserQuestion` over the newest four
+  candidates, stating how many were suppressed. The ticked boxes *are* the
+  confirmation, since the question says each selection opens one pull request;
+  an explicit plan list skips the picker, and an empty selection, a dismissed
+  question, or a headless run all cancel
+- **Base branch** — resolved from `refs/remotes/origin/HEAD` in Step 1 and
+  carried into every agent prompt, never assumed to be `main`; an unset
+  `origin/HEAD` asks rather than guessing
 - **Isolation** — one `Agent` per plan with `isolation: "worktree"`, so the
   harness creates each worktree and removes it if left unchanged. No
   `git worktree add`, no cleanup pass
