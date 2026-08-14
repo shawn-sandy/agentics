@@ -8,6 +8,8 @@
 # behaviour depending on whether the user typed the command or triggered the
 # skill. A thin delegator has one behaviour by construction. (These commands
 # now live under plan-agent after plan-interview was merged into it in 4.0.0.)
+# Thin comes in two shapes — hand off by name (DELEGATORS) or read the skill
+# file by path (BY_PATH) — and by-name is wrong when the names collide.
 #
 # Check 2 — reference resolution. An instruction naming a slash command that
 # does not exist is a dead end at the exact moment a workflow hands off.
@@ -36,35 +38,75 @@ failures = []
 MAX_LINES = 15
 DELEGATORS = {
     "plan-agent/commands/deep-grill.md": "plan-agent:deep-grill",
-    "plan-agent/commands/plan-status.md": "plan-agent:plan-status",
     "plan-agent/commands/documenting-plans.md": "plan-agent:documenting-plans",
 }
 
-for rel, skill in DELEGATORS.items():
+# Commands that reach their skill by READING ITS FILE rather than by name. A
+# command shadows a same-named skill in the Skill namespace, so a by-name handoff
+# to `<plugin>:<same-name>` returns the command file itself: the skill body never
+# enters context and the workflow silently no-ops. These must therefore carry no
+# by-name call at all, and must widen `allowed-tools` from `Skill` to what the
+# skill declares, since its steps now run under the command's permissions.
+BY_PATH = {
+    "plan-agent/commands/plan-status.md": "plan-status",
+}
+
+SKILL_CALL = re.compile(r"Skill\(\s*skill:\s*[\"']([^\"']+)[\"']")
+
+def read_command(rel):
+    """Shared shape checks. Returns the body, or None if the file is missing."""
     path = os.path.join(plugin_dir, rel)
     if not os.path.isfile(path):
         failures.append(f"{rel}: missing")
-        continue
+        return None
     with open(path, encoding="utf-8") as fh:
         text = fh.read()
     lines = text.count("\n") + (0 if text.endswith("\n") else 1)
-
     if lines > MAX_LINES:
         failures.append(
             f"{rel}: {lines} lines (max {MAX_LINES}) — a delegator restating its "
             f"skill's workflow will drift from it"
         )
+    # Frontmatter fields the collapse had to preserve.
+    for key in ("description", "argument-hint"):
+        if not re.search(rf"^{key}:\s*\S", text, re.M):
+            failures.append(f"{rel}: lost its `{key}:` frontmatter in the collapse")
+    return text
 
-    calls = re.findall(r"Skill\(\s*skill:\s*[\"']([^\"']+)[\"']", text)
+for rel, skill in DELEGATORS.items():
+    text = read_command(rel)
+    if text is None:
+        continue
+    calls = SKILL_CALL.findall(text)
     if len(calls) != 1:
         failures.append(f"{rel}: found {len(calls)} `Skill(` call(s), expected exactly 1")
     elif calls[0] != skill:
         failures.append(f"{rel}: delegates to `{calls[0]}`, expected `{skill}`")
 
-    # Frontmatter fields the collapse had to preserve.
-    for key in ("description", "argument-hint"):
-        if not re.search(rf"^{key}:\s*\S", text, re.M):
-            failures.append(f"{rel}: lost its `{key}:` frontmatter in the collapse")
+for rel, skill in BY_PATH.items():
+    text = read_command(rel)
+    if text is None:
+        continue
+    plugin = rel.split("/", 1)[0]
+    target = f"skills/{skill}/SKILL.md"
+    if target not in text:
+        failures.append(f"{rel}: never reads `{target}` — the skill body cannot load")
+    if f"**/{plugin}/{target}" not in text:
+        failures.append(f"{rel}: has no Glob fallback on `**/{plugin}/{target}`")
+    calls = SKILL_CALL.findall(text)
+    if calls:
+        failures.append(
+            f"{rel}: reintroduced a by-name call to `{calls[0]}` — a command shadows "
+            f"its same-named skill, so that resolves back to this file"
+        )
+    tools = re.search(r"^allowed-tools:\s*(.+)$", text, re.M)
+    if not tools:
+        failures.append(f"{rel}: lost its `allowed-tools:` frontmatter")
+    elif tools.group(1).strip() == "Skill":
+        failures.append(
+            f"{rel}: still declares `allowed-tools: Skill` — the skill's steps now run "
+            f"under this command, so it must declare the tools they use"
+        )
 
 # --- Check 2: every slash reference resolves ------------------------------
 #
@@ -129,6 +171,7 @@ if failures:
         print(f"  - {f}")
     sys.exit(1)
 
-print(f"PASS: {len(DELEGATORS)} commands delegate via a single Skill() call "
-      f"(<={MAX_LINES} lines each); {checked} slash references all resolve")
+print(f"PASS: {len(DELEGATORS)} commands delegate via a single Skill() call and "
+      f"{len(BY_PATH)} read their skill by path (<={MAX_LINES} lines each); "
+      f"{checked} slash references all resolve")
 PY

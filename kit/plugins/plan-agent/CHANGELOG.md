@@ -1,5 +1,30 @@
 # Changelog
 
+## 5.0.3 — `/plan-agent:plan-status` reaches its skill by path (2026-07-29)
+
+### Fixed
+
+- **The command was a no-op.** `commands/plan-status.md` handed off to the
+  `plan-agent:plan-status` skill *by name*, but a command shadows a same-named
+  skill in that namespace — the lookup returned the command file itself, so
+  `skills/plan-status/SKILL.md` never entered context and the workflow silently
+  did nothing. The command now reads the SKILL.md by path from
+  `${CLAUDE_PLUGIN_ROOT}`, with a `Glob` fallback on
+  `**/plan-agent/skills/plan-status/SKILL.md`. Measured with a headless probe
+  (`claude -p --plugin-dir kit/plugins/plan-agent`) counting the SKILL.md's `## `
+  headings in context after invoking the command: 0 before, 5 after. An inline
+  note records why the by-name handoff must not come back.
+- **`allowed-tools` widened** from `Skill` to `Read, Glob, Grep, Bash,
+  AskUserQuestion, Edit, TodoWrite` — the union the skill declares. Its steps now
+  execute under the command's permissions, so the narrow list would have prompted
+  mid-run.
+- **`tests/plugins/test-command-delegation.sh` grew a second shape.** Check 1
+  previously asserted every thin command carried exactly one by-name call, which
+  is the defect for a name that collides. `BY_PATH` now covers read-by-path
+  commands, asserting the SKILL.md read, the Glob fallback, zero by-name calls,
+  and a widened `allowed-tools`. `deep-grill` and `documenting-plans` have the
+  same collision and are still unconverted.
+
 ## 5.0.2 — Collapse the plan-mode guard to one line (2026-07-28)
 
 - **Eight skills reduced** — `build`, `build-proposal`, `finalize-plan`,
