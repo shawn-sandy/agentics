@@ -113,9 +113,25 @@ describes and seeing the wrong behavior yourself. A reviewer — human or bot �
 asserting a defect is a *claim about runtime*, and this skill has already
 committed to not accepting those on authority: an unverified fix is the same
 error as an unverified refutation, pointed the other way. It costs a commit and
-a re-fired review round to find out the code was already correct. If the finding
-cannot be reproduced, it is not blocking — it drops to the refuted branch below,
-with the reproduction attempt as the evidence.
+a re-fired review round to find out the code was already correct.
+
+**A finding you could not reproduce is not thereby wrong.** Plenty of real
+defects will not execute here: one needing a dependency or credential this
+environment lacks, production-only configuration, a destructive input you must
+not run, a race that does not fire on this machine, or a defect provable
+straight from a schema or spec without running anything at all. Treating "I
+could not run it" as "it is incorrect" would resolve the thread and let the
+merge proceed over a live bug — the exact failure this step exists to stop.
+
+So a failed reproduction is **inconclusive**, and routes on what the source of
+truth says, not on the failure itself:
+
+- Inspecting the schema, spec, or current source **establishes the finding is
+  wrong** → the refuted branch below, with that evidence.
+- Inspecting it **confirms the finding** (or the defect is provable without
+  executing) → treat it as blocking and fix it; the proof is the verification.
+- Neither → **AskUserQuestion**, naming what you tried and why it would not
+  run. Do not resolve the thread, and do not merge past it.
 
 If the comment is ambiguous, architecturally significant, or open to multiple
 interpretations: use **AskUserQuestion** with enough context that the user can

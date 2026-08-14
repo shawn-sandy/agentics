@@ -125,9 +125,27 @@ wrong for exactly that reason and were caught downstream.
    el.getBoundingClientRect()   // touch targets, 2.5.8
    ```
 
-   For a static file with no server, compute from the *resolved* values — run
-   `wcag-check`, or read both colors, flatten any alpha against the actual
-   backdrop, and show the arithmetic.
+   For a static file with no server, compute from the *resolved* values: read
+   both colors, flatten any alpha against the actual backdrop, and run the WCAG
+   relative-luminance formula with `Bash(python3 *)`, showing the arithmetic.
+
+   ```python
+   def lum(c):  # c = (r, g, b), each 0-255
+       def ch(v):
+           v /= 255
+           return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+       r, g, b = (ch(x) for x in c)
+       return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+   ratio = (max(lum(fg), lum(bg)) + 0.05) / (min(lum(fg), lum(bg)) + 0.05)
+   ```
+
+   **`wcag-check` does not compute this.** Its `_similar_lightness` averages
+   RGB and returns a boolean for "both light or both dark", then emits
+   *"Potential color contrast issue — verify 4.5:1"*. That is a prompt to go
+   measure, not a measurement, and its output must never be pasted as one. Use
+   it to *surface candidate pairs* worth checking; get the number from the
+   formula above or from the browser.
 2. **Paste the raw tool output** into the finding, before the conclusion. A
    ratio with no visible measurement behind it is an estimate wearing a
    measurement's clothes.

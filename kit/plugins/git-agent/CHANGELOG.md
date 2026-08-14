@@ -1,5 +1,30 @@
 # Changelog — git-agent
 
+## v4.16.1 — 2026-08-14 — two over-reaches in 4.16.0 / 4.15.1
+
+### Fixed
+
+- **A failed reproduction no longer counts as a refutation.** v4.16.0 sent any
+  finding that would not reproduce straight to the refuted branch, which
+  resolves the thread and lets the merge proceed. But real defects routinely
+  will not execute in the shipping environment — a missing dependency or
+  credential, production-only configuration, a destructive input, a race that
+  does not fire on this machine, or a defect provable from a schema without
+  running anything. That turned "I could not run it" into "it is incorrect",
+  the exact failure the step was added to prevent. A failed reproduction is now
+  **inconclusive** and routes on the source of truth: refuted only if
+  inspection shows the finding is wrong, blocking if inspection confirms it,
+  otherwise `AskUserQuestion` without resolving the thread.
+- **The detached-HEAD guard no longer fires when a PR was named explicitly.**
+  v4.15.1 pointed `agent-merge` at Steps 0.5–3 wholesale, importing a hard stop
+  that contradicts the agent's own contract that a dispatched PR wins over the
+  checkout. With an explicit URL or number nothing reads the current branch, so
+  the checkout state is irrelevant — the guard exists only to stop Step 1's
+  `gh pr list --head "$(git branch --show-current)"` fallback matching nothing
+  on an empty value. Now scoped to the infer-from-branch path in both
+  `merge/SKILL.md` and `agent-merge`. `gh auth status` and the dirty-tree check
+  are unchanged and still run either way.
+
 ## v4.16.0 — 2026-08-14 — review findings get verified in both directions
 
 ### Added

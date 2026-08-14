@@ -23,10 +23,17 @@ create a PR.
 Run all three before touching the PR. The first two are hard stops; the third
 is an ask.
 
-**Detached HEAD:** Run `git branch --show-current`. If the output is empty,
-output: "Cannot merge: repository is in detached HEAD state. Checkout the PR's
-branch first." and **STOP**. The Step 1 fallback interpolates this value into
-`gh pr list --head`, which silently matches nothing when it is empty.
+**Detached HEAD** — *only when the PR is being inferred from the branch.* Run
+`git branch --show-current`. If the output is empty, output: "Cannot merge:
+repository is in detached HEAD state. Checkout the PR's branch first." and
+**STOP**. The Step 1 fallback interpolates this value into `gh pr list --head`,
+which silently matches nothing when it is empty.
+
+**Skip this one when a PR was named explicitly** (`agent-merge`'s dispatch
+argument — a URL or number). Nothing then reads the current branch: the PR is
+already resolved and every later command carries it, so a detached checkout is
+irrelevant. Blocking there would break the documented promise that an explicit
+PR wins over the checkout. The other two guards below still apply.
 
 **GitHub CLI not available or not authenticated:** Run `gh auth status`. If `gh`
 is not installed or returns an auth error, output:

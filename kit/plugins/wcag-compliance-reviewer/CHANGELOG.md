@@ -1,6 +1,24 @@
 # Changelog
 
 
+## v1.5.1 — 2026-08-14 — wcag-check is not a contrast calculator
+
+### Fixed
+
+- **Step 4 named `wcag-check` as a way to obtain a measured ratio. It cannot
+  produce one.** `scripts/check_wcag.py::_similar_lightness` averages RGB
+  (`(r + g + b) // 3`) and returns a boolean for "both light or both dark",
+  then emits *"Potential color contrast issue - verify 4.5:1 ratio"* — a prompt
+  to go measure, phrased as a warning. It never resolves styles, never computes
+  relative luminance, and never outputs a ratio, so the step demanding raw
+  measurement output pointed at a tool that emits none. Step 4 now carries the
+  WCAG relative-luminance formula to run under `Bash(python3 *)`, and says
+  explicitly that `wcag-check` output must never be pasted as a measurement —
+  its role is surfacing candidate pairs worth checking.
+- Formula verified against reference values before shipping: 21.00:1 for
+  black on white, 4.54:1 for `#767676` on white (the lightest passing grey),
+  4.48:1 for `#777777` (the first failing one).
+
 ## v1.5.0 — 2026-08-14 — Contrast ratios get measured, not estimated
 
 ### Added
