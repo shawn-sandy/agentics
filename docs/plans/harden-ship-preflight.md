@@ -1,7 +1,8 @@
 ---
-status: todo
+status: completed
 type: fix
 created: 2026-08-14
+modified: 2026-08-14
 glance: Ship pre-flight stops at the first failing guard, so a session with three blockers costs three full spin-ups — and it never checks the one that has caused two phantom bugs, a linked worktree missing its .env. This makes pre-flight report every blocker at once, adds the env-parity and browser-availability checks, names a headless default for each prompt, and teaches CI triage that a billing block is not a code defect.
 effort: medium
 workflow: never
@@ -94,6 +95,7 @@ no scripts, no behaviour that runs outside a skill invocation.
 
 - kit/plugins/git-agent/skills/ship-autonomous/references/preflight-and-verify.md (modified) — run-all-then-report, env parity, browser probe, headless defaults
 - kit/plugins/git-agent/skills/ship/SKILL.md (modified) — same run-all-then-report contract and env-parity check in its own Step 1
+- kit/plugins/git-agent/skills/ship/references/preflight-guards.md (new) — ship's own copy of the table format and guard commands; the core carries the guard statements but is capped at 600 words by tests/plugins/test-skill-split-git-social.sh, and a skill can only bundle files under its own directory
 - kit/plugins/git-agent/skills/pr-agent/SKILL.md (modified) — Step 5's body template carries the `UNVERIFIED — no browser` line when the caller reports it
 - kit/plugins/git-agent/skills/ship-autonomous/references/ci-autofix.md (modified) — `external-blocker` class, placed first in the table
 - kit/plugins/git-agent/README.md (modified) — document the pre-flight table, the env check, and the external-blocker class
@@ -103,16 +105,16 @@ no scripts, no behaviour that runs outside a skill invocation.
 
 ## Steps
 
-1. Rewrite `references/preflight-and-verify.md` Step 1 so every guard runs before anything is reported: clean tree, uncommitted plan files, detached HEAD, `gh auth status`, and the two new checks below, collected into one PASS/FAIL/BLOCKED table with a verbatim remediation command per failing row. Keep every existing halt condition — the skill still stops on any BLOCKED row, it just stops knowing all of them. Why: the guards are already correct and the report treats their halts as acceptable outcomes; the cost being paid is one session spin-up per blocker, and that is entirely in the ordering. Verify: a repo with both an unauthenticated `gh` and a dirty tree produces one table naming both, and the skill mutates nothing.
-2. Add the worktree env-parity check to that table: skip unless `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`, then compare the `.env*` files present in the main checkout against those in this worktree and report any that are missing, with the exact `cp` command per file. Never copy. Why: this is the blocker with two recorded phantom bugs behind it, and it presents as a code defect in the last file edited, which is the most expensive way to learn about it — but the file holds secrets, so detection is the deliverable and copying stays the user's action. Verify: in a linked worktree whose main checkout has a `.env` the worktree lacks, the row reads BLOCKED and quotes the `cp` command; in a non-worktree checkout the row is absent entirely.
-3. Add the browser-availability probe to Step 2.5: before the preview block, establish whether `preview_start` is reachable. When it is not, skip the browser steps, state `UNVERIFIED — no browser` in the session output, and carry that string forward as the verification result the PR body must report. Why: a silently skipped verification step produces a PR that reads as verified, which is the failure mode the report describes, and this repo already chose the honest-marker convention in `wcag-compliance-reviewer` 1.5.2. Verify: with the browser MCP unavailable, the skill states `UNVERIFIED — no browser` and continues to commit; with it available, the phrase is absent and the preview checks run.
-4. Add one line to `skills/pr-agent/SKILL.md` Step 5's body template: when the invoking skill reports a verification marker, the Test Plan section carries it verbatim; when it reports none, the section is unchanged. Why: Step 3 can only produce the string — `pr-agent` is what writes the PR body, so without this line the marker never reaches the surface where a reviewer would see it, and the acceptance criterion would be unmeetable from inside this plan's scope. Verify: a `ship-autonomous` run with no browser produces a PR whose Test Plan section contains `UNVERIFIED — no browser`; a `pr-agent` invocation with no marker reported produces the existing template unchanged.
-5. Give each pre-flight `AskUserQuestion` a named headless default and say so in one line, matching `plan-agent` `build`'s wording — the uncommitted-plan-files gate defaults to `abort`. Why: under `claude -p` the tool is unavailable, and an unstated fallback means the skill improvises at exactly the gate that exists to stop it. Verify: the file names a default for every `AskUserQuestion` it raises, and the plan-files gate's default is `abort`.
-6. Apply the run-all-then-report contract and the env-parity check to `skills/ship/SKILL.md` Step 1, which carries its own copy of the guards rather than sharing the reference file. Why: `ship` is the entry point used when the user does not want CI watching, so leaving it on first-failure semantics means the fix only lands for half the callers. Verify: both files describe one report containing every blocker, and neither says "stop on the first failure".
-7. Add an `external-blocker` row to the `references/ci-autofix.md` classification table, ordered above the autofixable classes: signatures `billing`, `quota`, `spending limit`, `Bad credentials`, `refusing to allow`, token-expiry text, or every job failing with no test output. Its action is to report the failure verbatim as an external blocker, with no autofix and no increment of the three-attempt cap. Why: an infrastructure failure fixed as a code defect changes correct code and re-fires CI for another round, and this repo already applies the rule inside `plan-agent`'s planning guidance while the plugin that acts on CI lacks it. Verify: the table's first data row is `external-blocker`, and the file states that the attempt cap does not advance for it.
-8. Document the empty-log detection for the billing case, where no signature string exists to match: `gh run view <id> --json jobs` and treat all-jobs-failed with sub-minute durations and empty `--log-failed` output as `external-blocker`. Why: a quota block produces no log text at all, so a signature-only table would classify the most common instance as "anything else" and send it to the user as an unknown. Verify: the file carries the `gh run view --json jobs` command and states the all-failed-fast-and-empty condition.
-9. Add `tests/plugins/test-ship-preflight.sh` asserting: both pre-flight surfaces describe a single combined report, both carry the env-parity check gated on `--git-common-dir`, the browser probe names `UNVERIFIED — no browser`, `pr-agent`'s Step 5 body template carries the marker line, every `AskUserQuestion` in the pre-flight path has a named headless default, and `ci-autofix.md` lists `external-blocker` ahead of `lint`. Why: these are text contracts across four files that drift independently, and the `pr-agent` assertion is specifically what stops the marker requirement from passing its test while never reaching a PR — the failure mode this plan's earlier draft had. Verify: `bash tests/plugins/test-ship-preflight.sh` reports zero failures, and removing any one clause from any of the four files turns exactly one check red.
-10. Bump git-agent to 4.17.0 in `.claude-plugin/marketplace.json`, add the CHANGELOG entry, and document the pre-flight table, the env check, and the external-blocker class in the README. Why: the CI guard fails any PR whose touched plugin does not exceed the base branch version, and the env check is the kind of behaviour a user needs to read about before it blocks their ship. Verify: `git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0.
+1. [x] Rewrite `references/preflight-and-verify.md` Step 1 so every guard runs before anything is reported: clean tree, uncommitted plan files, detached HEAD, `gh auth status`, and the two new checks below, collected into one PASS/FAIL/BLOCKED table with a verbatim remediation command per failing row. Keep every existing halt condition — the skill still stops on any BLOCKED row, it just stops knowing all of them. Why: the guards are already correct and the report treats their halts as acceptable outcomes; the cost being paid is one session spin-up per blocker, and that is entirely in the ordering. Verify: a repo with both an unauthenticated `gh` and a dirty tree produces one table naming both, and the skill mutates nothing.
+2. [x] Add the worktree env-parity check to that table: skip unless `git rev-parse --git-dir` differs from `git rev-parse --git-common-dir`, then compare the `.env*` files present in the main checkout against those in this worktree and report any that are missing, with the exact `cp` command per file. Never copy. Why: this is the blocker with two recorded phantom bugs behind it, and it presents as a code defect in the last file edited, which is the most expensive way to learn about it — but the file holds secrets, so detection is the deliverable and copying stays the user's action. Verify: in a linked worktree whose main checkout has a `.env` the worktree lacks, the row reads BLOCKED and quotes the `cp` command; in a non-worktree checkout the row is absent entirely.
+3. [x] Add the browser-availability probe to Step 2.5: before the preview block, establish whether `preview_start` is reachable. When it is not, skip the browser steps, state `UNVERIFIED — no browser` in the session output, and carry that string forward as the verification result the PR body must report. Why: a silently skipped verification step produces a PR that reads as verified, which is the failure mode the report describes, and this repo already chose the honest-marker convention in `wcag-compliance-reviewer` 1.5.2. Verify: with the browser MCP unavailable, the skill states `UNVERIFIED — no browser` and continues to commit; with it available, the phrase is absent and the preview checks run.
+4. [x] Add one line to `skills/pr-agent/SKILL.md` Step 5's body template: when the invoking skill reports a verification marker, the Test Plan section carries it verbatim; when it reports none, the section is unchanged. Why: Step 3 can only produce the string — `pr-agent` is what writes the PR body, so without this line the marker never reaches the surface where a reviewer would see it, and the acceptance criterion would be unmeetable from inside this plan's scope. Verify: a `ship-autonomous` run with no browser produces a PR whose Test Plan section contains `UNVERIFIED — no browser`; a `pr-agent` invocation with no marker reported produces the existing template unchanged.
+5. [x] Give each pre-flight `AskUserQuestion` a named headless default and say so in one line, matching `plan-agent` `build`'s wording — the uncommitted-plan-files gate defaults to `abort`. Why: under `claude -p` the tool is unavailable, and an unstated fallback means the skill improvises at exactly the gate that exists to stop it. Verify: the file names a default for every `AskUserQuestion` it raises, and the plan-files gate's default is `abort`.
+6. [x] Apply the run-all-then-report contract and the env-parity check to `skills/ship/SKILL.md` Step 1, which carries its own copy of the guards rather than sharing the reference file. Why: `ship` is the entry point used when the user does not want CI watching, so leaving it on first-failure semantics means the fix only lands for half the callers. Verify: both files describe one report containing every blocker, and neither says "stop on the first failure".
+7. [x] Add an `external-blocker` row to the `references/ci-autofix.md` classification table, ordered above the autofixable classes: signatures `billing`, `quota`, `spending limit`, `Bad credentials`, `refusing to allow`, token-expiry text, or every job failing with no test output. Its action is to report the failure verbatim as an external blocker, with no autofix and no increment of the three-attempt cap. Why: an infrastructure failure fixed as a code defect changes correct code and re-fires CI for another round, and this repo already applies the rule inside `plan-agent`'s planning guidance while the plugin that acts on CI lacks it. Verify: the table's first data row is `external-blocker`, and the file states that the attempt cap does not advance for it.
+8. [x] Document the empty-log detection for the billing case, where no signature string exists to match: `gh run view <id> --json jobs` and treat all-jobs-failed with sub-minute durations and empty `--log-failed` output as `external-blocker`. Why: a quota block produces no log text at all, so a signature-only table would classify the most common instance as "anything else" and send it to the user as an unknown. Verify: the file carries the `gh run view --json jobs` command and states the all-failed-fast-and-empty condition.
+9. [x] Add `tests/plugins/test-ship-preflight.sh` asserting: both pre-flight surfaces describe a single combined report, both carry the env-parity check gated on `--git-common-dir`, the browser probe names `UNVERIFIED — no browser`, `pr-agent`'s Step 5 body template carries the marker line, every `AskUserQuestion` in the pre-flight path has a named headless default, and `ci-autofix.md` lists `external-blocker` ahead of `lint`. Why: these are text contracts across four files that drift independently, and the `pr-agent` assertion is specifically what stops the marker requirement from passing its test while never reaching a PR — the failure mode this plan's earlier draft had. Verify: `bash tests/plugins/test-ship-preflight.sh` reports zero failures, and removing any one clause from any of the four files turns exactly one check red.
+10. [x] Bump git-agent to 4.17.0 in `.claude-plugin/marketplace.json`, add the CHANGELOG entry, and document the pre-flight table, the env check, and the external-blocker class in the README. Why: the CI guard fails any PR whose touched plugin does not exceed the base branch version, and the env check is the kind of behaviour a user needs to read about before it blocks their ship. Verify: `git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0.
 
 ## Tests
 
@@ -122,18 +124,55 @@ Tier 2 — This plan changes skill instructions and reference files, not applica
 
 ## Acceptance Criteria
 
-- [ ] A pre-flight run with more than one blocker reports all of them in one table, each with its remediation command, and still halts.
-- [ ] The pre-flight table includes a worktree env-parity row that is present only in a linked worktree and never copies a file.
-- [ ] Step 2.5 probes browser availability and states `UNVERIFIED — no browser` in the session output when the browser is absent, rather than skipping silently.
-- [ ] A `ship-autonomous` run with no browser produces a PR whose Test Plan section contains `UNVERIFIED — no browser`; a `pr-agent` run with no marker reported produces the existing template unchanged.
-- [ ] No commit-body mechanism is added to `commit-agent`, whose single-`-m` commit stays as it is.
-- [ ] Every `AskUserQuestion` in the pre-flight path names its headless default, and the uncommitted-plan-files gate defaults to `abort`.
-- [ ] `skills/ship/SKILL.md` Step 1 and `references/preflight-and-verify.md` describe the same run-all-then-report contract, and neither halts on the first failing guard.
-- [ ] `ci-autofix.md` classifies expired credentials, billing and quota blocks, and all-jobs-failed-with-empty-logs as `external-blocker`, reported verbatim with no autofix.
-- [ ] An `external-blocker` classification does not advance the three-attempt autofix cap.
-- [ ] No automatic re-auth, stash, or env-file copy is introduced anywhere in this change.
-- [ ] `bash tests/plugins/test-ship-preflight.sh` reports zero failures.
-- [ ] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0.
+- [x] A pre-flight run with more than one blocker reports all of them in one table, each with its remediation command, and still halts.
+- [x] The pre-flight table includes a worktree env-parity row that is present only in a linked worktree and never copies a file.
+- [x] Step 2.5 probes browser availability and states `UNVERIFIED — no browser` in the session output when the browser is absent, rather than skipping silently.
+- [x] A `ship-autonomous` run with no browser produces a PR whose Test Plan section contains `UNVERIFIED — no browser`; a `pr-agent` run with no marker reported produces the existing template unchanged.
+- [x] No commit-body mechanism is added to `commit-agent`, whose single-`-m` commit stays as it is.
+- [x] Every `AskUserQuestion` in the pre-flight path names its headless default, and the uncommitted-plan-files gate defaults to `abort`.
+- [x] `skills/ship/SKILL.md` Step 1 and `references/preflight-and-verify.md` describe the same run-all-then-report contract, and neither halts on the first failing guard.
+- [x] `ci-autofix.md` classifies expired credentials, billing and quota blocks, and all-jobs-failed-with-empty-logs as `external-blocker`, reported verbatim with no autofix.
+- [x] An `external-blocker` classification does not advance the three-attempt autofix cap.
+- [x] No automatic re-auth, stash, or env-file copy is introduced anywhere in this change.
+- [x] `bash tests/plugins/test-ship-preflight.sh` reports zero failures.
+- [x] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0.
+
+## Completion Report
+
+- Acceptance criterion 4, first clause ("a `ship-autonomous` run with no browser
+  produces a PR whose Test Plan section contains `UNVERIFIED — no browser`") —
+  **verified as a text contract at its point of use, not by an executed
+  no-browser run.** A browser MCP is present in the implementing session, so the
+  no-browser branch cannot be induced here. `test-ship-preflight.sh` check 5
+  asserts the marker rule sits inside `pr-agent` Step 5's Test Plan section —
+  the block `gh pr create` writes into — and a mutation run confirms deleting
+  the rule turns exactly that check red. The clause's second half (no marker
+  reported → template unchanged) was exercised for real by this plan's own PR,
+  which reports no marker and carries the unmodified template.
+- End-to-end scratch-repo rehearsal from the Verification section (a linked
+  worktree missing its `.env`, invoking `ship`) — **not executed.** Driving a
+  `disable-model-invocation` skill end to end requires a separate interactive
+  session; the guard's logic is asserted by checks 1–3 instead.
+- CI-class thresholds — **measured, and the plan's assumption was corrected.**
+  The plan proposed keying `external-blocker` on "all jobs failed with
+  sub-minute durations and empty `--log-failed` output". Measurement on
+  `shawn-sandy/agentics` (2026-08-14, last 300 runs) shows the eight genuine
+  failures also completed in 6–22 s, so duration does not discriminate on this
+  repo. The shipped rule makes the empty log load-bearing and demotes duration
+  to corroboration. Numbers recorded in the CHANGELOG entry.
+- Two suite failures are pre-existing, not regressions — `test-plan-phases.mjs`
+  (plan-agent's unphased-render baseline hash) and `test-dist-transforms.mjs`
+  ("No dist/ directory"). Both reproduce identically on a clean `origin/main`
+  tree materialized via `git archive`, and neither reads a file this branch
+  touches. 60 of 62 suite scripts pass; no git-agent test regressed.
+  `test-skill-behavior-baselines.sh` was skipped (it shells out to the `claude`
+  CLI per recorded fact, as CI also skips it) — none of the five skills it
+  baselines is modified here.
+- `kit/plugins/git-agent/skills/ship/references/preflight-guards.md`, a file the
+  plan did not list — added because `ship/SKILL.md` is capped at 600 words by
+  `tests/plugins/test-skill-split-git-social.sh` and the full contract did not
+  fit. The core keeps the guard statements, the reference carries the commands.
+  Recorded in the Files section.
 
 ## Verification
 

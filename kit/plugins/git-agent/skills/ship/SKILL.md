@@ -19,23 +19,22 @@ For commit-only use commit-agent, for PR-only use pr-agent.
 
 ## Step 1: Pre-flight Guards
 
-Run all checks before any mutation. Stop on the first failure.
+**Run every guard before reporting any of them.** Run all five against the
+unmutated tree, then print one PASS/BLOCKED table with a verbatim remediation
+command per BLOCKED row. **Never stop on the first failure** — three blockers
+must cost one spin-up, not three. Any BLOCKED row then **STOPs** before any
+mutation. **Never remediate automatically:** no re-auth, no stash, no env copy.
 
-**Clean working tree:** Run `git status`. If nothing to commit, output: "Nothing
-to ship — working tree is clean." and **STOP**.
+Commands: `references/preflight-guards.md`. The five guards:
 
-**Detached HEAD:** Run `git branch --show-current`. If the output is empty,
-output: "Cannot ship: repository is in detached HEAD state. Checkout a branch
-first." and **STOP**.
-
-**On main or master:** If the current branch is `main` or `master`, output:
-"Cannot ship from the default branch. Switch to a feature branch first." and
-**STOP**.
-
-**CLI not available or not authenticated:** Detect GitHub vs GitLab, then verify
-the CLI, per `references/platform-clis.md` (bundled with this skill). If the CLI
-is missing or unauthenticated, print that file's install-and-login message and
-**STOP**.
+- **Clean working tree** — "Nothing to ship — working tree is clean."
+- **Detached HEAD** — no current branch.
+- **On main or master** — "Cannot ship from the default branch. Switch to a
+  feature branch first."
+- **CLI not available or not authenticated** — detect GitHub vs GitLab, then
+  verify per `references/platform-clis.md`.
+- **Worktree env parity** — linked worktrees only: report `.env*` files the main
+  checkout has and this worktree lacks, one `cp` each. **Never copy.**
 
 ## Step 2: Stage Changes
 
