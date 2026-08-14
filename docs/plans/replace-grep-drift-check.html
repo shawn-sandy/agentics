@@ -1602,7 +1602,7 @@ img, video { max-width: 100%; height: auto; }
       <summary>9 steps</summary>
       <div class="rail-heading">Steps</div>
       <ul class="rail-steps">
-        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Establish that rendering an unchanged spec is byte-deterministic: render a committed plan spec twice to two output paths, <code class="md">diff</code> them, then render again over an existing output file and diff against the first.</span><span class="rail-state">step 1 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Establish that rendering an unchanged spec is byte-deterministic <strong class="md">at a fixed output path</strong>: render a committed plan spec, keep a copy of the bytes, render again over that same path, and <code class="md">diff</code> the copy against the result. Compare at one path only — never across two — because <code class="md">plan-file</code> and <code class="md">plan-path</code> are derived from the output path and are meant to differ when it does.</span><span class="rail-state">step 1 of 9</span></a></li>
         <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Add <code class="md">--check</code> to the canonical <code class="md">scripts/build-plan-html.mjs</code>: parse the spec, render to a string, compare against the existing output file, and report the first differing line with its line number and 40 characters of context on each side. Missing output file is a FAIL naming the render command, not a crash.</span><span class="rail-state">step 2 of 9</span></a></li>
         <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Extend <code class="md">--check</code> with the spec-consistency assertions, evaluated on the parsed Markdown and skipped entirely unless <code class="md">status: completed</code>: every numbered step carries <code class="md">[x]</code>, every <code class="md">## Acceptance Criteria</code> bullet is <code class="md">- [x]</code>.</span><span class="rail-state">step 3 of 9</span></a></li>
         <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Make <code class="md">--check</code> print a fixed PASS/FAIL table — one row per property (<code class="md">html</code>, <code class="md">steps</code>, <code class="md">criteria</code>), a summary line, and exit 0 only when every row passes.</span><span class="rail-state">step 4 of 9</span></a></li>
@@ -1673,7 +1673,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 11 done</span>
+        <span id="progress-label">0 / 12 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1695,7 +1695,8 @@ img, video { max-width: 100%; height: auto; }
       <p>Neither property requires reading rendered markup, so the whole DOM-inspection<br>framing goes away rather than getting a better tool.</p>
       <p><strong class="md">The parser is already written and already proven.</strong> <code class="md">scripts/lib/plan-spec.mjs</code><br>carries <code class="md">parseSpecMarkdown</code> and <code class="md">extractSections</code>, and the round-trip property<br><code class="md">extractSections(render(spec))</code> deep-equals the spec&#39;s sections is already<br>enforced by <code class="md">tests/plugins/test-build-plan-html.mjs</code>. <code class="md">--check</code> composes<br>existing, tested pieces.</p>
       <p><strong class="md">The renderer lives at the repo root; the plugin carries a copy.</strong> <code class="md">scripts/</code><br>is canonical and <code class="md">kit/plugins/plan-agent/scripts/</code> is a bundled duplicate —<br>byte-identical today, and held that way by an assertion in<br><code class="md">tests/plugins/test-build-plan-html.mjs</code> whose failure message is *&quot;drifted<br>from scripts/… — re-copy it&quot;*. The unit tests import the <strong class="md">root</strong> module<br>(<code class="md">../../scripts/build-plan-html.mjs</code>), so an edit confined to the plugin copy<br>would both fail the parity assertion and leave every test blind to <code class="md">--check</code>.<br>Four files are mirrored this way: <code class="md">build-plan-html.mjs</code>,<br><code class="md">extract-plan-spec.mjs</code>, <code class="md">lib/plan-spec.mjs</code>, and <code class="md">lib/plan-shell.mjs</code>. Every<br>step below edits the root and re-copies, in that order.</p>
-      <p><strong class="md">Determinism is a precondition, not an assumption.</strong> The renderer keeps<br><code class="md">plan-created</code> stable across re-renders by reading the value back from the<br>existing HTML, and <code class="md">created</code> comes from frontmatter — so an unchanged spec<br>should render byte-identically. Should is not measured. Step 1 establishes it<br>by experiment before Step 2 builds a comparison on top of it, because a single<br>non-deterministic field would make <code class="md">--check</code> fail on every correct plan and<br>the gate would be disabled within a day.</p>
+      <p><strong class="md">Determinism holds at a fixed output path — measured, not assumed.</strong> The<br>renderer keeps <code class="md">plan-created</code> stable across re-renders by reading the value<br>back from the existing HTML, and <code class="md">created</code> comes from frontmatter. Rendering<br><code class="md">docs/plans/replace-grep-drift-check.md</code> twice over the same output path was<br>verified byte-identical on 2026-08-14; rendering it to two <em class="md">different</em> paths<br>differs on exactly two lines, <code class="md">plan-file</code> and <code class="md">plan-path</code>, which<br><code class="md">build-plan-html.mjs:537-538</code> derives from the output path and<br><code class="md">lib/plan-shell.mjs:1884-1885</code> emits as meta tags.</p>
+      <p>That distinction is load-bearing. Those two fields are semantic, not noise: a<br>plan&#39;s recorded path is part of what the file asserts about itself. Normalizing<br>them away to make a cross-path comparison succeed would let <code class="md">--check</code> pass an<br>HTML file copied in from another location — a stale state it is specifically<br>meant to catch. Step 1 therefore fixes the output path and compares there,<br>and any normalization is a last resort that must name the field it drops.</p>
       <p><strong class="md">Scope.</strong> This does not touch the renderer&#39;s output, the plan CSS, or the<br>gallery. <code class="md">--check</code> writes nothing.</p>
     </section>
 
@@ -1738,15 +1739,15 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Establish that rendering an unchanged spec is byte-deterministic: render a committed plan spec twice to two output paths, <code class="md">diff</code> them, then render again over an existing output file and diff against the first.</span>
+                <span class="step-chip-text">Establish that rendering an unchanged spec is byte-deterministic <strong class="md">at a fixed output path</strong>: render a committed plan spec, keep a copy of the bytes, render again over that same path, and <code class="md">diff</code> the copy against the result. Compare at one path only — never across two — because <code class="md">plan-file</code> and <code class="md">plan-path</code> are derived from the output path and are meant to differ when it does.</span>
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
-                <div class="step-why"><code class="md">--check</code> is a byte comparison, so a single volatile field — a timestamp, a generated id, a locale-dependent date — would make it fail on every correct plan, and the fix belongs in the comparison rather than in a gate nobody trusts.</div>
+                <div class="step-why"><code class="md">--check</code> is a byte comparison, so a genuinely volatile field — a timestamp, a generated id, a locale-dependent date — would make it fail on every correct plan; and normalizing the path fields to force a cross-path diff to zero would make <code class="md">--check</code> blind to an HTML file copied in from somewhere else, which is one of the stale states it exists to catch.</div>
               </div>
               <div class="step-note step-verify">
                 <span class="step-note-label">Verify</span>
-                <div class="verify-body">both diffs are empty; if either is not, name the volatile field in this plan&#39;s Context and carry it as a normalization the comparison applies before diffing.</div>
+                <div class="verify-body">the same-path diff is empty; if it is not, name the volatile field in this plan&#39;s Context and carry it as a normalization the comparison applies before diffing.</div>
               </div>
             </div>
           </div>
@@ -1924,7 +1925,7 @@ img, video { max-width: 100%; height: auto; }
       <div class="test-tier-label">Tier 1 — This plan changes application code</div>
       <div class="objective-test-card">Objective: a plan whose HTML is stale, or whose <code class="md">completed</code> spec has an unchecked criterion, fails the gate without any HTML being searched. File: tests/plugins/test-build-plan-html.mjs; Type: smoke; Asserts: <code class="md">--check</code> exits 0 on a freshly rendered consistent plan, and non-zero with the offending property named for a stale render and for an unchecked criterion under <code class="md">status: completed</code>; Run: node tests/plugins/test-build-plan-html.mjs</div>
       <div class="test-list">
-        <div class="test-card">Unit: render determinism. File: tests/plugins/test-build-plan-html.mjs; Targets: renderPlanHtml; Key cases: two renders of one unchanged spec are byte-identical, and a re-render over an existing output file preserves <code class="md">plan-created</code></div>
+        <div class="test-card">Unit: render determinism. File: tests/plugins/test-build-plan-html.mjs; Targets: renderPlanHtml; Key cases: two renders of one unchanged spec <strong class="md">over the same output path</strong> are byte-identical, a re-render over an existing output file preserves <code class="md">plan-created</code>, and rendering to a different path changes <code class="md">plan-file</code>/<code class="md">plan-path</code> and nothing else — pinning them as derived-from-path rather than volatile</div>
         <div class="test-card">Unit: check-mode reporting. File: tests/plugins/test-build-plan-html.mjs; Targets: the <code class="md">--check</code> code path; Key cases: missing output file reports FAIL naming the render command rather than throwing, the first differing line is reported with its line number, and the table&#39;s rows appear in fixed order</div>
         <div class="test-card">Unit: consistency assertions gate on status. File: tests/plugins/test-build-plan-html.mjs; Targets: the spec-consistency branch; Key cases: <code class="md">status: in-progress</code> with unchecked criteria exits 0, <code class="md">status: completed</code> with an unchecked step exits non-zero, and a plan with no <code class="md">## Acceptance Criteria</code> section does not crash</div>
         <div class="test-card">Integration: existing render behaviour survives. File: tests/plugins/test-build-plan-html.mjs; Targets: the whole renderer; Key cases: every current assertion, including the <code class="md">extractSections(render(spec))</code> round-trip property</div>
@@ -1964,23 +1965,27 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7"><code class="md">--check</code> is implemented in the canonical <code class="md">scripts/build-plan-html.mjs</code>, and <code class="md">cmp</code> reports the plugin-bundled copy byte-identical to it.</label>
+          <label for="ac7">Determinism is asserted at a fixed output path, and <code class="md">plan-file</code>/<code class="md">plan-path</code> are never normalized out of the comparison.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8">The <code class="md">plugin-bundled renderer copies are byte-identical to the repo-root sources</code> assertion still passes.</label>
+          <label for="ac8"><code class="md">--check</code> is implemented in the canonical <code class="md">scripts/build-plan-html.mjs</code>, and <code class="md">cmp</code> reports the plugin-bundled copy byte-identical to it.</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9"><code class="md">completion-gates.md</code> and <code class="md">write-completions.md</code> both invoke <code class="md">--check</code> and neither names a CSS selector as evidence.</label>
+          <label for="ac9">The <code class="md">plugin-bundled renderer copies are byte-identical to the repo-root sources</code> assertion still passes.</label>
         </li>
         <li>
           <input type="checkbox" id="ac10">
-          <label for="ac10"><code class="md">node tests/plugins/test-build-plan-html.mjs</code> reports zero failures with more assertions than before this change.</label>
+          <label for="ac10"><code class="md">completion-gates.md</code> and <code class="md">write-completions.md</code> both invoke <code class="md">--check</code> and neither names a CSS selector as evidence.</label>
         </li>
         <li>
           <input type="checkbox" id="ac11">
-          <label for="ac11"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0.</label>
+          <label for="ac11"><code class="md">node tests/plugins/test-build-plan-html.mjs</code> reports zero failures with more assertions than before this change.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac12">
+          <label for="ac12"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"

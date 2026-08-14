@@ -68,13 +68,21 @@ Four files are mirrored this way: `build-plan-html.mjs`,
 `extract-plan-spec.mjs`, `lib/plan-spec.mjs`, and `lib/plan-shell.mjs`. Every
 step below edits the root and re-copies, in that order.
 
-**Determinism is a precondition, not an assumption.** The renderer keeps
-`plan-created` stable across re-renders by reading the value back from the
-existing HTML, and `created` comes from frontmatter — so an unchanged spec
-should render byte-identically. Should is not measured. Step 1 establishes it
-by experiment before Step 2 builds a comparison on top of it, because a single
-non-deterministic field would make `--check` fail on every correct plan and
-the gate would be disabled within a day.
+**Determinism holds at a fixed output path — measured, not assumed.** The
+renderer keeps `plan-created` stable across re-renders by reading the value
+back from the existing HTML, and `created` comes from frontmatter. Rendering
+`docs/plans/replace-grep-drift-check.md` twice over the same output path was
+verified byte-identical on 2026-08-14; rendering it to two *different* paths
+differs on exactly two lines, `plan-file` and `plan-path`, which
+`build-plan-html.mjs:537-538` derives from the output path and
+`lib/plan-shell.mjs:1884-1885` emits as meta tags.
+
+That distinction is load-bearing. Those two fields are semantic, not noise: a
+plan's recorded path is part of what the file asserts about itself. Normalizing
+them away to make a cross-path comparison succeed would let `--check` pass an
+HTML file copied in from another location — a stale state it is specifically
+meant to catch. Step 1 therefore fixes the output path and compares there,
+and any normalization is a last resort that must name the field it drops.
 
 **Scope.** This does not touch the renderer's output, the plan CSS, or the
 gallery. `--check` writes nothing.
@@ -92,7 +100,7 @@ gallery. `--check` writes nothing.
 
 ## Steps
 
-1. Establish that rendering an unchanged spec is byte-deterministic: render a committed plan spec twice to two output paths, `diff` them, then render again over an existing output file and diff against the first. Why: `--check` is a byte comparison, so a single volatile field — a timestamp, a generated id, a locale-dependent date — would make it fail on every correct plan, and the fix belongs in the comparison rather than in a gate nobody trusts. Verify: both diffs are empty; if either is not, name the volatile field in this plan's Context and carry it as a normalization the comparison applies before diffing.
+1. Establish that rendering an unchanged spec is byte-deterministic **at a fixed output path**: render a committed plan spec, keep a copy of the bytes, render again over that same path, and `diff` the copy against the result. Compare at one path only — never across two — because `plan-file` and `plan-path` are derived from the output path and are meant to differ when it does. Why: `--check` is a byte comparison, so a genuinely volatile field — a timestamp, a generated id, a locale-dependent date — would make it fail on every correct plan; and normalizing the path fields to force a cross-path diff to zero would make `--check` blind to an HTML file copied in from somewhere else, which is one of the stale states it exists to catch. Verify: the same-path diff is empty; if it is not, name the volatile field in this plan's Context and carry it as a normalization the comparison applies before diffing.
 2. Add `--check` to the canonical `scripts/build-plan-html.mjs`: parse the spec, render to a string, compare against the existing output file, and report the first differing line with its line number and 40 characters of context on each side. Missing output file is a FAIL naming the render command, not a crash. Why: freshness is the property the old Step 5.3 was actually reaching for, and a first-difference report is what makes the failure actionable — a bare "files differ" sends the model back to grepping; the root file is the one the tests import, so implementing anywhere else leaves the change untested. Verify: `--check` on a freshly rendered plan exits 0 and prints `html  PASS`; the same plan with one character edited into its HTML exits non-zero and prints the edited line's number.
 3. Extend `--check` with the spec-consistency assertions, evaluated on the parsed Markdown and skipped entirely unless `status: completed`: every numbered step carries `[x]`, every `## Acceptance Criteria` bullet is `- [x]`. Why: this is the half of Step 5.3 that is not a freshness question, and evaluating it on the spec is what removes the last reason to open the HTML. Verify: a spec with `status: completed` and one `- [ ]` criterion exits non-zero and names that criterion's text; the same spec at `status: in-progress` exits 0 with the consistency rows reported as skipped.
 4. Make `--check` print a fixed PASS/FAIL table — one row per property (`html`, `steps`, `criteria`), a summary line, and exit 0 only when every row passes. Why: the model needs to know *which* property broke to fix the right file, and a stable table is also what the test asserts against. Verify: the table's row labels appear in the same order for a passing plan, a stale-HTML plan, and an inconsistent-spec plan.
@@ -107,7 +115,7 @@ gallery. `--check` writes nothing.
 Tier 1 — This plan changes application code
 
 - Objective: a plan whose HTML is stale, or whose `completed` spec has an unchecked criterion, fails the gate without any HTML being searched. File: tests/plugins/test-build-plan-html.mjs; Type: smoke; Asserts: `--check` exits 0 on a freshly rendered consistent plan, and non-zero with the offending property named for a stale render and for an unchecked criterion under `status: completed`; Run: node tests/plugins/test-build-plan-html.mjs
-- Unit: render determinism. File: tests/plugins/test-build-plan-html.mjs; Targets: renderPlanHtml; Key cases: two renders of one unchanged spec are byte-identical, and a re-render over an existing output file preserves `plan-created`
+- Unit: render determinism. File: tests/plugins/test-build-plan-html.mjs; Targets: renderPlanHtml; Key cases: two renders of one unchanged spec **over the same output path** are byte-identical, a re-render over an existing output file preserves `plan-created`, and rendering to a different path changes `plan-file`/`plan-path` and nothing else — pinning them as derived-from-path rather than volatile
 - Unit: check-mode reporting. File: tests/plugins/test-build-plan-html.mjs; Targets: the `--check` code path; Key cases: missing output file reports FAIL naming the render command rather than throwing, the first differing line is reported with its line number, and the table's rows appear in fixed order
 - Unit: consistency assertions gate on status. File: tests/plugins/test-build-plan-html.mjs; Targets: the spec-consistency branch; Key cases: `status: in-progress` with unchecked criteria exits 0, `status: completed` with an unchecked step exits non-zero, and a plan with no `## Acceptance Criteria` section does not crash
 - Integration: existing render behaviour survives. File: tests/plugins/test-build-plan-html.mjs; Targets: the whole renderer; Key cases: every current assertion, including the `extractSections(render(spec))` round-trip property
@@ -120,6 +128,7 @@ Tier 1 — This plan changes application code
 - [ ] A `status: completed` spec with any unchecked step or criterion fails the check with the offending item's text quoted.
 - [ ] The same spec at `status: in-progress` passes, with the consistency rows reported as skipped rather than passed.
 - [ ] `--check` writes no files.
+- [ ] Determinism is asserted at a fixed output path, and `plan-file`/`plan-path` are never normalized out of the comparison.
 - [ ] `--check` is implemented in the canonical `scripts/build-plan-html.mjs`, and `cmp` reports the plugin-bundled copy byte-identical to it.
 - [ ] The `plugin-bundled renderer copies are byte-identical to the repo-root sources` assertion still passes.
 - [ ] `completion-gates.md` and `write-completions.md` both invoke `--check` and neither names a CSS selector as evidence.
