@@ -1,6 +1,32 @@
 # Changelog
 
 
+## 9.3.0 — build-fleet: ship a plan backlog in parallel (2026-08-14)
+
+### Added
+
+- **`build-fleet` skill** — `build` fanned out. `build` ships one plan on the
+  current branch; `build-fleet` ships N plans on N branches, one subagent per
+  plan. Command (`/plan-agent:build-fleet [<plan> ...] [--dir <path>]
+  [--max N]`) or model-invocable on "ship the backlog in parallel" intent.
+- **Dispatch-only by construction** — every step of the work is delegated to
+  `plan-agent:build` and `git-agent:ship-autonomous` rather than restated, so
+  the completion gates, browser verification, CI autofix, and review triage are
+  inherited when those skills change.
+- **Worktree isolation via the harness** — each agent runs with
+  `isolation: "worktree"`, which creates the worktree and removes it if left
+  unchanged. No `git worktree add` and no cleanup pass to get wrong.
+- **Blast-radius guards** — a mandatory confirmation that names how many pull
+  requests will open, `--max` defaulting to 3, `status: completed` plans
+  excluded even when named explicitly, a dirty-tree stop (worktrees fork from
+  `origin/main`, so uncommitted parent-tree work does not travel), and a
+  headless run that cancels instead of defaulting.
+- **Stops at green** — the fleet ends at green PRs. A background agent cannot
+  answer `ship-autonomous`'s merge gate, and auto-merging N sibling PRs is the
+  one step in the chain with no cheap undo, so merging stays a human step via
+  `/git-agent:merge`.
+
+
 ## 9.2.0 — build-feature: feature docs that split into plans (2026-08-12)
 
 ### Added
