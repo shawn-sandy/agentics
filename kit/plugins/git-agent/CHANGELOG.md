@@ -1,5 +1,65 @@
 # Changelog — git-agent
 
+## v4.18.0 — 2026-08-14 — a scope guard for repo-wide formatters and bare stash pops
+
+### Added
+
+- **`hooks/scope-guard.py`, a second `PreToolUse` hook on `Bash`.** It refuses
+  two commands whose blast radius exceeds their intent, each with a recorded
+  incident behind it: a formatter or linter run with `--write`/`--fix` and
+  either no path operand or `.` (one such run reformatted ~190 untouched files
+  and needed a guarded revert), and `git stash pop`/`git stash apply` with no
+  stash reference (one bare pop restored an unrelated stash and created
+  conflicts needing recovery). Blocks exit 2 with the rule and its safe
+  alternative on stderr. Escape hatch: `.claude/no-scope-guard` at the repo
+  root, mirroring `.claude/no-lint-gate`.
+- **Package scripts are resolved before matching.** `npm run fix:all` carries
+  none of the dangerous text itself — its expansion lives in `package.json` —
+  so a runner invocation is resolved against the nearest manifest, walking up
+  from the command's directory to the git root, and the script's body is what
+  the rule sees. An optional `run` token is stripped rather than required, so
+  all eight spellings (`npm`/`pnpm`/`yarn`/`bun`, each with and without `run`)
+  behave identically; a script delegating to another script resolves through up
+  to three hops. A missing manifest, malformed JSON, or absent script resolves
+  to nothing and never blocks.
+- **A mention is not an invocation.** The guard parses the command and checks
+  the program actually being run, so a blocked pattern quoted inside a
+  `git commit -m` message, an `echo`, or a `grep` argument is not blocked, and
+  `git` is admitted only for `git stash`. Nothing touches the filesystem until
+  a command is a genuine candidate — this hook runs on every `Bash` call in
+  every repo that installs git-agent. `rm`, `curl`, `git reset --hard`, and
+  `git checkout -- .` are deliberately out of scope: a guard that fires on safe
+  commands gets switched off, which costs more than the two it was catching.
+- **`tests/plugins/test-scope-guard.sh`** — 79 assertions covering both blocked
+  patterns, each pattern's passing counterpart, all eight runner spellings in
+  both directions, the manifest walk (nearest wins, git root is the ceiling,
+  malformed never blocks), the opt-out, and the fast bail. Disabling either
+  rule turns exactly its own checks red and leaves the other rule green.
+
+### Changed
+
+- **The lint gate's `.claude/lint-gate.json` is documented as a test gate.** It
+  already accepted arbitrary commands and already compares every one against
+  `HEAD`, so `{"commands": ["npm run lint", "npm test"]}` is safe on a suite
+  that is already red — only a failure your change introduces blocks. The
+  capability existed and was documented only as a lint mechanism; this adds the
+  example. No behaviour change.
+- README documents both scope-guard rules, the `.claude/no-scope-guard` opt-out,
+  and the caveat that plugin `hooks.json` files are **not** registered in Claude
+  Code desktop sessions — this guard is CLI-only enforcement, so a desktop
+  session is not a test surface and the equivalent `CLAUDE.md` rules stay as the
+  desktop fallback.
+
+### Note on the version number
+
+Released as **4.18.0**, skipping 4.17.0. `harden-ship-preflight` was shipping
+concurrently from a sibling branch and took 4.17.0, which landed as PR #555
+while this work was in progress — `origin/main` read 4.16.1 when the number was
+chosen. Both branches taking 4.17.0 would have left whichever merged second
+failing `scripts/check-plugin-versions.mjs`, which requires the touched
+plugin's version to *exceed* the base branch. 4.18.0 exceeds it in either merge
+order.
+
 ## v4.17.0 — 2026-08-14 — pre-flight reports every blocker at once
 
 ### Added
