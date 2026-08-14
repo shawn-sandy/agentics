@@ -18,6 +18,39 @@ create a PR.
 
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
+## Step 0.5: Guards
+
+Run all three before touching the PR. The first two are hard stops; the third
+is an ask.
+
+**Detached HEAD** — *only when the PR is being inferred from the branch.* Run
+`git branch --show-current`. If the output is empty, output: "Cannot merge:
+repository is in detached HEAD state. Checkout the PR's branch first." and
+**STOP**. The Step 1 fallback interpolates this value into `gh pr list --head`,
+which silently matches nothing when it is empty.
+
+**Skip this one when a PR was named explicitly** (`agent-merge`'s dispatch
+argument — a URL or number). Nothing then reads the current branch: the PR is
+already resolved and every later command carries it, so a detached checkout is
+irrelevant. Blocking there would break the documented promise that an explicit
+PR wins over the checkout. The other two guards below still apply.
+
+**GitHub CLI not available or not authenticated:** Run `gh auth status`. If `gh`
+is not installed or returns an auth error, output:
+
+```
+GitHub CLI is required. Install it from https://cli.github.com/ and run `gh auth login`.
+```
+
+and **STOP**. (`glab auth status` on a GitLab remote.)
+
+**Dirty working tree:** Run `git status --porcelain`. If it prints anything,
+list the files and **ask** whether to merge anyway — do not STOP outright, and
+do not commit, stash, or clean anything. The merge itself happens server-side,
+so local edits cannot corrupt it; the risk is that the user believes this work
+is shipping when it is not in the PR. Naming the files is what makes that
+visible, so the approval in Step 3 covers what is actually being merged.
+
 ## Step 1: Find the PR
 
 ```

@@ -1,7 +1,7 @@
 ---
 name: wcag-compliance-reviewer
 description: "Reviews HTML/CSS and React code for WCAG 2.2 Level AA violations. Provides targeted fixes for each accessibility issue found. Use when the user asks to check WCAG compliance or audit accessibility."
-allowed-tools: Read
+allowed-tools: Read, Grep, Glob, WebFetch, Bash(wcag-check *), Bash(python3 *), mcp__Claude_Browser__preview_start, mcp__Claude_Browser__navigate, mcp__Claude_Browser__read_page, mcp__Claude_Browser__javascript_tool, mcp__Claude_Browser__resize_window
 license: MIT
 metadata:
   author: shawn-sandy
@@ -20,11 +20,12 @@ Review code changes for WCAG 2.2 Level AA accessibility compliance in HTML/CSS a
   - [1. Determine WCAG Version and Source](#1-determine-wcag-version-and-source)
   - [2. Initial Assessment](#2-initial-assessment)
   - [3. Load Relevant References](#3-load-relevant-references)
-  - [4. Systematic Review by WCAG Principle](#4-systematic-review-by-wcag-principle)
-  - [5. Categorize Issues by Severity](#5-categorize-issues-by-severity)
-  - [6. Provide Specific Fixes](#6-provide-specific-fixes)
-  - [7. Recommend Testing Approach](#7-recommend-testing-approach)
-  - [8. Summary Output Format](#8-summary-output-format)
+  - [4. Measured Values: Measure or Label](#4-measured-values-measure-or-label)
+  - [5. Systematic Review by WCAG Principle](#5-systematic-review-by-wcag-principle)
+  - [6. Categorize Issues by Severity](#6-categorize-issues-by-severity)
+  - [7. Provide Specific Fixes](#7-provide-specific-fixes)
+  - [8. Recommend Testing Approach](#8-recommend-testing-approach)
+  - [9. Summary Output Format](#9-summary-output-format)
 - [Quick Reference Checklist](#quick-reference-checklist)
 - [Code Examples for Common Patterns](#code-examples-for-common-patterns)
 - [Using the Automated Checker Script](#using-the-automated-checker-script)
@@ -101,7 +102,70 @@ After fetching, combine official guidelines with code examples from `references/
 - `references/common-violations.md` - Code examples and fixes for HTML/CSS/React/TypeScript
 - `references/testing-guide.md` - When user asks about testing or wants to set up automated checks
 
-### 4. Systematic Review by WCAG Principle
+### 4. Measured Values: Measure or Label
+
+Contrast ratios, computed sizes, and touch-target dimensions are **measurements,
+not readings**. Never state one that you did not obtain from a tool run.
+
+Reading a hex pair out of a stylesheet and reporting "3.8:1" is the single
+failure mode this skill is most prone to, because the number looks like analysis
+and reads as authoritative. Source CSS is not the rendered result: a `color`
+declaration can be overridden by specificity, recomputed by `color-mix()` or
+`light-dark()`, altered by opacity or a blend mode, or inherited from a variable
+whose value is only resolved at runtime. Two ratios shipped by this skill were
+wrong for exactly that reason and were caught downstream.
+
+**For anything with a number attached:**
+
+1. **Measure it.** Against a running page, read computed styles with the browser
+   MCP or Playwright:
+
+   ```js
+   const s = getComputedStyle(el);
+   ({ color: s.color, bg: s.backgroundColor, outline: s.outlineColor,
+      box: el.getBoundingClientRect() });   // box → touch targets, 2.5.8
+   ```
+
+   For a static file with no server, compute from the *resolved* values: read
+   both colors, flatten any alpha against the actual backdrop, and run the WCAG
+   relative-luminance formula with `Bash(python3 *)`, showing the arithmetic.
+
+   ```python
+   def lum(c):  # c = (r, g, b), each 0-255
+       def ch(v):
+           v /= 255
+           return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+       r, g, b = (ch(x) for x in c)
+       return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+   ratio = (max(lum(fg), lum(bg)) + 0.05) / (min(lum(fg), lum(bg)) + 0.05)
+   ```
+
+   **`wcag-check` does not compute this.** Its `_similar_lightness` averages
+   RGB and returns a boolean for "both light or both dark", then emits
+   *"Potential color contrast issue — verify 4.5:1"*. That is a prompt to go
+   measure, not a measurement, and its output must never be pasted as one. Use
+   it to *surface candidate pairs* worth checking; get the number from the
+   formula above or from the browser.
+2. **Paste the raw tool output** into the finding, before the conclusion. A
+   ratio with no visible measurement behind it is an estimate wearing a
+   measurement's clothes.
+3. **Only when you can neither reach a browser *nor* resolve the values
+   statically**, write `UNVERIFIED — <reason>` (`no browser, values unresolved`)
+   and describe what to check by hand. A ratio you computed from resolved
+   values with the arithmetic shown **is** verified — the absence of a browser
+   does not downgrade it, or step 1's static path would never produce a usable
+   number. Never substitute a `grep` of the source and report it as
+   verification.
+
+An honest `UNVERIFIED` costs the reader one manual check. A confident wrong
+ratio costs them the entire audit's credibility.
+
+Everything without a number — a missing `alt`, an unlabeled input, a heading
+skip, an `onClick` with no key handler — is a genuine source reading. Report
+those from the code directly.
+
+### 5. Systematic Review by WCAG Principle
 
 Review code against the four WCAG principles in this order:
 
@@ -142,7 +206,7 @@ Review code against the four WCAG principles in this order:
 4. Verify status messages use ARIA live regions (4.1.3)
 5. Check all interactive elements have accessible names (4.1.2)
 
-### 5. Categorize Issues by Severity
+### 6. Categorize Issues by Severity
 
 **Errors (Must Fix):**
 - Missing alt text on images
@@ -173,7 +237,7 @@ Review code against the four WCAG principles in this order:
 - Use ARIA landmarks consistently
 - Note: 4.1.1 Parsing was removed in WCAG 2.2 — valid HTML is still best practice but no longer a compliance requirement
 
-### 6. Provide Specific Fixes
+### 7. Provide Specific Fixes
 
 For each issue identified:
 
@@ -195,7 +259,7 @@ Line 23:
 Why: Screen readers announce "logo.png" without alt text, which is not meaningful. The alt text provides the image's purpose.
 ```
 
-### 7. Recommend Testing Approach
+### 8. Recommend Testing Approach
 
 Based on the code complexity, recommend appropriate testing tools from `references/testing-guide.md`:
 
@@ -212,7 +276,7 @@ Based on the code complexity, recommend appropriate testing tools from `referenc
 - pa11y-ci or Lighthouse CI for automated testing
 - Comprehensive manual testing checklist
 
-### 8. Summary Output Format
+### 9. Summary Output Format
 
 Structure the review output as follows:
 

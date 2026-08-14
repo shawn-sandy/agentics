@@ -55,7 +55,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/wcag-compliance-reviewer"
       },
-      "version": "1.4.0",
+      "version": "1.5.2",
       "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance",
       "category": "security",
       "tags": [
@@ -120,7 +120,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "4.15.0",
+      "version": "4.16.1",
       "description": "Automated git workflow — create branches, commit with conventional messages, create PRs, and open GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate; ships background subagents and slash commands for fire-and-forget commit/PR/ship/CI-watch plus auto-linking plan issue references in PR descriptions",
       "category": "development",
       "tags": [
@@ -247,7 +247,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/team-defaults"
       },
-      "version": "0.2.0",
+      "version": "0.2.1",
       "description": "Shared team defaults — documentation and design-token agents plus a sync-rules skill that installs the team's global rules into ~/.claude/rules/",
       "category": "productivity",
       "tags": [

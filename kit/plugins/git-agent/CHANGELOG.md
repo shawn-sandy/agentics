@@ -1,5 +1,74 @@
 # Changelog — git-agent
 
+## v4.16.1 — 2026-08-14 — two over-reaches in 4.16.0 / 4.15.1
+
+### Fixed
+
+- **A failed reproduction no longer counts as a refutation.** v4.16.0 sent any
+  finding that would not reproduce straight to the refuted branch, which
+  resolves the thread and lets the merge proceed. But real defects routinely
+  will not execute in the shipping environment — a missing dependency or
+  credential, production-only configuration, a destructive input, a race that
+  does not fire on this machine, or a defect provable from a schema without
+  running anything. That turned "I could not run it" into "it is incorrect",
+  the exact failure the step was added to prevent. A failed reproduction is now
+  **inconclusive** and routes on the source of truth: refuted only if
+  inspection shows the finding is wrong, blocking if inspection confirms it,
+  otherwise `AskUserQuestion` without resolving the thread.
+- **The detached-HEAD guard no longer fires when a PR was named explicitly.**
+  v4.15.1 pointed `agent-merge` at Steps 0.5–3 wholesale, importing a hard stop
+  that contradicts the agent's own contract that a dispatched PR wins over the
+  checkout. With an explicit URL or number nothing reads the current branch, so
+  the checkout state is irrelevant — the guard exists only to stop Step 1's
+  `gh pr list --head "$(git branch --show-current)"` fallback matching nothing
+  on an empty value. Now scoped to the infer-from-branch path in both
+  `merge/SKILL.md` and `agent-merge`. `gh auth status` and the dirty-tree check
+  are unchanged and still run either way.
+
+## v4.16.0 — 2026-08-14 — review findings get verified in both directions
+
+### Added
+
+- **Step 6c now requires reproducing a blocking finding before fixing it.**
+  Previously a finding that was "clear, safe, and in scope" went straight to
+  `Edit` → commit → push. But a reviewer asserting a defect is making a claim
+  about runtime, and this skill already refuses to accept those on authority
+  when *declining* — accepting one on authority when *fixing* is the same error
+  pointed the other way, and it costs a commit plus a re-fired review round to
+  discover the code was already correct. A finding that cannot be reproduced is
+  not blocking: it drops to the refuted branch, with the failed reproduction as
+  its evidence.
+- **Refuting a finding now requires checking its source of truth first**, and
+  putting that evidence in the reply — the schema excerpt, the spec, the file's
+  current contents. A bare "this is incorrect" trades an opinion for an
+  opinion, and reviewers are right often enough that a reflexive decline
+  eventually declines a real bug. Evidence in the thread is also checkable by a
+  human reading it later, which an assertion is not.
+
+## v4.15.1 — 2026-08-14 — merge gets the pre-flight guards back
+
+### Fixed
+
+- **`merge` Step 0.5, guards.** `merge` was the only skill in this plugin with
+  no pre-flight checks — `branch-agent`, `commit-agent`, `pr-agent`, `ship`,
+  and `ship-autonomous` all have them. It now runs three before touching the
+  PR:
+  - **Detached HEAD.** Step 1's fallback interpolates `git branch
+    --show-current` into `gh pr list --head`, so on a detached HEAD it queried
+    `--head ""` and matched nothing — reported as "no PR found" rather than as
+    the checkout problem it was.
+  - **`gh auth status`.** An auth failure surfaced as whatever `gh pr view`
+    happened to print, several steps in.
+  - **Dirty working tree.** This is the guard v4.15.0 dropped alongside the
+    lint gate. It returns with a different purpose: not to align the local tree
+    with the PR head for a local lint run, but to name uncommitted files before
+    the Step 3 approval, so nobody approves a merge believing work is shipping
+    that is not in the PR. It **asks** rather than stopping — the merge is
+    server-side, so local edits cannot corrupt it.
+- **`agent-merge`** follows Steps 0.5–3 instead of 1–3. The dirty-tree ask
+  needs no special case there: the existing "if the skill says ask, report and
+  STOP" substitution already covers it.
+
 ## v4.15.0 — 2026-08-11 — the merge lint gate is gone
 
 ### Removed

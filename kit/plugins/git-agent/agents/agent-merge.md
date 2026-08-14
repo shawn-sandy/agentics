@@ -58,12 +58,19 @@ decision that gate does not cover is a stop-and-report, never a guess.**
 
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
-### Step 1–3: Run the merge skill's gates
+### Step 0.5–3: Run the merge skill's gates
 
-Follow `skills/merge/SKILL.md` Steps 1 through 3 verbatim — PR lookup (against
-the target PR resolved above), the readiness gate (`gh pr checks --required`,
+Follow `skills/merge/SKILL.md` Steps 0.5 through 3 verbatim — the guards
+(detached HEAD, `gh auth status`, dirty working tree), PR lookup (against the
+target PR resolved above), the readiness gate (`gh pr checks --required`,
 `mergeable`, `mergeStateStatus`, `reviewDecision`), and the Step 3 re-check —
-with one substitution:
+with two substitutions:
+
+- **The detached-HEAD guard applies only when you resolved the PR from the
+  current branch.** When the dispatch named a PR, it is already resolved and
+  no command reads the branch, so a detached checkout is irrelevant — skipping
+  it is what keeps the explicit argument winning over the checkout, as promised
+  above. `gh auth status` and the dirty-tree check still run either way.
 
 - **Step 3's `AskUserQuestion` does not apply.** There is no user to ask. If
   the re-checked state is green, merge directly:
