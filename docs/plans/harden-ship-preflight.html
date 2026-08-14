@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="medium">
+<html lang="en" data-status="completed" data-effort="medium">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +14,7 @@ try {
   if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
 } catch (e) { /* no storage — prefers-color-scheme decides */ }
 </script>
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-effort" content="medium">
 <meta name="plan-type" content="fix">
 <meta name="plan-created" content="2026-08-14">
@@ -1569,7 +1569,7 @@ img, video { max-width: 100%; height: auto; }
         <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
                 aria-pressed="false" aria-label="Use dark theme">Dark</button>
         <span class="effort-badge" aria-label="Effort level">Medium</span>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1602,16 +1602,16 @@ img, video { max-width: 100%; height: auto; }
       <summary>10 steps</summary>
       <div class="rail-heading">Steps</div>
       <ul class="rail-steps">
-        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Rewrite <code class="md">references/preflight-and-verify.md</code> Step 1 so every guard runs before anything is reported: clean tree, uncommitted plan files, detached HEAD, <code class="md">gh auth status</code>, and the two new checks below, collected into one PASS/FAIL/BLOCKED table with a verbatim remediation command per failing row. Keep every existing halt condition — the skill still stops on any BLOCKED row, it just stops knowing all of them.</span><span class="rail-state">step 1 of 10</span></a></li>
-        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Add the worktree env-parity check to that table: skip unless <code class="md">git rev-parse --git-dir</code> differs from <code class="md">git rev-parse --git-common-dir</code>, then compare the <code class="md">.env*</code> files present in the main checkout against those in this worktree and report any that are missing, with the exact <code class="md">cp</code> command per file. Never copy.</span><span class="rail-state">step 2 of 10</span></a></li>
-        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Add the browser-availability probe to Step 2.5: before the preview block, establish whether <code class="md">preview_start</code> is reachable. When it is not, skip the browser steps, state <code class="md">UNVERIFIED — no browser</code> in the session output, and carry that string forward as the verification result the PR body must report.</span><span class="rail-state">step 3 of 10</span></a></li>
-        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Add one line to <code class="md">skills/pr-agent/SKILL.md</code> Step 5&#39;s body template: when the invoking skill reports a verification marker, the Test Plan section carries it verbatim; when it reports none, the section is unchanged.</span><span class="rail-state">step 4 of 10</span></a></li>
-        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Give each pre-flight <code class="md">AskUserQuestion</code> a named headless default and say so in one line, matching <code class="md">plan-agent</code> <code class="md">build</code>&#39;s wording — the uncommitted-plan-files gate defaults to <code class="md">abort</code>.</span><span class="rail-state">step 5 of 10</span></a></li>
-        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Apply the run-all-then-report contract and the env-parity check to <code class="md">skills/ship/SKILL.md</code> Step 1, which carries its own copy of the guards rather than sharing the reference file.</span><span class="rail-state">step 6 of 10</span></a></li>
-        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Add an <code class="md">external-blocker</code> row to the <code class="md">references/ci-autofix.md</code> classification table, ordered above the autofixable classes: signatures <code class="md">billing</code>, <code class="md">quota</code>, <code class="md">spending limit</code>, <code class="md">Bad credentials</code>, <code class="md">refusing to allow</code>, token-expiry text, or every job failing with no test output. Its action is to report the failure verbatim as an external blocker, with no autofix and no increment of the three-attempt cap.</span><span class="rail-state">step 7 of 10</span></a></li>
-        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Document the empty-log detection for the billing case, where no signature string exists to match: <code class="md">gh run view &lt;id&gt; --json jobs</code> and treat all-jobs-failed with sub-minute durations and empty <code class="md">--log-failed</code> output as <code class="md">external-blocker</code>.</span><span class="rail-state">step 8 of 10</span></a></li>
-        <li><a class="rail-step" href="#step-9"><span class="rail-no">9</span><span class="rail-text">Add <code class="md">tests/plugins/test-ship-preflight.sh</code> asserting: both pre-flight surfaces describe a single combined report, both carry the env-parity check gated on <code class="md">--git-common-dir</code>, the browser probe names <code class="md">UNVERIFIED — no browser</code>, <code class="md">pr-agent</code>&#39;s Step 5 body template carries the marker line, every <code class="md">AskUserQuestion</code> in the pre-flight path has a named headless default, and <code class="md">ci-autofix.md</code> lists <code class="md">external-blocker</code> ahead of <code class="md">lint</code>.</span><span class="rail-state">step 9 of 10</span></a></li>
-        <li><a class="rail-step" href="#step-10"><span class="rail-no">10</span><span class="rail-text">Bump git-agent to 4.17.0 in <code class="md">.claude-plugin/marketplace.json</code>, add the CHANGELOG entry, and document the pre-flight table, the env check, and the external-blocker class in the README.</span><span class="rail-state">step 10 of 10</span></a></li>
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Rewrite <code class="md">references/preflight-and-verify.md</code> Step 1 so every guard runs before anything is reported: clean tree, uncommitted plan files, detached HEAD, <code class="md">gh auth status</code>, and the two new checks below, collected into one PASS/FAIL/BLOCKED table with a verbatim remediation command per failing row. Keep every existing halt condition — the skill still stops on any BLOCKED row, it just stops knowing all of them.</span><span class="rail-state">step 1 of 10, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Add the worktree env-parity check to that table: skip unless <code class="md">git rev-parse --git-dir</code> differs from <code class="md">git rev-parse --git-common-dir</code>, then compare the <code class="md">.env*</code> files present in the main checkout against those in this worktree and report any that are missing, with the exact <code class="md">cp</code> command per file. Never copy.</span><span class="rail-state">step 2 of 10, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Add the browser-availability probe to Step 2.5: before the preview block, establish whether <code class="md">preview_start</code> is reachable. When it is not, skip the browser steps, state <code class="md">UNVERIFIED — no browser</code> in the session output, and carry that string forward as the verification result the PR body must report.</span><span class="rail-state">step 3 of 10, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Add one line to <code class="md">skills/pr-agent/SKILL.md</code> Step 5&#39;s body template: when the invoking skill reports a verification marker, the Test Plan section carries it verbatim; when it reports none, the section is unchanged.</span><span class="rail-state">step 4 of 10, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Give each pre-flight <code class="md">AskUserQuestion</code> a named headless default and say so in one line, matching <code class="md">plan-agent</code> <code class="md">build</code>&#39;s wording — the uncommitted-plan-files gate defaults to <code class="md">abort</code>.</span><span class="rail-state">step 5 of 10, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Apply the run-all-then-report contract and the env-parity check to <code class="md">skills/ship/SKILL.md</code> Step 1, which carries its own copy of the guards rather than sharing the reference file.</span><span class="rail-state">step 6 of 10, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Add an <code class="md">external-blocker</code> row to the <code class="md">references/ci-autofix.md</code> classification table, ordered above the autofixable classes: signatures <code class="md">billing</code>, <code class="md">quota</code>, <code class="md">spending limit</code>, <code class="md">Bad credentials</code>, <code class="md">refusing to allow</code>, token-expiry text, or every job failing with no test output. Its action is to report the failure verbatim as an external blocker, with no autofix and no increment of the three-attempt cap.</span><span class="rail-state">step 7 of 10, done</span></a></li>
+        <li><a class="rail-step done" href="#step-8"><span class="rail-no">✓</span><span class="rail-text">Document the empty-log detection for the billing case, where no signature string exists to match: <code class="md">gh run view &lt;id&gt; --json jobs</code> and treat all-jobs-failed with sub-minute durations and empty <code class="md">--log-failed</code> output as <code class="md">external-blocker</code>.</span><span class="rail-state">step 8 of 10, done</span></a></li>
+        <li><a class="rail-step done" href="#step-9"><span class="rail-no">✓</span><span class="rail-text">Add <code class="md">tests/plugins/test-ship-preflight.sh</code> asserting: both pre-flight surfaces describe a single combined report, both carry the env-parity check gated on <code class="md">--git-common-dir</code>, the browser probe names <code class="md">UNVERIFIED — no browser</code>, <code class="md">pr-agent</code>&#39;s Step 5 body template carries the marker line, every <code class="md">AskUserQuestion</code> in the pre-flight path has a named headless default, and <code class="md">ci-autofix.md</code> lists <code class="md">external-blocker</code> ahead of <code class="md">lint</code>.</span><span class="rail-state">step 9 of 10, done</span></a></li>
+        <li><a class="rail-step done" href="#step-10"><span class="rail-no">✓</span><span class="rail-text">Bump git-agent to 4.17.0 in <code class="md">.claude-plugin/marketplace.json</code>, add the CHANGELOG entry, and document the pre-flight table, the env check, and the external-blocker class in the README.</span><span class="rail-state">step 10 of 10, done</span></a></li>
       </ul>
     </details>
   </nav>
@@ -1674,12 +1674,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 12 done</span>
+        <span id="progress-label">12 / 12 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1711,6 +1711,7 @@ img, video { max-width: 100%; height: auto; }
         <ul class="file-list">
           <li><code>kit/plugins/git-agent/skills/ship-autonomous/references/preflight-and-verify.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">run-all-then-report, env parity, browser probe, headless defaults</span></li>
           <li><code>kit/plugins/git-agent/skills/ship/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same run-all-then-report contract and env-parity check in its own Step 1</span></li>
+          <li><code>kit/plugins/git-agent/skills/ship/references/preflight-guards.md</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">ship&#39;s own copy of the table format and guard commands; the core carries the guard statements but is capped at 600 words by tests/plugins/test-skill-split-git-social.sh, and a skill can only bundle files under its own directory</span></li>
           <li><code>kit/plugins/git-agent/skills/pr-agent/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">Step 5&#39;s body template carries the <code class="md">UNVERIFIED — no browser</code> line when the caller reports it</span></li>
           <li><code>kit/plugins/git-agent/skills/ship-autonomous/references/ci-autofix.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note"><code class="md">external-blocker</code> class, placed first in the table</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/git-agent/
@@ -1733,12 +1734,12 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card" id="step-1">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Rewrite <code class="md">references/preflight-and-verify.md</code> Step 1 so every guard runs before anything is reported: clean tree, uncommitted plan files, detached HEAD, <code class="md">gh auth status</code>, and the two new checks below, collected into one PASS/FAIL/BLOCKED table with a verbatim remediation command per failing row. Keep every existing halt condition — the skill still stops on any BLOCKED row, it just stops knowing all of them.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1753,12 +1754,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-2">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the worktree env-parity check to that table: skip unless <code class="md">git rev-parse --git-dir</code> differs from <code class="md">git rev-parse --git-common-dir</code>, then compare the <code class="md">.env*</code> files present in the main checkout against those in this worktree and report any that are missing, with the exact <code class="md">cp</code> command per file. Never copy.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1773,12 +1774,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-3">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the browser-availability probe to Step 2.5: before the preview block, establish whether <code class="md">preview_start</code> is reachable. When it is not, skip the browser steps, state <code class="md">UNVERIFIED — no browser</code> in the session output, and carry that string forward as the verification result the PR body must report.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1793,12 +1794,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-4">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add one line to <code class="md">skills/pr-agent/SKILL.md</code> Step 5&#39;s body template: when the invoking skill reports a verification marker, the Test Plan section carries it verbatim; when it reports none, the section is unchanged.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1813,12 +1814,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-5">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Give each pre-flight <code class="md">AskUserQuestion</code> a named headless default and say so in one line, matching <code class="md">plan-agent</code> <code class="md">build</code>&#39;s wording — the uncommitted-plan-files gate defaults to <code class="md">abort</code>.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1833,12 +1834,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-6">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Apply the run-all-then-report contract and the env-parity check to <code class="md">skills/ship/SKILL.md</code> Step 1, which carries its own copy of the guards rather than sharing the reference file.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1853,12 +1854,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-7">
+        <div class="step-card completed" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add an <code class="md">external-blocker</code> row to the <code class="md">references/ci-autofix.md</code> classification table, ordered above the autofixable classes: signatures <code class="md">billing</code>, <code class="md">quota</code>, <code class="md">spending limit</code>, <code class="md">Bad credentials</code>, <code class="md">refusing to allow</code>, token-expiry text, or every job failing with no test output. Its action is to report the failure verbatim as an external blocker, with no autofix and no increment of the three-attempt cap.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1873,12 +1874,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-8">
+        <div class="step-card completed" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Document the empty-log detection for the billing case, where no signature string exists to match: <code class="md">gh run view &lt;id&gt; --json jobs</code> and treat all-jobs-failed with sub-minute durations and empty <code class="md">--log-failed</code> output as <code class="md">external-blocker</code>.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1893,12 +1894,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-9">
+        <div class="step-card completed" id="step-9">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add <code class="md">tests/plugins/test-ship-preflight.sh</code> asserting: both pre-flight surfaces describe a single combined report, both carry the env-parity check gated on <code class="md">--git-common-dir</code>, the browser probe names <code class="md">UNVERIFIED — no browser</code>, <code class="md">pr-agent</code>&#39;s Step 5 body template carries the marker line, every <code class="md">AskUserQuestion</code> in the pre-flight path has a named headless default, and <code class="md">ci-autofix.md</code> lists <code class="md">external-blocker</code> ahead of <code class="md">lint</code>.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1913,12 +1914,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-10">
+        <div class="step-card completed" id="step-10">
           <div class="step-card-header">
             <div class="step-number">10</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bump git-agent to 4.17.0 in <code class="md">.claude-plugin/marketplace.json</code>, add the CHANGELOG entry, and document the pre-flight table, the env check, and the external-blocker class in the README.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1954,51 +1955,51 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">A pre-flight run with more than one blocker reports all of them in one table, each with its remediation command, and still halts.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">The pre-flight table includes a worktree env-parity row that is present only in a linked worktree and never copies a file.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">Step 2.5 probes browser availability and states <code class="md">UNVERIFIED — no browser</code> in the session output when the browser is absent, rather than skipping silently.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">A <code class="md">ship-autonomous</code> run with no browser produces a PR whose Test Plan section contains <code class="md">UNVERIFIED — no browser</code>; a <code class="md">pr-agent</code> run with no marker reported produces the existing template unchanged.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">No commit-body mechanism is added to <code class="md">commit-agent</code>, whose single-<code class="md">-m</code> commit stays as it is.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">Every <code class="md">AskUserQuestion</code> in the pre-flight path names its headless default, and the uncommitted-plan-files gate defaults to <code class="md">abort</code>.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code class="md">skills/ship/SKILL.md</code> Step 1 and <code class="md">references/preflight-and-verify.md</code> describe the same run-all-then-report contract, and neither halts on the first failing guard.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code class="md">ci-autofix.md</code> classifies expired credentials, billing and quota blocks, and all-jobs-failed-with-empty-logs as <code class="md">external-blocker</code>, reported verbatim with no autofix.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">An <code class="md">external-blocker</code> classification does not advance the three-attempt autofix cap.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac10">
+          <input type="checkbox" id="ac10" checked>
           <label for="ac10">No automatic re-auth, stash, or env-file copy is introduced anywhere in this change.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac11">
+          <input type="checkbox" id="ac11" checked>
           <label for="ac11"><code class="md">bash tests/plugins/test-ship-preflight.sh</code> reports zero failures.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac12">
+          <input type="checkbox" id="ac12" checked>
           <label for="ac12"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0.</label>
         </li>
       </ul>
@@ -2023,27 +2024,38 @@ img, video { max-width: 100%; height: auto; }
         Wrapping up
       </h2>
       <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">No items to report — all requirements met.</p>
+          <dl class="report-list">
+            <dt>Acceptance criterion 4, first clause (&quot;a <code class="md">ship-autonomous</code> run with no browser produces a PR whose Test Plan section contains `UNVERIFIED</dt>
+            <dd>no browser<code class="md">&quot;) — **verified as a text contract at its point of use, not by an executed no-browser run.** A browser MCP is present in the implementing session, so the no-browser branch cannot be induced here. </code>test-ship-preflight.sh<code class="md"> check 5 asserts the marker rule sits inside </code>pr-agent<code class="md"> Step 5&#39;s Test Plan section — the block </code>gh pr create` writes into — and a mutation run confirms deleting the rule turns exactly that check red. The clause&#39;s second half (no marker reported → template unchanged) was exercised for real by this plan&#39;s own PR, which reports no marker and carries the unmodified template.</dd>
+            <dt>End-to-end scratch-repo rehearsal from the Verification section (a linked worktree missing its <code class="md">.env</code>, invoking <code class="md">ship</code>)</dt>
+            <dd><strong class="md">not executed.</strong> Driving a <code class="md">disable-model-invocation</code> skill end to end requires a separate interactive session; the guard&#39;s logic is asserted by checks 1–3 instead.</dd>
+            <dt>CI-class thresholds</dt>
+            <dd><strong class="md">measured, and the plan&#39;s assumption was corrected.</strong> The plan proposed keying <code class="md">external-blocker</code> on &quot;all jobs failed with sub-minute durations and empty <code class="md">--log-failed</code> output&quot;. Measurement on <code class="md">shawn-sandy/agentics</code> (2026-08-14, last 300 runs) shows the eight genuine failures also completed in 6–22 s, so duration does not discriminate on this repo. The shipped rule makes the empty log load-bearing and demotes duration to corroboration. Numbers recorded in the CHANGELOG entry.</dd>
+            <dt>Two suite failures are pre-existing, not regressions</dt>
+            <dd><code class="md">test-plan-phases.mjs</code> (plan-agent&#39;s unphased-render baseline hash) and <code class="md">test-dist-transforms.mjs</code> (&quot;No dist/ directory&quot;). Both reproduce identically on a clean <code class="md">origin/main</code> tree materialized via <code class="md">git archive</code>, and neither reads a file this branch touches. 60 of 62 suite scripts pass; no git-agent test regressed. <code class="md">test-skill-behavior-baselines.sh</code> was skipped (it shells out to the <code class="md">claude</code> CLI per recorded fact, as CI also skips it) — none of the five skills it baselines is modified here.</dd>
+            <dt><code class="md">kit/plugins/git-agent/skills/ship/references/preflight-guards.md</code>, a file the plan did not list</dt>
+            <dd>added because <code class="md">ship/SKILL.md</code> is capped at 600 words by <code class="md">tests/plugins/test-skill-split-git-social.sh</code> and the full contract did not fit. The core keeps the guard statements, the reference carries the commands. Recorded in the Files section.</dd>
+          </dl>
         </div>
       </div>
     </section>

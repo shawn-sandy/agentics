@@ -130,7 +130,7 @@ The skill will:
 2. Detect base branch via `git symbolic-ref`, fall back to `main`/`master`
 3. Check for existing PR (stops if one exists)
 4. Push branch if no upstream tracking ref
-5. Run `gh pr create` and output the PR URL
+5. Run `gh pr create` and output the PR URL — if the invoking skill reported a verification marker (such as `UNVERIFIED — no browser`), it is reproduced verbatim in the body's Test Plan; with no marker reported the template is unchanged
 
 **STOPS after PR creation. Does not analyze code, run tests, or take further action.**
 
@@ -139,7 +139,7 @@ The skill will:
 **Manual invoke only** — does not respond to natural-language intent matching. Invoke explicitly with `/git-agent:ship` or dispatch via `/git-agent:ship-bg` for background operation.
 
 The skill will:
-1. Guard: check for clean tree, detached HEAD, default branch, `gh` auth
+1. Pre-flight: run **all five** guards — clean tree, detached HEAD, default branch, CLI auth, worktree env parity — then print **one** PASS/BLOCKED table with a remediation command per blocker. It does not stop at the first failure, so three blockers cost one invocation instead of three. Any BLOCKED row halts before any mutation
 2. Run `git add -A` and analyze `git diff --staged`
 3. Write a conventional commit message and run `git commit`
 4. Push the branch (with `-u` if no upstream)
@@ -149,6 +149,27 @@ The skill will:
 **STOPS after PR creation (or after pushing to an existing PR). Does not analyze code, run tests, or take further action.**
 
 Use `commit-agent` or `pr-agent` if you only need one step.
+
+#### The pre-flight table
+
+Both `ship` and `ship-autonomous` run every guard before reporting any of them, then print a single table:
+
+| Guard | Status | Remediation |
+|---|---|---|
+| Clean working tree | PASS | — |
+| Detached HEAD | PASS | — |
+| CLI auth | BLOCKED | `gh auth login` |
+| Worktree env parity | BLOCKED | `cp /path/to/main/.env /path/to/worktree/.env` |
+
+`PASS` is satisfied, `BLOCKED` is a blocker with a paste-ready remediation command, and `FAIL` means the guard could not run at all (treated as BLOCKED — a guard that cannot answer has cleared nothing). Any BLOCKED row stops the run before anything is staged, committed, or pushed.
+
+**Nothing is remediated automatically.** No re-auth, no `git stash`, no copying an env file. Re-auth is an interactive browser flow that cannot succeed unattended, and a silent stash or env copy would move your own data without asking. The Remediation column is text for you to run.
+
+#### Worktree env parity
+
+Gitignored `.env*` files do not travel with `git worktree add`, so a linked worktree starts without them — and the resulting failure looks like a bug in whatever you edited last rather than a missing file. This guard is **skipped entirely outside a linked worktree** (detected by comparing `git rev-parse --git-dir` against `--git-common-dir`). Inside one, it lists the gitignored env files the main checkout has that this worktree lacks, and prints the exact `cp` for each.
+
+It never copies the file. These hold secrets, so the copy stays your decision.
 
 ### ship-autonomous
 
@@ -160,14 +181,14 @@ Auto-activates when you say any of:
 
 The skill will:
 1. Exit plan mode (Step 0) — no-op when already off
-2. Guard: check for clean tree, uncommitted plan files, detached HEAD, `gh` auth
+2. Pre-flight: run **every** guard — clean tree, uncommitted plan files, detached HEAD, `gh` auth, worktree env parity, browser availability — and report them in one table (see [The pre-flight table](#the-pre-flight-table)). Headless, each gate takes its named default; the uncommitted-plan-files gate defaults to `abort`
 3. Branch: if on the default branch, auto-generate and create a feature branch via `branch-agent`; otherwise continue on current branch
-4. Verify (Step 2.5): run the project's `test*` script and **stop on failure** rather than committing a red tree; when the change is observable in a browser, preview it via `.claude/launch.json`, check console/server logs, and screenshot both light and dark themes. Skipped entirely when there's nothing a dev server could prove
+4. Verify (Step 2.5): run the project's `test*` script and **stop on failure** rather than committing a red tree; when the change is observable in a browser, preview it via `.claude/launch.json`, check console/server logs, and screenshot both light and dark themes. Skipped entirely when there's nothing a dev server could prove. When the browser MCP is unavailable the step is **not** silently skipped — it reports `UNVERIFIED — no browser`, which `pr-agent` reproduces verbatim in the PR body's Test Plan so a reviewer sees that the check did not happen
 5. Commit via `commit-agent` (stages, conventional message, commits)
 6. Open PR via `pr-agent` (pushes, checks for existing PR, creates one)
 7. Subscribe to the PR's activity events via `subscribe_pr_activity`, post an initial status update, and **end the turn** — CI failures and review comments then arrive as events that wake the session
 8. On each event: refresh a live TodoWrite status checklist and post a concise update, then
-   - **CI failure** → classify and autofix allow-listed classes (`lint`, `typecheck`, `peer-deps`), ≤3 attempts per check; commit + push the fix (which triggers the next CI run)
+   - **CI failure** → classify first. An **`external-blocker`** (billing or quota block, expired credentials, revoked permission, workflow awaiting approval, or a run whose jobs all failed producing no log output at all) is reported verbatim and **never autofixed** — a failing check is not a code defect until proven one, and fixing infrastructure as code changes correct code. It does not advance the attempt cap. Otherwise autofix the allow-listed classes (`lint`, `typecheck`, `peer-deps`), ≤3 attempts per check; commit + push the fix (which triggers the next CI run)
    - **Review comment** → apply clear, in-scope changes (commit, push, reply); ask first if ambiguous or architectural
    - **Anything outside the safe allowlist, or ambiguous** → ask via `AskUserQuestion` instead of guessing
 9. When all checks are green: marks the PR ready, posts "CI is green — ready for review.", and sends a final status update with the PR URL. Keeps watching for later review comments until the PR merges/closes or you say stop (then unsubscribes)

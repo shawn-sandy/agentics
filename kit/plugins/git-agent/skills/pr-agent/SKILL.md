@@ -120,6 +120,12 @@ user-facing changes). If a check was actually run earlier in this session,
 mark it `[x]` and name the result. **Never mark a box that was not verified** —
 an unchecked box is honest, a false checkmark is not.
 
+**Verification marker:** when the invoking skill reports one (for example
+`UNVERIFIED — no browser` from `ship-autonomous` Step 2.5), reproduce it
+verbatim as its own line in `## Test Plan`. When none is reported, the section
+is unchanged — never invent a marker. A verification that silently did not
+happen reads to a reviewer exactly like one that passed.
+
 Omit the `## Linked Issues` section entirely if Step 4.5 found no issue references.
 
 Output the PR URL returned by `gh pr create` and **STOP**.

@@ -1,5 +1,79 @@
 # Changelog — git-agent
 
+## v4.17.0 — 2026-08-14 — pre-flight reports every blocker at once
+
+### Added
+
+- **Pre-flight runs every guard, then reports once.** `ship` Step 1 and
+  `ship-autonomous`'s `preflight-and-verify.md` both stopped at the first
+  failing guard, so a session with an unauthenticated `gh`, a dirty tree, and a
+  worktree missing its `.env` cost three separate spin-ups — fix one, re-invoke,
+  discover the next. Both now run every guard against the unmutated tree and
+  print one PASS/BLOCKED table with a verbatim remediation command per BLOCKED
+  row. **The halt is unchanged**: any BLOCKED row still stops the skill before
+  any mutation. It just stops knowing all of them.
+- **A worktree env-parity guard.** Gitignored `.env*` files do not travel with
+  `git worktree add`, so every linked worktree starts without them and the
+  failure presents as a code defect in whatever was edited last — the cause
+  behind two recorded phantom bugs (a Clerk sign-in regression blamed on a CSS
+  change, and an earlier "missing nav button"). The guard is skipped entirely
+  unless `git rev-parse --git-dir` differs from `--git-common-dir`, then reports
+  each missing file with its exact `cp` command. **It never copies the file** —
+  these hold secrets, so detection is the deliverable and copying stays the
+  user's action.
+- **A browser-availability probe, and an honest marker when it fails.**
+  Step 2.5's browser block had no probe, so an absent MCP silently skipped
+  verification while the PR body still read as verified. It now states
+  `UNVERIFIED — no browser` in the session output and carries that exact string
+  to `pr-agent`, whose Step 5 body template reproduces it verbatim in the Test
+  Plan — adopting the convention `wcag-compliance-reviewer` settled in 1.5.2.
+  The marker had to reach `pr-agent` to reach a reviewer at all; a commit
+  trailer nobody reads would not have.
+- **An `external-blocker` class in CI triage**, ordered ahead of `lint` so it is
+  classified before the classes that assume a code defect. Covers billing and
+  quota blocks, expired credentials, revoked permissions, and workflows awaiting
+  approval. It is reported verbatim, never autofixed, and **does not advance the
+  three-attempt cap** — the cap bounds guessing at code fixes, and nothing is
+  attempted here.
+- **Empty-log detection for the billing case**, where no signature string
+  exists to match: `gh run view <run-id> --json jobs`, classified as
+  `external-blocker` when the jobs array is empty (or every job failed) and
+  `--log-failed` returns nothing.
+
+  Measured on `shawn-sandy/agentics`, 2026-08-14, last 300 runs. The four
+  blocked runs — `31703518612`, `31638004638`, `31624323167`, `31307691925`,
+  all conclusion `action_required` — returned **0 bytes** from `--log-failed`,
+  an **empty `jobs` array**, and `createdAt == updatedAt` (**0 s** elapsed). The
+  eight genuine failures in the same window ran **6–22 s** and returned
+  **2,218–40,948 bytes**. So duration alone does not discriminate on this repo:
+  real code failures also finish well under a minute. The load-bearing clause is
+  the **empty log**; a sub-minute duration is corroboration only.
+
+- **A named headless default for every pre-flight `AskUserQuestion`.** The
+  uncommitted-plan-files gate defaults to `abort` — under `claude -p` the tool
+  is unavailable, and staging or stashing the user's plan files unasked is
+  precisely what that gate exists to prevent.
+- `tests/plugins/test-ship-preflight.sh` — content assertions across both
+  pre-flight surfaces, `pr-agent`'s body template, and the CI table.
+
+### Changed
+
+- `ship` Step 1's guard commands moved to a new bundled
+  `skills/ship/references/preflight-guards.md`, keeping the core under its
+  600-word ceiling. The guard statements themselves stay in SKILL.md. `ship` and
+  `ship-autonomous` still carry separate copies of the pre-flight definition —
+  a skill can only bundle files under its own directory — and both files say so.
+
+### Explicitly not changed
+
+- **No automatic re-auth, stash, or env-file copy.** Re-auth is an interactive
+  browser flow that cannot succeed unattended, and the standing rule is to
+  report blockers verbatim rather than guess at a workaround. Only the
+  round-trip count changed.
+- **`commit-agent` keeps its single-`-m` commit.** It has no commit body to
+  write a verification marker into, and giving it one is a behaviour change
+  affecting several callers.
+
 ## v4.16.1 — 2026-08-14 — two over-reaches in 4.16.0 / 4.15.1
 
 ### Fixed
