@@ -309,6 +309,19 @@ to it:
 Commands run in a shell at the repo root. A malformed file disables the gate
 rather than silently falling back to the detection it was meant to replace.
 
+Nothing restricts these to linters. Naming a test command makes this a test
+gate as well, so a defect is caught at the commit rather than by CI or a review
+bot two round-trips later:
+
+```json
+{ "commands": ["npm run lint", "npm test"] }
+```
+
+That is safe on a suite that is already red: every command is compared against
+`HEAD` the same way, so a test failing before your change never blocks the
+commit — only one your change introduces does. Keep the whole set inside the
+hook's time budget; a suite that cannot finish is a silent no-op, not a block.
+
 The config is read from the **staged** version when it differs from disk, as
 `package.json` is — which files decide the verdict is the same lever as their
 contents, so an unstaged edit must not be able to switch the gate off for a
@@ -318,6 +331,53 @@ the working tree, so you can disable the gate without committing anything.
 
 All checks share one deadline, so a config naming more commands than the two
 built-in scripts still cannot outlast the hook timeout.
+
+## The scope guard
+
+`hooks/scope-guard.py` is a second `PreToolUse` hook on `Bash`, sharing the
+matcher with the lint gate. It refuses two commands whose blast radius exceeds
+their intent — each one has a recorded incident behind it, and nothing else is
+blocked.
+
+| Blocked | Passes |
+|---------|--------|
+| A formatter or linter run with `--write`/`--fix` and either no path operand or `.` — `prettier --write .`, `eslint --fix`, `biome format --write .` | Any explicit path — `prettier --write src/app.ts`, `npx prettier --write kit/`, `prettier --write ./src`. A `--check`-only run. |
+| `git stash pop` / `git stash apply` with no stash reference | `git stash pop stash@{2}`, `git stash apply 1`, `git stash list`, `git stash push` |
+
+The first rule resolves package scripts before matching. `npm run fix:all`
+carries none of the dangerous text itself — its expansion lives in
+`package.json` — so a runner invocation is resolved against the nearest
+manifest, walking up from the command's directory to the git root, and the
+script's *body* is what the rule sees. An optional `run` token is stripped
+rather than required, so all eight spellings (`npm`/`pnpm`/`yarn`/`bun`, each
+with and without `run`) behave identically, and a script that delegates to
+another script resolves through up to three hops. A missing manifest,
+unreadable JSON, or absent script resolves to nothing and never blocks.
+
+A mention is not an invocation. The guard parses the command and checks the
+program actually being run, so a blocked pattern quoted inside a
+`git commit -m` message, an `echo`, or a `grep` argument is not blocked —
+`git` is admitted only for `git stash`. Nothing touches the filesystem until a
+command is a genuine candidate, which matters because this hook runs on every
+`Bash` call in every repo that installs git-agent.
+
+`rm`, `curl`, `git reset --hard`, and `git checkout -- .` are deliberately out
+of scope. A guard that fires on safe commands gets switched off, which costs
+more than the two patterns it was catching.
+
+Blocks exit 2 with the rule and its safe alternative on stderr, so the message
+comes back as something to act on rather than a bare failure.
+
+Escape hatch: create `.claude/no-scope-guard` at the repo root. It disables
+both rules, mirroring `.claude/no-lint-gate`.
+
+### It does not run in the desktop app
+
+Plugin `hooks.json` files are not registered in Claude Code desktop sessions.
+This guard is CLI-only enforcement, so a desktop session is not a test surface
+— a command sailing through there proves nothing about the hook. Keep the
+equivalent rules in `CLAUDE.md` as the desktop fallback rather than retiring
+them when this ships.
 
 ## Background subagents
 
@@ -397,7 +457,8 @@ plugins/git-agent/
 ├── hooks.json                    # Hook wiring; declared by plugin.json's "hooks" key
 ├── hooks/
 │   ├── merge-shorthand.py        # Routes the literal prompt `merge?` to skills/merge
-│   └── lint-before-commit.py     # Blocks a commit that introduces a lint failure
+│   ├── lint-before-commit.py     # Blocks a commit that introduces a lint failure
+│   └── scope-guard.py            # Blocks repo-wide formatters and index-less stash pops
 ├── commands/
 │   ├── commit-bg.md
 │   ├── merge-bg.md

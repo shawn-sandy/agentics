@@ -19,6 +19,11 @@
             "type": "command",
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-before-commit.py\"",
             "timeout": 480
+          },
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/scope-guard.py\"",
+            "timeout": 10
           }
         ]
       }
