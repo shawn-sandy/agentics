@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.1 — 2026-08-14 — css-generator computes its contrast ratios
+
+### Fixed
+
+- **`agents/css-generator.md` wrote contrast ratios it never calculated.** The
+  agent extracts colors from images — already approximations — then documented
+  each pair "with contrast ratios," with nothing telling it to compute one.
+  Pairing an approximate color with an eyeballed ratio compounds two guesses
+  into a number a reader treats as fact, and a token doc claiming 4.6:1 on a
+  pair that measures 3.9:1 is worse than one claiming nothing, because it ends
+  the inquiry at the wrong answer. Ratios must now be computed from resolved
+  sRGB values with the arithmetic shown, or marked `UNVERIFIED` — called out
+  specifically for `color-mix()` and `light-dark()`, whose resolved value is
+  never the authored one.
+
 ## 0.2.0 — 2026-07-17 — Scope both agents and make ts-commenter findable
 
 ### Changed

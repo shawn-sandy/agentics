@@ -55,7 +55,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/wcag-compliance-reviewer"
       },
-      "version": "1.4.0",
+      "version": "1.5.0",
       "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance",
       "category": "security",
       "tags": [
@@ -247,7 +247,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/team-defaults"
       },
-      "version": "0.2.0",
+      "version": "0.2.1",
       "description": "Shared team defaults — documentation and design-token agents plus a sync-rules skill that installs the team's global rules into ~/.claude/rules/",
       "category": "productivity",
       "tags": [

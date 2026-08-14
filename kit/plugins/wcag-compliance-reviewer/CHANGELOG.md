@@ -1,6 +1,34 @@
 # Changelog
 
 
+## v1.5.0 — 2026-08-14 — Contrast ratios get measured, not estimated
+
+### Added
+
+- **Review step 4, "Measured Values: Measure or Label."** Contrast ratios,
+  computed sizes, and touch-target dimensions must now come from a tool run —
+  computed styles via the browser MCP or Playwright, or `wcag-check` for a
+  static file — with the raw output pasted into the finding before the
+  conclusion. When no browser is reachable, the skill writes
+  `UNVERIFIED — no browser` instead of substituting a source `grep`. Source CSS
+  is not the rendered result: specificity, `color-mix()`, `light-dark()`,
+  opacity, and blend modes all resolve at runtime, and two ratios this skill
+  shipped were wrong for exactly that reason. Findings *without* a number
+  (missing `alt`, unlabeled input, heading skip) remain genuine source
+  readings and are unaffected.
+- Steps renumbered: systematic review is now 5, severity 6, fixes 7, testing 8,
+  summary 9. Table of contents follows.
+
+### Fixed
+
+- **`allowed-tools` was `Read` alone**, which made the skill structurally
+  incapable of the verification it was asked to perform — it documents
+  `wcag-check` as a shell command and `web_fetch` for live W3C guidelines while
+  declaring neither, so both stalled on a permission prompt and the only
+  reachable way to "verify contrast" was to eyeball a hex pair. Now declares
+  `Grep`, `Glob`, `WebFetch`, `Bash(wcag-check *)`, `Bash(python3 *)`, and the
+  `mcp__Claude_Browser__*` tools needed to read computed styles.
+
 ## v1.4.0 — 2026-08-02 — The checker command actually runs (this time)
 
 ### Fixed
