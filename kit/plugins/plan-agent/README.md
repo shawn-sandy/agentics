@@ -591,6 +591,27 @@ Command-invocable via `/plan-agent:implementation-plan <objective>` and model-in
 - **Markdown-spec pipeline** — the agent authors a compact Markdown plan spec (the committed source of truth) and renders it deterministically with the bundled `plan-agent-render` (a `bin/` wrapper around `scripts/build-plan-html.mjs`); the renderer owns all presentation (CSS, JS, meta tags, derived implement/goal/workflow prompts, effort level, file-tree) *and* all progress state: `- [x]` criteria bullets, `[x]` step markers, and an optional `## Completion Report` section render as checked boxes, completed step cards, the derived completion checklist, and the report list — status/checkbox changes are Markdown edits plus a re-render, never HTML surgery
 - **Guidelines library** — `guidelines/planning-principles.md`, `section-catalog.md`, `right-sizing.md`, `red-green-verify.md`, and `writing-style.md` drive judgment-based structure: the required core (objective, steps, acceptance criteria, verification) is always present, everything else earns its place per plan (`minimal`/`adr`/`spike` ship as right-sizing guidance, not extra templates)
 - **Spec starter** — `reference/SKELETON.md` is the copyable spec skeleton in the exact format the renderer parses
+- **`--check` (verify, write nothing)** — `plan-agent-render "<stem>.md" -o "<stem>.html" --check` proves the rendered HTML is current and that a finished spec is internally consistent, without inspecting the rendered markup:
+
+  ```bash
+  plan-agent-render docs/plans/my-plan.md -o docs/plans/my-plan.html --check
+  ```
+
+  | Row | Asserts | Skipped when |
+  |-----|---------|--------------|
+  | `html` | the file on disk is byte-identical to a fresh in-memory render | never |
+  | `steps` | every numbered step carries `[x]` | `status:` is not `completed` |
+  | `criteria` | every `## Acceptance Criteria` bullet is `- [x]` | `status:` is not `completed` |
+
+  Rows always print in that order. Exit is 0 only when nothing fails; a stale
+  `html` row names the first differing line, column, and a 40-character window
+  of each side, and a missing HTML file names the render command that produces
+  it rather than throwing. A failure is always fixed in the **spec** — re-render
+  rather than editing the HTML, and never promote `status:` to satisfy it.
+  Run by `build` Step 5.3 and `finalize-plan` Step 5e; it replaced a gate that
+  named CSS selectors as evidence and was reached with `Grep`, which searches
+  source markup instead of evaluating anything and reported drift that was not
+  there.
 
 ### `build` Skill
 

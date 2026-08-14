@@ -27,8 +27,17 @@
  * the status — tools flip state in the Markdown and re-render instead of
  * editing HTML attributes.
  *
- * Usage: node scripts/build-plan-html.mjs <spec.md> [-o <plan.html>]
- * Exit:  0 on success; 1 on missing/unparseable input; 2 on misuse.
+ * `--check` verifies instead of writing (see runCheck below): the rendered
+ * HTML on disk must be byte-identical to a fresh render, and a spec claiming
+ * `status: completed` must actually carry `[x]` on every step and `- [x]` on
+ * every criterion. It replaces the DOM-selector inspection the build skill's
+ * completion gate used to prescribe — that gate named CSS selectors with no
+ * way to evaluate them, so it was reached with `Grep` against the source
+ * markup and reported drift that was not there.
+ *
+ * Usage: node scripts/build-plan-html.mjs <spec.md> [-o <plan.html>] [--check]
+ * Exit:  0 on success; 1 on missing/unparseable input or a failed --check;
+ *        2 on misuse.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -461,6 +470,118 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   });
 }
 
+/* ── --check ──────────────────────────────────────────────────────── */
+
+/** Row labels, in the order runCheck() always prints them. */
+export const CHECK_ROWS = ['html', 'steps', 'criteria'];
+
+const WINDOW = 40;
+const LEAD = 10;
+
+/**
+ * First line at which two renderings diverge, with a WINDOW-character view of
+ * each side anchored LEAD characters before the first differing column.
+ *
+ * Anchoring is the point. A plan's longest lines are the plan-implement and
+ * plan-goal meta tags — several hundred characters of near-identical prompt
+ * text — so two windows taken from column 0 would print the same 40 characters
+ * twice and show the reader nothing. Returns null when the strings match.
+ */
+export function firstDiff(onDisk, rendered) {
+  const a = onDisk.split('\n');
+  const b = rendered.split('\n');
+  for (let i = 0; i < Math.max(a.length, b.length); i += 1) {
+    if (a[i] === b[i]) continue;
+    // A file that simply ends early has no line here; '' makes the window
+    // render as (empty) rather than throwing on undefined.
+    const la = a[i] === undefined ? '' : a[i];
+    const lb = b[i] === undefined ? '' : b[i];
+    let col = 0;
+    while (col < la.length && col < lb.length && la[col] === lb[col]) col += 1;
+    const from = Math.max(0, col - LEAD);
+    const view = (s) => {
+      if (s === '') return '(no line — file ends here)';
+      const head = from > 0 ? '…' : '';
+      const tail = s.length > from + WINDOW ? '…' : '';
+      return `${head}${s.slice(from, from + WINDOW)}${tail}`;
+    };
+    return { line: i + 1, column: col + 1, onDisk: view(la), rendered: view(lb) };
+  }
+  return null;
+}
+
+/**
+ * The half of the old gate that never needed the HTML at all: whether a spec
+ * claiming to be finished actually is. Evaluated on the parsed Markdown, and
+ * skipped outright below `completed` — a todo plan with unchecked steps is
+ * correct, not inconsistent.
+ */
+export function checkSpecConsistency(parsed) {
+  const status = enumValue(parsed.metadata || {}, 'status', 'todo');
+  if (status !== 'completed') {
+    const note = `status: ${status} — consistency is asserted only for completed`;
+    return { steps: { state: 'SKIP', detail: note }, criteria: { state: 'SKIP', detail: note } };
+  }
+  const steps = (parsed.sections && parsed.sections.steps) || [];
+  const criteria = (parsed.sections && parsed.sections.criteria) || [];
+  const stepsDone = (parsed.progress && parsed.progress.steps) || [];
+  const criteriaDone = (parsed.progress && parsed.progress.criteria) || [];
+  const openStep = steps.findIndex((_, i) => !stepsDone[i]);
+  const openCriterion = criteria.findIndex((_, i) => !criteriaDone[i]);
+  return {
+    steps: openStep === -1
+      ? { state: 'PASS', detail: `${steps.length}/${steps.length} steps marked [x]` }
+      : { state: 'FAIL', detail: `step ${openStep + 1} is not marked [x]: "${steps[openStep].action}"` },
+    criteria: openCriterion === -1
+      ? { state: 'PASS', detail: `${criteria.length}/${criteria.length} criteria marked - [x]` }
+      : { state: 'FAIL', detail: `criterion ${openCriterion + 1} is not marked - [x]: "${criteria[openCriterion]}"` },
+  };
+}
+
+/** Freshness: the file on disk versus what this spec renders to right now. */
+function checkHtmlFreshness(specPath, outPath, rendered) {
+  let onDisk;
+  try {
+    onDisk = readFileSync(outPath, 'utf8');
+  } catch {
+    // Not a crash and not a diff — there is nothing to compare. Name the
+    // command that fixes it, because "missing" without a remedy is what sends
+    // a reader back to inspecting markup by hand.
+    return {
+      state: 'FAIL',
+      detail: `${outPath} does not exist — run: plan-agent-render "${specPath}" -o "${outPath}"`,
+    };
+  }
+  const d = firstDiff(onDisk, rendered);
+  if (d === null) return { state: 'PASS', detail: `${outPath} matches a fresh render` };
+  return {
+    state: 'FAIL',
+    detail: `${outPath} is stale — first difference at line ${d.line}, column ${d.column}`,
+    lines: [`on disk:  ${d.onDisk}`, `rendered: ${d.rendered}`],
+  };
+}
+
+/**
+ * Print the fixed three-row table and return the process exit code. Rows are
+ * always emitted in CHECK_ROWS order whatever the outcome, so a reader (and
+ * the test) can find the property that broke without parsing prose. Writes
+ * nothing to disk — that is the whole contract of --check.
+ */
+export function runCheck({ specPath, outPath, parsed, rendered, log = console.log }) {
+  const rows = { html: checkHtmlFreshness(specPath, outPath, rendered), ...checkSpecConsistency(parsed) };
+  log(`plan-agent-render --check ${specPath}`);
+  for (const name of CHECK_ROWS) {
+    const row = rows[name];
+    log(`  ${name.padEnd(8)} ${row.state}  ${row.detail}`);
+    for (const extra of row.lines || []) log(`             ${extra}`);
+  }
+  const tally = (state) => CHECK_ROWS.filter((n) => rows[n].state === state).length;
+  const failed = tally('FAIL');
+  log(`check: ${failed === 0 ? 'PASS' : 'FAIL'} (${tally('PASS')} passed, ${tally('SKIP')} skipped, ${failed} failed)`);
+  if (failed > 0) log('Fix the spec and re-render. Never hand-edit the HTML.');
+  return failed === 0 ? 0 : 1;
+}
+
 function defaultRepo() {
   try {
     const url = execFileSync('git', ['config', '--get', 'remote.origin.url'], { stdio: ['ignore', 'pipe', 'ignore'] })
@@ -477,10 +598,13 @@ function main() {
   const args = process.argv.slice(2);
   let specPath = null;
   let outPath = null;
+  let check = false;
   for (let i = 0; i < args.length; i += 1) {
     if (args[i] === '-o' || args[i] === '--output') {
       outPath = args[i + 1];
       i += 1;
+    } else if (args[i] === '--check') {
+      check = true;
     } else if (!specPath) {
       specPath = args[i];
     } else {
@@ -489,7 +613,7 @@ function main() {
     }
   }
   if (!specPath || (outPath !== null && !outPath)) {
-    console.error('Usage: node scripts/build-plan-html.mjs <spec.md> [-o <plan.html>]');
+    console.error('Usage: node scripts/build-plan-html.mjs <spec.md> [-o <plan.html>] [--check]');
     process.exit(2);
   }
   if (!outPath) outPath = specPath.replace(/\.md$/, '') + '.html';
@@ -549,6 +673,14 @@ function main() {
     }
     throw err;
   }
+  // --check verifies and writes nothing. The render above is the comparison
+  // baseline, and it went through the identical code path — including the
+  // plan-created read-back — so a spec with no `created:` frontmatter does not
+  // fail the check merely for having been rendered on an earlier day.
+  if (check) {
+    process.exit(runCheck({ specPath, outPath, parsed, rendered: html }));
+  }
+
   writeFileSync(outPath, html);
   console.log(`build-plan-html: wrote ${outPath} (${html.length} bytes)`);
 }

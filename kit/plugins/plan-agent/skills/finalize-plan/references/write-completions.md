@@ -33,7 +33,7 @@ The failure mode this closes: `build` stops at its first phase boundary by desig
 
 Each item names the specific criterion, token gap, or test — never a generic summary. Place the section after `## Acceptance Criteria`.
 
-**5e — Re-render.** Regenerate the HTML from the spec and confirm it succeeded:
+**5e — Re-render, then check.** Regenerate the HTML from the spec and confirm it succeeded:
 
 ```bash
 plan-agent-render "<stem>.md" -o "<stem>.html"
@@ -43,6 +43,24 @@ plan-agent-render "<stem>.md" -o "<stem>.html"
 the Bash tool's `PATH` — invoke it by bare name, never by path.
 
 Exit 1 means the spec edit broke the format — fix the reported problem in the markdown and re-run. Never hand-edit the HTML to compensate. (The plugin's `render-plan-html.py` hook also re-renders on every spec write, but run the script explicitly so a failure surfaces here, not silently.)
+
+Then verify the result with the same gate `build` Step 5.3 runs — the two are
+deliberately kept consistent:
+
+```bash
+plan-agent-render "<stem>.md" -o "<stem>.html" --check
+```
+
+It prints one row per property — `html`, `steps`, `criteria` — and exits
+non-zero if any fails. `html` compares the file on disk against a fresh
+in-memory render and names the first differing line; `steps` and `criteria`
+read the spec's `[x]` and `- [x]` markers and are **skipped unless the spec
+says `status: completed`**, so a spec the downgrade rule sent to
+`in-progress` is expected to pass with those rows skipped. A non-zero exit
+names the property that broke: fix the **spec** and re-render, never the HTML,
+and never by promoting `status:` to satisfy the check. Read the reported row
+rather than searching the markup — nothing here is answerable by grepping the
+rendered HTML.
 
 ### Legacy mode (no spec — HTML attribute surgery)
 

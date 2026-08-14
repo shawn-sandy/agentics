@@ -1,6 +1,57 @@
 # Changelog
 
 
+## 9.4.0 — a deterministic render check replaces the grep drift gate (2026-08-14)
+
+### Added
+
+- **`plan-agent-render --check`** — verifies instead of writing. Three rows,
+  always printed in the same order: `html` compares the file on disk against a
+  fresh in-memory render and names the first differing line, column, and a
+  40-character window of each side; `steps` and `criteria` read the spec's
+  `[x]` and `- [x]` markers. Exit 0 only when nothing fails. Writes no files.
+- **Consistency is gated on `status: completed`** — below that, the `steps` and
+  `criteria` rows report `SKIP`, not `PASS`. A todo plan with unchecked steps
+  is in its correct state, so asserting completeness there would fail every
+  live plan.
+- **Actionable failures** — a missing HTML file reports the exact
+  `plan-agent-render … -o …` command that produces it rather than throwing, and
+  an unchecked item is quoted verbatim so the offending step or criterion is
+  identifiable without opening the spec.
+
+### Changed
+
+- **`build` Step 5.3 is one command instead of five CSS selectors.** The gate
+  used to say "confirm the HTML matches the spec" and then name `.step-card`,
+  criteria `checked` inputs, the three status representations, cc1–cc3, and
+  `all-complete` as the evidence — with no mechanism for evaluating any of
+  them. Handed selector names and no tool, the reader reached for `Grep`, which
+  searches source markup rather than evaluating a selector: a selector defined
+  in the stylesheet counted as a match, and a class the renderer emits
+  conditionally did not. Both directions produced false drift and a wasted
+  second verification pass. The selector paragraph is deleted, not merely
+  supplemented, so there is nothing to fall back to.
+- **`finalize-plan` Step 5e runs the same check**, keeping the two gates
+  consistent as `completion-gates.md` instructs. Legacy mode — the HTML
+  attribute surgery for plans that have no `.md` spec — still names the
+  elements it edits, because those are edit targets rather than drift evidence.
+
+### Why
+
+The check was aimed at the wrong artifact. The HTML is *derived* from the spec
+by a deterministic function this repo owns, so "is the HTML current?" is a
+build-freshness question answered by one byte comparison, and "is a completed
+spec internally consistent?" is a Markdown question that never needed the HTML
+at all. Neither requires reading rendered markup.
+
+Determinism was measured, not assumed: rendering an unchanged spec repeatedly
+over one output path is byte-identical, and `plan-file`/`plan-path` are the
+only fields that vary with the output path. They are deliberately **not**
+normalized away — a comparison blind to them would pass an HTML file copied in
+from another location, which is one of the stale states the check exists to
+catch.
+
+
 ## 9.3.0 — build-fleet: ship a plan backlog in parallel (2026-08-14)
 
 ### Added
