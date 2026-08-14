@@ -1,5 +1,25 @@
 # Changelog — git-agent
 
+## v4.16.0 — 2026-08-14 — review findings get verified in both directions
+
+### Added
+
+- **Step 6c now requires reproducing a blocking finding before fixing it.**
+  Previously a finding that was "clear, safe, and in scope" went straight to
+  `Edit` → commit → push. But a reviewer asserting a defect is making a claim
+  about runtime, and this skill already refuses to accept those on authority
+  when *declining* — accepting one on authority when *fixing* is the same error
+  pointed the other way, and it costs a commit plus a re-fired review round to
+  discover the code was already correct. A finding that cannot be reproduced is
+  not blocking: it drops to the refuted branch, with the failed reproduction as
+  its evidence.
+- **Refuting a finding now requires checking its source of truth first**, and
+  putting that evidence in the reply — the schema excerpt, the spec, the file's
+  current contents. A bare "this is incorrect" trades an opinion for an
+  opinion, and reviewers are right often enough that a reflexive decline
+  eventually declines a real bug. Evidence in the thread is also checkable by a
+  human reading it later, which an assertion is not.
+
 ## v4.15.1 — 2026-08-14 — merge gets the pre-flight guards back
 
 ### Fixed

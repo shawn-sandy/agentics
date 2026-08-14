@@ -103,9 +103,19 @@ Resolve only threads you replied to, and never one carried by a
 `CHANGES_REQUESTED` review — that is blocking by the table above, and resolving
 it does not clear the review decision (see below).
 
-If a blocking finding is clear, safe, and in scope: apply it with `Edit`,
-commit via **`git-agent:commit-agent`** (delegated — no push prompt), `git push`,
-then reply to the comment via `gh` noting the commit that addresses it.
+If a blocking finding is clear, safe, and in scope: **reproduce it first**, then
+apply it with `Edit`, commit via **`git-agent:commit-agent`** (delegated — no
+push prompt), `git push`, then reply to the comment via `gh` noting the commit
+that addresses it and the reproduction.
+
+Reproducing means running the failing input, the test, or the query the finding
+describes and seeing the wrong behavior yourself. A reviewer — human or bot —
+asserting a defect is a *claim about runtime*, and this skill has already
+committed to not accepting those on authority: an unverified fix is the same
+error as an unverified refutation, pointed the other way. It costs a commit and
+a re-fired review round to find out the code was already correct. If the finding
+cannot be reproduced, it is not blocking — it drops to the refuted branch below,
+with the reproduction attempt as the evidence.
 
 If the comment is ambiguous, architecturally significant, or open to multiple
 interpretations: use **AskUserQuestion** with enough context that the user can
@@ -113,7 +123,18 @@ answer without scrolling back. Do not guess.
 
 If the finding is **wrong** — it misreads the code, describes state that no
 longer exists, or repeats something already declined on this PR: do not push a
-no-op fix to silence it. Reply once on the thread with the specific reason
+no-op fix to silence it.
+
+**Establish that it is wrong before saying so.** Check the actual source of
+truth the finding appeals to — the schema, the spec, the API's own docs, the
+current file at the current commit — and put that evidence in the reply. "This
+is incorrect" with nothing behind it is an opinion traded for an opinion, and a
+reviewer is right often enough that a reflexive decline eventually declines a
+real bug. A refutation carrying the schema excerpt or the file's current
+contents is checkable by a human scrolling the thread later, which a bare
+assertion is not.
+
+Reply once on the thread with the specific reason
 (`gh pr comment` for a top-level review, `gh api` on the review-comment id for
 an inline thread), resolve the thread, and move on. Keep the reply to a
 sentence or two — a re-firing bot will not remember it next round. If the same
