@@ -58,10 +58,11 @@ decision that gate does not cover is a stop-and-report, never a guess.**
 
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
-### Step 1–3: Run the merge skill's gates
+### Step 0.5–3: Run the merge skill's gates
 
-Follow `skills/merge/SKILL.md` Steps 1 through 3 verbatim — PR lookup (against
-the target PR resolved above), the readiness gate (`gh pr checks --required`,
+Follow `skills/merge/SKILL.md` Steps 0.5 through 3 verbatim — the guards
+(detached HEAD, `gh auth status`, dirty working tree), PR lookup (against the
+target PR resolved above), the readiness gate (`gh pr checks --required`,
 `mergeable`, `mergeStateStatus`, `reviewDecision`), and the Step 3 re-check —
 with one substitution:
 

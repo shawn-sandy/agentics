@@ -1,5 +1,29 @@
 # Changelog — git-agent
 
+## v4.15.1 — 2026-08-14 — merge gets the pre-flight guards back
+
+### Fixed
+
+- **`merge` Step 0.5, guards.** `merge` was the only skill in this plugin with
+  no pre-flight checks — `branch-agent`, `commit-agent`, `pr-agent`, `ship`,
+  and `ship-autonomous` all have them. It now runs three before touching the
+  PR:
+  - **Detached HEAD.** Step 1's fallback interpolates `git branch
+    --show-current` into `gh pr list --head`, so on a detached HEAD it queried
+    `--head ""` and matched nothing — reported as "no PR found" rather than as
+    the checkout problem it was.
+  - **`gh auth status`.** An auth failure surfaced as whatever `gh pr view`
+    happened to print, several steps in.
+  - **Dirty working tree.** This is the guard v4.15.0 dropped alongside the
+    lint gate. It returns with a different purpose: not to align the local tree
+    with the PR head for a local lint run, but to name uncommitted files before
+    the Step 3 approval, so nobody approves a merge believing work is shipping
+    that is not in the PR. It **asks** rather than stopping — the merge is
+    server-side, so local edits cannot corrupt it.
+- **`agent-merge`** follows Steps 0.5–3 instead of 1–3. The dirty-tree ask
+  needs no special case there: the existing "if the skill says ask, report and
+  STOP" substitution already covers it.
+
 ## v4.15.0 — 2026-08-11 — the merge lint gate is gone
 
 ### Removed

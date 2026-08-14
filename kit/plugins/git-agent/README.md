@@ -334,7 +334,7 @@ Mirrors `ship`: guards → stage → commit → push → check for existing PR/M
 
 Dispatched via `/git-agent:merge-bg [pr]` or directly by an orchestrator. The optional argument names the PR to act on and wins over the checked-out branch; only without it is the PR resolved from the current branch.
 
-Mirrors `merge` Steps 1–3: find the PR → readiness gate (`--required` checks, `mergeable`, `mergeStateStatus`, `reviewDecision`) → re-check → `gh pr merge --squash --match-head-commit`. The skill's `AskUserQuestion` approval has no background equivalent, so the dispatch itself authorizes exactly one squash merge of a fully green PR; every other branch is a stop-and-report. Never passes `--delete-branch`.
+Mirrors `merge` Steps 0.5–3: guards → find the PR → readiness gate (`--required` checks, `mergeable`, `mergeStateStatus`, `reviewDecision`) → re-check → `gh pr merge --squash --match-head-commit`. The skill's `AskUserQuestion` approval has no background equivalent, so the dispatch itself authorizes exactly one squash merge of a fully green PR; every other branch is a stop-and-report. Never passes `--delete-branch`.
 
 ### Caveat: working-tree snapshot
 
