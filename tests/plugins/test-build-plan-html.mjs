@@ -36,7 +36,7 @@ import {
   ParseError,
   unguardScriptClose,
 } from '../../scripts/lib/plan-spec.mjs';
-import { deriveEffort, inline, renderPlanHtml } from '../../scripts/build-plan-html.mjs';
+import { CHECK_ROWS, deriveEffort, firstDiff, inline, renderPlanHtml } from '../../scripts/build-plan-html.mjs';
 import * as shell from '../../scripts/lib/plan-shell.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -910,6 +910,203 @@ ok('CLI keeps plan-created stable when re-rendering over an existing sibling', (
   writeFileSync(out, '<meta name="plan-created" content="2020-01-01">');
   execFileSync('node', [RENDERER, spec, '-o', out]);
   assert.ok(readFileSync(out, 'utf8').includes('<meta name="plan-created" content="2020-01-01">'));
+});
+
+/* ── Unit + integration: --check ──────────────────────────────────── */
+
+/** Render `spec` to `out` inside tmp, then return both paths. */
+function rendered(name, specText = SAMPLE_SPEC) {
+  const spec = join(tmp, `${name}.md`);
+  const out = join(tmp, `${name}.html`);
+  writeFileSync(spec, specText);
+  execFileSync('node', [RENDERER, spec, '-o', out]);
+  return { spec, out };
+}
+
+const check = (spec, out) => spawnSync('node', [RENDERER, spec, '-o', out, '--check'], { encoding: 'utf8' });
+
+/** The row labels --check actually printed, in printed order. */
+const rowOrder = (stdout) =>
+  [...stdout.matchAll(/^ {2}(html|steps|criteria) +(?:PASS|FAIL|SKIP)\b/gm)].map((m) => m[1]);
+
+ok('rendering an unchanged spec twice over one output path is byte-identical', () => {
+  // --check is a byte comparison, so a genuinely volatile field — a timestamp,
+  // a generated id, a locale-dependent date — would fail it on every correct
+  // plan. This is the property that makes the whole gate viable.
+  const { spec, out } = rendered('determinism');
+  const first = readFileSync(out, 'utf8');
+  execFileSync('node', [RENDERER, spec, '-o', out]);
+  assert.equal(readFileSync(out, 'utf8'), first, 're-render introduced a volatile field');
+
+  // The one field that could drift is plan-created, which is read back from
+  // the existing HTML precisely so it does not.
+  const bare = rendered('determinism-nocreated', SAMPLE_SPEC.replace('created: 2026-07-12\n', ''));
+  const before = readFileSync(bare.out, 'utf8');
+  execFileSync('node', [RENDERER, bare.spec, '-o', bare.out]);
+  assert.equal(readFileSync(bare.out, 'utf8'), before, 'plan-created was restamped instead of read back');
+});
+
+ok('a different output path changes plan-file/plan-path and nothing else', () => {
+  // These two are DERIVED FROM the output path, not volatile — which is why
+  // --check compares at a fixed path rather than normalizing them away.
+  // Normalizing would let the check pass an HTML file copied in from another
+  // location, one of the exact stale states it exists to catch.
+  const spec = join(tmp, 'crosspath.md');
+  writeFileSync(spec, SAMPLE_SPEC);
+  execFileSync('node', [RENDERER, spec, '-o', join(tmp, 'crosspath-one.html')]);
+  execFileSync('node', [RENDERER, spec, '-o', join(tmp, 'crosspath-two.html')]);
+  const one = readFileSync(join(tmp, 'crosspath-one.html'), 'utf8').split('\n');
+  const two = readFileSync(join(tmp, 'crosspath-two.html'), 'utf8').split('\n');
+  assert.equal(one.length, two.length, 'a path change must not alter the line count');
+  const differing = one.filter((line, i) => line !== two[i]);
+  assert.ok(differing.length > 0, 'the output path must be visible in the render at all');
+  for (const line of differing) {
+    assert.match(
+      line,
+      /plan-file|plan-path/,
+      `a field other than plan-file/plan-path varies with the output path: ${line.slice(0, 80)}`
+    );
+  }
+});
+
+ok('firstDiff anchors its window on the first differing column', () => {
+  assert.equal(firstDiff('identical', 'identical'), null, 'equal input has no first difference');
+  // A plan's longest lines are the several-hundred-character prompt meta tags;
+  // a window taken from column 0 would print the same 40 characters twice.
+  const long = 'x'.repeat(200);
+  const d = firstDiff(`${long}A`, `${long}B`);
+  assert.equal(d.line, 1);
+  assert.equal(d.column, 201);
+  assert.ok(d.onDisk.includes('A'), `the differing character must be inside the window: ${d.onDisk}`);
+  assert.ok(d.rendered.includes('B'), `the differing character must be inside the window: ${d.rendered}`);
+  assert.ok(d.onDisk.length < 60, `the window is bounded, not the whole line: ${d.onDisk.length}`);
+  // A file that simply ends early reports a line, not a crash on undefined.
+  const short = firstDiff('one\ntwo', 'one\ntwo\nthree');
+  assert.equal(short.line, 3);
+  assert.match(short.onDisk, /file ends here/);
+});
+
+ok('--check exits 0 with a PASS row for a freshly rendered plan', () => {
+  const { spec, out } = rendered('check-fresh');
+  const res = check(spec, out);
+  assert.equal(res.status, 0, `${res.stdout}${res.stderr}`);
+  assert.match(res.stdout, /^ {2}html +PASS/m, 'html row passes');
+  assert.match(res.stdout, /^check: PASS/m, 'summary line reports PASS');
+});
+
+ok('--check writes nothing at all', () => {
+  const { spec, out } = rendered('check-readonly');
+  const before = readFileSync(out, 'utf8');
+  const listBefore = readdirSync(tmp).sort();
+  assert.equal(check(spec, out).status, 0);
+  assert.equal(readFileSync(out, 'utf8'), before, '--check modified the HTML it was asked to verify');
+  assert.deepEqual(readdirSync(tmp).sort(), listBefore, '--check created or removed a file');
+});
+
+ok('--check reports the first differing line of a stale HTML file', () => {
+  const { spec, out } = rendered('check-stale');
+  const lines = readFileSync(out, 'utf8').split('\n');
+  const idx = lines.findIndex((l) => l.includes('<meta name="plan-type"'));
+  assert.ok(idx > 0, 'fixture must contain a plan-type meta tag to corrupt');
+  lines[idx] += 'DRIFT';
+  writeFileSync(out, lines.join('\n'));
+
+  const res = check(spec, out);
+  assert.equal(res.status, 1, 'a stale render must exit non-zero');
+  assert.match(res.stdout, /^ {2}html +FAIL/m, 'the html row is the one that fails');
+  assert.match(res.stdout, new RegExp(`first difference at line ${idx + 1}\\b`), 'names the edited line number');
+  assert.match(res.stdout, /on disk:/, 'shows the on-disk side');
+  assert.match(res.stdout, /rendered:/, 'shows the freshly rendered side');
+  assert.ok(readFileSync(out, 'utf8').includes('DRIFT'), '--check repaired the file instead of reporting it');
+});
+
+ok('--check on a missing HTML file fails with the render command named, not a stack trace', () => {
+  const spec = join(tmp, 'check-missing.md');
+  const out = join(tmp, 'check-missing.html');
+  writeFileSync(spec, SAMPLE_SPEC);
+  assert.ok(!existsSync(out), 'the output file must be absent for this case');
+
+  const res = check(spec, out);
+  assert.equal(res.status, 1);
+  assert.match(res.stdout, /^ {2}html +FAIL/m);
+  assert.match(res.stdout, /does not exist/);
+  assert.ok(res.stdout.includes(`plan-agent-render "${spec}" -o "${out}"`), 'names the command that fixes it');
+  assert.ok(!/^\s+at /m.test(res.stderr), `a missing file must not throw: ${res.stderr}`);
+  assert.ok(!existsSync(out), '--check must not create the missing file');
+});
+
+ok('--check skips the consistency rows below status: completed', () => {
+  // A todo or in-progress plan with unchecked steps is correct, not
+  // inconsistent — asserting completeness there would fail every live plan.
+  const { spec, out } = rendered('check-partial', PARTIAL_SPEC);
+  const res = check(spec, out);
+  assert.equal(res.status, 0, `${res.stdout}${res.stderr}`);
+  assert.match(res.stdout, /^ {2}steps +SKIP/m, 'steps skipped, not passed');
+  assert.match(res.stdout, /^ {2}criteria +SKIP/m, 'criteria skipped, not passed');
+  assert.match(res.stdout, /^check: PASS \(1 passed, 2 skipped, 0 failed\)/m);
+});
+
+ok('--check passes a completed spec that is genuinely complete', () => {
+  const { spec, out } = rendered('check-done', DONE_SPEC);
+  const res = check(spec, out);
+  assert.equal(res.status, 0, `${res.stdout}${res.stderr}`);
+  assert.match(res.stdout, /^ {2}steps +PASS/m);
+  assert.match(res.stdout, /^ {2}criteria +PASS/m);
+  assert.match(res.stdout, /^check: PASS \(3 passed, 0 skipped, 0 failed\)/m);
+});
+
+ok('--check fails a completed spec with an unchecked criterion, quoting it', () => {
+  const openCriterion = DONE_SPEC.replace('- [x] The second criterion holds.', '- The second criterion holds.');
+  const { spec, out } = rendered('check-open-criterion', openCriterion);
+  const res = check(spec, out);
+  assert.equal(res.status, 1, 'an incomplete completed-spec must exit non-zero');
+  assert.match(res.stdout, /^ {2}criteria +FAIL/m);
+  assert.ok(res.stdout.includes('The second criterion holds.'), 'quotes the offending criterion text');
+  // The HTML was rendered from this very spec, so freshness still holds — the
+  // two properties are reported independently, which is the point of the table.
+  assert.match(res.stdout, /^ {2}html +PASS/m, 'a spec-consistency failure must not implicate the html row');
+});
+
+ok('--check fails a completed spec with an unchecked step, quoting it', () => {
+  const openStep = DONE_SPEC.replace('2. [x] Do the second thing.', '2. Do the second thing.');
+  const { spec, out } = rendered('check-open-step', openStep);
+  const res = check(spec, out);
+  assert.equal(res.status, 1);
+  assert.match(res.stdout, /^ {2}steps +FAIL/m);
+  assert.ok(res.stdout.includes('Do the second thing.'), 'quotes the offending step action');
+  assert.match(res.stdout, /^ {2}criteria +PASS/m, 'the criteria row is unaffected');
+});
+
+ok('--check prints its rows in a fixed order for pass, stale, and inconsistent plans', () => {
+  // The model has to find the property that broke without parsing prose, and a
+  // stable order is what the reader (and this assertion) can rely on.
+  const pass = rendered('order-pass');
+  const stale = rendered('order-stale');
+  writeFileSync(stale.out, `${readFileSync(stale.out, 'utf8')}\n<!-- drift -->`);
+  const bad = rendered('order-bad', DONE_SPEC.replace('- [x] The second criterion holds.', '- The second criterion holds.'));
+
+  // Spelled out, NOT compared against the imported CHECK_ROWS: reordering that
+  // constant would reorder both sides of the assertion and the test would keep
+  // passing while the printed order silently changed.
+  const EXPECTED = ['html', 'steps', 'criteria'];
+  assert.deepEqual(CHECK_ROWS, EXPECTED, 'the exported row contract changed — update the gate docs too');
+
+  const outputs = [check(pass.spec, pass.out), check(stale.spec, stale.out), check(bad.spec, bad.out)];
+  assert.deepEqual(outputs.map((r) => r.status), [0, 1, 1], 'the three scenarios must differ in exit status');
+  for (const res of outputs) {
+    assert.deepEqual(rowOrder(res.stdout), EXPECTED, `row order drifted: ${res.stdout}`);
+  }
+});
+
+ok('--check on a spec missing a required section exits 1 without a stack trace', () => {
+  // parseSpecMarkdown requires ## Acceptance Criteria, so this is a spec error
+  // reported as one — an exit 1 with guidance, never an unhandled throw.
+  const spec = join(tmp, 'check-nocriteria.md');
+  writeFileSync(spec, SAMPLE_SPEC.replace('## Acceptance Criteria', '## Removed'));
+  const res = check(spec, join(tmp, 'check-nocriteria.html'));
+  assert.equal(res.status, 1);
+  assert.match(res.stderr, /not a valid plan spec/);
+  assert.ok(!/^\s+at /m.test(res.stderr), `must not print a stack trace: ${res.stderr}`);
 });
 
 /* ── Integration: render-plan-html.py hook ────────────────────────── */

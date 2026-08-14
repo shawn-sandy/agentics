@@ -66,16 +66,31 @@ Confirms the *objective* works, not just that criteria are met.
    overridden item is a permanent record, not a gap to clear.** Delete the
    section only when a later run genuinely verifies every item in it; the
    default "No items to report" sentence then returns on the next re-render.
-3. Re-render, then confirm the HTML matches the spec. **When the status is
-   `completed`**, the derived state must show all `.step-card` elements
-   completed, all criteria inputs `checked`, the three status representations
-   `completed`, cc1–cc3 checked, and `completion-checklist` carrying
-   `all-complete`. When it is `in-progress`, the derived state must instead
-   reflect exactly what the spec says — partial progress is the correct render,
-   not a defect to fix.
-4. If the derived state disagrees with the spec, fix the **spec**, never the
-   HTML — and never by promoting `status:` to satisfy the check. The status is
-   an output of sub-step 1, not a knob for making sub-step 3 pass.
+3. Re-render, then run the check:
+
+   ```bash
+   plan-agent-render "<stem>.md" -o "<stem>.html" --check
+   ```
+
+   It prints one row per property — `html`, `steps`, `criteria` — and exits
+   non-zero if any fails. `html` compares the file on disk against a fresh
+   in-memory render and names the first differing line; `steps` and `criteria`
+   read the spec's `[x]` and `- [x]` markers and are **skipped unless the spec
+   says `status: completed`**, because partial progress below that status is
+   the correct state, not a defect. A non-zero exit names the property that
+   broke, so read the row rather than searching the HTML: the check evaluates
+   the render, and nothing here is answerable by grepping markup.
+
+   Because `html` compares the whole file byte for byte, it already subsumes
+   everything the old hand-inspection list named — the three status
+   representations, the criteria inputs, the completed step cards, and the
+   completion checklist — so none of them has to be located or confirmed
+   individually. That is why this gate names no selectors: a passing `html` row
+   is a stronger statement than any of them.
+4. If the check fails, fix the **spec**, never the HTML — and never by
+   promoting `status:` to satisfy the check. The status is an output of
+   sub-step 1, not a knob for making sub-step 3 pass. A failing `html` row
+   means the re-render was skipped or the HTML was hand-edited: re-render it.
 5. **Update the linked tracking ticket.** Skip when the spec carries no
    `issue:` key. Check the URL before anything else: it is frontmatter, it
    reaches this step unvalidated, and it is about to become a shell argument.
