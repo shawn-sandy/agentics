@@ -32,6 +32,30 @@ this user and nobody who installs these plugins, and it is advice a model can
 weigh rather than a gate it cannot pass. A hook is the difference between a
 prompt and a program.
 
+**A user-level hook already covers part of this, with three gaps.**
+`~/.claude/hooks/block-repo-wide-format.py` was written on 2026-08-14 and
+blocks three literal patterns: `<runner> run fix:all`, `prettier|biome --write .`,
+and `eslint|biome --fix .`. It is the right idea, and it settles the `yarn run`
+question — its own pattern already spells the runner alternation with an
+explicit `run`. Three gaps remain, and they are why this plan is still worth
+landing:
+
+1. **No script resolution.** It matches the literal string `fix:all`, so
+   `npm run format` where `format` is `prettier --write .` passes untouched.
+   The incident command happened to be named `fix:all`; the next one will not
+   be.
+2. **`run` is mandatory in its first pattern.** `yarn fix:all` — the bare form
+   every runner accepts — does not match. Stripping an optional `run` token
+   covers both spellings without enumerating either.
+3. **It fires on non-executing mentions.** It inspects the raw command text, so
+   `git commit -m "...fix:all..."` is blocked even though nothing runs. This
+   was observed while authoring this plan: a commit whose *message* described
+   the pattern was refused. A guard that blocks talking about a command is a
+   guard that gets disabled.
+
+It is also user-level, so it does not travel to anyone installing git-agent —
+the original reason for shipping it in a plugin stands unchanged.
+
 **It belongs in git-agent because the wiring already exists.** git-agent
 registers a `PreToolUse` hook on `Bash` for `lint-before-commit.py`, and its
 manifest carries the explicit `"hooks": "./hooks.json"` key added in 4.14.0
@@ -48,6 +72,12 @@ matching text at all. The hook therefore resolves `npm`/`pnpm`/`yarn`/`bun`
 script invocations against the nearest manifest before matching, reusing the
 upward walk `lint-before-commit.py` already implements. Without that step the
 guard would pass the exact command it exists to stop.
+
+Resolution strips an optional `run` token rather than enumerating invocation
+spellings. Every runner accepts both — `yarn fix:all` and `yarn run fix:all`
+are the same command, and `lint-before-commit.py` already normalizes Yarn to
+`yarn run` at its `RUNNERS` table — so a list of literal forms leaves a bypass
+for whichever spelling it omitted.
 
 **Two patterns, not five.** Only the two with recorded incidents are blocked:
 
@@ -89,8 +119,8 @@ ships here because it edits the same README section as the new hook.
 
 ## Steps
 
-1. Write `hooks/scope-guard.py` reading the PreToolUse payload from stdin and exiting 0 immediately for any payload that is not a `Bash` tool call, and for any command whose text contains none of the trigger tokens (`--write`, `--fix`, `stash`, or a package-runner prefix). Why: this hook runs on every Bash call in every repo that installs git-agent, so the cheap bail is a correctness constraint on the common path, not an optimization — the same rule `lint-before-commit.py` follows. Verify: a payload for a non-Bash tool and a payload for `ls -la` each exit 0 having opened no file, asserted by running with an unreadable cwd.
-2. Implement package-script resolution: for a command matching `npm run <script>`, `pnpm run <script>`, `yarn <script>`, or `bun run <script>`, walk up from the payload's cwd to the git root and read the first manifest declaring that script, then match against the script's value rather than the typed command. A missing manifest, unreadable JSON, or absent script resolves to the typed text and never blocks on its own. Why: `npm run fix:all` is the command that caused the incident and carries none of the dangerous text itself, so a guard without resolution would have allowed it. Verify: a fixture whose `package.json` defines `"fix:all": "prettier --write ."` blocks on `npm run fix:all`, and the same fixture with that script removed exits 0.
+1. Write `hooks/scope-guard.py` reading the PreToolUse payload from stdin and exiting 0 immediately for any payload that is not a `Bash` tool call, for any command whose text contains none of the trigger tokens (`--write`, `--fix`, `stash`, or a package-runner prefix), and for any command whose first token is not itself a runner, formatter, or `git` — so a pattern appearing inside a `git commit -m` message, a `grep`, or an `echo` never matches. Why: this hook runs on every Bash call in every repo that installs git-agent, so the cheap bail is a correctness constraint on the common path; and the first-token rule is what stops the observed false positive where a commit message merely describing a blocked command was refused. Verify: a payload for a non-Bash tool and a payload for `ls -la` each exit 0 having opened no file; `git commit -m "fixes npm run fix:all"` and `grep -r "prettier --write ." docs/` both exit 0.
+2. Implement package-script resolution: for a command whose first token is `npm`, `pnpm`, `yarn`, or `bun`, **strip an optional `run` token** and treat the next token as the script name, then walk up from the payload's cwd to the git root, read the first manifest declaring that script, and match against the script's value rather than the typed command. A missing manifest, unreadable JSON, or absent script resolves to the typed text and never blocks on its own. Why: `npm run fix:all` is the command that caused the incident and carries none of the dangerous text itself, and every runner accepts both spellings — `yarn fix:all` and `yarn run fix:all` are the same invocation, and this repo's own `lint-before-commit.py` uses the `yarn run` form — so enumerating spellings leaves a bypass for whichever ones the list missed. Verify: a fixture whose `package.json` defines `"fix:all": "prettier --write ."` blocks on all eight forms (`npm run`, `pnpm run`, `yarn run`, `bun run` and each without `run`), and the same fixture with that script removed exits 0 for all eight.
 3. Implement the formatter rule: block when the resolved command invokes a formatter or linter with `--write` or `--fix` and either no path operand or `.` as the operand. A command naming any other path — `prettier --write src/`, `eslint --fix kit/plugins/git-agent` — passes. Why: the constraint is blast radius, not the tool; formatting the files you touched is the documented correct action and must stay frictionless or the guard gets switched off. Verify: `prettier --write .` and `eslint --fix` block; `prettier --write src/app.ts` and `npx prettier --write kit/` exit 0.
 4. Implement the stash rule: block `git stash pop` and `git stash apply` with no stash reference, and pass when an explicit `stash@{N}` or index is given. The block message quotes `git stash list` as the first step. Why: the recorded failure was a bare pop restoring an unrelated stash, and the remediation is a listing, not an abstinence — the message has to name the safe form or the user just re-runs it. Verify: `git stash pop` blocks and the message contains `git stash list`; `git stash pop stash@{2}` exits 0.
 5. Emit blocks as exit 2 with a stderr message naming the command, the rule, and the safe alternative, and add the `.claude/no-scope-guard` opt-out checked at the repo root before any rule runs. Why: exit 2 is the PreToolUse contract that returns the message to the model as actionable feedback rather than a bare failure, and the opt-out mirrors `.claude/no-lint-gate` so a user who knows both files knows both escape hatches. Verify: a blocked command exits 2 with the alternative quoted in stderr; the same command with `.claude/no-scope-guard` present exits 0 silently.
@@ -104,18 +134,20 @@ ships here because it edits the same README section as the new hook.
 Tier 1 — This plan adds application code
 
 - Objective: a repo-wide formatter reached through an npm script, and a bare `git stash pop`, are both blocked before executing, while their scoped equivalents run untouched. File: tests/plugins/test-scope-guard.sh; Type: smoke; Asserts: `npm run fix:all` resolving to `prettier --write .` exits 2, `prettier --write src/app.ts` exits 0, `git stash pop` exits 2 with `git stash list` in the message, and `git stash pop stash@{1}` exits 0; Run: bash tests/plugins/test-scope-guard.sh
-- Unit: fast bail. File: tests/plugins/test-scope-guard.sh; Targets: the payload and token pre-checks; Key cases: a non-Bash payload exits 0, a command with no trigger token exits 0, and neither path reads a manifest or the opt-out file
-- Unit: script resolution. File: tests/plugins/test-scope-guard.sh; Targets: the manifest walk; Key cases: nearest manifest wins over the root, a missing script resolves to the typed text, malformed JSON never blocks, and the walk stops at the git root
+- Unit: fast bail and non-executing mentions. File: tests/plugins/test-scope-guard.sh; Targets: the payload, token, and first-token pre-checks; Key cases: a non-Bash payload exits 0, a command with no trigger token exits 0, `git commit -m` and `echo`/`grep` carrying a blocked pattern in their text exit 0, and none of these read a manifest or the opt-out file
+- Unit: script resolution. File: tests/plugins/test-scope-guard.sh; Targets: the manifest walk and the optional-`run` strip; Key cases: all eight runner spellings (`npm`/`pnpm`/`yarn`/`bun`, each with and without `run`) resolve the same script, nearest manifest wins over the root, a missing script resolves to the typed text, malformed JSON never blocks, and the walk stops at the git root
 - Unit: formatter rule boundaries. File: tests/plugins/test-scope-guard.sh; Targets: path-operand detection; Key cases: `.` blocks, no operand blocks, an explicit path passes, a `--check`-only invocation passes, and a path containing a dot in its name is not mistaken for `.`
 - Unit: opt-out and message contract. File: tests/plugins/test-scope-guard.sh; Targets: the exit paths; Key cases: `.claude/no-scope-guard` disables every rule, and each block writes the rule and its safe alternative to stderr with exit 2
 
 ## Acceptance Criteria
 
 - [ ] `npm run fix:all` is blocked when its script resolves to a repo-wide formatter, and the block message names the scoped alternative.
+- [ ] The same block applies to all eight runner spellings — `npm`/`pnpm`/`yarn`/`bun`, each with and without an explicit `run` token.
 - [ ] A formatter invoked with an explicit path is never blocked.
 - [ ] A bare `git stash pop` or `git stash apply` is blocked, and the message names `git stash list`; an explicit `stash@{N}` passes.
 - [ ] No rule blocks `rm`, `curl`, `git reset`, or `git checkout` — the guard's scope is exactly the two documented patterns.
 - [ ] A non-Bash payload, and a Bash command carrying no trigger token, exit 0 without reading any file.
+- [ ] A blocked pattern appearing inside a `git commit -m` message, an `echo`, or a `grep` argument is not blocked — only an actual invocation is.
 - [ ] `.claude/no-scope-guard` at the repo root disables every rule.
 - [ ] Blocks exit 2 with the rule and the safe alternative on stderr.
 - [ ] `lint-before-commit.py` still fires on `git commit` with its existing timeout unchanged.
@@ -161,6 +193,7 @@ registered there, so a silent pass proves nothing about this hook.
 
 ## Resources
 
+- ~/.claude/hooks/block-repo-wide-format.py — the user-level hook this supersedes; its pattern list is the starting point, its three gaps are the reason for this plan
 - kit/plugins/git-agent/hooks/lint-before-commit.py — the fast-bail pattern, the manifest walk, and the opt-out convention being reused
 - kit/plugins/git-agent/hooks.json — the existing PreToolUse Bash matcher
 - docs/plans/fix-lint-gate-defects.md — the A/B that established plugins need an explicit `hooks` manifest key

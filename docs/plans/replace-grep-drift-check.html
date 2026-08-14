@@ -1599,17 +1599,18 @@ img, video { max-width: 100%; height: auto; }
       <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
     </ul>
     <details class="rail-disclosure" open>
-      <summary>8 steps</summary>
+      <summary>9 steps</summary>
       <div class="rail-heading">Steps</div>
       <ul class="rail-steps">
-        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Establish that rendering an unchanged spec is byte-deterministic: render a committed plan spec twice to two output paths, <code class="md">diff</code> them, then render again over an existing output file and diff against the first.</span><span class="rail-state">step 1 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Add <code class="md">--check</code> to <code class="md">scripts/build-plan-html.mjs</code>: parse the spec, render to a string, compare against the existing output file, and report the first differing line with its line number and 40 characters of context on each side. Missing output file is a FAIL naming the render command, not a crash.</span><span class="rail-state">step 2 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Extend <code class="md">--check</code> with the spec-consistency assertions, evaluated on the parsed Markdown and skipped entirely unless <code class="md">status: completed</code>: every numbered step carries <code class="md">[x]</code>, every <code class="md">## Acceptance Criteria</code> bullet is <code class="md">- [x]</code>.</span><span class="rail-state">step 3 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Make <code class="md">--check</code> print a fixed PASS/FAIL table — one row per property (<code class="md">html</code>, <code class="md">steps</code>, <code class="md">criteria</code>), a summary line, and exit 0 only when every row passes.</span><span class="rail-state">step 4 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Rewrite <code class="md">skills/build/references/completion-gates.md</code> Step 5.3 as a single command — <code class="md">plan-agent-render &quot;&lt;stem&gt;.md&quot; -o &quot;&lt;stem&gt;.html&quot; --check</code> — stating that a non-zero exit names the property and that the fix is always in the spec, never the HTML. Delete the five-selector paragraph. Keep sub-step 4&#39;s &quot;fix the spec, never the HTML&quot; rule and its no-promoting-status clause verbatim.</span><span class="rail-state">step 5 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Apply the same replacement to <code class="md">skills/finalize-plan/references/write-completions.md</code>, which runs the same completion rules for plans implemented outside <code class="md">build</code>.</span><span class="rail-state">step 6 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Extend <code class="md">tests/plugins/test-build-plan-html.mjs</code> with the determinism case, the stale-HTML case, the missing-HTML case, the completed-with-unchecked-criterion case, and the in-progress skip case, keeping every existing assertion green.</span><span class="rail-state">step 7 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Bump plan-agent to 9.3.0 in <code class="md">.claude-plugin/marketplace.json</code>, add the CHANGELOG entry, and document <code class="md">--check</code> in the README&#39;s renderer section.</span><span class="rail-state">step 8 of 8</span></a></li>
+        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Establish that rendering an unchanged spec is byte-deterministic: render a committed plan spec twice to two output paths, <code class="md">diff</code> them, then render again over an existing output file and diff against the first.</span><span class="rail-state">step 1 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Add <code class="md">--check</code> to the canonical <code class="md">scripts/build-plan-html.mjs</code>: parse the spec, render to a string, compare against the existing output file, and report the first differing line with its line number and 40 characters of context on each side. Missing output file is a FAIL naming the render command, not a crash.</span><span class="rail-state">step 2 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Extend <code class="md">--check</code> with the spec-consistency assertions, evaluated on the parsed Markdown and skipped entirely unless <code class="md">status: completed</code>: every numbered step carries <code class="md">[x]</code>, every <code class="md">## Acceptance Criteria</code> bullet is <code class="md">- [x]</code>.</span><span class="rail-state">step 3 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Make <code class="md">--check</code> print a fixed PASS/FAIL table — one row per property (<code class="md">html</code>, <code class="md">steps</code>, <code class="md">criteria</code>), a summary line, and exit 0 only when every row passes.</span><span class="rail-state">step 4 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Re-copy the edited renderer to <code class="md">kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> so the bundled copy is byte-identical again, and confirm the other three mirrored files (<code class="md">extract-plan-spec.mjs</code>, <code class="md">lib/plan-spec.mjs</code>, <code class="md">lib/plan-shell.mjs</code>) were not touched.</span><span class="rail-state">step 5 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Rewrite <code class="md">skills/build/references/completion-gates.md</code> Step 5.3 as a single command — <code class="md">plan-agent-render &quot;&lt;stem&gt;.md&quot; -o &quot;&lt;stem&gt;.html&quot; --check</code> — stating that a non-zero exit names the property and that the fix is always in the spec, never the HTML. Delete the five-selector paragraph. Keep sub-step 4&#39;s &quot;fix the spec, never the HTML&quot; rule and its no-promoting-status clause verbatim.</span><span class="rail-state">step 6 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Apply the same replacement to <code class="md">skills/finalize-plan/references/write-completions.md</code>, which runs the same completion rules for plans implemented outside <code class="md">build</code>.</span><span class="rail-state">step 7 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Extend <code class="md">tests/plugins/test-build-plan-html.mjs</code> with the determinism case, the stale-HTML case, the missing-HTML case, the completed-with-unchecked-criterion case, and the in-progress skip case — importing from <code class="md">../../scripts/build-plan-html.mjs</code> as the file already does — while keeping every existing assertion green, the byte-identical parity assertion included.</span><span class="rail-state">step 8 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-9"><span class="rail-no">9</span><span class="rail-text">Bump plan-agent to 9.3.0 in <code class="md">.claude-plugin/marketplace.json</code>, add the CHANGELOG entry, and document <code class="md">--check</code> in the README&#39;s renderer section.</span><span class="rail-state">step 9 of 9</span></a></li>
       </ul>
     </details>
   </nav>
@@ -1672,7 +1673,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 9 done</span>
+        <span id="progress-label">0 / 11 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1693,6 +1694,7 @@ img, video { max-width: 100%; height: auto; }
       <p>1. <em class="md">Is the HTML current?</em> — a build-freshness question. If the file on disk was<br>produced from this spec, it is byte-identical to a fresh render. A stale<br>file means a re-render was skipped, the write partially failed, or someone<br>hand-edited the HTML. All three are caught by one comparison.<br>2. <em class="md">Is a <code class="md">completed</code> spec internally consistent?</em> — a Markdown question. Every<br>step marked <code class="md">[x]</code>, every criterion <code class="md">- [x]</code>, <code class="md">status: completed</code>. Nothing<br>here needs the HTML at all; the render is what <em class="md">displays</em> the answer, not<br>what determines it.</p>
       <p>Neither property requires reading rendered markup, so the whole DOM-inspection<br>framing goes away rather than getting a better tool.</p>
       <p><strong class="md">The parser is already written and already proven.</strong> <code class="md">scripts/lib/plan-spec.mjs</code><br>carries <code class="md">parseSpecMarkdown</code> and <code class="md">extractSections</code>, and the round-trip property<br><code class="md">extractSections(render(spec))</code> deep-equals the spec&#39;s sections is already<br>enforced by <code class="md">tests/plugins/test-build-plan-html.mjs</code>. <code class="md">--check</code> composes<br>existing, tested pieces.</p>
+      <p><strong class="md">The renderer lives at the repo root; the plugin carries a copy.</strong> <code class="md">scripts/</code><br>is canonical and <code class="md">kit/plugins/plan-agent/scripts/</code> is a bundled duplicate —<br>byte-identical today, and held that way by an assertion in<br><code class="md">tests/plugins/test-build-plan-html.mjs</code> whose failure message is *&quot;drifted<br>from scripts/… — re-copy it&quot;*. The unit tests import the <strong class="md">root</strong> module<br>(<code class="md">../../scripts/build-plan-html.mjs</code>), so an edit confined to the plugin copy<br>would both fail the parity assertion and leave every test blind to <code class="md">--check</code>.<br>Four files are mirrored this way: <code class="md">build-plan-html.mjs</code>,<br><code class="md">extract-plan-spec.mjs</code>, <code class="md">lib/plan-spec.mjs</code>, and <code class="md">lib/plan-shell.mjs</code>. Every<br>step below edits the root and re-copies, in that order.</p>
       <p><strong class="md">Determinism is a precondition, not an assumption.</strong> The renderer keeps<br><code class="md">plan-created</code> stable across re-renders by reading the value back from the<br>existing HTML, and <code class="md">created</code> comes from frontmatter — so an unchanged spec<br>should render byte-identically. Should is not measured. Step 1 establishes it<br>by experiment before Step 2 builds a comparison on top of it, because a single<br>non-deterministic field would make <code class="md">--check</code> fail on every correct plan and<br>the gate would be disabled within a day.</p>
       <p><strong class="md">Scope.</strong> This does not touch the renderer&#39;s output, the plan CSS, or the<br>gallery. <code class="md">--check</code> writes nothing.</p>
     </section>
@@ -1706,7 +1708,8 @@ img, video { max-width: 100%; height: auto; }
       <div class="file-tree">
         <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
         <ul class="file-list">
-          <li><code>kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note"><code class="md">--check</code> mode: render to memory, compare, assert spec consistency, print a table</span></li>
+          <li><code>scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">canonical source; <code class="md">--check</code> mode: render to memory, compare, assert spec consistency, print a table</span></li>
+          <li><code>kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical re-copy of the above, held by the parity assertion</span></li>
           <li><code>kit/plugins/plan-agent/skills/build/references/completion-gates.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">Step 5.3 becomes one command; the selector list is deleted</span></li>
           <li><code>kit/plugins/plan-agent/skills/finalize-plan/references/write-completions.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same gate, kept consistent per completion-gates.md&#39;s own instruction</span></li>
           <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/
@@ -1755,11 +1758,11 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add <code class="md">--check</code> to <code class="md">scripts/build-plan-html.mjs</code>: parse the spec, render to a string, compare against the existing output file, and report the first differing line with its line number and 40 characters of context on each side. Missing output file is a FAIL naming the render command, not a crash.</span>
+                <span class="step-chip-text">Add <code class="md">--check</code> to the canonical <code class="md">scripts/build-plan-html.mjs</code>: parse the spec, render to a string, compare against the existing output file, and report the first differing line with its line number and 40 characters of context on each side. Missing output file is a FAIL naming the render command, not a crash.</span>
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
-                <div class="step-why">freshness is the property the old Step 5.3 was actually reaching for, and a first-difference report is what makes the failure actionable — a bare &quot;files differ&quot; sends the model back to grepping.</div>
+                <div class="step-why">freshness is the property the old Step 5.3 was actually reaching for, and a first-difference report is what makes the failure actionable — a bare &quot;files differ&quot; sends the model back to grepping; the root file is the one the tests import, so implementing anywhere else leaves the change untested.</div>
               </div>
               <div class="step-note step-verify">
                 <span class="step-note-label">Verify</span>
@@ -1815,6 +1818,26 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
+                <span class="step-chip-text">Re-copy the edited renderer to <code class="md">kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> so the bundled copy is byte-identical again, and confirm the other three mirrored files (<code class="md">extract-plan-spec.mjs</code>, <code class="md">lib/plan-spec.mjs</code>, <code class="md">lib/plan-shell.mjs</code>) were not touched.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the parity assertion fails the moment the two diverge, and its failure message — &quot;drifted from scripts/… — re-copy it&quot; — is the whole contract; skipping this makes every later step&#39;s test run red for an unrelated reason.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">cmp scripts/build-plan-html.mjs kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> exits 0, and <code class="md">plan-agent-render --check</code> invoked by bare name (which resolves through the plugin&#39;s <code class="md">bin/</code>) behaves identically to the root module.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card" id="step-6">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
                 <span class="step-chip-text">Rewrite <code class="md">skills/build/references/completion-gates.md</code> Step 5.3 as a single command — <code class="md">plan-agent-render &quot;&lt;stem&gt;.md&quot; -o &quot;&lt;stem&gt;.html&quot; --check</code> — stating that a non-zero exit names the property and that the fix is always in the spec, never the HTML. Delete the five-selector paragraph. Keep sub-step 4&#39;s &quot;fix the spec, never the HTML&quot; rule and its no-promoting-status clause verbatim.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1829,9 +1852,9 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-6">
+        <div class="step-card" id="step-7">
           <div class="step-card-header">
-            <div class="step-number">6</div>
+            <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1849,29 +1872,29 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-7">
+        <div class="step-card" id="step-8">
           <div class="step-card-header">
-            <div class="step-number">7</div>
+            <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Extend <code class="md">tests/plugins/test-build-plan-html.mjs</code> with the determinism case, the stale-HTML case, the missing-HTML case, the completed-with-unchecked-criterion case, and the in-progress skip case, keeping every existing assertion green.</span>
+                <span class="step-chip-text">Extend <code class="md">tests/plugins/test-build-plan-html.mjs</code> with the determinism case, the stale-HTML case, the missing-HTML case, the completed-with-unchecked-criterion case, and the in-progress skip case — importing from <code class="md">../../scripts/build-plan-html.mjs</code> as the file already does — while keeping every existing assertion green, the byte-identical parity assertion included.</span>
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
-                <div class="step-why">the gate is only worth what its failure modes are worth, and each of these is a way <code class="md">--check</code> could silently pass.</div>
+                <div class="step-why">the gate is only worth what its failure modes are worth, each of these is a way <code class="md">--check</code> could silently pass, and the parity assertion is what catches a Step 5 re-copy that was skipped.</div>
               </div>
               <div class="step-note step-verify">
                 <span class="step-note-label">Verify</span>
-                <div class="verify-body"><code class="md">node tests/plugins/test-build-plan-html.mjs</code> reports zero failures with a higher assertion count than before the change.</div>
+                <div class="verify-body"><code class="md">node tests/plugins/test-build-plan-html.mjs</code> reports zero failures with a higher assertion count than before the change, including the <code class="md">plugin-bundled renderer copies are byte-identical to the repo-root sources</code> check.</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card" id="step-8">
+        <div class="step-card" id="step-9">
           <div class="step-card-header">
-            <div class="step-number">8</div>
+            <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
@@ -1941,15 +1964,23 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7"><code class="md">completion-gates.md</code> and <code class="md">write-completions.md</code> both invoke <code class="md">--check</code> and neither names a CSS selector as evidence.</label>
+          <label for="ac7"><code class="md">--check</code> is implemented in the canonical <code class="md">scripts/build-plan-html.mjs</code>, and <code class="md">cmp</code> reports the plugin-bundled copy byte-identical to it.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8"><code class="md">node tests/plugins/test-build-plan-html.mjs</code> reports zero failures with more assertions than before this change.</label>
+          <label for="ac8">The <code class="md">plugin-bundled renderer copies are byte-identical to the repo-root sources</code> assertion still passes.</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0.</label>
+          <label for="ac9"><code class="md">completion-gates.md</code> and <code class="md">write-completions.md</code> both invoke <code class="md">--check</code> and neither names a CSS selector as evidence.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac10">
+          <label for="ac10"><code class="md">node tests/plugins/test-build-plan-html.mjs</code> reports zero failures with more assertions than before this change.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac11">
+          <label for="ac11"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"

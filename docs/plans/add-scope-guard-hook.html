@@ -1602,8 +1602,8 @@ img, video { max-width: 100%; height: auto; }
       <summary>9 steps</summary>
       <div class="rail-heading">Steps</div>
       <ul class="rail-steps">
-        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Write <code class="md">hooks/scope-guard.py</code> reading the PreToolUse payload from stdin and exiting 0 immediately for any payload that is not a <code class="md">Bash</code> tool call, and for any command whose text contains none of the trigger tokens (<code class="md">--write</code>, <code class="md">--fix</code>, <code class="md">stash</code>, or a package-runner prefix).</span><span class="rail-state">step 1 of 9</span></a></li>
-        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Implement package-script resolution: for a command matching <code class="md">npm run &lt;script&gt;</code>, <code class="md">pnpm run &lt;script&gt;</code>, <code class="md">yarn &lt;script&gt;</code>, or <code class="md">bun run &lt;script&gt;</code>, walk up from the payload&#39;s cwd to the git root and read the first manifest declaring that script, then match against the script&#39;s value rather than the typed command. A missing manifest, unreadable JSON, or absent script resolves to the typed text and never blocks on its own.</span><span class="rail-state">step 2 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Write <code class="md">hooks/scope-guard.py</code> reading the PreToolUse payload from stdin and exiting 0 immediately for any payload that is not a <code class="md">Bash</code> tool call, for any command whose text contains none of the trigger tokens (<code class="md">--write</code>, <code class="md">--fix</code>, <code class="md">stash</code>, or a package-runner prefix), and for any command whose first token is not itself a runner, formatter, or <code class="md">git</code> — so a pattern appearing inside a <code class="md">git commit -m</code> message, a <code class="md">grep</code>, or an <code class="md">echo</code> never matches.</span><span class="rail-state">step 1 of 9</span></a></li>
+        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Implement package-script resolution: for a command whose first token is <code class="md">npm</code>, <code class="md">pnpm</code>, <code class="md">yarn</code>, or <code class="md">bun</code>, <strong class="md">strip an optional <code class="md">run</code> token</strong> and treat the next token as the script name, then walk up from the payload&#39;s cwd to the git root, read the first manifest declaring that script, and match against the script&#39;s value rather than the typed command. A missing manifest, unreadable JSON, or absent script resolves to the typed text and never blocks on its own.</span><span class="rail-state">step 2 of 9</span></a></li>
         <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Implement the formatter rule: block when the resolved command invokes a formatter or linter with <code class="md">--write</code> or <code class="md">--fix</code> and either no path operand or <code class="md">.</code> as the operand. A command naming any other path — <code class="md">prettier --write src/</code>, <code class="md">eslint --fix kit/plugins/git-agent</code> — passes.</span><span class="rail-state">step 3 of 9</span></a></li>
         <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Implement the stash rule: block <code class="md">git stash pop</code> and <code class="md">git stash apply</code> with no stash reference, and pass when an explicit <code class="md">stash@{N}</code> or index is given. The block message quotes <code class="md">git stash list</code> as the first step.</span><span class="rail-state">step 4 of 9</span></a></li>
         <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Emit blocks as exit 2 with a stderr message naming the command, the rule, and the safe alternative, and add the <code class="md">.claude/no-scope-guard</code> opt-out checked at the repo root before any rule runs.</span><span class="rail-state">step 5 of 9</span></a></li>
@@ -1673,7 +1673,7 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 11 done</span>
+        <span id="progress-label">0 / 13 done</span>
       </div>
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-bar"
@@ -1690,8 +1690,12 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
       <p>The 2026-08-14 usage report records the two most expensive single incidents in<br>the period, both from commands whose blast radius exceeded their intent: a<br>repo-wide <code class="md">npm run fix:all</code> that <em class="md">&quot;reformatted ~190 untouched files, requiring<br>a guarded revert&quot;</em>, and <em class="md">&quot;a bare <code class="md">git stash pop</code> [that] restored an unrelated<br>stash and created conflicts requiring recovery.&quot;</em> It also notes 47<br><code class="md">user_rejected_action</code> events clustering on destructive commands — meaning the<br>enforcement mechanism today is a human at the permission prompt.</p>
       <p><strong class="md">The rule exists but is not shipped.</strong> Both constraints are already written in<br>this user&#39;s global <code class="md">CLAUDE.md</code>, under Formatting &amp; Scope and Git. That governs<br>this user and nobody who installs these plugins, and it is advice a model can<br>weigh rather than a gate it cannot pass. A hook is the difference between a<br>prompt and a program.</p>
+      <p><strong class="md">A user-level hook already covers part of this, with three gaps.</strong><br><code class="md">~/.claude/hooks/block-repo-wide-format.py</code> was written on 2026-08-14 and<br>blocks three literal patterns: <code class="md">&lt;runner&gt; run fix:all</code>, <code class="md">prettier|biome --write .</code>,<br>and <code class="md">eslint|biome --fix .</code>. It is the right idea, and it settles the <code class="md">yarn run</code><br>question — its own pattern already spells the runner alternation with an<br>explicit <code class="md">run</code>. Three gaps remain, and they are why this plan is still worth<br>landing:</p>
+      <p>1. <strong class="md">No script resolution.</strong> It matches the literal string <code class="md">fix:all</code>, so<br><code class="md">npm run format</code> where <code class="md">format</code> is <code class="md">prettier --write .</code> passes untouched.<br>The incident command happened to be named <code class="md">fix:all</code>; the next one will not<br>be.<br>2. <strong class="md"><code class="md">run</code> is mandatory in its first pattern.</strong> <code class="md">yarn fix:all</code> — the bare form<br>every runner accepts — does not match. Stripping an optional <code class="md">run</code> token<br>covers both spellings without enumerating either.<br>3. <strong class="md">It fires on non-executing mentions.</strong> It inspects the raw command text, so<br><code class="md">git commit -m &quot;...fix:all...&quot;</code> is blocked even though nothing runs. This<br>was observed while authoring this plan: a commit whose <em class="md">message</em> described<br>the pattern was refused. A guard that blocks talking about a command is a<br>guard that gets disabled.</p>
+      <p>It is also user-level, so it does not travel to anyone installing git-agent —<br>the original reason for shipping it in a plugin stands unchanged.</p>
       <p><strong class="md">It belongs in git-agent because the wiring already exists.</strong> git-agent<br>registers a <code class="md">PreToolUse</code> hook on <code class="md">Bash</code> for <code class="md">lint-before-commit.py</code>, and its<br>manifest carries the explicit <code class="md">&quot;hooks&quot;: &quot;./hooks.json&quot;</code> key added in 4.14.0<br>after a controlled A/B showed the root-level file is otherwise never read. A<br>second command in the same matcher costs one new file and no new registration.<br>The alternative — a new plugin for two guards — is a marketplace entry, a<br>README, a version line, and a CHANGELOG for 80 lines of Python.</p>
       <p><strong class="md">A literal-text match would miss the actual incident.</strong> The report&#39;s own<br>suggested hook greps the raw command for <code class="md">fix:all</code>. The command that caused the<br>damage was <code class="md">npm run fix:all</code>, whose expansion lives in <code class="md">package.json</code> — and the<br>general case, <code class="md">npm run format</code> where the script is <code class="md">prettier --write .</code>, has no<br>matching text at all. The hook therefore resolves <code class="md">npm</code>/<code class="md">pnpm</code>/<code class="md">yarn</code>/<code class="md">bun</code><br>script invocations against the nearest manifest before matching, reusing the<br>upward walk <code class="md">lint-before-commit.py</code> already implements. Without that step the<br>guard would pass the exact command it exists to stop.</p>
+      <p>Resolution strips an optional <code class="md">run</code> token rather than enumerating invocation<br>spellings. Every runner accepts both — <code class="md">yarn fix:all</code> and <code class="md">yarn run fix:all</code><br>are the same command, and <code class="md">lint-before-commit.py</code> already normalizes Yarn to<br><code class="md">yarn run</code> at its <code class="md">RUNNERS</code> table — so a list of literal forms leaves a bypass<br>for whichever spelling it omitted.</p>
       <p><strong class="md">Two patterns, not five.</strong> Only the two with recorded incidents are blocked:</p>
       <p>- a formatter or linter invoked with <code class="md">--write</code> or <code class="md">--fix</code> and no path argument,<br>or with <code class="md">.</code> as its path, whether typed directly or reached through a package<br>script;<br>- <code class="md">git stash pop</code> or <code class="md">git stash apply</code> with no explicit stash reference.</p>
       <p><code class="md">rm</code>, <code class="md">curl</code>, <code class="md">git reset --hard</code>, and <code class="md">git checkout -- .</code> are deliberately<br>excluded. <code class="md">rm</code> and <code class="md">curl</code> are already denied outright at the permission layer<br>for this user, and the rest have no measured incident here. A guard that fires<br>on safe commands gets disabled within a week, which costs more than the two it<br>was catching.</p>
@@ -1736,15 +1740,15 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Write <code class="md">hooks/scope-guard.py</code> reading the PreToolUse payload from stdin and exiting 0 immediately for any payload that is not a <code class="md">Bash</code> tool call, and for any command whose text contains none of the trigger tokens (<code class="md">--write</code>, <code class="md">--fix</code>, <code class="md">stash</code>, or a package-runner prefix).</span>
+                <span class="step-chip-text">Write <code class="md">hooks/scope-guard.py</code> reading the PreToolUse payload from stdin and exiting 0 immediately for any payload that is not a <code class="md">Bash</code> tool call, for any command whose text contains none of the trigger tokens (<code class="md">--write</code>, <code class="md">--fix</code>, <code class="md">stash</code>, or a package-runner prefix), and for any command whose first token is not itself a runner, formatter, or <code class="md">git</code> — so a pattern appearing inside a <code class="md">git commit -m</code> message, a <code class="md">grep</code>, or an <code class="md">echo</code> never matches.</span>
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
-                <div class="step-why">this hook runs on every Bash call in every repo that installs git-agent, so the cheap bail is a correctness constraint on the common path, not an optimization — the same rule <code class="md">lint-before-commit.py</code> follows.</div>
+                <div class="step-why">this hook runs on every Bash call in every repo that installs git-agent, so the cheap bail is a correctness constraint on the common path; and the first-token rule is what stops the observed false positive where a commit message merely describing a blocked command was refused.</div>
               </div>
               <div class="step-note step-verify">
                 <span class="step-note-label">Verify</span>
-                <div class="verify-body">a payload for a non-Bash tool and a payload for <code class="md">ls -la</code> each exit 0 having opened no file, asserted by running with an unreadable cwd.</div>
+                <div class="verify-body">a payload for a non-Bash tool and a payload for <code class="md">ls -la</code> each exit 0 having opened no file; <code class="md">git commit -m &quot;fixes npm run fix:all&quot;</code> and <code class="md">grep -r &quot;prettier --write .&quot; docs/</code> both exit 0.</div>
               </div>
             </div>
           </div>
@@ -1756,15 +1760,15 @@ img, video { max-width: 100%; height: auto; }
             <div class="step-body">
               <div class="step-action">
                 <span class="step-chip">todo</span>
-                <span class="step-chip-text">Implement package-script resolution: for a command matching <code class="md">npm run &lt;script&gt;</code>, <code class="md">pnpm run &lt;script&gt;</code>, <code class="md">yarn &lt;script&gt;</code>, or <code class="md">bun run &lt;script&gt;</code>, walk up from the payload&#39;s cwd to the git root and read the first manifest declaring that script, then match against the script&#39;s value rather than the typed command. A missing manifest, unreadable JSON, or absent script resolves to the typed text and never blocks on its own.</span>
+                <span class="step-chip-text">Implement package-script resolution: for a command whose first token is <code class="md">npm</code>, <code class="md">pnpm</code>, <code class="md">yarn</code>, or <code class="md">bun</code>, <strong class="md">strip an optional <code class="md">run</code> token</strong> and treat the next token as the script name, then walk up from the payload&#39;s cwd to the git root, read the first manifest declaring that script, and match against the script&#39;s value rather than the typed command. A missing manifest, unreadable JSON, or absent script resolves to the typed text and never blocks on its own.</span>
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
-                <div class="step-why"><code class="md">npm run fix:all</code> is the command that caused the incident and carries none of the dangerous text itself, so a guard without resolution would have allowed it.</div>
+                <div class="step-why"><code class="md">npm run fix:all</code> is the command that caused the incident and carries none of the dangerous text itself, and every runner accepts both spellings — <code class="md">yarn fix:all</code> and <code class="md">yarn run fix:all</code> are the same invocation, and this repo&#39;s own <code class="md">lint-before-commit.py</code> uses the <code class="md">yarn run</code> form — so enumerating spellings leaves a bypass for whichever ones the list missed.</div>
               </div>
               <div class="step-note step-verify">
                 <span class="step-note-label">Verify</span>
-                <div class="verify-body">a fixture whose <code class="md">package.json</code> defines <code class="md">&quot;fix:all&quot;: &quot;prettier --write .&quot;</code> blocks on <code class="md">npm run fix:all</code>, and the same fixture with that script removed exits 0.</div>
+                <div class="verify-body">a fixture whose <code class="md">package.json</code> defines <code class="md">&quot;fix:all&quot;: &quot;prettier --write .&quot;</code> blocks on all eight forms (<code class="md">npm run</code>, <code class="md">pnpm run</code>, <code class="md">yarn run</code>, <code class="md">bun run</code> and each without <code class="md">run</code>), and the same fixture with that script removed exits 0 for all eight.</div>
               </div>
             </div>
           </div>
@@ -1922,8 +1926,8 @@ img, video { max-width: 100%; height: auto; }
       <div class="test-tier-label">Tier 1 — This plan adds application code</div>
       <div class="objective-test-card">Objective: a repo-wide formatter reached through an npm script, and a bare <code class="md">git stash pop</code>, are both blocked before executing, while their scoped equivalents run untouched. File: tests/plugins/test-scope-guard.sh; Type: smoke; Asserts: <code class="md">npm run fix:all</code> resolving to <code class="md">prettier --write .</code> exits 2, <code class="md">prettier --write src/app.ts</code> exits 0, <code class="md">git stash pop</code> exits 2 with <code class="md">git stash list</code> in the message, and <code class="md">git stash pop stash@{1}</code> exits 0; Run: bash tests/plugins/test-scope-guard.sh</div>
       <div class="test-list">
-        <div class="test-card">Unit: fast bail. File: tests/plugins/test-scope-guard.sh; Targets: the payload and token pre-checks; Key cases: a non-Bash payload exits 0, a command with no trigger token exits 0, and neither path reads a manifest or the opt-out file</div>
-        <div class="test-card">Unit: script resolution. File: tests/plugins/test-scope-guard.sh; Targets: the manifest walk; Key cases: nearest manifest wins over the root, a missing script resolves to the typed text, malformed JSON never blocks, and the walk stops at the git root</div>
+        <div class="test-card">Unit: fast bail and non-executing mentions. File: tests/plugins/test-scope-guard.sh; Targets: the payload, token, and first-token pre-checks; Key cases: a non-Bash payload exits 0, a command with no trigger token exits 0, <code class="md">git commit -m</code> and <code class="md">echo</code>/<code class="md">grep</code> carrying a blocked pattern in their text exit 0, and none of these read a manifest or the opt-out file</div>
+        <div class="test-card">Unit: script resolution. File: tests/plugins/test-scope-guard.sh; Targets: the manifest walk and the optional-<code class="md">run</code> strip; Key cases: all eight runner spellings (<code class="md">npm</code>/<code class="md">pnpm</code>/<code class="md">yarn</code>/<code class="md">bun</code>, each with and without <code class="md">run</code>) resolve the same script, nearest manifest wins over the root, a missing script resolves to the typed text, malformed JSON never blocks, and the walk stops at the git root</div>
         <div class="test-card">Unit: formatter rule boundaries. File: tests/plugins/test-scope-guard.sh; Targets: path-operand detection; Key cases: <code class="md">.</code> blocks, no operand blocks, an explicit path passes, a <code class="md">--check</code>-only invocation passes, and a path containing a dot in its name is not mistaken for <code class="md">.</code></div>
         <div class="test-card">Unit: opt-out and message contract. File: tests/plugins/test-scope-guard.sh; Targets: the exit paths; Key cases: <code class="md">.claude/no-scope-guard</code> disables every rule, and each block writes the rule and its safe alternative to stderr with exit 2</div>
       </div>
@@ -1942,43 +1946,51 @@ img, video { max-width: 100%; height: auto; }
         </li>
         <li>
           <input type="checkbox" id="ac2">
-          <label for="ac2">A formatter invoked with an explicit path is never blocked.</label>
+          <label for="ac2">The same block applies to all eight runner spellings — <code class="md">npm</code>/<code class="md">pnpm</code>/<code class="md">yarn</code>/<code class="md">bun</code>, each with and without an explicit <code class="md">run</code> token.</label>
         </li>
         <li>
           <input type="checkbox" id="ac3">
-          <label for="ac3">A bare <code class="md">git stash pop</code> or <code class="md">git stash apply</code> is blocked, and the message names <code class="md">git stash list</code>; an explicit <code class="md">stash@{N}</code> passes.</label>
+          <label for="ac3">A formatter invoked with an explicit path is never blocked.</label>
         </li>
         <li>
           <input type="checkbox" id="ac4">
-          <label for="ac4">No rule blocks <code class="md">rm</code>, <code class="md">curl</code>, <code class="md">git reset</code>, or <code class="md">git checkout</code> — the guard&#39;s scope is exactly the two documented patterns.</label>
+          <label for="ac4">A bare <code class="md">git stash pop</code> or <code class="md">git stash apply</code> is blocked, and the message names <code class="md">git stash list</code>; an explicit <code class="md">stash@{N}</code> passes.</label>
         </li>
         <li>
           <input type="checkbox" id="ac5">
-          <label for="ac5">A non-Bash payload, and a Bash command carrying no trigger token, exit 0 without reading any file.</label>
+          <label for="ac5">No rule blocks <code class="md">rm</code>, <code class="md">curl</code>, <code class="md">git reset</code>, or <code class="md">git checkout</code> — the guard&#39;s scope is exactly the two documented patterns.</label>
         </li>
         <li>
           <input type="checkbox" id="ac6">
-          <label for="ac6"><code class="md">.claude/no-scope-guard</code> at the repo root disables every rule.</label>
+          <label for="ac6">A non-Bash payload, and a Bash command carrying no trigger token, exit 0 without reading any file.</label>
         </li>
         <li>
           <input type="checkbox" id="ac7">
-          <label for="ac7">Blocks exit 2 with the rule and the safe alternative on stderr.</label>
+          <label for="ac7">A blocked pattern appearing inside a <code class="md">git commit -m</code> message, an <code class="md">echo</code>, or a <code class="md">grep</code> argument is not blocked — only an actual invocation is.</label>
         </li>
         <li>
           <input type="checkbox" id="ac8">
-          <label for="ac8"><code class="md">lint-before-commit.py</code> still fires on <code class="md">git commit</code> with its existing timeout unchanged.</label>
+          <label for="ac8"><code class="md">.claude/no-scope-guard</code> at the repo root disables every rule.</label>
         </li>
         <li>
           <input type="checkbox" id="ac9">
-          <label for="ac9">The README documents both rules, both escape hatches, the desktop-app caveat, and a <code class="md">.claude/lint-gate.json</code> test-command example.</label>
+          <label for="ac9">Blocks exit 2 with the rule and the safe alternative on stderr.</label>
         </li>
         <li>
           <input type="checkbox" id="ac10">
-          <label for="ac10"><code class="md">bash tests/plugins/test-scope-guard.sh</code> reports zero failures.</label>
+          <label for="ac10"><code class="md">lint-before-commit.py</code> still fires on <code class="md">git commit</code> with its existing timeout unchanged.</label>
         </li>
         <li>
           <input type="checkbox" id="ac11">
-          <label for="ac11"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0.</label>
+          <label for="ac11">The README documents both rules, both escape hatches, the desktop-app caveat, and a <code class="md">.claude/lint-gate.json</code> test-command example.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac12">
+          <label for="ac12"><code class="md">bash tests/plugins/test-scope-guard.sh</code> reports zero failures.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac13">
+          <label for="ac13"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0.</label>
         </li>
       </ul>
       <span id="criteria-status" aria-live="polite" aria-atomic="true"

@@ -57,6 +57,17 @@ carries `parseSpecMarkdown` and `extractSections`, and the round-trip property
 enforced by `tests/plugins/test-build-plan-html.mjs`. `--check` composes
 existing, tested pieces.
 
+**The renderer lives at the repo root; the plugin carries a copy.** `scripts/`
+is canonical and `kit/plugins/plan-agent/scripts/` is a bundled duplicate —
+byte-identical today, and held that way by an assertion in
+`tests/plugins/test-build-plan-html.mjs` whose failure message is *"drifted
+from scripts/… — re-copy it"*. The unit tests import the **root** module
+(`../../scripts/build-plan-html.mjs`), so an edit confined to the plugin copy
+would both fail the parity assertion and leave every test blind to `--check`.
+Four files are mirrored this way: `build-plan-html.mjs`,
+`extract-plan-spec.mjs`, `lib/plan-spec.mjs`, and `lib/plan-shell.mjs`. Every
+step below edits the root and re-copies, in that order.
+
 **Determinism is a precondition, not an assumption.** The renderer keeps
 `plan-created` stable across re-renders by reading the value back from the
 existing HTML, and `created` comes from frontmatter — so an unchanged spec
@@ -70,7 +81,8 @@ gallery. `--check` writes nothing.
 
 ## Files
 
-- kit/plugins/plan-agent/scripts/build-plan-html.mjs (modified) — `--check` mode: render to memory, compare, assert spec consistency, print a table
+- scripts/build-plan-html.mjs (modified) — canonical source; `--check` mode: render to memory, compare, assert spec consistency, print a table
+- kit/plugins/plan-agent/scripts/build-plan-html.mjs (modified) — byte-identical re-copy of the above, held by the parity assertion
 - kit/plugins/plan-agent/skills/build/references/completion-gates.md (modified) — Step 5.3 becomes one command; the selector list is deleted
 - kit/plugins/plan-agent/skills/finalize-plan/references/write-completions.md (modified) — same gate, kept consistent per completion-gates.md's own instruction
 - kit/plugins/plan-agent/README.md (modified) — document `--check`
@@ -81,13 +93,14 @@ gallery. `--check` writes nothing.
 ## Steps
 
 1. Establish that rendering an unchanged spec is byte-deterministic: render a committed plan spec twice to two output paths, `diff` them, then render again over an existing output file and diff against the first. Why: `--check` is a byte comparison, so a single volatile field — a timestamp, a generated id, a locale-dependent date — would make it fail on every correct plan, and the fix belongs in the comparison rather than in a gate nobody trusts. Verify: both diffs are empty; if either is not, name the volatile field in this plan's Context and carry it as a normalization the comparison applies before diffing.
-2. Add `--check` to `scripts/build-plan-html.mjs`: parse the spec, render to a string, compare against the existing output file, and report the first differing line with its line number and 40 characters of context on each side. Missing output file is a FAIL naming the render command, not a crash. Why: freshness is the property the old Step 5.3 was actually reaching for, and a first-difference report is what makes the failure actionable — a bare "files differ" sends the model back to grepping. Verify: `--check` on a freshly rendered plan exits 0 and prints `html  PASS`; the same plan with one character edited into its HTML exits non-zero and prints the edited line's number.
+2. Add `--check` to the canonical `scripts/build-plan-html.mjs`: parse the spec, render to a string, compare against the existing output file, and report the first differing line with its line number and 40 characters of context on each side. Missing output file is a FAIL naming the render command, not a crash. Why: freshness is the property the old Step 5.3 was actually reaching for, and a first-difference report is what makes the failure actionable — a bare "files differ" sends the model back to grepping; the root file is the one the tests import, so implementing anywhere else leaves the change untested. Verify: `--check` on a freshly rendered plan exits 0 and prints `html  PASS`; the same plan with one character edited into its HTML exits non-zero and prints the edited line's number.
 3. Extend `--check` with the spec-consistency assertions, evaluated on the parsed Markdown and skipped entirely unless `status: completed`: every numbered step carries `[x]`, every `## Acceptance Criteria` bullet is `- [x]`. Why: this is the half of Step 5.3 that is not a freshness question, and evaluating it on the spec is what removes the last reason to open the HTML. Verify: a spec with `status: completed` and one `- [ ]` criterion exits non-zero and names that criterion's text; the same spec at `status: in-progress` exits 0 with the consistency rows reported as skipped.
 4. Make `--check` print a fixed PASS/FAIL table — one row per property (`html`, `steps`, `criteria`), a summary line, and exit 0 only when every row passes. Why: the model needs to know *which* property broke to fix the right file, and a stable table is also what the test asserts against. Verify: the table's row labels appear in the same order for a passing plan, a stale-HTML plan, and an inconsistent-spec plan.
-5. Rewrite `skills/build/references/completion-gates.md` Step 5.3 as a single command — `plan-agent-render "<stem>.md" -o "<stem>.html" --check` — stating that a non-zero exit names the property and that the fix is always in the spec, never the HTML. Delete the five-selector paragraph. Keep sub-step 4's "fix the spec, never the HTML" rule and its no-promoting-status clause verbatim. Why: the selector list is the instruction that produced the defect, and leaving it beside the new command lets a future run fall back to it. Verify: `grep -c 'step-card' kit/plugins/plan-agent/skills/build/references/completion-gates.md` returns 0, and the file names the `--check` invocation exactly once.
-6. Apply the same replacement to `skills/finalize-plan/references/write-completions.md`, which runs the same completion rules for plans implemented outside `build`. Why: completion-gates.md ends by instructing that the two stay consistent, so a one-sided change is a defect the next reader inherits. Verify: both files reference `--check` and neither mentions `.step-card`.
-7. Extend `tests/plugins/test-build-plan-html.mjs` with the determinism case, the stale-HTML case, the missing-HTML case, the completed-with-unchecked-criterion case, and the in-progress skip case, keeping every existing assertion green. Why: the gate is only worth what its failure modes are worth, and each of these is a way `--check` could silently pass. Verify: `node tests/plugins/test-build-plan-html.mjs` reports zero failures with a higher assertion count than before the change.
-8. Bump plan-agent to 9.3.0 in `.claude-plugin/marketplace.json`, add the CHANGELOG entry, and document `--check` in the README's renderer section. Why: the CI guard fails any PR whose touched plugin does not exceed the base branch version, and an undocumented flag is a flag the next session re-invents. Verify: `git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0.
+5. Re-copy the edited renderer to `kit/plugins/plan-agent/scripts/build-plan-html.mjs` so the bundled copy is byte-identical again, and confirm the other three mirrored files (`extract-plan-spec.mjs`, `lib/plan-spec.mjs`, `lib/plan-shell.mjs`) were not touched. Why: the parity assertion fails the moment the two diverge, and its failure message — "drifted from scripts/… — re-copy it" — is the whole contract; skipping this makes every later step's test run red for an unrelated reason. Verify: `cmp scripts/build-plan-html.mjs kit/plugins/plan-agent/scripts/build-plan-html.mjs` exits 0, and `plan-agent-render --check` invoked by bare name (which resolves through the plugin's `bin/`) behaves identically to the root module.
+6. Rewrite `skills/build/references/completion-gates.md` Step 5.3 as a single command — `plan-agent-render "<stem>.md" -o "<stem>.html" --check` — stating that a non-zero exit names the property and that the fix is always in the spec, never the HTML. Delete the five-selector paragraph. Keep sub-step 4's "fix the spec, never the HTML" rule and its no-promoting-status clause verbatim. Why: the selector list is the instruction that produced the defect, and leaving it beside the new command lets a future run fall back to it. Verify: `grep -c 'step-card' kit/plugins/plan-agent/skills/build/references/completion-gates.md` returns 0, and the file names the `--check` invocation exactly once.
+7. Apply the same replacement to `skills/finalize-plan/references/write-completions.md`, which runs the same completion rules for plans implemented outside `build`. Why: completion-gates.md ends by instructing that the two stay consistent, so a one-sided change is a defect the next reader inherits. Verify: both files reference `--check` and neither mentions `.step-card`.
+8. Extend `tests/plugins/test-build-plan-html.mjs` with the determinism case, the stale-HTML case, the missing-HTML case, the completed-with-unchecked-criterion case, and the in-progress skip case — importing from `../../scripts/build-plan-html.mjs` as the file already does — while keeping every existing assertion green, the byte-identical parity assertion included. Why: the gate is only worth what its failure modes are worth, each of these is a way `--check` could silently pass, and the parity assertion is what catches a Step 5 re-copy that was skipped. Verify: `node tests/plugins/test-build-plan-html.mjs` reports zero failures with a higher assertion count than before the change, including the `plugin-bundled renderer copies are byte-identical to the repo-root sources` check.
+9. Bump plan-agent to 9.3.0 in `.claude-plugin/marketplace.json`, add the CHANGELOG entry, and document `--check` in the README's renderer section. Why: the CI guard fails any PR whose touched plugin does not exceed the base branch version, and an undocumented flag is a flag the next session re-invents. Verify: `git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0.
 
 ## Tests
 
@@ -107,6 +120,8 @@ Tier 1 — This plan changes application code
 - [ ] A `status: completed` spec with any unchecked step or criterion fails the check with the offending item's text quoted.
 - [ ] The same spec at `status: in-progress` passes, with the consistency rows reported as skipped rather than passed.
 - [ ] `--check` writes no files.
+- [ ] `--check` is implemented in the canonical `scripts/build-plan-html.mjs`, and `cmp` reports the plugin-bundled copy byte-identical to it.
+- [ ] The `plugin-bundled renderer copies are byte-identical to the repo-root sources` assertion still passes.
 - [ ] `completion-gates.md` and `write-completions.md` both invoke `--check` and neither names a CSS selector as evidence.
 - [ ] `node tests/plugins/test-build-plan-html.mjs` reports zero failures with more assertions than before this change.
 - [ ] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0.
@@ -148,6 +163,6 @@ exactly one `--check` invocation and no `Grep` call against the plan HTML.
 ## Resources
 
 - kit/plugins/plan-agent/skills/build/references/completion-gates.md — Step 5.3, the instruction being replaced
-- kit/plugins/plan-agent/scripts/lib/plan-spec.mjs — `parseSpecMarkdown` and `extractSections`, reused by `--check`
-- tests/plugins/test-build-plan-html.mjs — the round-trip property this builds on
+- scripts/lib/plan-spec.mjs — `parseSpecMarkdown` and `extractSections`, reused by `--check` (canonical copy; the plugin mirrors it)
+- tests/plugins/test-build-plan-html.mjs — the round-trip property this builds on, and the byte-identical parity assertion at its tail
 - ~/.claude/usage-data/report-2026-08-14-071004.html — the four verification-failure entries motivating this plan
