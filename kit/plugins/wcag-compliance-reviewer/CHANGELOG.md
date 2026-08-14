@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v1.5.2 — 2026-08-14 — the measurement examples now actually run
+
+### Fixed
+
+- **The computed-style example was not valid JavaScript.** `getComputedStyle(el).color / .backgroundColor / .outlineColor`
+  used `/` to mean "or", but parses as division followed by a property access —
+  `SyntaxError: Unexpected token '.'`. In a step whose whole instruction is to
+  paste raw tool output, an example that throws when pasted defeats the step.
+  Rewritten as a real destructuring expression, fenced as `js`, with
+  `getBoundingClientRect()` folded into the same object.
+- **The `UNVERIFIED` condition nullified the static path added in 1.5.1.** It
+  read "if you cannot reach a browser **or** resolve the values" — so a ratio
+  correctly computed from resolved values with the arithmetic shown was still
+  labelled unverified whenever no browser was around, which is every static
+  file. Now requires *neither* to be available, the label names the actual
+  reason, and it says outright that a resolved static calculation is verified.
+
 ## v1.5.1 — 2026-08-14 — wcag-check is not a contrast calculator
 
 ### Fixed

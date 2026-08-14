@@ -55,7 +55,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/wcag-compliance-reviewer"
       },
-      "version": "1.5.1",
+      "version": "1.5.2",
       "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance",
       "category": "security",
       "tags": [

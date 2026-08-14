@@ -120,9 +120,10 @@ wrong for exactly that reason and were caught downstream.
 1. **Measure it.** Against a running page, read computed styles with the browser
    MCP or Playwright:
 
-   ```
-   getComputedStyle(el).color / .backgroundColor / .outlineColor
-   el.getBoundingClientRect()   // touch targets, 2.5.8
+   ```js
+   const s = getComputedStyle(el);
+   ({ color: s.color, bg: s.backgroundColor, outline: s.outlineColor,
+      box: el.getBoundingClientRect() });   // box → touch targets, 2.5.8
    ```
 
    For a static file with no server, compute from the *resolved* values: read
@@ -149,9 +150,13 @@ wrong for exactly that reason and were caught downstream.
 2. **Paste the raw tool output** into the finding, before the conclusion. A
    ratio with no visible measurement behind it is an estimate wearing a
    measurement's clothes.
-3. **If you cannot reach a browser or resolve the values**, write
-   `UNVERIFIED — no browser` and describe what to check by hand. Never
-   substitute a `grep` of the source and report it as verification.
+3. **Only when you can neither reach a browser *nor* resolve the values
+   statically**, write `UNVERIFIED — <reason>` (`no browser, values unresolved`)
+   and describe what to check by hand. A ratio you computed from resolved
+   values with the arithmetic shown **is** verified — the absence of a browser
+   does not downgrade it, or step 1's static path would never produce a usable
+   number. Never substitute a `grep` of the source and report it as
+   verification.
 
 An honest `UNVERIFIED` costs the reader one manual check. A confident wrong
 ratio costs them the entire audit's credibility.
