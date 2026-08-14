@@ -70,6 +70,16 @@ TOTAL=0
 # Portable bounded run: macOS ships no coreutils `timeout`, so the watchdog is a
 # background sleeper that kills the run if it overruns.
 #
+# A skill carrying `disable-model-invocation: true` MUST be driven by its
+# `/plugin:skill` slash form, never by a "Use the X skill" sentence. The flag is
+# an authorization boundary: the CLI refuses the model's Skill call outright, the
+# run declines and stops, and — because every other fact in these manifests
+# asserts that nothing bad happened — a fully blocked run still satisfies them.
+# branch-agent caught this only because `left_default_branch` happens to require
+# the skill to act; optimizing-skill-frontmatter reported MATCH for a run that
+# never started. Both scenarios now use the slash form, and both manifests carry
+# a liveness fact so a future block fails loudly instead of passing green.
+#
 # `</dev/null` is load-bearing, not tidiness. Without it the run inherits the
 # caller's stdin; when this harness is itself launched non-interactively (a
 # background job, a CI step, a nested agent), that stdin is a pipe nobody ever
@@ -238,8 +248,10 @@ scenario_branch_agent() {
   bash "$SCENARIOS/dirty-tree.sh" "$sb" >/dev/null
   install_shims "$sb"
 
+  # Slash form, no argument — see run_claude. branch-agent is
+  # `disable-model-invocation: true`; a sentence here is refused, not run.
   run_claude "$sb" "$ROOT/kit/plugins/git-agent" \
-    "Use the git-agent:branch-agent skill with no arguments to create a branch." \
+    "/git-agent:branch-agent" \
     "$sb/run.log" || true
 
   local branch
@@ -305,12 +317,38 @@ scenario_optimizing_frontmatter() {
   git -C "$sb" config user.email baseline@example.com
   git -C "$sb" config user.name "Baseline Harness"
   install_shims "$sb"
+  # Read from the pristine fixture, not the copy, so the liveness fact below
+  # stays correct if the fixture's description is ever reworded.
+  local desc_before
+  desc_before="$(grep -m1 '^description:' "$SCENARIOS/fixture-skill/SKILL.md" || true)"
 
+  # Slash form with the path as its argument — see run_claude.
+  # optimizing-skill-frontmatter is `disable-model-invocation: true`.
   run_claude "$sb" "$ROOT/kit/plugins/skill-reviewer" \
-    "Use the skill-reviewer:optimizing-skill-frontmatter skill on kit/plugins/demo/skills/fixture-demo/SKILL.md" \
+    "/skill-reviewer:optimizing-skill-frontmatter kit/plugins/demo/skills/fixture-demo/SKILL.md" \
     "$sb/run.log" || true
 
   emit skill optimizing-skill-frontmatter
+  # Liveness. Every other fact here asserts an absence, so all four are satisfied
+  # by a run that never started — which is exactly how this scenario reported
+  # MATCH while the CLI was refusing the invocation outright. Rewriting the
+  # fixture's over-long single-sentence description into the three-part format is
+  # the skill's whole job, so "did that line change at all" is the cheapest fact
+  # that cannot be satisfied by doing nothing. It asserts change, not wording:
+  # the prose is model-generated and pinning it would rot in a week.
+  #
+  # "Rewritten" has to mean there IS a description and it changed. Comparing the
+  # two lines alone is not enough: deleting the `description:` line, or blanking
+  # its value, also makes them differ, so a destructive outcome would report
+  # `yes`. Nothing else here would catch that — `target_still_present` only
+  # asserts the file exists and `has_name_line` checks `name:`.
+  local desc_after rewritten=1
+  desc_after="$(grep -m1 '^description:' "$target" 2>/dev/null || true)"
+  if printf '%s\n' "$desc_after" | grep -qE '^description:[[:space:]]*[^[:space:]]' \
+     && [ "$desc_after" != "$desc_before" ]; then
+    rewritten=0
+  fi
+  emit description_rewritten "$(yn "$rewritten")"
   # The one prohibition that must never be violated.
   emit wrote_disable_false "$(yn "$(grep -qF 'disable-model-invocation: false' "$target" && echo 0 || echo 1)")"
   emit target_still_present "$(yn "$([ -f "$target" ] && echo 0 || echo 1)")"
