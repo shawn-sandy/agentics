@@ -336,9 +336,19 @@ scenario_optimizing_frontmatter() {
   # the skill's whole job, so "did that line change at all" is the cheapest fact
   # that cannot be satisfied by doing nothing. It asserts change, not wording:
   # the prose is model-generated and pinning it would rot in a week.
-  local desc_after
+  #
+  # "Rewritten" has to mean there IS a description and it changed. Comparing the
+  # two lines alone is not enough: deleting the `description:` line, or blanking
+  # its value, also makes them differ, so a destructive outcome would report
+  # `yes`. Nothing else here would catch that — `target_still_present` only
+  # asserts the file exists and `has_name_line` checks `name:`.
+  local desc_after rewritten=1
   desc_after="$(grep -m1 '^description:' "$target" 2>/dev/null || true)"
-  emit description_rewritten "$(yn "$([ "$desc_after" != "$desc_before" ] && echo 0 || echo 1)")"
+  if printf '%s\n' "$desc_after" | grep -qE '^description:[[:space:]]*[^[:space:]]' \
+     && [ "$desc_after" != "$desc_before" ]; then
+    rewritten=0
+  fi
+  emit description_rewritten "$(yn "$rewritten")"
   # The one prohibition that must never be violated.
   emit wrote_disable_false "$(yn "$(grep -qF 'disable-model-invocation: false' "$target" && echo 0 || echo 1)")"
   emit target_still_present "$(yn "$([ -f "$target" ] && echo 0 || echo 1)")"
