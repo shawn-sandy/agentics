@@ -1,7 +1,7 @@
 ---
 name: plan-status
 description: "Writes lifecycle status into a plan's frontmatter, one file or a directory. Inspects codebase and git history for accurate dates. Use when asked to check or update plan status."
-allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite, ToolSearch, ExitPlanMode
 argument-hint: "[plan-file-path | directory] [--all] [--force] - omit to auto-detect; pass a directory or --all for bulk mode"
 ---
 
@@ -21,6 +21,10 @@ Does not stress-test, validate, or critique plan content — use review-plan or 
 - `references/single-file-flow.md` — Steps 0–4, 6, and 7 in full: file resolution, git date commands, existing-frontmatter handling, evidence scoring, the confirmation prompt, and the frontmatter write rules
 - `references/bulk-mode.md` — the whole Bulk mode (directory / `--all`) section: seven-stage flow, triage table, batch date/evidence/type rules, summary approval, hybrid write
 - `references/type-classification.md` — Step 5's signal-to-type table and the keep-existing-type rule
+
+## Exit plan mode
+
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ## Instructions
 

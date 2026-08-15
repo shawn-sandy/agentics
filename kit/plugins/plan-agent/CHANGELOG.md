@@ -1,6 +1,22 @@
 # Changelog
 
 
+## 9.4.1 — plan-status carries the plan-mode guard (2026-08-14)
+
+### Fixed
+
+- **`plan-status` exits plan mode before writing** — the skill's Step 7 writes
+  lifecycle status and dates into a plan's YAML frontmatter with `Edit`, but it
+  carried no guard, so invoking it inside plan mode blocked that write and
+  stalled the workflow. It now carries the canonical line as its first step and
+  declares `ToolSearch` and `ExitPlanMode` in `allowed-tools`.
+- **`commands/plan-status.md` mirrors the new tools** — the command reads the
+  SKILL.md by path and runs its steps inline under its own permissions, so the
+  skill's `allowed-tools` has to be a subset of the command's.
+- **Regression guard** — `plan-agent/skills/plan-status/SKILL.md` is now in the
+  `WRITE_HEAVY` manifest of `tests/plugins/test-exitplanmode-guard.sh`.
+
+
 ## 9.4.0 — a deterministic render check replaces the grep drift gate (2026-08-14)
 
 ### Added
