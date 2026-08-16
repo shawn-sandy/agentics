@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plugin version pinning across git worktrees</title>
+</head>
+<body>
+<style>
+  :root {
+    --ground: #F6F7F9;
+    --surface: #FFFFFF;
+    --surface-sunk: #EDEFF3;
+    --ink: #16191F;
+    --ink-soft: #5A616E;
+    --ink-faint: #858C99;
+    --accent: #2E5C8A;
+    --accent-soft: #E3EAF3;
+    --stale: #9A5C15;
+    --stale-soft: #F6EADA;
+    --fresh: #2A6249;
+    --fresh-soft: #E1EFE8;
+    --rule: #DEE2E9;
+    --rule-strong: #C6CCD6;
+    --code-bg: #EFF1F5;
+
+    --font-display: ui-serif, "Iowan Old Style", "Source Serif Pro", "Palatino Linotype", Georgia, serif;
+    --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101318;
+      --surface: #171B22;
+      --surface-sunk: #1D222B;
+      --ink: #E4E7EC;
+      --ink-soft: #99A1AF;
+      --ink-faint: #6E7683;
+      --accent: #86AFDC;
+      --accent-soft: #1C2B3C;
+      --stale: #DB9B52;
+      --stale-soft: #2E2416;
+      --fresh: #74BE9A;
+      --fresh-soft: #14261D;
+      --rule: #262C36;
+      --rule-strong: #333B47;
+      --code-bg: #1B2029;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #101318;
+    --surface: #171B22;
+    --surface-sunk: #1D222B;
+    --ink: #E4E7EC;
+    --ink-soft: #99A1AF;
+    --ink-faint: #6E7683;
+    --accent: #86AFDC;
+    --accent-soft: #1C2B3C;
+    --stale: #DB9B52;
+    --stale-soft: #2E2416;
+    --fresh: #74BE9A;
+    --fresh-soft: #14261D;
+    --rule: #262C36;
+    --rule-strong: #333B47;
+    --code-bg: #1B2029;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .prose { max-width: 42rem; }
+
+  /* ---- masthead ---- */
+  .masthead { display: flex; flex-direction: column; gap: 0.9rem; }
+
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 2.9rem);
+    line-height: 1.12;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .standfirst {
+    font-size: 1.06rem;
+    color: var(--ink-soft);
+    max-width: 42rem;
+    margin: 0;
+  }
+
+  /* ---- stat strip ---- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .stat {
+    background: var(--surface);
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.7rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+
+  .stat-label {
+    font-size: 0.74rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---- sections ---- */
+  section { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h3 {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.4;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  p { margin: 0; }
+  .prose p + p { margin-top: 0.85rem; }
+
+  ul { margin: 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  ol { margin: 0; padding-left: 1.35rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  li { max-width: 40rem; }
+
+  strong { font-weight: 650; }
+
+  /* ---- inline code & paths ---- */
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.855em;
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 2px;
+    overflow-wrap: break-word;
+  }
+
+  pre.block {
+    font-family: var(--font-mono);
+    font-size: 0.83rem;
+    line-height: 1.6;
+    background: var(--code-bg);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-left: 2px solid var(--accent);
+    border-radius: 3px;
+    padding: 0.85rem 1rem;
+    margin: 0;
+    overflow-x: auto;
+  }
+  pre.block code { background: none; padding: 0; font-size: inherit; }
+
+  /* ---- entry blocks (decisions, tradeoffs, learnings) ---- */
+  .entries { display: flex; flex-direction: column; gap: 1.4rem; }
+
+  .entry {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-left: 0.95rem;
+    border-left: 1px solid var(--rule-strong);
+  }
+  .entry p, .entry ul { max-width: 40rem; }
+
+  /* ---- version pin chips ---- */
+  .pin {
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+    font-variant-numeric: tabular-nums;
+    padding: 0.1em 0.45em;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .pin-stale { background: var(--stale-soft); color: var(--stale); }
+  .pin-fresh { background: var(--fresh-soft); color: var(--fresh); }
+
+  /* ---- tables ---- */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 3px; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.9rem;
+    background: var(--surface);
+  }
+
+  th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--ink-faint);
+    background: var(--surface-sunk);
+    padding: 0.6rem 0.85rem;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  td {
+    padding: 0.55rem 0.85rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    color: var(--ink-soft);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); }
+  td.path { font-family: var(--font-mono); font-size: 0.84rem; color: var(--ink); }
+  td.gone { color: var(--ink-faint); }
+
+  /* ---- diagram ---- */
+  .figure { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .diagram-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1.1rem 0.75rem;
+    overflow-x: auto;
+  }
+
+  .caption {
+    font-size: 0.83rem;
+    color: var(--ink-faint);
+    font-style: italic;
+    max-width: 40rem;
+  }
+
+  /* ---- callout ---- */
+  .callout {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.95rem 1.1rem;
+    font-size: 0.94rem;
+    color: var(--ink);
+    max-width: 44rem;
+  }
+  .callout .lede {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.35rem;
+  }
+
+  /* ---- verdict list (tests) ---- */
+  .verdict { display: flex; flex-direction: column; gap: 0.9rem; }
+  .verdict-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: baseline;
+    max-width: 42rem;
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    padding: 0.2em 0.5em;
+    border-radius: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 5.4rem;
+    text-align: center;
+  }
+  .tag-pass { background: var(--fresh-soft); color: var(--fresh); }
+  .tag-gap { background: var(--stale-soft); color: var(--stale); }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.2rem;
+    font-size: 0.83rem;
+    color: var(--ink-faint);
+    max-width: 42rem;
+  }
+
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible, :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* Gallery copy: mermaid rendered to static SVG with a light palette baked in,
+     so its card is pinned light on both grounds rather than following a token. */
+  .diagram-card { background: #FFFFFF; border-color: #DEE2E9; }
+  .diagram-card svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">Engineering recap &middot; 2026-08-16 &middot; agentics</div>
+    <h1>Plugin version pinning across git worktrees</h1>
+    <p class="standfirst">
+      <code>/git-agent:post-merge-cleanup</code> was reported broken. It is not broken &mdash; it was
+      never loaded. This worktree resolves <code>git-agent@agentics-kit</code> to
+      <span class="pin pin-stale">4.15.0</span> at project scope, and the skill first shipped in
+      <span class="pin pin-fresh">4.19.0</span> (<code>e1e8840</code>, PR&nbsp;#565).
+    </p>
+  </header>
+
+  <section>
+    <div class="eyebrow">At a glance</div>
+    <div class="stats">
+      <div class="stat"><span class="stat-value">0</span><span class="stat-label">Repo changes</span></div>
+      <div class="stat"><span class="stat-value">0</span><span class="stat-label">Files changed</span></div>
+      <div class="stat"><span class="stat-value">4</span><span class="stat-label">Decisions</span></div>
+      <div class="stat"><span class="stat-value">5</span><span class="stat-label">Open items</span></div>
+    </div>
+    <div class="prose">
+      <p>
+        The skill's own suite passes <strong>28/28</strong> against the worktree sources, so nothing in
+        <code>kit/plugins/git-agent/</code> is implicated. No code was changed. The fix
+        (<code>claude plugin update &hellip; --scope project</code>) was identified and left
+        unapplied, pending the user's call on which remediation path to take.
+      </p>
+      <p>
+        <strong>Diff budget:</strong> opted in per the command, but there was nothing to spend it on.
+        Session mode with a clean tree &mdash; <code>git status --porcelain</code> empty, zero hunks.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Architecture and code paths</div>
+    <h2>The finding lives entirely in the plugin resolution chain</h2>
+
+    <div class="figure">
+      <div class="diagram-card">
+        <svg id="claude-mermaid-0" width="803.484375" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="894" viewBox="0 0 803.484375 894" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-0{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-0 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-0 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-0 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-0 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-0 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-0 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-0 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-0 .marker.cross{stroke:#a8adb8;}#claude-mermaid-0 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;}#claude-mermaid-0 p{margin:0;}#claude-mermaid-0 .label{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;color:#f2f3f5;}#claude-mermaid-0 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-0 .cluster-label span{color:#f2f3f5;}#claude-mermaid-0 .cluster-label span p{background-color:transparent;}#claude-mermaid-0 .label text,#claude-mermaid-0 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node ellipse,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .rough-node .label text,#claude-mermaid-0 .node .label text,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-anchor:middle;}#claude-mermaid-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-0 .rough-node .label,#claude-mermaid-0 .node .label,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-align:center;}#claude-mermaid-0 .node.clickable{cursor:pointer;}#claude-mermaid-0 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-0 .arrowheadPath{fill:#efece7;}#claude-mermaid-0 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-0 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-0 .edgeLabel{background-color:rgb(16, 19, 24);text-align:center;}#claude-mermaid-0 .edgeLabel p{background-color:rgb(16, 19, 24);}#claude-mermaid-0 .edgeLabel rect{opacity:0.5;background-color:rgb(16, 19, 24);fill:rgb(16, 19, 24);}#claude-mermaid-0 .labelBkg{background-color:rgba(16, 19, 24, 0.5);}#claude-mermaid-0 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .cluster text{fill:#f2f3f5;}#claude-mermaid-0 .cluster span{color:#f2f3f5;}#claude-mermaid-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-0 rect.text{fill:none;stroke-width:0;}#claude-mermaid-0 .icon-shape,#claude-mermaid-0 .image-shape{background-color:rgb(16, 19, 24);text-align:center;}#claude-mermaid-0 .icon-shape p,#claude-mermaid-0 .image-shape p{background-color:rgb(16, 19, 24);padding:2px;}#claude-mermaid-0 .icon-shape .label rect,#claude-mermaid-0 .image-shape .label rect{opacity:0.5;background-color:rgb(16, 19, 24);fill:rgb(16, 19, 24);}#claude-mermaid-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-0 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-0 [data-look="neo"].node rect,#claude-mermaid-0 [data-look="neo"].cluster rect,#claude-mermaid-0 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node path{stroke:url(#claude-mermaid-0-gradient);stroke-width:1px;}#claude-mermaid-0 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-0 [data-look="neo"].node circle{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-0 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path,#claude-mermaid-0 .cluster rect{stroke-width:2px;}#claude-mermaid-0 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-0_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M187.242,134L187.242,140.167C187.242,146.333,187.242,158.667,187.242,170.333C187.242,182,187.242,193,187.242,198.5L187.242,204" id="claude-mermaid-0-L_A_B_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A_B_0" data-points="W3sieCI6MTg3LjI0MjE4NzUsInkiOjEzNH0seyJ4IjoxODcuMjQyMTg3NSwieSI6MTcxfSx7IngiOjE4Ny4yNDIxODc1LCJ5IjoyMDh9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M187.242,310L187.242,318.167C187.242,326.333,187.242,342.667,187.242,358.333C187.242,374,187.242,389,187.242,396.5L187.242,404" id="claude-mermaid-0-L_B_C_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_C_0" data-points="W3sieCI6MTg3LjI0MjE4NzUsInkiOjMxMH0seyJ4IjoxODcuMjQyMTg3NSwieSI6MzU5fSx7IngiOjE4Ny4yNDIxODc1LCJ5Ijo0MDh9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M187.242,486L187.242,494.167C187.242,502.333,187.242,518.667,191.302,534.412C195.363,550.158,203.483,565.316,207.543,572.895L211.603,580.474" id="claude-mermaid-0-L_C_D_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_D_0" data-points="W3sieCI6MTg3LjI0MjE4NzUsInkiOjQ4Nn0seyJ4IjoxODcuMjQyMTg3NSwieSI6NTM1fSx7IngiOjIxMy40OTIxODc1LCJ5Ijo1ODR9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M605.984,298L605.984,308.167C605.984,318.333,605.984,338.667,605.984,356.333C605.984,374,605.984,389,605.984,396.5L605.984,404" id="claude-mermaid-0-L_E_F_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_F_0" data-points="W3sieCI6NjA1Ljk4NDM3NSwieSI6Mjk4fSx7IngiOjYwNS45ODQzNzUsInkiOjM1OX0seyJ4Ijo2MDUuOTg0Mzc1LCJ5Ijo0MDh9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M539.786,486L525.924,494.167C512.062,502.333,484.337,518.667,455.797,534.686C427.256,550.704,397.898,566.409,383.219,574.261L368.54,582.113" id="claude-mermaid-0-L_F_D_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_D_0" data-points="W3sieCI6NTM5Ljc4NTgyMjA4ODA2ODIsInkiOjQ4Nn0seyJ4Ijo0NTYuNjEzMjgxMjUsInkiOjUzNX0seyJ4IjozNjUuMDEzNDI3NzM0Mzc1LCJ5Ijo1ODR9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M632.575,486L638.143,494.167C643.712,502.333,654.848,518.667,660.416,545.5C665.984,572.333,665.984,609.667,665.984,647C665.984,684.333,665.984,721.667,641.62,748.293C617.255,774.919,568.525,790.839,544.161,798.798L519.796,806.758" id="claude-mermaid-0-L_F_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_G_0" data-points="W3sieCI6NjMyLjU3NTI4NDA5MDkwOTEsInkiOjQ4Nn0seyJ4Ijo2NjUuOTg0Mzc1LCJ5Ijo1MzV9LHsieCI6NjY1Ljk4NDM3NSwieSI6NjQ3fSx7IngiOjY2NS45ODQzNzUsInkiOjc1OX0seyJ4Ijo1MTUuOTkzNjUyMzQzNzUsInkiOjgwOH1d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M247.242,710L247.242,718.167C247.242,726.333,247.242,742.667,260.53,758.662C273.818,774.657,300.393,790.313,313.681,798.141L326.968,805.97" id="claude-mermaid-0-L_D_G_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_D_G_0" data-points="W3sieCI6MjQ3LjI0MjE4NzUsInkiOjcxMH0seyJ4IjoyNDcuMjQyMTg3NSwieSI6NzU5fSx7IngiOjMzMC40MTQ3MjgzMzgwNjgyLCJ5Ijo4MDh9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(187.2421875, 171)"><g class="label" data-id="L_A_B_0" transform="translate(-81.375, -12)"><foreignObject width="162.75" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>published via PR #565</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B_C_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_C_D_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(605.984375, 359)"><g class="label" data-id="L_E_F_0" transform="translate(-100, -24)"><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="edgeLabel"><p>first session in a new projectPath</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(456.61328125, 535)"><g class="label" data-id="L_F_D_0" transform="translate(-100, -24)"><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="edgeLabel"><p>pins one version, never re-resolved</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_F_G_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(247.2421875, 759)"><g class="label" data-id="L_D_G_0" transform="translate(-100, -24)"><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="edgeLabel"><p>4.15.0/skills/ has no post-merge-cleanup</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-0-flowchart-A-0" data-look="classic" transform="translate(187.2421875, 71)"><rect class="basic label-container" style="" x="-130" y="-63" width="260" height="126"></rect><g class="label" style="" transform="translate(-100, -48)"><rect></rect><foreignObject width="200" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md(source, this worktree)</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-B-1" data-look="classic" transform="translate(187.2421875, 259)"><rect class="basic label-container" style="" x="-146.6171875" y="-51" width="293.234375" height="102"></rect><g class="label" style="" transform="translate(-116.6171875, -36)"><rect></rect><foreignObject width="233.234375" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>.claude-plugin/marketplace.jsonversion: 4.19.0</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-C-3" data-look="classic" transform="translate(187.2421875, 447)"><rect class="basic label-container" style="" x="-179.2421875" y="-39" width="358.484375" height="78"></rect><g class="label" style="" transform="translate(-149.2421875, -24)"><rect></rect><foreignObject width="298.484375" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>~/.claude/plugins/marketplaces/agentics-kit/ (clone, current)</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-D-5" data-look="classic" transform="translate(247.2421875, 647)"><rect class="basic label-container" style="" x="-152.3828125" y="-63" width="304.765625" height="126"></rect><g class="label" style="" transform="translate(-122.3828125, -48)"><rect></rect><foreignObject width="244.765625" height="96"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>~/.claude/plugins/cache/agentics-kit/git-agent//4.10.0 · 4.11.0 · 4.13.0 · 4.14.4 · 4.15.0 · 4.18.0 · 4.19.0</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-E-6" data-look="classic" transform="translate(605.984375, 259)"><rect class="basic label-container" style="" x="-162.109375" y="-39" width="324.21875" height="78"></rect><g class="label" style="" transform="translate(-132.109375, -24)"><rect></rect><foreignObject width="264.21875" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>.claude/settings.jsonenabledPlugins (checked in)</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-F-7" data-look="classic" transform="translate(605.984375, 447)"><rect class="basic label-container" style="" x="-189.5" y="-39" width="379" height="78"></rect><g class="label" style="" transform="translate(-159.5, -24)"><rect></rect><foreignObject width="319" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>~/.claude/plugins/installed_plugins.jsonrow: scope, projectPath, version</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-G-11" data-look="classic" transform="translate(396.61328125, 847)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>skills loaded for this session</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="claude-mermaid-0-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-0-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-0-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg>
+      </div>
+      <p class="caption">
+        Follow the <code>installed_plugins.json</code> row &mdash; it is the only thing that decides
+        which cached version a directory sees.
+      </p>
+    </div>
+
+    <h3>What to read first, in order</h3>
+    <ol>
+      <li>
+        <code>~/.claude/plugins/installed_plugins.json</code> &mdash;
+        <code>plugins["git-agent@agentics-kit"]</code> is an <strong>array</strong>, one row per
+        install site: <code>{scope, projectPath, installPath, version, installedAt, lastUpdated}</code>.
+        A <code>scope: project</code> row shadows the <code>scope: user</code> row. This file is the
+        authority; <code>~/.claude/plugins/config.json</code> is <code>{"repositories": {}}</code> and
+        holds nothing relevant.
+      </li>
+      <li>
+        <code>.claude/settings.json:23</code> &mdash; <code>enabledPlugins</code> declares
+        <code>"git-agent@agentics-kit": true</code>, alongside <code>extraKnownMarketplaces</code>.
+        The file is <strong>tracked in git</strong>, so every worktree checkout carries it.
+      </li>
+      <li>
+        <code>~/.claude/plugins/cache/agentics-kit/git-agent/&lt;version&gt;/skills/</code> &mdash;
+        the version-keyed cache, shared across all projects. <code>4.15.0/skills/</code> and
+        <code>4.14.4/skills/</code> have no <code>post-merge-cleanup</code> directory;
+        <code>4.19.0/skills/</code> does.
+      </li>
+    </ol>
+
+    <h3>The pin mechanism</h3>
+    <div class="prose"><p>Four steps, and the pin happens at step 3.</p></div>
+    <ol>
+      <li><code>.claude/settings.json</code> lists the plugin and is checked in.</li>
+      <li>
+        A new worktree is a full checkout at a new path &mdash; Claude Code treats each worktree path
+        as a distinct <code>projectPath</code>.
+      </li>
+      <li>
+        The first session there reads <code>enabledPlugins</code>, resolves the plugin against the
+        marketplace <em>as of that moment</em>, and writes a <code>scope: project</code> row with a
+        concrete <code>version</code>.
+      </li>
+      <li>
+        That version is fixed. Nothing re-resolves it, and project scope shadows user scope &mdash; so
+        a user-level <span class="pin pin-fresh">4.19.0</span> stays invisible in that directory.
+      </li>
+    </ol>
+
+    <div class="prose">
+      <p>Install timestamps confirm it: they track worktree creation, not plugin releases.</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Version</th><th>Installed</th><th>Path</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">4.14.4</td><td class="num">08-12 12:43</td><td class="path">devbox/agentics <span style="font-family: var(--font-body)">(main checkout)</span></td></tr>
+          <tr><td class="num">4.14.4</td><td class="num">08-12 12:47</td><td class="path gone">festive-clarke-e9f4a5 <span style="font-family: var(--font-body)">(directory deleted)</span></td></tr>
+          <tr><td class="num">4.15.0</td><td class="num">08-12 17:01</td><td class="path gone">build-proposal-refactor-da22e9 <span style="font-family: var(--font-body)">(directory deleted)</span></td></tr>
+          <tr><td class="num">4.15.0</td><td class="num">08-14 18:44</td><td class="path">insights-review-skill-ba0347</td></tr>
+          <tr><td class="num">4.15.0</td><td class="num">08-14 19:23</td><td class="path">intelligent-dubinsky-b80fde</td></tr>
+          <tr><td class="num">4.15.0</td><td class="num">08-14 19:53</td><td class="path">modest-elion-eff4c2</td></tr>
+          <tr><td class="num">4.15.0</td><td class="num">08-14 19:55</td><td class="path">lucid-haslett-a66e8b <span style="font-family: var(--font-body)">(this session)</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <span class="lede">The sharp edge</span>
+      The user row moved to <span class="pin pin-fresh">4.19.0</span> on 08-16. No project row followed.
+      7 agentics rows, 21 project rows across all repos, 15 live worktrees. This is the repo where
+      git-agent is <em>authored</em> &mdash; so the place most likely to be testing a new skill is the
+      place least likely to have it.
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decisions</div>
+    <div class="entries">
+
+      <div class="entry">
+        <h3>Diagnose, do not apply the fix</h3>
+        <p>
+          <code>claude plugin update git-agent@agentics-kit --scope project</code> was identified and
+          handed back unrun. It mutates plugin config outside the repo and requires a session restart
+          to take effect either way, so running it would have changed user state without making the
+          result observable in this session. The user asked why it was broken, not to fix it.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Treat the session's own available-skills listing as primary evidence</h3>
+        <p>
+          The listing showed only <code>create-issue</code>, <code>merge</code>, and
+          <code>ship-autonomous</code> from git-agent &mdash; direct observation of what the runtime
+          actually loaded, stronger than any inference from source files. Cross-checked against
+          <code>ls</code> on the version cache.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Rule out <code>scope-guard.py</code> by reading it, not by running the skill</h3>
+        <p>
+          The PreToolUse hook added in <code>744f6e1</code> was the first suspect, since it sits in
+          front of every Bash call and post-merge-cleanup is a destructive-command skill.
+          <code>is_candidate()</code> (<code>kit/plugins/git-agent/hooks/scope-guard.py:139</code>)
+          admits <code>git</code> only when <code>git_args(tokens)[0] == "stash"</code>, so
+          <code>git worktree remove</code> and <code>git branch -d</code> never reach a rule. Ruled
+          out without touching a worktree.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Retract the first remediation recommendation</h3>
+        <p>
+          The initial answer called dropping project-scoped installs "the cheap answer" before reading
+          what holds them. <code>.claude/settings.json</code> turned out to be checked in, which makes
+          that a repo-visible change with consequences for cloners, not local bookkeeping. The
+          retraction was stated plainly rather than quietly amended.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Tradeoffs and rejected options</div>
+    <div class="prose">
+      <p>
+        Three remediation paths were laid out; none was chosen, because the choice turns on a question
+        only the user can answer &mdash; whether the checked-in <code>enabledPlugins</code> list exists
+        for them or for people cloning the repo.
+      </p>
+    </div>
+    <div class="entries">
+
+      <div class="entry">
+        <h3>Per-worktree update on demand</h3>
+        <p>
+          No repo change; recurring cost. Cheap per instance &mdash; the version cache is shared, so an
+          update rewrites a JSON pin and downloads nothing.
+        </p>
+        <pre class="block"><code>claude plugin update git-agent@agentics-kit --scope project</code></pre>
+      </div>
+
+      <div class="entry">
+        <h3>Drop <code>git-agent</code> from checked-in <code>enabledPlugins</code></h3>
+        <p>
+          Permanently fixes <em>new</em> worktrees, which would inherit only the user-scoped install.
+          Costs auto-enable on a fresh clone &mdash; a real loss for a marketplace repo that partly
+          exists to dogfood its own plugins &mdash; and does nothing to the 7 rows already written.
+          To revisit: decide the audience of <code>enabledPlugins</code> first.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Update the main checkout only</h3>
+        <p>
+          Worktrees are short-lived; the main checkout at <span class="pin pin-stale">4.14.4</span> has
+          been stale four versions and is the one that persists. Accepts that worktrees stay stale by
+          design.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Learnings</div>
+    <div class="entries">
+
+      <div class="entry">
+        <h3>Tried and abandoned &mdash; the scope-guard hypothesis</h3>
+        <p>
+          <code>744f6e1</code> had just added a PreToolUse scope guard to git-agent, and "new hook +
+          skill that shells out to destructive git commands" was a tidier story than a version pin.
+          Reading <code>is_candidate()</code> killed it in one pass. Worth knowing the guard's actual
+          blast radius: repo-wide <code>--write</code>/<code>--fix</code> formatter runs, and
+          <code>git stash pop|apply</code> with no explicit ref. Nothing else.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Tried and abandoned &mdash; the "systemic skill loading bug" read</h3>
+        <p>
+          Five git-agent skills were missing from the session listing &mdash; <code>branch-agent</code>,
+          <code>commit-agent</code>, <code>pr-agent</code>, <code>ship</code>, and
+          <code>post-merge-cleanup</code> &mdash; which looked like a loader failure. Four of them carry
+          <code>disable-model-invocation: true</code> in frontmatter and are user-invocable only, so
+          their absence is correct. Only <code>post-merge-cleanup</code>, which has no such flag, was
+          signal. Checking frontmatter across all skills before theorizing would have skipped this
+          detour.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Gotcha &mdash; a correct user-scoped install is not evidence the skill is available</h3>
+        <p>
+          User scope showed <span class="pin pin-fresh">4.19.0</span> with the skill present on disk the
+          whole time. Scope shadowing is silent: there is no warning that a project row is overriding a
+          newer user row.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Gotcha &mdash; <code>installed_plugins.json</code> rows are never reaped</h3>
+        <p>
+          Two of the seven agentics rows point at worktree directories that no longer exist. Deleting a
+          worktree leaves its pin behind indefinitely.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Gotcha &mdash; <code>~/.claude/plugins/config.json</code> is a dead end</h3>
+        <p>
+          It reads <code>{"repositories": {}}</code>. Install state lives in
+          <code>installed_plugins.json</code>.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Tests and verification</div>
+    <div class="verdict">
+
+      <div class="verdict-row">
+        <span class="tag tag-pass">28 / 28</span>
+        <span>
+          <code>tests/plugins/test-post-merge-cleanup.sh</code> against the worktree sources. This is
+          what establishes the skill is not defective; the report of "not working" would otherwise
+          have been indistinguishable from a real bug.
+        </span>
+      </div>
+
+      <div class="verdict-row">
+        <span class="tag tag-pass">Verified</span>
+        <span>
+          <code>ls</code> on <code>cache/agentics-kit/git-agent/{4.14.4,4.15.0}/skills/</code> &mdash;
+          no <code>post-merge-cleanup</code> directory. <code>4.19.0/skills/</code> has it, with
+          matching frontmatter.
+        </span>
+      </div>
+
+      <div class="verdict-row">
+        <span class="tag tag-pass">Verified</span>
+        <span>
+          <code>installed_plugins.json</code> parsed for every <code>git-agent@agentics-kit</code> row,
+          with an <code>os.path.isdir</code> existence check per <code>projectPath</code>.
+        </span>
+      </div>
+
+      <div class="verdict-row">
+        <span class="tag tag-pass">Verified</span>
+        <span>
+          <code>git ls-files --error-unmatch .claude/settings.json</code> confirmed tracked;
+          <code>claude plugin update --help</code> confirmed
+          <code>--scope user|project|local|managed</code>.
+        </span>
+      </div>
+
+      <div class="verdict-row">
+        <span class="tag tag-gap">Untested</span>
+        <span>
+          <strong>The fix itself.</strong> <code>claude plugin update &hellip; --scope project</code>
+          was never run. The claim that it makes the skill resolve after a restart is reasoned from the
+          scope model, not observed.
+        </span>
+      </div>
+
+      <div class="verdict-row">
+        <span class="tag tag-gap">Untested</span>
+        <span>
+          <strong>The skill end-to-end.</strong> Only its test suite ran.
+          <code>post-merge-cleanup</code> has still never executed against a real merged branch and
+          worktree, which is the thing the original bug report was actually reaching for.
+        </span>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Review follow-ups and tech debt</div>
+    <ul>
+      <li>
+        <strong>Main checkout is four versions stale.</strong>
+        <code>/Users/shawnsandy/devbox/agentics</code> pinned at
+        <span class="pin pin-stale">4.14.4</span> while HEAD ships
+        <span class="pin pin-fresh">4.19.0</span>. It is the long-lived directory, so it matters more
+        than any worktree.
+      </li>
+      <li>
+        <strong>Open decision blocking remediation.</strong> Is checked-in
+        <code>enabledPlugins</code> for the maintainer or for cloners? Every path above depends on the
+        answer.
+      </li>
+      <li>
+        <strong>No bulk update across worktrees.</strong> <code>--scope project</code> acts on one cwd.
+        With 15 live worktrees there is no single command to move them all.
+      </li>
+      <li>
+        <strong>Stale rows accumulate.</strong> Nothing prunes <code>installed_plugins.json</code> when
+        a worktree is removed; 2 of 7 agentics rows are already orphaned.
+      </li>
+      <li>
+        <strong>Dogfooding ceiling on <code>post-merge-cleanup</code> itself.</strong> The skill's job
+        includes clearing merged worktrees, and this pin behaviour means it is least likely to be
+        present in exactly the aging worktrees it was written to clean up. Upgrade path: if the skill
+        is meant to be reachable everywhere, it belongs somewhere that is not per-project
+        version-pinned.
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="eyebrow">Files touched</div>
+    <h2>Repo source: none</h2>
+    <div class="prose">
+      <p>
+        <code>git status --porcelain</code> was empty at the start and end of the session. No plugin
+        file, test, or config was modified.
+      </p>
+    </div>
+
+    <h3>Read for diagnosis (unmodified)</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Path</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="path">kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md</td>
+            <td>Confirm the skill and its safety contract exist as shipped</td>
+          </tr>
+          <tr>
+            <td class="path">kit/plugins/git-agent/hooks/scope-guard.py</td>
+            <td>Rule out the PreToolUse guard as the blocker</td>
+          </tr>
+          <tr>
+            <td class="path">.claude/settings.json</td>
+            <td>Source of <code>enabledPlugins</code>; established it is checked in</td>
+          </tr>
+          <tr>
+            <td class="path">tests/plugins/test-post-merge-cleanup.sh</td>
+            <td>Executed; 28/28</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <p>
+        <strong>Outside the repo (read only):</strong>
+        <code>~/.claude/plugins/installed_plugins.json</code>,
+        <code>~/.claude/plugins/config.json</code>, and the
+        <code>cache/agentics-kit/git-agent/*/skills/</code> version directories.
+      </p>
+      <p><strong>Created:</strong> this record.</p>
+    </div>
+  </section>
+
+  <footer>
+    Session record: <code>docs/plans/sessions/document-worktree-plugin-pinning-session.md</code>
+    &middot; session <code>8ce579d2</code>
+  </footer>
+
+</div>
+</body>
+</html>
