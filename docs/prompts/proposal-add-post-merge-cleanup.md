@@ -5,7 +5,7 @@ techniques: Long-context grounding, XML structure, Comparison tables, Positive f
 created: 2026-08-15
 status: converged
 modified: 2026-08-15
-generated-sha: edcc5622ae702ca8d86b0b670e9ecb0d28f4f3c2336f452ce8e2cf31af02124d
+generated-sha: 63f59bd4420a7a62317961eec4a32580a2380a24301c53ffb4d8725424ee7819
 repo-name: agentics
 ---
 
@@ -16,22 +16,37 @@ repo-name: agentics
 > below hands off to drafting an execution plan from it.
 
 <tldr>
-The nearest existing tool, `commit-commands:clean_gone`, selects branches on the
-wrong signal and forces past the only safety check that matters. Measured against
-agentics on 2026-08-15 it would force-delete 51 branches that never landed on
-main and silently destroy 16 untracked files across 9 worktrees. This proposes a
-new git-agent skill, `post-merge-cleanup`, that inverts the order: inspect the
-merged branch's worktree for untracked files first, report and ask, and only then
-remove the worktree and branch using unforced git commands. Selection is
-merged-into-`origin/main` only, which makes `git branch -d` the safety check
-rather than a policy the skill has to enforce itself. Single-branch by default,
-with a repo-wide sweep behind a flag. The 3 unregistered worktree directories on
-disk (~7.3M) that `git worktree prune` cannot see are detected and removed only
-on explicit per-directory approval.
+The nearest existing tool, `commit-commands:clean_gone`, runs
+`git worktree remove --force` and `git branch -D` in one unattended loop with no
+user gate — which against agentics on 2026-08-15 would silently destroy 16
+untracked files across 9 of 19 worktrees. This proposes a new git-agent skill,
+`post-merge-cleanup`, that inverts the order: inspect the branch's worktree for
+uncommitted work first, report and ask, and only then remove the worktree and
+branch using unforced git commands. Selection takes either signal — commit
+ancestry or a merged pull request — because git-agent squash-merges and
+`git branch --merged` structurally cannot see squash-merged branches: 85 are
+ancestry-merged here and a further 51 are invisible to that test, every one of
+them with a MERGED PR. Single-branch by default, with a repo-wide sweep behind a
+flag. The 3 unregistered worktree directories on disk (~7.3M) that
+`git worktree prune` cannot see are detected and removed only on explicit
+per-directory approval.
 </tldr>
 
+<correction>
+Revised 2026-08-15 after the plan interview. The first draft claimed
+`clean_gone` would "force-delete 51 branches that never landed on main." That is
+false: all 51 were verified to have MERGED pull requests, and were invisible to
+`git branch --merged` only because a squash merge rewrites commits under new
+SHAs. `clean_gone`'s `[gone]`-based branch selection is therefore reasonable for
+this workflow — its actual defect is the missing user gate and the `--force`,
+not the selector. The correction also inverted this proposal's own selection
+decision: ancestry alone would have missed 51 of 136 real candidates, and
+`git branch -d` would have refused them, so `-d` cannot serve as the safety
+check on its own.
+</correction>
+
 <context>
-git-agent 4.11.0 ships `branch-agent`, `commit-agent`, `create-issue`, `merge`,
+git-agent 4.18.0 ships `branch-agent`, `commit-agent`, `create-issue`, `merge`,
 `pr-agent`, `ship`, and `ship-autonomous`. There is no cleanup skill. The gap is
 deliberate and documented: `kit/plugins/git-agent/skills/merge/SKILL.md:183`
 states "Never pass `--delete-branch`. Branch deletion is a separate destructive
@@ -50,12 +65,17 @@ It runs one unattended loop over `[gone]` branches executing
 
 Measured state of agentics, 2026-08-15:
 
-- 395 local branches; 85 merged into `origin/main`; 53 with a `[gone]` upstream;
-  only 2 in both sets (51 gone-only, 83 merged-only).
+- 395 local branches; 85 ancestry-merged into `origin/main`; 53 with a `[gone]`
+  upstream; only 2 in both sets. The 51 `[gone]`-only branches were each checked
+  against the GitHub API: all 51 have MERGED pull requests, so they landed via
+  squash merge and are invisible to `git branch --merged` by construction.
+  Cleanable candidates across both signals: 136.
 - 19 registered worktrees. 3 merged branches still hold one, including the
   worktree this proposal was authored in.
-- 9 of 19 worktrees carry untracked files: 16 files total, 0 staged, 0 unstaged.
-  In practice "orphaned" means untracked only.
+- 9 of 19 worktrees carry untracked files: 16 files total, 0 staged, 0 unstaged
+  *today*. The gate keys on any non-empty `git status --porcelain` rather than on
+  untracked alone, since a clean staged/unstaged column is a snapshot, not a
+  guarantee, and uncommitted tracked edits are worth more than screenshots.
 - Those 16 files sort into 11 verification screenshots, 3 copies of
   `.claude/launch.json`, and 3 content files (a plan `.md`, a session log, one
   social-card `.html`). None of these classes is gitignored, so plain
@@ -75,24 +95,27 @@ Measured state of agentics, 2026-08-15:
 </context>
 
 <finding>
-The existing cleanup path selects on the wrong signal and forces past the only
-safety check that matters: `clean_gone` targets `[gone]` upstreams — 53 branches
-here, of which just 2 are actually merged into `origin/main` — then runs
-`git worktree remove --force` and `git branch -D` unattended, which against
-agentics today would force-delete 51 branches that never landed and silently
-destroy 16 untracked files across 9 worktrees.
+Commit ancestry is the wrong test for a squash-merge workflow, and the existing
+cleanup path forces past the only safety check that survives it: 51 of this
+repo's 136 cleanable branches are invisible to `git branch --merged` despite
+every one having a MERGED pull request, while `clean_gone` runs
+`git worktree remove --force` and `git branch -D` unattended — destroying, on
+agentics today, 16 untracked files across 9 worktrees that an unforced
+`git worktree remove` would have refused to touch.
 </finding>
 
 <comparison>
 | Dimension | Proposed `post-merge-cleanup` | `commit-commands:clean_gone` (existing) |
 |---|---|---|
-| Selection signal | merged into default branch — 85 branches here | `[gone]` upstream — 53 branches, only 2 of them merged |
-| Orphaned-file check | gates everything; `git status --porcelain` per worktree before any removal | none |
-| Worktree removal | `git worktree remove` unforced; a dirty tree stops the run and asks | `git worktree remove --force` — destroys untracked work |
-| Branch deletion | `git branch -d` — git itself refuses anything unmerged | `git branch -D` — no merge check at all |
+| Selection signal | ancestry **or** merged PR — 136 candidates here | `[gone]` upstream — 53 branches; a reasonable proxy, not the defect |
+| Squash-merged branches | detected via the PR signal — 51 here | detected incidentally, since merged branches usually go `[gone]` |
+| Uncommitted-work check | gates everything; any non-empty `git status --porcelain` stops the run | none |
+| Worktree removal | `git worktree remove` unforced; a dirty tree stops the run and asks | `git worktree remove --force` — destroys uncommitted work |
+| Branch deletion | `-d` by default; `-D` only where a merged PR is positive evidence | `git branch -D` unconditionally |
 | User interaction | notify, ask, or recommend at every destructive step | none; one unattended loop |
 | Unregistered dirs on disk | detected and reported; removed only on per-directory approval | invisible |
-| Blast radius on agentics today | 3 merged branches with worktrees, each individually confirmed | 51 unmerged branches force-deleted, 16 untracked files destroyed |
+| Blast radius on agentics today | 3 branches with worktrees, each individually confirmed | 16 untracked files destroyed across 9 worktrees |
+| Degraded mode | without `gh`, falls back to ancestry and says the list is incomplete | n/a |
 </comparison>
 
 <decisions>
@@ -108,17 +131,23 @@ Settled before this draft:
 
 Resolved in the 2026-08-15 review:
 
-2. **Selection is merged-into-default-branch only.** The 51 `[gone]`-but-unmerged
-   branches are explicitly out of scope and are not reported as cleanable.
-   Consequence: every branch deletion uses `git branch -d`, never `-D`, so git's
-   own merge check is the safety mechanism rather than a policy the skill must
-   implement and could get wrong. Propagates to Workstreams A, B, C.
+2. **Selection takes either signal: commit ancestry or a merged pull request.**
+   *(Revised 2026-08-15 — the original "merged-into-default only" wording was
+   overturned by the squash-merge finding.)* A branch is cleanable when
+   `git branch --merged origin/<default>` lists it, or when
+   `gh pr list --head <branch> --state merged` returns a PR. Ancestry alone would
+   miss 51 of 136 candidates here. Consequence: `git branch -d` can no longer
+   serve as the safety check on its own — it applies the same ancestry test and
+   refuses squash-merged branches — so `-D` is permitted, gated on a confirmed
+   merged PR as positive evidence. Without `gh`, the skill degrades to ancestry
+   and states that the list is incomplete. Propagates to Workstreams A, B, C.
 3. **Run scope is single-branch by default, with a repo-wide sweep behind an
    explicit flag.** Consequence: two report shapes and two approval gates must be
    specified, not one. Propagates to Workstreams B and C, and splits the roadmap
    into separate phases 2 and 3.
-4. **Untracked files always stop the run and ask.** The skill never auto-deletes
-   them and never passes `--force`. Consequence: no file-classification engine
+4. **Any uncommitted work always stops the run and asks.** The gate fires on a
+   non-empty `git status --porcelain` — untracked, staged, or unstaged. The skill
+   never auto-deletes and never passes `--force`. Consequence: no file-classification engine
    and no rescue automation are in scope — the skill reports the file list and
    asks. This materially shrinks the skill and removes the tuning burden of
    classification rules. Propagates to Workstreams A and B, and removes the
@@ -127,13 +156,16 @@ Resolved in the 2026-08-15 review:
    only on explicit per-directory approval.** Consequence: this is the single
    place a recursive delete lands inside a skill, and the per-directory gate is
    what makes it compatible with the global rule forbidding `rm` without explicit
-   approval. It requires hard rails (see Workstream D and Risks). Propagates to
+   approval. Because a dangling `.git` means `git status` cannot inspect these
+   directories, the skill must first print size, file count, and most recently
+   modified files — the human is the only available check. It requires hard rails (see Workstream D and Risks). Propagates to
    Workstream D and roadmap phase 4.
 </decisions>
 
 <workstreams>
 **A — Detection and inventory (read-only).** Resolve the default branch and its
-remote form. Enumerate branches merged into it, worktrees registered to those
+remote form. Enumerate cleanable branches by either signal — ancestry or merged
+PR, degrading to ancestry with a stated warning when `gh` is unavailable — worktrees registered to those
 branches, and each such worktree's `git status --porcelain` output. Enumerate
 directories under the worktrees root and diff them against registered worktree
 paths to find unregistered leftovers. Nothing here mutates state, which makes it
@@ -161,7 +193,7 @@ resolved path is inside the worktrees root before acting, and must never accept 
 path supplied by anything other than this detection step.
 
 **E — Packaging.** Register the skill in the plugin, bump git-agent's version in
-`.claude-plugin/marketplace.json` (4.11.0 is current; a version bump is required
+`.claude-plugin/marketplace.json` (4.18.0 is current; a version bump is required
 by the CI guard for any change under `kit/plugins/git-agent/`), and update the
 plugin README skill table and CHANGELOG. Regenerate the root README Plugin
 Reference Table with the repo's canonical generator rather than hand-editing.
@@ -219,7 +251,7 @@ Decisions still owned by the human — surface them, do not answer them:
 | 2 | Workstream B — single-branch cleanup with the orphan gate | M | 1 |
 | 3 | Workstream C — repo-wide sweep behind the flag | M | 2 |
 | 4 | Workstream D — unregistered directory detection and gated removal | S | 1 |
-| 5 | Workstream E — packaging: registration, version bump to 4.12.0, README and CHANGELOG | S | 2, 3, 4 |
+| 5 | Workstream E — packaging: registration, version bump to 4.19.0, README and CHANGELOG | S | 2, 3, 4 |
 </roadmap>
 
 <appendices>
@@ -231,7 +263,8 @@ Decisions still owned by the human — surface them, do not answer them:
 | Merged into `origin/main` | 85 |
 | `[gone]` upstream | 53 |
 | In both sets | 2 |
-| Gone-only (unmerged) | 51 |
+| Squash-merged, invisible to ancestry (all 51 verified MERGED PRs) | 51 |
+| Total cleanable candidates (ancestry OR merged PR) | 136 |
 | Merged-only | 83 |
 | Registered worktrees | 19 |
 | Merged branches holding a worktree | 3 |
@@ -272,10 +305,12 @@ confirming prune cannot reach them.
 | Operation | Command |
 |---|---|
 | Resolve default branch | `git symbolic-ref refs/remotes/origin/HEAD`, falling back to `gh repo view --json defaultBranchRef` |
-| List merged branches with worktrees | `git branch --merged origin/<default> --format='%(refname:short)\|%(worktreepath)'` |
+| List ancestry-merged branches with worktrees | `git branch --merged origin/<default> --format='%(refname:short)\|%(worktreepath)'` |
+| Detect a squash-merged branch | `gh pr list --head <branch> --state merged --limit 1` |
 | Inspect a worktree | `git -C <path> status --porcelain` |
 | Remove a worktree | `git worktree remove <path>` — never `-f` |
-| Delete a branch | `git branch -d <name>` — never `-D` |
+| Delete an ancestry-merged branch | `git branch -d <name>` |
+| Delete a squash-merged branch | `git branch -D <name>` — only after its merged PR is confirmed |
 | Detect unregistered dirs | diff `ls <worktrees-root>` against paths from `git worktree list --porcelain` |
 | Confirm a dir is unregistered | `.git/worktrees/<name>` absent, and any `.git` file in it points at a nonexistent path |
 </appendices>
