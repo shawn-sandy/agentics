@@ -40,6 +40,12 @@ jobs:
       # safety gates are checked at review time, not the next morning.
       - name: Test merge? shorthand hook and merge skill contract
         run: bash tests/plugins/test-merge-shorthand.sh
+      # post-merge-cleanup deletes branches and worktrees and can reach rm -rf,
+      # and its central safety property is git's own refusal to remove a dirty
+      # worktree — a property no diff review re-checks. The gate pins that
+      # refusal, the containment rule, and the forbidden flags together.
+      - name: Test post-merge-cleanup skill contract
+        run: bash tests/plugins/test-post-merge-cleanup.sh
       # CLAUDE.md is loaded into every session in this repo, so growth there is
       # a tax on all future work — and it grows by ordinary PRs adding "just one
       # more line", which is exactly what review misses.

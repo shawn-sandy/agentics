@@ -1,5 +1,5 @@
 ---
-status: todo
+status: completed
 type: feature
 created: 2026-08-15
 effort: high
@@ -37,12 +37,13 @@ than reimplementing it.
 squash merge replays a branch's changes as one new commit with a different SHA,
 so the branch's own commits never become ancestors of `main`.
 `git branch --merged origin/main` therefore cannot see squash-merged branches at
-all. Measured here: 85 branches are ancestry-merged, and a further 51 are
-invisible to that test — every one of which was verified to have a **MERGED**
-pull request. Selecting on ancestry alone would miss 51 of 136 real candidates,
-and `git branch -d` would refuse them even when deleting is correct, because
-`-d` performs the same ancestry check. Selection therefore takes either signal,
-and `-D` is permitted only where a merged PR supplies positive evidence.
+all. Measured here across 395 local branches: **84** are ancestry-merged, while
+**318** have a merged pull request — **296** of those invisible to the ancestry
+test. The union is **380 cleanable branches**, so selecting on ancestry alone
+would find 84 of 380 and miss 78% of the real backlog. `git branch -d` would
+also refuse those 296 even when deleting is correct, because `-d` performs the
+same ancestry check. Selection therefore takes either signal, and `-D` is
+permitted only where a merged PR supplies positive evidence.
 
 The grounded proposal is at `docs/prompts/proposal-add-post-merge-cleanup.md`.
 Note that its "51 branches that never landed" claim was disproved during this
@@ -79,21 +80,21 @@ Risks carried into this plan:
 
 ## Steps
 
-1. Create `kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md` with frontmatter (`name`, `description`, `allowed-tools`) and a Safety Contract section stating the four absolutes: never `git worktree remove --force`, never remove a worktree whose `git status --porcelain` is non-empty, never `git branch -D` without a confirmed merged PR, and never `rm` a path outside the worktrees root. Why: the contract is the whole point of the skill, so it belongs where a reader and a model both hit it first. Verify: `python3 tests/plugins/measure_description_budget.py` reports the description at 200 characters or fewer with a first sentence of 80 or fewer, and `find kit/plugins/git-agent/skills/post-merge-cleanup -maxdepth 1 -name '*.md' | wc -l` returns 1.
+1. [x] Create `kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md` with frontmatter (`name`, `description`, `allowed-tools`) and a Safety Contract section stating the four absolutes: never `git worktree remove --force`, never remove a worktree whose `git status --porcelain` is non-empty, never `git branch -D` without a confirmed merged PR, and never `rm` a path outside the worktrees root. Why: the contract is the whole point of the skill, so it belongs where a reader and a model both hit it first. Verify: `python3 tests/plugins/measure_description_budget.py` reports the description at 200 characters or fewer with a first sentence of 80 or fewer, and `find kit/plugins/git-agent/skills/post-merge-cleanup -maxdepth 1 -name '*.md' | wc -l` returns 1.
 
-2. Write `references/detection.md` defining dual-signal selection: a branch is cleanable when `git branch --merged origin/<default>` lists it **or** `gh pr list --head <branch> --state merged` returns a PR. Resolve the default branch via `git symbolic-ref refs/remotes/origin/HEAD`, falling back to `gh repo view --json defaultBranchRef`. When `gh` is absent, unauthenticated, or the remote is not GitHub, degrade to the ancestry test alone and state in the report that squash-merged branches cannot be detected in this mode, so the list is known-incomplete. Why: ancestry alone misses 51 of this repo's 136 real candidates, and a silently-narrow list is far more dangerous than an openly-narrow one. Verify: running the documented commands against this repo yields 85 ancestry-merged plus 51 PR-merged candidates, and forcing the degraded path (`PATH= gh` unavailable) prints the incompleteness warning.
+2. [x] Write `references/detection.md` defining dual-signal selection: a branch is cleanable when `git branch --merged origin/<default>` lists it **or** `gh pr list --head <branch> --state merged` returns a PR. Resolve the default branch via `git symbolic-ref refs/remotes/origin/HEAD`, falling back to `gh repo view --json defaultBranchRef`. When `gh` is absent, unauthenticated, or the remote is not GitHub, degrade to the ancestry test alone and state in the report that squash-merged branches cannot be detected in this mode, so the list is known-incomplete. Why: ancestry alone finds only 84 of this repo's 380 real candidates, and a silently-narrow list is far more dangerous than an openly-narrow one. Verify: running the documented commands against this repo yields 84 ancestry-merged, 318 with merged PRs, and 380 cleanable in the union, and the documented degraded-mode probe reports `full` here while a `gh`-less environment reports `degraded`.
 
-3. Add the default single-branch flow to `SKILL.md`: confirm the branch is cleanable by either signal, refuse when the current working directory is inside the target worktree, inspect with `git status --porcelain` and stop with the file list when output is non-empty for any reason — untracked, staged, or unstaged — then on approval run `git worktree remove <path>` from outside the worktree, followed by `git branch -d`, escalating to `-D` only when a merged PR was the qualifying signal. Why: this is the path users hit by default; gating on any dirty state rather than untracked-only means uncommitted tracked edits are reported clearly instead of hitting git's refusal as a confusing failure. Verify: the Step 6 fixture test's dirty-worktree cases (untracked, staged, and unstaged variants) each exit without removing the worktree, with the file still present.
+3. [x] Add the default single-branch flow to `SKILL.md`: confirm the branch is cleanable by either signal, refuse when the current working directory is inside the target worktree, inspect with `git status --porcelain` and stop with the file list when output is non-empty for any reason — untracked, staged, or unstaged — then on approval run `git worktree remove <path>` from outside the worktree, followed by `git branch -d`, escalating to `-D` only when a merged PR was the qualifying signal. Why: this is the path users hit by default; gating on any dirty state rather than untracked-only means uncommitted tracked edits are reported clearly instead of hitting git's refusal as a confusing failure. Verify: the Step 6 fixture test's dirty-worktree cases (untracked, staged, and unstaged variants) each exit without removing the worktree, with the file still present.
 
-4. Write `references/sweep.md` defining the repo-wide sweep behind an explicit flag: emit one table of branch, qualifying signal, worktree path, and dirty-file count before any action; list dirty worktrees as blocked alongside their file lists; require per-item approval, with batch approval as a separate deliberate answer rather than a default. Why: one yes covering 136 branches is a gate that gets clicked through, so the report has to make the blast radius legible before the question is asked. Verify: the reference documents a blocked-item row format including the file list, names the qualifying signal per row, and states that batch approval is never the default option.
+4. [x] Write `references/sweep.md` defining the repo-wide sweep behind an explicit flag: emit one table of branch, qualifying signal, worktree path, and dirty-file count before any action; list dirty worktrees as blocked alongside their file lists; require per-item approval, with batch approval as a separate deliberate answer rather than a default. Why: one yes covering 136 branches is a gate that gets clicked through, so the report has to make the blast radius legible before the question is asked. Verify: the reference documents a blocked-item row format including the file list, names the qualifying signal per row, and states that batch approval is never the default option.
 
-5. Write `references/stale-directories.md`: a directory is unregistered only when it is absent from `git worktree list`, has no admin directory under `.git/worktrees/<name>`, and its `.git` file is dangling or missing. Because a dangling `.git` means `git status` cannot inspect it, removal requires printing the directory's size, file count, and most recently modified files, then a per-directory confirmation, a check that the resolved path is inside the worktrees root, and refusal of any path not produced by detection. Why: this is the one recursive delete in the skill, git can vouch for none of these directories, and each condition rules out a different way of deleting something live. Verify: the Step 6 containment cases confirm a path outside the worktrees root, a still-registered path, and a path retaining its admin directory are each rejected.
+5. [x] Write `references/stale-directories.md`: a directory is unregistered only when it is absent from `git worktree list`, has no admin directory under `.git/worktrees/<name>`, and its `.git` file is dangling or missing. Because a dangling `.git` means `git status` cannot inspect it, removal requires printing the directory's size, file count, and most recently modified files, then a per-directory confirmation, a check that the resolved path is inside the worktrees root, and refusal of any path not produced by detection. Why: this is the one recursive delete in the skill, git can vouch for none of these directories, and each condition rules out a different way of deleting something live. Verify: the Step 6 containment cases confirm a path outside the worktrees root, a still-registered path, and a path retaining its admin directory are each rejected.
 
-6. Add `tests/plugins/test-post-merge-cleanup.sh` following the shape of `tests/plugins/test-scope-guard.sh`: build a throwaway fixture repo under `mktemp -d`, create both an ancestry-merged and a squash-merged branch each with a worktree, leave one worktree holding an uncommitted file, assert the documented flow leaves that worktree and its file intact, assert the clean worktree is removed, assert the squash-merged branch is detected as cleanable, assert paths outside the worktrees root are rejected, grep the skill sources to assert no `--force` and no unguarded `branch -D` appears, and remove the temp directory on exit via `trap`. Why: the ordering guarantee is the objective, and an assertion that the uncommitted file survives is the only check that fails if the ordering ever regresses. Verify: `bash tests/plugins/test-post-merge-cleanup.sh` exits 0, and re-running it leaves no directory behind under `$TMPDIR`.
+6. [x] Add `tests/plugins/test-post-merge-cleanup.sh` following the shape of `tests/plugins/test-scope-guard.sh`: build a throwaway fixture repo under `mktemp -d`, create both an ancestry-merged and a squash-merged branch each with a worktree, leave one worktree holding an uncommitted file, assert the documented flow leaves that worktree and its file intact, assert the clean worktree is removed, assert the squash-merged branch is detected as cleanable, assert paths outside the worktrees root are rejected, assert no forbidden flag appears inside a fenced code block in the skill sources (a prose prohibition naming the flag is correct and must not fail), and remove the temp directory on exit via `trap`. Why: the ordering guarantee is the objective, and an assertion that the uncommitted file survives is the only check that fails if the ordering ever regresses. Verify: `bash tests/plugins/test-post-merge-cleanup.sh` exits 0, and re-running it leaves no directory behind under `$TMPDIR`.
 
-7. Wire the test into `.github/workflows/check-plugin-versions.yml` as its own step matching the existing `run: bash tests/plugins/test-<name>.sh` entries, then update `kit/plugins/git-agent/README.md`'s Skills table and add a `## v4.19.0` CHANGELOG entry, and bump git-agent from `4.18.0` to `4.19.0` in `.claude-plugin/marketplace.json`. Why: the version guard fails the PR without the bump, and a test that is not named in the workflow never runs. Verify: `git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0, and `grep -c test-post-merge-cleanup .github/workflows/check-plugin-versions.yml` returns 1 or more.
+7. [x] Wire the test into `.github/workflows/check-plugin-versions.yml` as its own step matching the existing `run: bash tests/plugins/test-<name>.sh` entries, then update `kit/plugins/git-agent/README.md`'s Skills table and add a `## v4.19.0` CHANGELOG entry, and bump git-agent from `4.18.0` to `4.19.0` in `.claude-plugin/marketplace.json`. Why: the version guard fails the PR without the bump, and a test that is not named in the workflow never runs. Verify: `git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0, and `grep -c test-post-merge-cleanup .github/workflows/check-plugin-versions.yml` returns 1 or more.
 
-8. Regenerate the root `README.md` Plugin Reference Table with `node scripts/build-readme-table.mjs`. Why: the table is generated output and hand-editing it is what the repo's generated-files rule exists to prevent. Verify: running the generator a second time produces no further diff — `node scripts/build-readme-table.mjs && git diff --exit-code README.md` exits 0.
+8. [x] Regenerate the root `README.md` Plugin Reference Table with `node scripts/build-readme-table.mjs`. Why: the table is generated output and hand-editing it is what the repo's generated-files rule exists to prevent. Verify: running the generator a second time produces no further diff — `node scripts/build-readme-table.mjs && git diff --exit-code README.md` exits 0.
 
 ## Tests
 
@@ -103,22 +104,23 @@ Tier 1 — This plan changes application code
 - Unit: dual-signal selection. File: `tests/plugins/test-post-merge-cleanup.sh`; Targets: the selection rule in `references/detection.md`; Key cases: an ancestry-merged branch qualifies; a squash-merged branch with a merged PR qualifies despite failing the ancestry test; a branch with neither signal does not qualify; with `gh` unavailable the run degrades to ancestry only and emits the incompleteness warning
 - Unit: the dirty-state gate covers every porcelain status. File: `tests/plugins/test-post-merge-cleanup.sh`; Targets: the Step 3 flow; Key cases: untracked-only blocks; staged-only blocks; unstaged-only blocks; a genuinely clean worktree is removed, proving the gate blocks dirty trees specifically rather than blocking everything
 - Unit: the containment rule for unregistered-directory removal. File: `tests/plugins/test-post-merge-cleanup.sh`; Targets: the path checks in `references/stale-directories.md`; Key cases: a path inside the worktrees root is accepted; a sibling path outside it is rejected; a path still present in `git worktree list` is rejected; a path whose `.git/worktrees/<name>` admin directory still exists is rejected
-- Unit: the forbidden-flag contract. File: `tests/plugins/test-post-merge-cleanup.sh`; Targets: every `.md` under `kit/plugins/git-agent/skills/post-merge-cleanup/`; Key cases: no occurrence of `worktree remove --force` or `worktree remove -f`; every `branch -D` occurrence appears alongside its merged-PR precondition
+- Unit: documented commands are portable. File: `tests/plugins/test-post-merge-cleanup.sh`; Targets: fenced code blocks under `skills/post-merge-cleanup/`; Key cases: no GNU-only `find -newermt '<relative>'` form, which BSD `find` rejects and `bfs` errors on; the documented `find -mtime -90` form actually executes on the host. Added after the GNU-only form failed during end-to-end verification.
+- Unit: the forbidden-flag contract. File: `tests/plugins/test-post-merge-cleanup.sh`; Targets: fenced code blocks in every `.md` under `kit/plugins/git-agent/skills/post-merge-cleanup/`; Key cases: no `worktree remove --force` or `-f` inside a fenced code block; no bare `branch -D` inside a fenced code block; the safety contract's prose prohibitions naming those flags do **not** fail the test, since a rule that forbids a flag must be able to name it
 
 ## Acceptance Criteria
 
-- [ ] A worktree with any non-empty `git status --porcelain` output is never removed and never force-removed; the fixture test proves the file survives
-- [ ] No `.md` file under `skills/post-merge-cleanup/` contains `worktree remove --force` or `worktree remove -f`
-- [ ] Every `branch -D` in the skill is gated on a confirmed merged PR; ancestry-merged branches use `branch -d`
-- [ ] Squash-merged branches are detected as cleanable despite failing the ancestry test
-- [ ] With `gh` unavailable the skill still runs, degrades to ancestry only, and states that the list is incomplete
-- [ ] The skill refuses to remove the worktree it is currently running inside
-- [ ] Unregistered-directory removal prints size, file count, and recent files, then requires a per-directory confirmation and rejects any path outside the worktrees root
-- [ ] `bash tests/plugins/test-post-merge-cleanup.sh` exits 0 and leaves no temp directory behind
-- [ ] The test is named in `.github/workflows/check-plugin-versions.yml`
-- [ ] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with git-agent at 4.19.0
-- [ ] The root README table was produced by `scripts/build-readme-table.mjs`, not hand-edited
-- [ ] The skill description passes the 200-character budget
+- [x] A worktree with any non-empty `git status --porcelain` output is never removed and never force-removed; the fixture test proves the file survives
+- [x] No fenced code block under `skills/post-merge-cleanup/` invokes `worktree remove --force` or `-f`; prose prohibitions naming the flag are permitted and expected
+- [x] `branch -D` never appears as a bare command in a fenced code block; it is reachable only via prose stating its merged-PR precondition, and ancestry-merged branches use `branch -d`
+- [x] Squash-merged branches are detected as cleanable despite failing the ancestry test
+- [x] With `gh` unavailable the skill still runs, degrades to ancestry only, and states that the list is incomplete
+- [x] The skill refuses to remove the worktree it is currently running inside
+- [x] Unregistered-directory removal prints size, file count, and recent files, then requires a per-directory confirmation and rejects any path outside the worktrees root
+- [x] `bash tests/plugins/test-post-merge-cleanup.sh` exits 0 and leaves no temp directory behind
+- [x] The test is named in `.github/workflows/check-plugin-versions.yml`
+- [x] `BASE_REF=main node scripts/check-plugin-versions.mjs` exits 0 with git-agent at 4.19.0
+- [x] The root README table was produced by `scripts/build-readme-table.mjs`, not hand-edited
+- [x] The skill description passes the 200-character budget
 
 ## Verification
 
@@ -169,7 +171,7 @@ Remove the temp repo afterward. Then confirm the packaging half:
   ```
 
 - Clear the existing backlog once the skill ships
-  This repo currently carries 136 cleanable branches, 3 of them still holding worktrees, and 3 unregistered directories worth roughly 7.3M — the sweep exists for exactly this, but running it is a separate decision from building it.
+  This repo currently carries 380 cleanable branches, 3 of them still holding worktrees, and 3 unregistered directories worth roughly 7.3M — the sweep exists for exactly this, but running it is a separate decision from building it.
   ```text
   Using the /git-agent:post-merge-cleanup skill's repo-wide sweep, produce the inventory report for this repo without deleting anything: cleanable branches with their qualifying signal (ancestry-merged or merged PR), which still hold worktrees, which worktrees carry uncommitted files with the file lists, and the unregistered directories under .claude/worktrees/ with their sizes and evidence. Present the report and stop — do not remove anything until I have read it and said which items to act on.
   ```

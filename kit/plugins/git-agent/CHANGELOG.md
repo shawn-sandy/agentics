@@ -1,5 +1,53 @@
 # Changelog — git-agent
 
+## v4.19.0 — 2026-08-15 — post-merge cleanup that looks before it deletes
+
+### Added
+
+- **`skills/post-merge-cleanup/`, a skill for clearing merged branches and their
+  worktrees.** It inspects each worktree for uncommitted work *before* removing
+  anything, and stops with the file list when `git status --porcelain` is
+  non-empty for any reason — untracked, staged, or unstaged. The ordering is the
+  point: an unforced `git worktree remove` already refuses a dirty tree, so
+  checking first lets the skill delegate its central safety property to git
+  instead of reimplementing it. Four absolutes back that up: never
+  `worktree remove --force`, never remove a dirty worktree, never `branch -D`
+  without a confirmed merged PR, never `rm` outside the worktrees root.
+- **Dual-signal selection, because commit ancestry is not enough.** This project
+  squash-merges, and a squash merge replays a branch's changes as one commit
+  with a new SHA — so the branch's own commits never become ancestors of the
+  default branch and `git branch --merged` cannot see it by construction.
+  Measured on this repo: 84 branches are ancestry-merged, while 318 have a
+  merged pull request, 296 of them invisible to the ancestry test. The union is
+  380 cleanable branches, so ancestry alone would have found 84 of 380 and
+  missed 78% of the backlog. A branch qualifies when either signal fires, and
+  the qualifying signal decides the flag — `-d` for ancestry, `-D` only where a
+  merged PR supplies positive evidence, since `-d` applies the same ancestry
+  test and would refuse those 296.
+- **Repo-wide sweep behind `--all`, with the report before the question.** One
+  approval spanning hundreds of branches is a gate that gets clicked through, so
+  the inventory table prints first — branch, qualifying signal, worktree, dirty
+  count, action — and batch approval is a separate deliberate answer that names
+  its count, never the default option. Blocked worktrees are listed with their
+  file lists rather than silently skipped.
+- **Unregistered-directory detection, covering a gap `git worktree prune` cannot
+  reach.** Prune scans the admin directories under `.git/worktrees/`; a
+  directory whose admin entry is already gone is invisible to it. Three
+  directories on this repo (~7.3M) sit in exactly that state. Because their
+  dangling `.git` files mean `git status` cannot vouch for the contents, the
+  skill prints size, file count, and recently modified files, then requires a
+  per-directory confirmation and a `pwd -P` containment check before any
+  removal — and prints the command rather than acting when `rm` is denied by
+  policy.
+- **`tests/plugins/test-post-merge-cleanup.sh`, wired into CI.** Builds a real
+  throwaway repo and asserts the objective directly: a dirty worktree survives
+  with its file byte-identical, while a clean one is still removed, so the gate
+  is proven to block dirty trees specifically rather than blocking everything.
+  The forbidden-flag checks scan fenced code blocks only — the safety contract
+  has to name `--force` in order to forbid it, so a naive whole-file grep would
+  fail on a correctly written skill. Prose is a mention; a code block is an
+  invocation.
+
 ## v4.18.0 — 2026-08-14 — a scope guard for repo-wide formatters and bare stash pops
 
 ### Added

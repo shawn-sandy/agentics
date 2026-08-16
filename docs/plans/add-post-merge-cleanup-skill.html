@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="high">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +14,7 @@ try {
   if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
 } catch (e) { /* no storage — prefers-color-scheme decides */ }
 </script>
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-08-15">
@@ -1528,7 +1528,7 @@ img, video { max-width: 100%; height: auto; }
         <span class="effort-badge" aria-label="Effort level">High</span>
         <a class="issue-link" href="https://github.com/shawn-sandy/agentics/issues/564"
            aria-label="View the tracking issue for this plan">Issue #564</a>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1561,14 +1561,14 @@ img, video { max-width: 100%; height: auto; }
       <summary>8 steps</summary>
       <div class="rail-heading">Steps</div>
       <ul class="rail-steps">
-        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Create <code class="md">kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md</code> with frontmatter (<code class="md">name</code>, <code class="md">description</code>, <code class="md">allowed-tools</code>) and a Safety Contract section stating the four absolutes: never <code class="md">git worktree remove --force</code>, never remove a worktree whose <code class="md">git status --porcelain</code> is non-empty, never <code class="md">git branch -D</code> without a confirmed merged PR, and never <code class="md">rm</code> a path outside the worktrees root.</span><span class="rail-state">step 1 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Write <code class="md">references/detection.md</code> defining dual-signal selection: a branch is cleanable when <code class="md">git branch --merged origin/&lt;default&gt;</code> lists it <strong class="md">or</strong> <code class="md">gh pr list --head &lt;branch&gt; --state merged</code> returns a PR. Resolve the default branch via <code class="md">git symbolic-ref refs/remotes/origin/HEAD</code>, falling back to <code class="md">gh repo view --json defaultBranchRef</code>. When <code class="md">gh</code> is absent, unauthenticated, or the remote is not GitHub, degrade to the ancestry test alone and state in the report that squash-merged branches cannot be detected in this mode, so the list is known-incomplete.</span><span class="rail-state">step 2 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Add the default single-branch flow to <code class="md">SKILL.md</code>: confirm the branch is cleanable by either signal, refuse when the current working directory is inside the target worktree, inspect with <code class="md">git status --porcelain</code> and stop with the file list when output is non-empty for any reason — untracked, staged, or unstaged — then on approval run <code class="md">git worktree remove &lt;path&gt;</code> from outside the worktree, followed by <code class="md">git branch -d</code>, escalating to <code class="md">-D</code> only when a merged PR was the qualifying signal.</span><span class="rail-state">step 3 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Write <code class="md">references/sweep.md</code> defining the repo-wide sweep behind an explicit flag: emit one table of branch, qualifying signal, worktree path, and dirty-file count before any action; list dirty worktrees as blocked alongside their file lists; require per-item approval, with batch approval as a separate deliberate answer rather than a default.</span><span class="rail-state">step 4 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Write <code class="md">references/stale-directories.md</code>: a directory is unregistered only when it is absent from <code class="md">git worktree list</code>, has no admin directory under <code class="md">.git/worktrees/&lt;name&gt;</code>, and its <code class="md">.git</code> file is dangling or missing. Because a dangling <code class="md">.git</code> means <code class="md">git status</code> cannot inspect it, removal requires printing the directory&#39;s size, file count, and most recently modified files, then a per-directory confirmation, a check that the resolved path is inside the worktrees root, and refusal of any path not produced by detection.</span><span class="rail-state">step 5 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Add <code class="md">tests/plugins/test-post-merge-cleanup.sh</code> following the shape of <code class="md">tests/plugins/test-scope-guard.sh</code>: build a throwaway fixture repo under <code class="md">mktemp -d</code>, create both an ancestry-merged and a squash-merged branch each with a worktree, leave one worktree holding an uncommitted file, assert the documented flow leaves that worktree and its file intact, assert the clean worktree is removed, assert the squash-merged branch is detected as cleanable, assert paths outside the worktrees root are rejected, grep the skill sources to assert no <code class="md">--force</code> and no unguarded <code class="md">branch -D</code> appears, and remove the temp directory on exit via <code class="md">trap</code>.</span><span class="rail-state">step 6 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Wire the test into <code class="md">.github/workflows/check-plugin-versions.yml</code> as its own step matching the existing <code class="md">run: bash tests/plugins/test-&lt;name&gt;.sh</code> entries, then update <code class="md">kit/plugins/git-agent/README.md</code>&#39;s Skills table and add a <code class="md">## v4.19.0</code> CHANGELOG entry, and bump git-agent from <code class="md">4.18.0</code> to <code class="md">4.19.0</code> in <code class="md">.claude-plugin/marketplace.json</code>.</span><span class="rail-state">step 7 of 8</span></a></li>
-        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Regenerate the root <code class="md">README.md</code> Plugin Reference Table with <code class="md">node scripts/build-readme-table.mjs</code>.</span><span class="rail-state">step 8 of 8</span></a></li>
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Create <code class="md">kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md</code> with frontmatter (<code class="md">name</code>, <code class="md">description</code>, <code class="md">allowed-tools</code>) and a Safety Contract section stating the four absolutes: never <code class="md">git worktree remove --force</code>, never remove a worktree whose <code class="md">git status --porcelain</code> is non-empty, never <code class="md">git branch -D</code> without a confirmed merged PR, and never <code class="md">rm</code> a path outside the worktrees root.</span><span class="rail-state">step 1 of 8, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">references/detection.md</code> defining dual-signal selection: a branch is cleanable when <code class="md">git branch --merged origin/&lt;default&gt;</code> lists it <strong class="md">or</strong> <code class="md">gh pr list --head &lt;branch&gt; --state merged</code> returns a PR. Resolve the default branch via <code class="md">git symbolic-ref refs/remotes/origin/HEAD</code>, falling back to <code class="md">gh repo view --json defaultBranchRef</code>. When <code class="md">gh</code> is absent, unauthenticated, or the remote is not GitHub, degrade to the ancestry test alone and state in the report that squash-merged branches cannot be detected in this mode, so the list is known-incomplete.</span><span class="rail-state">step 2 of 8, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Add the default single-branch flow to <code class="md">SKILL.md</code>: confirm the branch is cleanable by either signal, refuse when the current working directory is inside the target worktree, inspect with <code class="md">git status --porcelain</code> and stop with the file list when output is non-empty for any reason — untracked, staged, or unstaged — then on approval run <code class="md">git worktree remove &lt;path&gt;</code> from outside the worktree, followed by <code class="md">git branch -d</code>, escalating to <code class="md">-D</code> only when a merged PR was the qualifying signal.</span><span class="rail-state">step 3 of 8, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">references/sweep.md</code> defining the repo-wide sweep behind an explicit flag: emit one table of branch, qualifying signal, worktree path, and dirty-file count before any action; list dirty worktrees as blocked alongside their file lists; require per-item approval, with batch approval as a separate deliberate answer rather than a default.</span><span class="rail-state">step 4 of 8, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">references/stale-directories.md</code>: a directory is unregistered only when it is absent from <code class="md">git worktree list</code>, has no admin directory under <code class="md">.git/worktrees/&lt;name&gt;</code>, and its <code class="md">.git</code> file is dangling or missing. Because a dangling <code class="md">.git</code> means <code class="md">git status</code> cannot inspect it, removal requires printing the directory&#39;s size, file count, and most recently modified files, then a per-directory confirmation, a check that the resolved path is inside the worktrees root, and refusal of any path not produced by detection.</span><span class="rail-state">step 5 of 8, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Add <code class="md">tests/plugins/test-post-merge-cleanup.sh</code> following the shape of <code class="md">tests/plugins/test-scope-guard.sh</code>: build a throwaway fixture repo under <code class="md">mktemp -d</code>, create both an ancestry-merged and a squash-merged branch each with a worktree, leave one worktree holding an uncommitted file, assert the documented flow leaves that worktree and its file intact, assert the clean worktree is removed, assert the squash-merged branch is detected as cleanable, assert paths outside the worktrees root are rejected, assert no forbidden flag appears inside a fenced code block in the skill sources (a prose prohibition naming the flag is correct and must not fail), and remove the temp directory on exit via <code class="md">trap</code>.</span><span class="rail-state">step 6 of 8, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Wire the test into <code class="md">.github/workflows/check-plugin-versions.yml</code> as its own step matching the existing <code class="md">run: bash tests/plugins/test-&lt;name&gt;.sh</code> entries, then update <code class="md">kit/plugins/git-agent/README.md</code>&#39;s Skills table and add a <code class="md">## v4.19.0</code> CHANGELOG entry, and bump git-agent from <code class="md">4.18.0</code> to <code class="md">4.19.0</code> in <code class="md">.claude-plugin/marketplace.json</code>.</span><span class="rail-state">step 7 of 8, done</span></a></li>
+        <li><a class="rail-step done" href="#step-8"><span class="rail-no">✓</span><span class="rail-text">Regenerate the root <code class="md">README.md</code> Plugin Reference Table with <code class="md">node scripts/build-readme-table.mjs</code>.</span><span class="rail-state">step 8 of 8, done</span></a></li>
       </ul>
     </details>
   </nav>
@@ -1640,12 +1640,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 12 done</span>
+        <span id="progress-label">12 / 12 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1657,7 +1657,7 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
       <p><code class="md">kit/plugins/git-agent/skills/merge/SKILL.md:183</code> deliberately declines branch<br>deletion — &quot;Never pass <code class="md">--delete-branch</code>. Branch deletion is a separate<br>destructive action that needs its own explicit yes.&quot; Nothing has ever filled<br>that seam, so the job falls to <code class="md">commit-commands:clean_gone</code>, an external command<br>that runs <code class="md">git worktree remove --force</code> plus <code class="md">git branch -D</code> in one unattended<br>loop with no user gate. Measured against this repo on 2026-08-15, that would<br>destroy 16 untracked files across 9 of 19 worktrees, because <code class="md">--force</code> exists<br>precisely to defeat the dirty-tree refusal <code class="md">git worktree remove</code> performs by<br>default.</p>
       <p>That default refusal is the design hinge: because an unforced<br><code class="md">git worktree remove</code> already fails on a dirty tree, checking for uncommitted<br>work <em class="md">first</em> lets this skill delegate its central safety property to git rather<br>than reimplementing it.</p>
-      <p><strong class="md">Selection cannot rely on commit ancestry.</strong> git-agent squash-merges, and a<br>squash merge replays a branch&#39;s changes as one new commit with a different SHA,<br>so the branch&#39;s own commits never become ancestors of <code class="md">main</code>.<br><code class="md">git branch --merged origin/main</code> therefore cannot see squash-merged branches at<br>all. Measured here: 85 branches are ancestry-merged, and a further 51 are<br>invisible to that test — every one of which was verified to have a <strong class="md">MERGED</strong><br>pull request. Selecting on ancestry alone would miss 51 of 136 real candidates,<br>and <code class="md">git branch -d</code> would refuse them even when deleting is correct, because<br><code class="md">-d</code> performs the same ancestry check. Selection therefore takes either signal,<br>and <code class="md">-D</code> is permitted only where a merged PR supplies positive evidence.</p>
+      <p><strong class="md">Selection cannot rely on commit ancestry.</strong> git-agent squash-merges, and a<br>squash merge replays a branch&#39;s changes as one new commit with a different SHA,<br>so the branch&#39;s own commits never become ancestors of <code class="md">main</code>.<br><code class="md">git branch --merged origin/main</code> therefore cannot see squash-merged branches at<br>all. Measured here across 395 local branches: <strong class="md">84</strong> are ancestry-merged, while<br><strong class="md">318</strong> have a merged pull request — <strong class="md">296</strong> of those invisible to the ancestry<br>test. The union is <strong class="md">380 cleanable branches</strong>, so selecting on ancestry alone<br>would find 84 of 380 and miss 78% of the real backlog. <code class="md">git branch -d</code> would<br>also refuse those 296 even when deleting is correct, because <code class="md">-d</code> performs the<br>same ancestry check. Selection therefore takes either signal, and <code class="md">-D</code> is<br>permitted only where a merged PR supplies positive evidence.</p>
       <p>The grounded proposal is at <code class="md">docs/prompts/proposal-add-post-merge-cleanup.md</code>.<br>Note that its &quot;51 branches that never landed&quot; claim was disproved during this<br>plan&#39;s interview and has been corrected there.</p>
       <p>Risks carried into this plan:</p>
       <p>- <strong class="md">Recursive delete inside a skill.</strong> Step 6 gives the skill an <code class="md">rm -rf</code> for<br>unregistered directories, which have no git registration to remove them by,<br>and whose dangling <code class="md">.git</code> files mean <code class="md">git status</code> cannot vouch for their<br>contents. Mitigated by printing size, file count, and recently modified files,<br>requiring a per-directory confirmation, checking containment against the<br>worktrees root, and refusing any path detection did not itself produce.<br>- <strong class="md"><code class="md">-D</code> is now reachable.</strong> Squash-merged branches require it. Mitigated by<br>gating <code class="md">-D</code> behind a confirmed merged PR; without that evidence the skill uses<br><code class="md">-d</code> and accepts git&#39;s refusal.<br>- <strong class="md">Self-deletion.</strong> The skill can run inside the worktree it is asked to<br>remove. Mitigated by an explicit cwd check in Step 3.<br>- <strong class="md">Version guard.</strong> Any edit under <code class="md">kit/plugins/git-agent/</code> fails CI without a<br><code class="md">marketplace.json</code> version bump. Step 7 does it; nothing else may.</p>
@@ -1702,12 +1702,12 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
       <div class="steps-list">
 
-        <div class="step-card" id="step-1">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Create <code class="md">kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md</code> with frontmatter (<code class="md">name</code>, <code class="md">description</code>, <code class="md">allowed-tools</code>) and a Safety Contract section stating the four absolutes: never <code class="md">git worktree remove --force</code>, never remove a worktree whose <code class="md">git status --porcelain</code> is non-empty, never <code class="md">git branch -D</code> without a confirmed merged PR, and never <code class="md">rm</code> a path outside the worktrees root.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1722,32 +1722,32 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-2">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">references/detection.md</code> defining dual-signal selection: a branch is cleanable when <code class="md">git branch --merged origin/&lt;default&gt;</code> lists it <strong class="md">or</strong> <code class="md">gh pr list --head &lt;branch&gt; --state merged</code> returns a PR. Resolve the default branch via <code class="md">git symbolic-ref refs/remotes/origin/HEAD</code>, falling back to <code class="md">gh repo view --json defaultBranchRef</code>. When <code class="md">gh</code> is absent, unauthenticated, or the remote is not GitHub, degrade to the ancestry test alone and state in the report that squash-merged branches cannot be detected in this mode, so the list is known-incomplete.</span>
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
-                <div class="step-why">ancestry alone misses 51 of this repo&#39;s 136 real candidates, and a silently-narrow list is far more dangerous than an openly-narrow one.</div>
+                <div class="step-why">ancestry alone finds only 84 of this repo&#39;s 380 real candidates, and a silently-narrow list is far more dangerous than an openly-narrow one.</div>
               </div>
               <div class="step-note step-verify">
                 <span class="step-note-label">Verify</span>
-                <div class="verify-body">running the documented commands against this repo yields 85 ancestry-merged plus 51 PR-merged candidates, and forcing the degraded path (<code class="md">PATH= gh</code> unavailable) prints the incompleteness warning.</div>
+                <div class="verify-body">running the documented commands against this repo yields 84 ancestry-merged, 318 with merged PRs, and 380 cleanable in the union, and the documented degraded-mode probe reports <code class="md">full</code> here while a <code class="md">gh</code>-less environment reports <code class="md">degraded</code>.</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card" id="step-3">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the default single-branch flow to <code class="md">SKILL.md</code>: confirm the branch is cleanable by either signal, refuse when the current working directory is inside the target worktree, inspect with <code class="md">git status --porcelain</code> and stop with the file list when output is non-empty for any reason — untracked, staged, or unstaged — then on approval run <code class="md">git worktree remove &lt;path&gt;</code> from outside the worktree, followed by <code class="md">git branch -d</code>, escalating to <code class="md">-D</code> only when a merged PR was the qualifying signal.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1762,12 +1762,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-4">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">references/sweep.md</code> defining the repo-wide sweep behind an explicit flag: emit one table of branch, qualifying signal, worktree path, and dirty-file count before any action; list dirty worktrees as blocked alongside their file lists; require per-item approval, with batch approval as a separate deliberate answer rather than a default.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1782,12 +1782,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-5">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">references/stale-directories.md</code>: a directory is unregistered only when it is absent from <code class="md">git worktree list</code>, has no admin directory under <code class="md">.git/worktrees/&lt;name&gt;</code>, and its <code class="md">.git</code> file is dangling or missing. Because a dangling <code class="md">.git</code> means <code class="md">git status</code> cannot inspect it, removal requires printing the directory&#39;s size, file count, and most recently modified files, then a per-directory confirmation, a check that the resolved path is inside the worktrees root, and refusal of any path not produced by detection.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1802,13 +1802,13 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-6">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
-                <span class="step-chip-text">Add <code class="md">tests/plugins/test-post-merge-cleanup.sh</code> following the shape of <code class="md">tests/plugins/test-scope-guard.sh</code>: build a throwaway fixture repo under <code class="md">mktemp -d</code>, create both an ancestry-merged and a squash-merged branch each with a worktree, leave one worktree holding an uncommitted file, assert the documented flow leaves that worktree and its file intact, assert the clean worktree is removed, assert the squash-merged branch is detected as cleanable, assert paths outside the worktrees root are rejected, grep the skill sources to assert no <code class="md">--force</code> and no unguarded <code class="md">branch -D</code> appears, and remove the temp directory on exit via <code class="md">trap</code>.</span>
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Add <code class="md">tests/plugins/test-post-merge-cleanup.sh</code> following the shape of <code class="md">tests/plugins/test-scope-guard.sh</code>: build a throwaway fixture repo under <code class="md">mktemp -d</code>, create both an ancestry-merged and a squash-merged branch each with a worktree, leave one worktree holding an uncommitted file, assert the documented flow leaves that worktree and its file intact, assert the clean worktree is removed, assert the squash-merged branch is detected as cleanable, assert paths outside the worktrees root are rejected, assert no forbidden flag appears inside a fenced code block in the skill sources (a prose prohibition naming the flag is correct and must not fail), and remove the temp directory on exit via <code class="md">trap</code>.</span>
               </div>
               <div class="step-note step-why-note">
                 <span class="step-note-label">Why</span>
@@ -1822,12 +1822,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-7">
+        <div class="step-card completed" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Wire the test into <code class="md">.github/workflows/check-plugin-versions.yml</code> as its own step matching the existing <code class="md">run: bash tests/plugins/test-&lt;name&gt;.sh</code> entries, then update <code class="md">kit/plugins/git-agent/README.md</code>&#39;s Skills table and add a <code class="md">## v4.19.0</code> CHANGELOG entry, and bump git-agent from <code class="md">4.18.0</code> to <code class="md">4.19.0</code> in <code class="md">.claude-plugin/marketplace.json</code>.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1842,12 +1842,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-8">
+        <div class="step-card completed" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Regenerate the root <code class="md">README.md</code> Plugin Reference Table with <code class="md">node scripts/build-readme-table.mjs</code>.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1877,7 +1877,8 @@ img, video { max-width: 100%; height: auto; }
         <div class="test-card">Unit: dual-signal selection. File: <code class="md">tests/plugins/test-post-merge-cleanup.sh</code>; Targets: the selection rule in <code class="md">references/detection.md</code>; Key cases: an ancestry-merged branch qualifies; a squash-merged branch with a merged PR qualifies despite failing the ancestry test; a branch with neither signal does not qualify; with <code class="md">gh</code> unavailable the run degrades to ancestry only and emits the incompleteness warning</div>
         <div class="test-card">Unit: the dirty-state gate covers every porcelain status. File: <code class="md">tests/plugins/test-post-merge-cleanup.sh</code>; Targets: the Step 3 flow; Key cases: untracked-only blocks; staged-only blocks; unstaged-only blocks; a genuinely clean worktree is removed, proving the gate blocks dirty trees specifically rather than blocking everything</div>
         <div class="test-card">Unit: the containment rule for unregistered-directory removal. File: <code class="md">tests/plugins/test-post-merge-cleanup.sh</code>; Targets: the path checks in <code class="md">references/stale-directories.md</code>; Key cases: a path inside the worktrees root is accepted; a sibling path outside it is rejected; a path still present in <code class="md">git worktree list</code> is rejected; a path whose <code class="md">.git/worktrees/&lt;name&gt;</code> admin directory still exists is rejected</div>
-        <div class="test-card">Unit: the forbidden-flag contract. File: <code class="md">tests/plugins/test-post-merge-cleanup.sh</code>; Targets: every <code class="md">.md</code> under <code class="md">kit/plugins/git-agent/skills/post-merge-cleanup/</code>; Key cases: no occurrence of <code class="md">worktree remove --force</code> or <code class="md">worktree remove -f</code>; every <code class="md">branch -D</code> occurrence appears alongside its merged-PR precondition</div>
+        <div class="test-card">Unit: documented commands are portable. File: <code class="md">tests/plugins/test-post-merge-cleanup.sh</code>; Targets: fenced code blocks under <code class="md">skills/post-merge-cleanup/</code>; Key cases: no GNU-only <code class="md">find -newermt &#39;&lt;relative&gt;&#39;</code> form, which BSD <code class="md">find</code> rejects and <code class="md">bfs</code> errors on; the documented <code class="md">find -mtime -90</code> form actually executes on the host. Added after the GNU-only form failed during end-to-end verification.</div>
+        <div class="test-card">Unit: the forbidden-flag contract. File: <code class="md">tests/plugins/test-post-merge-cleanup.sh</code>; Targets: fenced code blocks in every <code class="md">.md</code> under <code class="md">kit/plugins/git-agent/skills/post-merge-cleanup/</code>; Key cases: no <code class="md">worktree remove --force</code> or <code class="md">-f</code> inside a fenced code block; no bare <code class="md">branch -D</code> inside a fenced code block; the safety contract&#39;s prose prohibitions naming those flags do <strong class="md">not</strong> fail the test, since a rule that forbids a flag must be able to name it</div>
       </div>
     </section>
 
@@ -1889,51 +1890,51 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">A worktree with any non-empty <code class="md">git status --porcelain</code> output is never removed and never force-removed; the fixture test proves the file survives</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
-          <label for="ac2">No <code class="md">.md</code> file under <code class="md">skills/post-merge-cleanup/</code> contains <code class="md">worktree remove --force</code> or <code class="md">worktree remove -f</code></label>
+          <input type="checkbox" id="ac2" checked>
+          <label for="ac2">No fenced code block under <code class="md">skills/post-merge-cleanup/</code> invokes <code class="md">worktree remove --force</code> or <code class="md">-f</code>; prose prohibitions naming the flag are permitted and expected</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
-          <label for="ac3">Every <code class="md">branch -D</code> in the skill is gated on a confirmed merged PR; ancestry-merged branches use <code class="md">branch -d</code></label>
+          <input type="checkbox" id="ac3" checked>
+          <label for="ac3"><code class="md">branch -D</code> never appears as a bare command in a fenced code block; it is reachable only via prose stating its merged-PR precondition, and ancestry-merged branches use <code class="md">branch -d</code></label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">Squash-merged branches are detected as cleanable despite failing the ancestry test</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">With <code class="md">gh</code> unavailable the skill still runs, degrades to ancestry only, and states that the list is incomplete</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">The skill refuses to remove the worktree it is currently running inside</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">Unregistered-directory removal prints size, file count, and recent files, then requires a per-directory confirmation and rejects any path outside the worktrees root</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code class="md">bash tests/plugins/test-post-merge-cleanup.sh</code> exits 0 and leaves no temp directory behind</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">The test is named in <code class="md">.github/workflows/check-plugin-versions.yml</code></label>
         </li>
         <li>
-          <input type="checkbox" id="ac10">
+          <input type="checkbox" id="ac10" checked>
           <label for="ac10"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 with git-agent at 4.19.0</label>
         </li>
         <li>
-          <input type="checkbox" id="ac11">
+          <input type="checkbox" id="ac11" checked>
           <label for="ac11">The root README table was produced by <code class="md">scripts/build-readme-table.mjs</code>, not hand-edited</label>
         </li>
         <li>
-          <input type="checkbox" id="ac12">
+          <input type="checkbox" id="ac12" checked>
           <label for="ac12">The skill description passes the 200-character budget</label>
         </li>
       </ul>
@@ -1959,21 +1960,21 @@ img, video { max-width: 100%; height: auto; }
         Wrapping up
       </h2>
       <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
@@ -2005,7 +2006,7 @@ img, video { max-width: 100%; height: auto; }
         <details class="next-step-item">
           <summary>Clear the existing backlog once the skill ships</summary>
           <div class="next-step-prompt">
-            <p>This repo currently carries 136 cleanable branches, 3 of them still holding worktrees, and 3 unregistered directories worth roughly 7.3M — the sweep exists for exactly this, but running it is a separate decision from building it.</p>
+            <p>This repo currently carries 380 cleanable branches, 3 of them still holding worktrees, and 3 unregistered directories worth roughly 7.3M — the sweep exists for exactly this, but running it is a separate decision from building it.</p>
             <p>Paste this prompt into Claude to execute this follow-up:</p>
             <pre>Using the /git-agent:post-merge-cleanup skill&#39;s repo-wide sweep, produce the inventory report for this repo without deleting anything: cleanable branches with their qualifying signal (ancestry-merged or merged PR), which still hold worktrees, which worktrees carry uncommitted files with the file lists, and the unregistered directories under .claude/worktrees/ with their sizes and evidence. Present the report and stop — do not remove anything until I have read it and said which items to act on.</pre>
             <button class="copy-prompt-btn" type="button"

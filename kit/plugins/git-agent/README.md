@@ -62,6 +62,7 @@ claude --plugin-dir ./kit/plugins/git-agent
 | `ship-autonomous` | Auto-activated | "ship it autonomously", "ship and watch the PR", "ship and fix what breaks", "ship and autofix CI failures" |
 | `merge` | Auto-activated — or type the `merge?` shorthand (hook-routed) | "merge?", "is this ready to merge", "merge the PR if it's green" |
 | `create-issue` | Auto-activated | "file a bug", "open an issue", "create a feature ticket", "log this as an issue" |
+| `post-merge-cleanup` | Auto-activated | "clean up merged branches", "remove this worktree", "delete the branch now it's merged", "clear out old worktrees" |
 
 ### Agents
 
