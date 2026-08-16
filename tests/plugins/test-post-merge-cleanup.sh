@@ -208,9 +208,39 @@ grep -q 'never the default option' "$SKILL_DIR/references/sweep.md" \
 grep -q 'known-incomplete\|incomplete' "$SKILL_DIR/references/detection.md" \
   && check "detection documents the degraded-mode incompleteness warning" 1 \
   || check "detection documents the degraded-mode incompleteness warning" 0
-grep -q 'cd. out first\|cd` out first' "$SKILL_DIR/SKILL.md" \
+grep -q 'Refuse self-deletion' "$SKILL_DIR/SKILL.md" \
   && check "SKILL documents the self-deletion refusal" 1 \
   || check "SKILL documents the self-deletion refusal" 0
+
+# --- 9. The refusal must leave the target addressable ---------------------
+# A refusal that says "cd out first" without an explicit target selector is a
+# dead end: once the user leaves, the current branch is no longer the target,
+# so a bare re-invocation resolves to something else. Caught in review of #565.
+grep -qE 'post-merge-cleanup \[<branch>\|<worktree-path>\]' "$SKILL_DIR/SKILL.md" \
+  && check "SKILL declares an explicit <branch>|<worktree-path> target" 1 \
+  || check "SKILL declares an explicit <branch>|<worktree-path> target" 0
+
+awk '/Refuse self-deletion/,/^3\./' "$SKILL_DIR/SKILL.md" | grep -q 'post-merge-cleanup <branch>' \
+  && check "self-deletion refusal prints a resumable command naming the target" 1 \
+  || check "self-deletion refusal prints a resumable command naming the target" 0
+
+grep -q 'Matching neither is an error' "$SKILL_DIR/SKILL.md" \
+  && check "an unresolvable target errors instead of falling back to current branch" 1 \
+  || check "an unresolvable target errors instead of falling back to current branch" 0
+
+# --- 10. Design docs must not contradict the shipped gate -----------------
+# The proposal's workstreams described an untracked-only gate while its own
+# locked decision required the full porcelain check. Stale prose in a design
+# doc is how the next reader implements the wrong thing.
+PROPOSAL="$ROOT/docs/prompts/proposal-add-post-merge-cleanup.md"
+if [ -f "$PROPOSAL" ]; then
+  WS="$(awk '/^\*\*B — Single-branch/,/^\*\*D —/' "$PROPOSAL")"
+  printf '%s' "$WS" | grep -q 'porcelain' \
+    && check "proposal workstreams state the full porcelain gate" 1 \
+    || check "proposal workstreams state the full porcelain gate" 0
+else
+  check "proposal present for gate-consistency check" 0
+fi
 
 echo
 echo "passed: $PASS   failed: $FAIL"

@@ -39,6 +39,14 @@
   per-directory confirmation and a `pwd -P` containment check before any
   removal — and prints the command rather than acting when `rm` is denied by
   policy.
+- **An explicit `<branch>` or `<worktree-path>` target, alongside `--all` and
+  `--dirs`.** Without it the self-deletion refusal was a dead end: the flow
+  defaulted to the current branch, refused because the cwd sat inside the target
+  worktree, and told the user to `cd` out — after which the current branch was no
+  longer the target and a bare re-invocation would resolve to something else. The
+  refusal now prints a resumable command naming the target, and a target that
+  resolves to neither a branch nor a worktree is an error rather than a silent
+  fallback to the current branch.
 - **`tests/plugins/test-post-merge-cleanup.sh`, wired into CI.** Builds a real
   throwaway repo and asserts the objective directly: a dirty worktree survives
   with its file byte-identical, while a clean one is still removed, so the gate

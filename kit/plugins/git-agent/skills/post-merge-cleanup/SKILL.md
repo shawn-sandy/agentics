@@ -38,11 +38,23 @@ These four are absolute. Nothing in this skill or its references overrides them.
 
 ## Step 1 — Determine the scope
 
-- **Default (no argument):** operate on the current branch and its worktree.
+`/git-agent:post-merge-cleanup [<branch>|<worktree-path>] [--all] [--dirs]`
+
+- **A target argument** — a branch name or a worktree path — names what to clean
+  explicitly. This is what makes the flow usable from anywhere, including from
+  the main checkout after stepping out of the worktree being removed.
+- **No target and no flag:** operate on the current branch and its worktree.
 - **`--all`:** repo-wide sweep. Read
   [references/sweep.md](references/sweep.md) and follow it instead of Step 3.
 - **`--dirs`:** unregistered-directory pass only. Read
   [references/stale-directories.md](references/stale-directories.md).
+
+Resolve a target argument before anything else: a value matching a branch name
+selects that branch and whatever worktree holds it; otherwise treat it as a
+worktree path and resolve it through `git worktree list` to find its branch.
+Matching neither is an error — say what was tried and stop, rather than falling
+back to the current branch. Silently cleaning something other than what was
+named is the worst available outcome.
 
 A sweep and a directory pass may both run; the single-branch flow is what you
 get when neither flag is present.
@@ -63,10 +75,20 @@ default will have more squash-merged branches than ancestry-merged ones.
 
 1. **Confirm it is cleanable** by either signal. Neither → say which checks ran
    and stop. Never delete a branch this step could not qualify.
-2. **Refuse self-deletion.** If the current working directory is inside the
-   target worktree, stop and tell the user to `cd` out first. Removing the
+2. **Refuse self-deletion, and hand back a way to continue.** If the current
+   working directory is inside the target worktree, stop — removing the
    directory you are standing in leaves the shell in a path that no longer
-   exists.
+   exists. Do not stop at "`cd` out first": once the user leaves, the current
+   branch is no longer the target, so a bare re-invocation would resolve to
+   something else entirely. Print the exact command to resume, naming the target
+   explicitly:
+
+   ```
+   cd <repo-root> && /git-agent:post-merge-cleanup <branch>
+   ```
+
+   A refusal that leaves the target unaddressable is a dead end, not a
+   safeguard.
 3. **Inspect for uncommitted work.** Run `git -C <worktree> status --porcelain`.
    Non-empty for any reason → print the file list, state that cleanup is
    blocked, and stop. Do not offer to force, and do not offer to delete the

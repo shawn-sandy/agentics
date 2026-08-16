@@ -171,18 +171,24 @@ directories under the worktrees root and diff them against registered worktree
 paths to find unregistered leftovers. Nothing here mutates state, which makes it
 independently shippable and independently testable.
 
-**B — Single-branch cleanup path (the default).** Given the current branch,
-confirm it is merged into the default branch. Inspect its worktree for untracked
-files; if any exist, print the file list and stop for a decision rather than
-proceeding. On a clean worktree and explicit approval, `cd` out of the worktree,
-run `git worktree remove` unforced, then `git branch -d`. Report each command and
-its result.
+**B — Single-branch cleanup path (the default).** Given an explicit target
+argument, or the current branch when none is supplied, confirm it is cleanable
+by either signal. Inspect its worktree with `git status --porcelain` and stop
+for a decision whenever the output is non-empty for any reason — untracked,
+staged, or unstaged — printing the file list rather than proceeding. On a clean
+worktree and explicit approval, `cd` out of the worktree, run
+`git worktree remove` unforced, then `git branch -d` (or `-D` where a merged PR
+was the qualifying signal). Report each command and its result. Because the flow
+refuses to remove the worktree it is running inside, the target must stay
+addressable after the user steps out — hence the explicit target argument.
 
 **C — Repo-wide sweep (behind a flag).** The same per-item logic as B applied
-across every merged branch, but presented as one inventory table first: branch,
-worktree path, untracked-file count. Worktrees with untracked files are listed as
-blocked with their file lists, never silently skipped. Approval is per item or
-explicitly per batch — the report must make the blast radius legible before any
+across every cleanable branch, but presented as one inventory table first:
+branch, qualifying signal, worktree path, and the count of uncommitted files
+from `git status --porcelain`. Worktrees with any uncommitted work — untracked,
+staged, or unstaged — are listed as blocked with their file lists, never
+silently skipped. Approval is per item or explicitly per batch, and batch is
+never the default; the report must make the blast radius legible before any
 yes.
 
 **D — Unregistered directory handling.** Report each leftover directory with its

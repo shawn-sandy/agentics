@@ -13,6 +13,7 @@ Automated git workflow for Claude Code — branch creation, commits, PRs, ship p
 - **ship-autonomous** — Supervised full pipeline: branches (if on default), runs the tests and previews both themes before committing, opens a PR, then subscribes to the PR's activity events to autofix CI failures (lint/typecheck/peer-deps, ≤3 attempts per check) and respond to review comments, posting regular status updates. Asks before any fix outside the safe allowlist, before merging, and again before deleting the branch. Falls back to CI polling when run locally without the GitHub MCP server. Auto-activates on intent match. Use when you want to ship and walk away.
 - **merge** — Checks the current branch's PR for merge readiness (MERGEABLE, `mergeStateStatus` `CLEAN`, `UNSTABLE`, or `HAS_HOOKS`, required checks successful or skipped, no `CHANGES_REQUESTED`), then asks for explicit approval before merging with `gh pr merge --squash --match-head-commit`. Never passes `--delete-branch`. Anything pending, failing, or ambiguous → prints the status summary and asks. Typing `merge?` triggers it deterministically via the bundled `UserPromptSubmit` hook. Auto-activates on intent match.
 - **create-issue** — Drafts and creates a GitHub or GitLab issue from any context source — `bug`, `feature`, `selection`, `session`, or `plan` (a plan file becomes a tracked ticket). Auto-detects the git host from the remote URL (`gh` for GitHub, `glab` for GitLab) and always shows a confirmation gate before writing. After creation, opens the issue in the browser (`--no-open` to suppress). Auto-activates on intent match.
+- **post-merge-cleanup** — Removes a merged branch and its worktree, but inspects the worktree first and stops with the file list whenever `git status --porcelain` is non-empty — untracked, staged, or unstaged alike. Never passes `--force`. Finds squash-merged branches that commit ancestry cannot see by also checking for a merged PR, and uses `-D` only where that PR is positive evidence. Takes an explicit `<branch>` or `<worktree-path>` target, `--all` for a repo-wide sweep, and `--dirs` for unregistered leftover directories that `git worktree prune` cannot reach. Auto-activates on intent match.
 
 ### Subagents (background, fire-and-forget)
 
@@ -62,7 +63,7 @@ claude --plugin-dir ./kit/plugins/git-agent
 | `ship-autonomous` | Auto-activated | "ship it autonomously", "ship and watch the PR", "ship and fix what breaks", "ship and autofix CI failures" |
 | `merge` | Auto-activated — or type the `merge?` shorthand (hook-routed) | "merge?", "is this ready to merge", "merge the PR if it's green" |
 | `create-issue` | Auto-activated | "file a bug", "open an issue", "create a feature ticket", "log this as an issue" |
-| `post-merge-cleanup` | Auto-activated | "clean up merged branches", "remove this worktree", "delete the branch now it's merged", "clear out old worktrees" |
+| `post-merge-cleanup` | Auto-activated — accepts an explicit `<branch>` or `<worktree-path>` target, plus `--all` / `--dirs` | "clean up merged branches", "remove this worktree", "delete the branch now it's merged", "clear out old worktrees" |
 
 ### Agents
 
