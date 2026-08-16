@@ -3,6 +3,7 @@ status: todo
 type: feature
 created: 2026-08-15
 effort: high
+issue: https://github.com/shawn-sandy/agentics/issues/564
 glance: Merged branches pile up with their worktrees, and the existing tool for clearing them force-removes whatever uncommitted work is sitting inside. This adds a skill that looks first and deletes second, so nothing gets destroyed without someone saying yes. We will know it worked when a worktree holding an uncommitted file survives a cleanup run untouched.
 ---
 
