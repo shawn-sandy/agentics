@@ -1,6 +1,26 @@
 # Changelog
 
 
+## 9.4.5 — Context sections name the no-follow-up bar (2026-08-17)
+
+(Authored as 9.4.2 on a branch that predated 9.4.3–9.4.4; ships as 9.4.5.)
+
+### Changed
+
+- **`implementation-plan` and `build-proposal` make the "no follow-up
+  question" completeness bar explicit for `## Context`.** The guidance
+  already required Context to be grounded in real files/specs rather than
+  memory, and already routes settled-choices/resumption content to
+  `## Decisions` (`implementation-plan`) or `Locked & resolved decisions`
+  (`build-proposal`) — that split was already correct. This just states the
+  underlying test in words: a reader with no prior context, including a
+  future session after this one's context is cleared, should need no
+  follow-up question to judge the plan or proposal.
+- Touches `implementation-plan/guidelines/section-catalog.md`,
+  `implementation-plan/reference/SKELETON.md`, and
+  `build-proposal/references/artifact-shape.md`. No structural or behavioral
+  change — prose only.
+
 ## 9.4.4 — four skills verify their own output (2026-08-17)
 
 - **`markdown-to-html` gains a Step 5b output gate** modeled on
@@ -28,7 +48,7 @@
 
 ## 9.4.3 — review-plan edits the spec, not the render (2026-08-17)
 
-(9.4.2 is on a separate in-flight branch; this entry deliberately skips it.)
+(9.4.2 was on a then-in-flight branch; its content later shipped as 9.4.5.)
 
 - **`review-plan` detects spec vs legacy mode in Step 1** (spec mode when
   `<stem>.md` exists with a `# Plan:` heading, mirroring finalize-plan's

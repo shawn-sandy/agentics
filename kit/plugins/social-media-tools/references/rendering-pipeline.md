@@ -55,7 +55,27 @@ Then:
 kill $SERVER_PID 2>/dev/null || true
 ```
 
+## Step 5 — Verify screenshot output
+
+Confirm the capture actually produced a real image before Phase 6 (Deliver)
+treats the card as done — a blank or truncated PNG still counts as a
+successful tool call.
+
+```bash
+SIZE=$(wc -c < "$SAVE_PATH_PNG" 2>/dev/null | tr -d ' ')
+```
+
+- File missing, or `$SIZE` empty or `0` → capture failed outright. Go to **Fallback**.
+- `$SIZE` below `5000` (5KB) → likely blank or empty. A solid-color capture
+  compresses to a few KB; a populated card with text and a gradient does not.
+  Go to **Fallback**.
+  <!-- ponytail: byte-count heuristic, not pixel inspection — a legitimately
+  sparse card could trip this. Raise the threshold or sample actual pixels if
+  false positives show up. -->
+- Otherwise → proceed to Phase 6.
+
 ## Fallback
 
-If Playwright tools are unavailable or the screenshot fails, tell the user:
+If Playwright tools are unavailable, the screenshot fails, or Step 5's
+verification fails, tell the user:
 > "Screenshot could not be generated. The populated HTML is at `~/.claude/tmp/$TEMP_HTML` — open it in a browser to screenshot manually."

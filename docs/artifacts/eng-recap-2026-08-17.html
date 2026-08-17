@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screenshot verification and plan Context completeness</title>
+<style>
+  :root{
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, Menlo, monospace;
+    --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    --bg: #f5f6f9;
+    --surface: #ffffff;
+    --surface-2: #eef0f7;
+    --ink: #1a1d27;
+    --ink-soft: #5b6072;
+    --ink-faint: #8a8fa3;
+    --border: #dde0ea;
+    --accent: #3454d1;
+    --accent-soft: #ecf0fd;
+    --good: #1f7a5c;
+    --good-soft: #e7f4ee;
+    --warn: #a8630f;
+    --warn-soft: #faf0e0;
+    --risk: #b23a2f;
+    --risk-soft: #fbebe9;
+    --shadow: 0 1px 2px rgba(20,24,40,.04), 0 8px 24px rgba(20,24,40,.05);
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #12141b;
+      --surface: #191c26;
+      --surface-2: #20232f;
+      --ink: #e7e9f0;
+      --ink-soft: #9aa0b8;
+      --ink-faint: #6b7086;
+      --border: #2b3040;
+      --accent: #8ea0ff;
+      --accent-soft: #212a4a;
+      --good: #55c79a;
+      --good-soft: #16261f;
+      --warn: #e0a855;
+      --warn-soft: #2c2213;
+      --risk: #ea7469;
+      --risk-soft: #2e1917;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+
+  :root[data-theme="dark"]{
+    --bg: #12141b;
+    --surface: #191c26;
+    --surface-2: #20232f;
+    --ink: #e7e9f0;
+    --ink-soft: #9aa0b8;
+    --ink-faint: #6b7086;
+    --border: #2b3040;
+    --accent: #8ea0ff;
+    --accent-soft: #212a4a;
+    --good: #55c79a;
+    --good-soft: #16261f;
+    --warn: #e0a855;
+    --warn-soft: #2c2213;
+    --risk: #ea7469;
+    --risk-soft: #2e1917;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  *{ box-sizing: border-box; }
+  html{ -webkit-text-size-adjust: 100%; }
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection{ background: var(--accent-soft); color: var(--ink); }
+
+  code, .mono{ font-family: var(--font-mono); }
+  .tabular{ font-variant-numeric: tabular-nums; }
+
+  a{ color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, button:focus-visible, summary:focus-visible{
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px;
+  }
+
+  .wrap{
+    max-width: 840px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+
+  header.doc-head{
+    margin-bottom: 40px;
+  }
+  .kicker{
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .kicker .dot{
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--good);
+    box-shadow: 0 0 0 3px var(--good-soft);
+  }
+  h1{
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: clamp(26px, 4vw, 34px);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 14px;
+  }
+  .dek{
+    color: var(--ink-soft);
+    font-size: 16px;
+    max-width: 62ch;
+    margin: 0;
+  }
+  .dek code{ font-size: .92em; }
+
+  .stat-strip{
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 28px;
+    box-shadow: var(--shadow);
+  }
+  .stat{
+    background: var(--surface);
+    padding: 16px 16px;
+  }
+  .stat .n{
+    font-family: var(--font-mono);
+    font-size: 26px;
+    font-weight: 600;
+  }
+  .stat .n.warn{ color: var(--warn); }
+  .stat .label{
+    font-size: 11px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 4px;
+  }
+
+  section.sec{
+    margin-top: 40px;
+    padding-left: 22px;
+    border-left: 2px solid var(--border);
+    position: relative;
+  }
+  section.sec::before{
+    content: attr(data-n);
+    position: absolute;
+    left: -2px;
+    top: 0;
+    transform: translateX(-50%);
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    text-indent: -9999px;
+  }
+  .sec-tag{
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .08em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  h2{
+    font-family: var(--font-mono);
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h3{
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 20px 0 8px;
+  }
+  p{ margin: 0 0 12px; color: var(--ink); }
+  p.lede{ color: var(--ink-soft); }
+
+  .card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .card + .card{ margin-top: 10px; }
+
+  .cards{ display: flex; flex-direction: column; gap: 10px; }
+
+  .pill{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .03em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .pill.good{ background: var(--good-soft); color: var(--good); }
+  .pill.warn{ background: var(--warn-soft); color: var(--warn); }
+  .pill.risk{ background: var(--risk-soft); color: var(--risk); }
+  .pill.plain{ background: var(--surface-2); color: var(--ink-soft); }
+
+  code.path, code.inline{
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: .87em;
+    color: var(--ink);
+  }
+
+  ul.list{ margin: 0; padding-left: 0; list-style: none; }
+  ul.list > li{
+    position: relative;
+    padding-left: 18px;
+    margin-bottom: 10px;
+  }
+  ul.list > li::before{
+    content: "";
+    position: absolute; left: 3px; top: 9px;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--ink-faint);
+  }
+  ul.list.tight > li{ margin-bottom: 6px; }
+
+  ol.steps{ margin: 0; padding-left: 22px; }
+  ol.steps > li{ margin-bottom: 6px; }
+
+  .file-group{ margin-bottom: 18px; }
+  .file-group:last-child{ margin-bottom: 0; }
+  .file-group-head{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .file-group-head strong{ font-family: var(--font-mono); font-size: 13.5px; }
+  table.files{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  table.files td{
+    padding: 8px 0;
+    border-top: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table.files tr:first-child td{ border-top: none; }
+  table.files td.f{
+    width: 46%;
+    padding-right: 14px;
+  }
+  table.files td.n{ color: var(--ink-soft); }
+
+  .diagram-frame{
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 14px 10px;
+    box-shadow: var(--shadow);
+    margin: 16px 0 6px;
+    overflow-x: auto;
+  }
+  .diagram-frame svg{ display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .diagram-cap{
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    text-align: center;
+    margin: 0 0 4px;
+  }
+
+  .scroll-x{ overflow-x: auto; }
+
+  footer.doc-foot{
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--ink-faint);
+    font-size: 12.5px;
+    font-family: var(--font-mono);
+  }
+
+  @media (max-width: 560px){
+    .stat-strip{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+    table.files td.f{ width: 100%; display: block; padding-right: 0; }
+    table.files tr{ display: block; padding: 8px 0; }
+    table.files tr:first-child td{ border-top: 1px solid var(--border); }
+    table.files tr:first-child{ padding-top: 0; }
+    table.files td{ display: block; border: none; padding: 2px 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="doc-head">
+    <div class="kicker"><span class="dot"></span>eng recap · 2026-08-17</div>
+    <h1>Screenshot verification and plan Context completeness</h1>
+    <p class="dek">Two unrelated fixes, one session: a post-capture check in <code class="inline">social-media-tools</code>'s screenshot pipeline (shipped, <code class="inline">0bedc78</code>), and a completeness bar added to <code class="inline">plan-agent</code>'s <code class="inline">## Context</code> guidance (uncommitted). Both trace back to a plugin review run against an external article on agent-prompting technique.</p>
+
+    <div class="stat-strip">
+      <div class="stat">
+        <div class="n tabular">8</div>
+        <div class="label">Files touched</div>
+      </div>
+      <div class="stat">
+        <div class="n tabular">2</div>
+        <div class="label">Plugins bumped</div>
+      </div>
+      <div class="stat">
+        <div class="n tabular">4</div>
+        <div class="label">Decisions</div>
+      </div>
+      <div class="stat">
+        <div class="n tabular warn">4</div>
+        <div class="label">Open items</div>
+      </div>
+    </div>
+  </header>
+
+  <section class="sec" data-n="01">
+    <div class="sec-tag">01 · At a glance</div>
+    <h2>Where it landed</h2>
+    <p>Two independent fixes landed in one session, unrelated to each other beyond sharing a source: a plugin/skills review run earlier against an external article on agent-prompting technique.</p>
+    <p><strong><code class="inline">social-media-tools</code></strong>'s shared Playwright screenshot pipeline gained a post-capture verification step — it checked the DOM was ready <em>before</em> capture but never checked the output file <em>after</em>, so a blank PNG still counted as success. Committed and pushed (<code class="inline">0bedc78</code>, branch <code class="inline">claude/project-optimization-review-595e98</code>).</p>
+    <p><strong><code class="inline">plan-agent</code></strong>'s <code class="inline">implementation-plan</code> and <code class="inline">build-proposal</code> skills, plus the personal global plan-mode skeleton, got an explicit "no follow-up question" completeness bar added to their <code class="inline">## Context</code> section guidance. Still uncommitted in the working tree.</p>
+  </section>
+
+  <section class="sec" data-n="02">
+    <div class="sec-tag">02 · Architecture and code paths</div>
+    <h2>Where things live, and how they call</h2>
+
+    <h3>Screenshot pipeline</h3>
+    <p><code class="path">kit/plugins/social-media-tools/references/rendering-pipeline.md</code> is a single shared reference, not duplicated per skill. Ten <code class="inline">SKILL.md</code> files read it: <code class="inline">share-code</code>, <code class="inline">share-react</code>, <code class="inline">share-github</code>, <code class="inline">share-project</code>, <code class="inline">share-session</code>, <code class="inline">share-selection</code>, <code class="inline">share-explanation</code>, <code class="inline">share-blog</code>, <code class="inline">share-video</code>, and one more matched by the same grep. One file change reaches all ten with no per-skill edit.</p>
+
+    <div class="diagram-frame">
+      <svg id="mermaid-1786984117224" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" style="max-width: 505.859375px;" viewBox="0 0 505.859375 958" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#mermaid-1786984117224{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mermaid-1786984117224 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mermaid-1786984117224 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mermaid-1786984117224 .error-icon{fill:#552222;}#mermaid-1786984117224 .error-text{fill:#552222;stroke:#552222;}#mermaid-1786984117224 .edge-thickness-normal{stroke-width:1px;}#mermaid-1786984117224 .edge-thickness-thick{stroke-width:3.5px;}#mermaid-1786984117224 .edge-pattern-solid{stroke-dasharray:0;}#mermaid-1786984117224 .edge-thickness-invisible{stroke-width:0;fill:none;}#mermaid-1786984117224 .edge-pattern-dashed{stroke-dasharray:3;}#mermaid-1786984117224 .edge-pattern-dotted{stroke-dasharray:2;}#mermaid-1786984117224 .marker{fill:#333333;stroke:#333333;}#mermaid-1786984117224 .marker.cross{stroke:#333333;}#mermaid-1786984117224 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mermaid-1786984117224 p{margin:0;}#mermaid-1786984117224 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mermaid-1786984117224 .cluster-label text{fill:#333;}#mermaid-1786984117224 .cluster-label span{color:#333;}#mermaid-1786984117224 .cluster-label span p{background-color:transparent;}#mermaid-1786984117224 .label text,#mermaid-1786984117224 span{fill:#333;color:#333;}#mermaid-1786984117224 .node rect,#mermaid-1786984117224 .node circle,#mermaid-1786984117224 .node ellipse,#mermaid-1786984117224 .node polygon,#mermaid-1786984117224 .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mermaid-1786984117224 .rough-node .label text,#mermaid-1786984117224 .node .label text,#mermaid-1786984117224 .image-shape .label,#mermaid-1786984117224 .icon-shape .label{text-anchor:middle;}#mermaid-1786984117224 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#mermaid-1786984117224 .rough-node .label,#mermaid-1786984117224 .node .label,#mermaid-1786984117224 .image-shape .label,#mermaid-1786984117224 .icon-shape .label{text-align:center;}#mermaid-1786984117224 .node.clickable{cursor:pointer;}#mermaid-1786984117224 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#mermaid-1786984117224 .arrowheadPath{fill:#333333;}#mermaid-1786984117224 .edgePath .path{stroke:#333333;stroke-width:1px;}#mermaid-1786984117224 .flowchart-link{stroke:#333333;fill:none;}#mermaid-1786984117224 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#mermaid-1786984117224 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#mermaid-1786984117224 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#mermaid-1786984117224 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#mermaid-1786984117224 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#mermaid-1786984117224 .cluster text{fill:#333;}#mermaid-1786984117224 .cluster span{color:#333;}#mermaid-1786984117224 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#mermaid-1786984117224 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#mermaid-1786984117224 rect.text{fill:none;stroke-width:0;}#mermaid-1786984117224 .icon-shape,#mermaid-1786984117224 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#mermaid-1786984117224 .icon-shape p,#mermaid-1786984117224 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#mermaid-1786984117224 .icon-shape .label rect,#mermaid-1786984117224 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#mermaid-1786984117224 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#mermaid-1786984117224 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#mermaid-1786984117224 .node .neo-node{stroke:#9370DB;}#mermaid-1786984117224 [data-look="neo"].node rect,#mermaid-1786984117224 [data-look="neo"].cluster rect,#mermaid-1786984117224 [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#mermaid-1786984117224 [data-look="neo"].swimlane.cluster rect{filter:none;}#mermaid-1786984117224 [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#mermaid-1786984117224 [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#mermaid-1786984117224 [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#mermaid-1786984117224 [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#mermaid-1786984117224 [data-look="neo"].node circle .state-start{fill:#000000;}#mermaid-1786984117224 [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#mermaid-1786984117224 [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#mermaid-1786984117224 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="mermaid-1786984117224_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="mermaid-1786984117224_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="mermaid-1786984117224_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="mermaid-1786984117224_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="mermaid-1786984117224_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="mermaid-1786984117224_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="mermaid-1786984117224_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="mermaid-1786984117224_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="mermaid-1786984117224_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="mermaid-1786984117224_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="mermaid-1786984117224_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="mermaid-1786984117224_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker></g><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M232.895,62L232.895,66.167C232.895,70.333,232.895,78.667,232.895,86.333C232.895,94,232.895,101,232.895,104.5L232.895,108" id="mermaid-1786984117224-L_A_B_0" class=" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A_B_0" data-points="W3sieCI6MjMyLjg5NDUzMTI1LCJ5Ijo2Mn0seyJ4IjoyMzIuODk0NTMxMjUsInkiOjg3fSx7IngiOjIzMi44OTQ1MzEyNSwieSI6MTEyfV0=" data-look="classic" marker-end="url(#mermaid-1786984117224_flowchart-v2-pointEnd)"></path><path d="M232.895,190L232.895,194.167C232.895,198.333,232.895,206.667,232.895,214.333C232.895,222,232.895,229,232.895,232.5L232.895,236" id="mermaid-1786984117224-L_B_C_0" class=" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_C_0" data-points="W3sieCI6MjMyLjg5NDUzMTI1LCJ5IjoxOTB9LHsieCI6MjMyLjg5NDUzMTI1LCJ5IjoyMTV9LHsieCI6MjMyLjg5NDUzMTI1LCJ5IjoyNDB9XQ==" data-look="classic" marker-end="url(#mermaid-1786984117224_flowchart-v2-pointEnd)"></path><path d="M232.895,342L232.895,346.167C232.895,350.333,232.895,358.667,232.895,366.333C232.895,374,232.895,381,232.895,384.5L232.895,388" id="mermaid-1786984117224-L_C_D_0" class=" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_D_0" data-points="W3sieCI6MjMyLjg5NDUzMTI1LCJ5IjozNDJ9LHsieCI6MjMyLjg5NDUzMTI1LCJ5IjozNjd9LHsieCI6MjMyLjg5NDUzMTI1LCJ5IjozOTJ9XQ==" data-look="classic" marker-end="url(#mermaid-1786984117224_flowchart-v2-pointEnd)"></path><path d="M232.895,446L232.895,450.167C232.895,454.333,232.895,462.667,232.895,470.333C232.895,478,232.895,485,232.895,488.5L232.895,492" id="mermaid-1786984117224-L_D_E_0" class=" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_D_E_0" data-points="W3sieCI6MjMyLjg5NDUzMTI1LCJ5Ijo0NDZ9LHsieCI6MjMyLjg5NDUzMTI1LCJ5Ijo0NzF9LHsieCI6MjMyLjg5NDUzMTI1LCJ5Ijo0OTZ9XQ==" data-look="classic" marker-end="url(#mermaid-1786984117224_flowchart-v2-pointEnd)"></path><path d="M169.793,734.898L157.815,751.582C145.838,768.265,121.884,801.633,109.907,825.816C97.93,850,97.93,865,97.93,872.5L97.93,880" id="mermaid-1786984117224-L_E_F_0" class=" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_F_0" data-points="W3sieCI6MTY5Ljc5MjY0MzIyNTIyOTUsInkiOjczNC44OTgxMTE5NzUyMjk1fSx7IngiOjk3LjkyOTY4NzUsInkiOjgzNX0seyJ4Ijo5Ny45Mjk2ODc1LCJ5Ijo4ODR9XQ==" data-look="classic" marker-end="url(#mermaid-1786984117224_flowchart-v2-pointEnd)"></path><path d="M295.996,734.898L307.974,751.582C319.951,768.265,343.905,801.633,355.882,823.816C367.859,846,367.859,857,367.859,862.5L367.859,868" id="mermaid-1786984117224-L_E_G_0" class=" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_G_0" data-points="W3sieCI6Mjk1Ljk5NjQxOTI3NDc3MDUsInkiOjczNC44OTgxMTE5NzUyMjk1fSx7IngiOjM2Ny44NTkzNzUsInkiOjgzNX0seyJ4IjozNjcuODU5Mzc1LCJ5Ijo4NzJ9XQ==" data-look="classic" marker-end="url(#mermaid-1786984117224_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A_B_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel "></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B_C_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel "></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_C_D_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel "></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_D_E_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel "></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(97.9296875, 835)"><g class="label" data-id="L_E_F_0" transform="translate(-15.140625, -12)"><foreignObject width="30.28125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel "><p>pass</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(367.859375, 835)"><g class="label" data-id="L_E_G_0" transform="translate(-11.8046875, -12)"><foreignObject width="23.609375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel "><p>fail</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default  " id="mermaid-1786984117224-flowchart-A-0" data-look="classic" transform="translate(232.89453125, 35)"><rect class="basic label-container" style="" x="-123.828125" y="-27" width="247.65625" height="54"></rect><g class="label" style="" transform="translate(-93.828125, -12)"><rect></rect><foreignObject width="187.65625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel "><p>Step 1 · find_free_port.py</p></span></div></foreignObject></g></g><g class="node default  " id="mermaid-1786984117224-flowchart-B-1" data-look="classic" transform="translate(232.89453125, 151)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel "><p>Step 2 · python3 -m http.server</p></span></div></foreignObject></g></g><g class="node default  " id="mermaid-1786984117224-flowchart-C-3" data-look="classic" transform="translate(232.89453125, 291)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel "><p>Step 3 · Playwright resize / navigate / snapshot / take_screenshot(.card)</p></span></div></foreignObject></g></g><g class="node default  " id="mermaid-1786984117224-flowchart-D-5" data-look="classic" transform="translate(232.89453125, 419)"><rect class="basic label-container" style="" x="-119.6953125" y="-27" width="239.390625" height="54"></rect><g class="label" style="" transform="translate(-89.6953125, -12)"><rect></rect><foreignObject width="179.390625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel "><p>Step 4 · kill $SERVER_PID</p></span></div></foreignObject></g></g><g class="node default  " id="mermaid-1786984117224-flowchart-E-7" data-look="classic" transform="translate(232.89453125, 647)"><polygon points="151,0 302,-151 151,-302 0,-151" class="label-container" transform="translate(-150.5, 151)"></polygon><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel "><p>Step 5 (new) · verify $SAVE_PATH_PNG exists and size &gt;= 5KB</p></span></div></foreignObject></g></g><g class="node default  " id="mermaid-1786984117224-flowchart-F-9" data-look="classic" transform="translate(97.9296875, 911)"><rect class="basic label-container" style="" x="-89.9296875" y="-27" width="179.859375" height="54"></rect><g class="label" style="" transform="translate(-59.9296875, -12)"><rect></rect><foreignObject width="119.859375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel "><p>Phase 6 · Deliver</p></span></div></foreignObject></g></g><g class="node default  " id="mermaid-1786984117224-flowchart-G-11" data-look="classic" transform="translate(367.859375, 911)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel "><p>Fallback · point user at local HTML</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="mermaid-1786984117224-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="mermaid-1786984117224-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs></svg>
+    </div>
+    <p class="diagram-cap">Step 5 is new. A blank or truncated capture now routes to Fallback instead of reaching Deliver.</p>
+
+    <h3>Plan Context sections</h3>
+    <p>Three independent copies of the same guidance, no shared code path between them:</p>
+    <ul class="list">
+      <li><code class="path">kit/plugins/plan-agent/skills/implementation-plan/guidelines/section-catalog.md</code> — the canonical section definitions <code class="inline">implementation-plan</code>'s Workflow Step 2.2 reads before drafting a spec.</li>
+      <li><code class="path">kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.md</code> — the copyable starter the same step also reads.</li>
+      <li><code class="path">kit/plugins/plan-agent/skills/build-proposal/references/artifact-shape.md</code> — <code class="inline">build-proposal</code>'s equivalent: both the prose section-order description (item 4) and its own copyable Skeleton block.</li>
+      <li><code class="path">~/.claude/reference/SKELETON.md</code> (outside this repo) — the global starter <code class="inline">~/.claude/rules/plan-mode.md</code> Step 2 tells any Claude Code session to copy, in any project.</li>
+    </ul>
+    <p>Worth knowing before touching any of these again: <code class="inline">implementation-plan</code> already has a <code class="inline">## Decisions</code> section, and <code class="inline">build-proposal</code> already has <code class="inline">Locked &amp; resolved decisions</code> — both exist specifically so "a resumed session reads this instead of re-deriving" (verbatim from <code class="inline">section-catalog.md</code>). Context is the <em>why</em>; Decisions/Locked-decisions is the <em>settled how</em>. Don't merge them.</p>
+    <p>Not modified, but load-bearing if extending verification-gate patterns elsewhere: <code class="path">kit/plugins/plan-agent/skills/build/references/completion-gates.md</code> is this repo's reference implementation of a mandatory, bounded, escalate-rather-than-fake-success verification gate — the pattern the screenshot check is a lightweight instance of.</p>
+  </section>
+
+  <section class="sec" data-n="03">
+    <div class="sec-tag">03 · Decisions</div>
+    <h2>What was decided, and why</h2>
+    <div class="cards">
+      <div class="card">
+        <strong>Screenshot check uses a 5,000-byte heuristic, not pixel inspection.</strong>
+        <p style="margin-top:6px;"><code class="inline">wc -c</code> on the output file is free; a real "is this blank" check would need an image-decode dependency the pipeline doesn't have. A solid-color/blank PNG compresses far smaller than a populated card with text and a gradient, so byte count is a reasonable proxy. Marked with an inline <code class="inline">ponytail:</code> comment naming the ceiling (a legitimately sparse card could false-positive) and the upgrade path (real pixel sampling).</p>
+      </div>
+      <div class="card">
+        <strong>Verification runs after server cleanup, not before.</strong>
+        <p style="margin-top:6px;">Step 5 sits after Step 4 (<code class="inline">kill $SERVER_PID</code>), so a failed verification never leaves the HTTP server orphaned — cleanup isn't gated on the check succeeding.</p>
+      </div>
+      <div class="card">
+        <strong>Context-section fix scope was cut down mid-session.</strong>
+        <p style="margin-top:6px;">The original plan was a heavier rewrite of <code class="inline">implementation-plan</code>/<code class="inline">build-proposal</code>'s Context guidance. After reading <code class="inline">section-catalog.md</code>, <code class="inline">right-sizing.md</code>, and <code class="inline">artifact-shape.md</code> in full — not just <code class="inline">implementation-plan/SKILL.md</code>'s summary line — it became clear both skills already solve the cold-read problem via <code class="inline">## Decisions</code>/<code class="inline">Locked &amp; resolved decisions</code>. The change shipped is one added sentence per file stating the completeness test in words, plus a clause naming the Context/Decisions boundary — not a restructure.</p>
+      </div>
+      <div class="card">
+        <strong><code class="inline">~/.claude/rules/plan-mode.md</code>'s own Required Structure gloss for <code class="inline">context</code> was left untouched.</strong>
+        <p style="margin-top:6px;">It's now slightly thinner than <code class="inline">SKELETON.md</code>'s copy ("Background and motivation; why this work is needed" vs. the strengthened placeholder). Not fixed because the request named <code class="inline">SKELETON.md</code> specifically, and <code class="inline">SKELETON.md</code> is the file actually copied into new plans — <code class="inline">plan-mode.md</code>'s line is reference prose, not copied. Practical fix landed in the higher-leverage file; the inconsistency is flagged in §07, not resolved.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" data-n="04">
+    <div class="sec-tag">04 · Tradeoffs and rejected options</div>
+    <h2>What was weighed and lost</h2>
+    <ul class="list">
+      <li><strong>Rejected: pixel-level screenshot verification.</strong> More accurate than byte count, but needs an image-processing dependency not currently in the pipeline. Revisit if the 5KB heuristic misfires in practice — the <code class="inline">ponytail:</code> comment in <code class="inline">rendering-pipeline.md</code> names this as the upgrade path.</li>
+      <li><strong>Rejected: a retry-on-failure loop for the screenshot step</strong>, mirroring <code class="inline">plan-agent:build</code>'s 3-try fix loop. Out of scope for what was asked; on any Step 5 failure the pipeline falls back to the same single Fallback message it already used for other failure modes (Playwright unavailable, capture failure) — consistent, not new.</li>
+      <li><strong>Rejected: rewriting the Context section definitions wholesale</strong> in <code class="inline">implementation-plan</code>/<code class="inline">build-proposal</code>. Would have duplicated or blurred what <code class="inline">## Decisions</code>/<code class="inline">Locked &amp; resolved decisions</code> already do. A one-sentence addition was chosen once the existing design was understood.</li>
+      <li><strong>Rejected: applying "unpack jargon on first use" broadly</strong> across plan-mode/plan-agent writing style. Conflicts on purpose with the existing "precise names over plain words" rule for an expert-engineer-only reader. Scoped out entirely — not partially applied anywhere.</li>
+    </ul>
+  </section>
+
+  <section class="sec" data-n="05">
+    <div class="sec-tag">05 · Learnings</div>
+    <h2>Tried, abandoned, and gotchas</h2>
+    <ul class="list">
+      <li><strong>A skill's top-level <code class="inline">SKILL.md</code> workflow steps can undersell how complete its <code class="inline">guidelines/</code>/<code class="inline">references/</code> files already are.</strong> The Context-section gap was originally diagnosed from <code class="inline">implementation-plan/SKILL.md</code>'s one-line summary ("Optional by judgment: Context…") without reading <code class="inline">guidelines/section-catalog.md</code> or <code class="inline">guidelines/right-sizing.md</code> first. Those turned out to already solve the described problem, just under a different section name. Read the deeper files before diagnosing a gap in a mature skill.</li>
+      <li><strong>One shared reference file can back many skills in this plugin family.</strong> <code class="inline">social-media-tools/references/rendering-pipeline.md</code> is read by ten separate <code class="inline">SKILL.md</code> files; the fix didn't need touching any of them. Worth checking for a shared reference before assuming per-skill duplication is needed.</li>
+      <li><strong>No automated test exercises the Playwright screenshot pipeline end-to-end</strong> — it needs a live browser, which this session didn't have. What ran instead (<code class="inline">test-no-shell-expansion.sh</code>, <code class="inline">test-react-card-smoke.sh</code>, <code class="inline">test-share-react-registration.sh</code>) confirms no shell-expansion or template-registration regression, but none execute the new Step 5 logic against a real capture. A real coverage gap, not just an unexercised edge case.</li>
+    </ul>
+  </section>
+
+  <section class="sec" data-n="06">
+    <div class="sec-tag">06 · Tests and verification</div>
+    <h2>What ran, and what didn't</h2>
+    <ul class="list tight">
+      <li><code class="inline">git fetch origin &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs</code> — run after each version bump (<code class="inline">social-media-tools</code> 2.23.0→2.23.1, <code class="inline">plan-agent</code> 9.4.1→9.4.2). <span class="pill good">pass</span></li>
+      <li><code class="inline">python3 -c "json.load(...)"</code> on <code class="inline">marketplace.json</code> after each edit — valid JSON. <span class="pill good">pass</span></li>
+      <li><code class="inline">tests/plugins/test-no-shell-expansion.sh</code> — confirms the new <code class="inline">$SAVE_PATH_PNG</code>/<code class="inline">$SIZE</code> vars don't introduce a <code class="inline">${VAR}</code>-style expansion (this repo's Bash tool rejects those outright). <span class="pill good">pass</span></li>
+      <li><code class="inline">tests/social-media-tools/test-react-card-smoke.sh</code>, <code class="inline">test-share-react-registration.sh</code> <span class="pill good">pass</span></li>
+      <li><code class="inline">tests/plugins/test-build-proposal.sh</code>, <code class="inline">test-proposal-prompt-pipeline.sh</code>, <code class="inline">test-goal-prompt.sh</code>, <code class="inline">test-resources-section.sh</code>, <code class="inline">test-write-prompt-proposal-type.sh</code> — pass, none assert on the new Context prose specifically (expected — prose-only, no structural or parser-visible effect). <span class="pill good">pass</span></li>
+      <li><code class="inline">tests/plugins/test-humanized-skeleton.sh</code> — run, passed, confirmed irrelevant on inspection (checks renderer HTML output, not these guideline files). <span class="pill plain">n/a</span></li>
+      <li><strong>Knowingly untested:</strong> the screenshot verification logic was never run against a real Playwright capture — no live browser in this session. The 5KB threshold is unverified against an actual blank-vs-populated card pair. <span class="pill warn">untested</span></li>
+    </ul>
+  </section>
+
+  <section class="sec" data-n="07">
+    <div class="sec-tag">07 · Review follow-ups and tech debt</div>
+    <h2>Open items</h2>
+    <div class="cards">
+      <div class="card">
+        <span class="pill warn">uncommitted</span>
+        <p style="margin-top:8px;"><code class="path">.claude-plugin/marketplace.json</code>, <code class="path">kit/plugins/plan-agent/CHANGELOG.md</code>, <code class="path">kit/plugins/plan-agent/skills/build-proposal/references/artifact-shape.md</code>, <code class="path">kit/plugins/plan-agent/skills/implementation-plan/guidelines/section-catalog.md</code>, <code class="path">kit/plugins/plan-agent/skills/implementation-plan/reference/SKELETON.md</code>. The plan-agent Context-completeness change is not yet committed or pushed.</p>
+      </div>
+      <div class="card">
+        <span class="pill plain">known ceiling</span>
+        <p style="margin-top:8px;">The screenshot Step 5's 5KB threshold is a documented byte-count heuristic (inline <code class="inline">ponytail:</code> comment in <code class="inline">rendering-pipeline.md</code>), untested against a real capture. Upgrade path if it misfires: sample actual pixel content instead of byte count.</p>
+      </div>
+      <div class="card">
+        <span class="pill plain">left inconsistent</span>
+        <p style="margin-top:8px;"><code class="inline">~/.claude/rules/plan-mode.md</code>'s Required Structure line for <code class="inline">context</code> still reads "Background and motivation; why this work is needed" — thinner than the strengthened <code class="inline">SKELETON.md</code> it points at. Flagged mid-session as optional polish, not applied because it wasn't named in the request.</p>
+      </div>
+      <div class="card">
+        <span class="pill risk">not implemented</span>
+        <p style="margin-top:8px;">Three more gaps identified during the earlier plugin-review pass, no action taken beyond the screenshot fix:</p>
+        <ol class="steps">
+          <li>Only <code class="inline">plan-agent:build</code> uses an explicit completion-gate/"don't finish until X" pattern; roughly 30 of 63 skills in this repo mention no verification step at all (some legitimately don't need one — routers, display-only skills).</li>
+          <li><code class="inline">code-review-agent</code> doesn't verify its own findings against cited line numbers before reporting them.</li>
+          <li>Only 3 of 63 skills in the repo ship a worked example of their actual output shape.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" data-n="08">
+    <div class="sec-tag">08 · Files touched</div>
+    <h2>Grouped by area</h2>
+
+    <div class="file-group">
+      <div class="file-group-head">
+        <strong>social-media-tools</strong>
+        <span class="pill good">committed · 0bedc78 · pushed</span>
+      </div>
+      <div class="scroll-x">
+        <table class="files">
+          <tr><td class="f"><code class="path">kit/plugins/social-media-tools/references/rendering-pipeline.md</code></td><td class="n">Added Step 5 (post-capture PNG existence/size check); widened Fallback's trigger to include verification failure.</td></tr>
+          <tr><td class="f"><code class="path">kit/plugins/social-media-tools/CHANGELOG.md</code></td><td class="n">New <code class="inline">v2.23.1</code> entry.</td></tr>
+          <tr><td class="f"><code class="path">.claude-plugin/marketplace.json</code></td><td class="n"><code class="inline">social-media-tools</code> 2.23.0 → 2.23.1.</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="file-group">
+      <div class="file-group-head">
+        <strong>plan-agent</strong>
+        <span class="pill warn">uncommitted</span>
+      </div>
+      <div class="scroll-x">
+        <table class="files">
+          <tr><td class="f"><code class="path">.../implementation-plan/guidelines/section-catalog.md</code></td><td class="n">Added the no-follow-up test and the Context/Decisions boundary sentence to the <code class="inline">## Context</code> entry.</td></tr>
+          <tr><td class="f"><code class="path">.../implementation-plan/reference/SKELETON.md</code></td><td class="n">Same addition to the copyable Context placeholder.</td></tr>
+          <tr><td class="f"><code class="path">.../build-proposal/references/artifact-shape.md</code></td><td class="n">Same addition, two spots: section-order description (item 4) and the copyable Skeleton block.</td></tr>
+          <tr><td class="f"><code class="path">kit/plugins/plan-agent/CHANGELOG.md</code></td><td class="n">New <code class="inline">9.4.2</code> entry.</td></tr>
+          <tr><td class="f"><code class="path">.claude-plugin/marketplace.json</code></td><td class="n"><code class="inline">plan-agent</code> 9.4.1 → 9.4.2.</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="file-group">
+      <div class="file-group-head">
+        <strong>Outside this repo</strong>
+        <span class="pill plain">untracked · no version mechanism</span>
+      </div>
+      <div class="scroll-x">
+        <table class="files">
+          <tr><td class="f"><code class="path">~/.claude/reference/SKELETON.md</code></td><td class="n">Same Context-completeness addition, personal dotfiles.</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-foot">
+    session-id 014e06c5 · branch claude/project-optimization-review-595e98
+  </footer>
+
+</div>
+</body>
+</html>

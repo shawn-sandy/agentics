@@ -242,11 +242,9 @@ else
   # (now == was) — the check then fails until the entry is removed, so the
   # ledger cannot silently outlive the change it documents.
   #
-  #   path-rules-advisor — memory-tools 4.1.1 narrowed allowed-tools from
-  #   Bash(git *), Bash(python3 *) to Bash(memory-verify-write *) when the
-  #   inline verification block became a bin/ wrapper.
+  #   (No entries. path-rules-advisor carried one for the memory-tools 4.1.1
+  #   allowed-tools narrowing until main caught up and the entry went stale.)
   DOCUMENTED_DRIFT="
-path-rules-advisor:5a4b82afb17508816ac4bf638655692f1008be67adb53cab3ea08d3dba4cdc79
 "
   while IFS='|' read -r skill _; do
     [ -n "$skill" ] || continue

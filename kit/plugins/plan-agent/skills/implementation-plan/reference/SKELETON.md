@@ -14,7 +14,9 @@ glance: <2–3 plain-language sentences on ONE line — why this matters and how
 ## Context
 
 <why this work is needed; risks with mitigations; issue link when seeded
-from one. Omit the whole section for self-evident chores.>
+from one. State what a reader with no prior context needs to judge the
+plan — no follow-up question required. Omit the whole section for
+self-evident chores.>
 
 ## Files
 

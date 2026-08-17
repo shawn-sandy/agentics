@@ -1,5 +1,20 @@
 # Changelog — social-media-tools
 
+## v2.23.4 — 2026-08-17 — screenshots verify themselves before delivery
+
+### Fixed
+
+- **`references/rendering-pipeline.md` checks the captured PNG before Phase 6
+  (Deliver) hands it to the user.** The Playwright step verified the page had
+  rendered *before* capture, but nothing checked the output file afterward —
+  a blank or truncated screenshot still counted as a successful tool call.
+  Step 5 now confirms `$SAVE_PATH_PNG` exists and is above a 5KB heuristic
+  threshold (a blank/solid-color capture compresses far smaller than a
+  populated card); either check failing routes to the existing Fallback
+  message instead of silently delivering a bad image.
+
+(Authored as v2.23.1 on a branch that predated v2.23.2–v2.23.3; ships as v2.23.4.)
+
 ## v2.23.3 — 2026-08-17 — worked posts per platform; save-artifact proves the publish
 
 ### Changed
