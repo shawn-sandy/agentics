@@ -21,121 +21,20 @@ jobs:
         run: node scripts/check-plugin-versions.mjs
         env:
           BASE_REF: ${{ github.base_ref }}
-      - name: Unit-test the guard
-        run: node tests/publish/test-check-plugin-versions.mjs
-      # Pre-merge gate. publish-dist.yml also runs this, but that workflow is
-      # schedule/dispatch-only, so on its own it catches a regression the
-      # morning after the merge rather than at review time.
-      - name: Test build skill ships and owns the implementation gates
-        run: bash tests/plugins/test-build-skill.sh
-      # The five plan-agent cores are the largest bodies the plugin ships, and a
-      # SKILL.md is paid in full on every trigger. A core that creeps back over
-      # its ceiling — or a reference link that goes dangling or orphaned — shows
-      # up in no diff review of a single file, so re-monolithization is
-      # invisible without a gate that reads all five together.
-      - name: Test skill progressive disclosure
-        run: bash tests/plugins/test-progressive-disclosure.sh
-      # Same rationale: the merge? hook fires on every prompt and the merge
-      # skill ends in an irreversible squash-merge, so its trigger boundary and
-      # safety gates are checked at review time, not the next morning.
-      - name: Test merge? shorthand hook and merge skill contract
-        run: bash tests/plugins/test-merge-shorthand.sh
-      # post-merge-cleanup deletes branches and worktrees and can reach rm -rf,
-      # and its central safety property is git's own refusal to remove a dirty
-      # worktree — a property no diff review re-checks. The gate pins that
-      # refusal, the containment rule, and the forbidden flags together.
-      - name: Test post-merge-cleanup skill contract
-        run: bash tests/plugins/test-post-merge-cleanup.sh
-      # CLAUDE.md is loaded into every session in this repo, so growth there is
-      # a tax on all future work — and it grows by ordinary PRs adding "just one
-      # more line", which is exactly what review misses.
-      - name: Test CLAUDE.md stays within its context budget
-        run: bash tests/plugins/test-claude-md-budget.sh
-      # The de-registered plugin list is written twice — marketplace.json's
-      # `removed` array and .claude/rules/removed-plugins.md — and drifted in
-      # both directions before anything checked it. The rule file is the copy
-      # that matters: it loads unscoped in every session so the re-add
-      # confirmation gate fires before any plugin file is opened, so a missing
-      # row is the gate with a hole in it rather than cosmetic drift. Neither
-      # half of a two-file update shows up as missing in a review of the other.
-      - name: Test removed-plugins list stays in sync
-        run: bash tests/plugins/test-removed-plugins-sync.sh
-      # The gallery merge driver runs during `git merge`, where a silent wrong
-      # answer looks like lost plan or artifact cards rather than a failure.
-      # Nothing else exercises it, so this is its only regression gate.
-      - name: Test gallery index merge driver
-        run: bash tests/plugins/test-merge-gallery-index.sh
-      # Three of these six skills carry irreversible git operations: `ship` and
-      # `ship-autonomous` push to remotes and end in a squash merge, and
-      # `branch-agent` creates and checks out refs and can stash and pop a dirty
-      # tree — it never commits, pushes, or merges. The three share-* skills
-      # publish to a public gallery behind a scrub gate. So their guards are
-      # checked at review time by reading the SKILL.md core: a guard that drifts
-      # behind a reference link is a guard that may never load, and its absence
-      # is invisible until the day it should have fired.
-      - name: Test the git-agent and social-media-tools cores stay split
-        run: bash tests/plugins/test-skill-split-git-social.sh
-      # The sibling gate for PR #487's six skills (artifact-to-post,
-      # diff-artifact, optimizing-skill-frontmatter, path-rules-advisor,
-      # prompt-artifact, tdd-fix). Same invariant, disjoint file set — a SKILL.md
-      # body is paid in full every time the skill fires, so a core creeping back
-      # over its ceiling shows up in no diff review of a single file.
-      - name: Test the PR 487 skill cores stay split
-        run: bash tests/plugins/test-remaining-skill-splits.sh
-      # The five tests below read shipped skill bodies as data, and four of them
-      # were retargeted in this PR to follow content that moved behind a
-      # reference link. None of them was wired into CI, so nothing stopped a
-      # future edit from moving a literal back and quietly turning a safety
-      # assertion into a no-op — the same decay the step above exists to prevent.
-      # All five pass on main unchanged, so wiring them breaks nothing in flight.
-      - name: Test artifact-tools contracts survive the reference split
-        run: bash tests/plugins/test-artifact-tools.sh
-      - name: Test artifact-to-post contracts survive the reference split
-        run: bash tests/plugins/test-artifact-to-post.sh
-
-      # The three recap commands are three framings of one workflow, and the
-      # duplication came back once already. Nothing stops the next feature from
-      # being pasted into all three except a check that runs before merge.
-      - name: Test the recap commands stay deduplicated
-        run: bash tests/plugins/test-recap-command-dedupe.sh
-      # A documented command containing ${VAR} is refused by the Bash tool
-      # before permission rules are consulted, so it never runs for anybody —
-      # and it fails silently, as prose that reads correctly and greps clean.
-      # Eight such commands shipped across five plugins; one of them had been
-      # "fixed" INTO that shape by a release, and one was invisible to a
-      # node|python3|bash scan because it had no interpreter prefix at all.
-      # Nothing but a pre-merge check distinguishes a command that works from
-      # one that has never run.
-      - name: Test no documented Bash command contains shell expansion
-        run: bash tests/plugins/test-no-shell-expansion.sh
-      - name: Test the memory-tools write guard executes shipped code
-        run: bash tests/plugins/test-memory-doctor-guard.sh
-      - name: Test generator skills verify their own output
-        run: bash tests/plugins/test-generator-skills-verify-output.sh
-      - name: Test every skill description stays within budget
-        run: bash tests/plugins/test-description-budget.sh
-      # An unlinked reference file is invisible to review: it lints, it greps,
-      # it reads correctly, and it never loads. best-practices-reference.md
-      # shipped that way for releases. This check fails on the link, not the
-      # prose, so the calibration cannot go orphaned a second time.
-      - name: Test the prompt skill's Claude 5 calibration stays wired
-        run: bash tests/plugins/test-prompt-calibration.sh
-      # The plan-mode guard fails silently in both directions: strip it and a
-      # skill writes from inside a mode the user deliberately entered; re-expand
-      # it and 40 files each re-teach the model something it already knows.
-      # Neither shows up in a diff review of a single file.
-      - name: Test plan-mode guard survives without its boilerplate
-        run: bash tests/plugins/test-exitplanmode-guard.sh
-      # Guards the imperative prune. Removing a process reminder and removing a
-      # safety guard look identical in a diff — both are a deleted sentence — and
-      # the guards here sit in front of an irreversible squash merge
-      # (ship-autonomous), a stash/pop over the user's uncommitted work
-      # (branch-agent), and a plan-authoring skill forbidden from writing source
-      # (implementation-plan). This step is the structural half: it asserts every
-      # KEEP-classified guard is still literally present and that no frontmatter
-      # `description:` drifted. The behavioral half needs the `claude` CLI, which
-      # this runner has no access to, so it runs locally via
-      # tests/plugins/test-skill-behavior-baselines.sh — which exits 1 rather
-      # than skipping, so it cannot go green by being absent.
+      # One runner, every test: tests/run-all.sh globs tests/**/test-*.sh,
+      # tests/**/test-*.mjs, and tests/**/*.test.mjs, so a new test file is
+      # wired into CI by existing — there is nothing to add here. Before this,
+      # the workflow hand-enumerated 20 of the tree's 77 test files and the
+      # rest ran only when someone remembered to run them by hand. The skip
+      # list (with a reason per entry) lives at the top of the runner; the
+      # rationale for each individual test lives in that test file's header
+      # comment, which the per-step comments this replaced were duplicating.
+      - name: Run the test suite
+        run: bash tests/run-all.sh
+      # Explicit because run-all skips it: on this runner the `claude` CLI is
+      # absent, so the test's behavioral half self-skips and its static guard
+      # checks still run fast. Locally the CLI exists and the chained harness
+      # is slow (and hangs inside a nested Claude session), which is why the
+      # runner leaves it out — see the skip list in tests/run-all.sh.
       - name: Test pruned skill imperatives kept every load-bearing guard
         run: bash tests/plugins/test-imperative-pruning.sh

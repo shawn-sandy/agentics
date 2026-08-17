@@ -8,7 +8,9 @@
 //   node scripts/build-dist.mjs              # build to dist/
 //   node scripts/build-dist.mjs --list       # print active plugin names
 //   node scripts/build-dist.mjs --check      # verify no DROP patterns leaked
-//   # --publish / --dry-run: reserved (not yet implemented)
+//   node scripts/build-dist.mjs --publish    # build + push to the dist repo
+//                                            #   (env: DIST_REPO_URL, DIST_REPO_TOKEN)
+//   # --dry-run: reserved (not yet implemented)
 
 import { readFileSync, writeFileSync, mkdirSync, cpSync, statSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { join, relative, basename, extname } from 'node:path';
@@ -280,6 +282,18 @@ function build() {
   // ── Print summary ──────────────────────────────────────────────────────
 
   printSummary(summary, allDropped);
+
+  // A manifest-registered plugin with no source directory is a broken dist,
+  // not a warning: exiting 0 here shipped a dist missing a plugin, caught
+  // only by the publish workflow's downstream smoke test the next morning.
+  const errored = summary.filter((s) => s.error);
+  if (errored.length > 0) {
+    console.error(
+      `\nERROR: ${errored.length} plugin(s) failed to build: ` +
+        errored.map((s) => `${s.name} (${s.error})`).join(', '),
+    );
+    process.exitCode = 1;
+  }
 
   return { summary, allDropped };
 }

@@ -132,6 +132,7 @@ Word count takes precedence when line count and word count thresholds disagree. 
 | SKILL.md casing | File is named exactly `SKILL.md` (case-sensitive) | Error if wrong casing |
 | Three-level architecture | Content distributed across frontmatter (L1), body (L2), and linked files (L3) where appropriate | Suggestion if all content crammed into body |
 | Feedback loop | Quality-critical or iterative tasks define a validator → fix → repeat cycle with a stop condition | Suggestion if absent in iterative/quality-critical skills |
+| Verification gate | Skills that write or edit files, mutate git/remote state, or report measured values define how they verify their own output before declaring done (re-read the edit, execute the written file, re-run the comparison, tool-measure the number) | Warning if absent in mutating or measuring skills |
 
 **Three-level progressive disclosure assessment:**
 - Level 1 (frontmatter): Is the description sufficient for activation decisions?
@@ -141,8 +142,8 @@ Word count takes precedence when line count and word count thresholds disagree. 
 A skill with >3,000 words in the body and no reference files should consider splitting.
 
 **Scoring:**
-- **2 pts** — Reference depth valid, TOC present (if needed), freedom level clear, folder naming correct, content well-distributed across levels
-- **1 pt** — Missing TOC on long reference file (≥100 lines), or freedom level unstated, or all content in body with no references
+- **2 pts** — Reference depth valid, TOC present (if needed), freedom level clear, folder naming correct, content well-distributed across levels, verification gate present where required
+- **1 pt** — Missing TOC on long reference file (≥100 lines), or freedom level unstated, or all content in body with no references, **or a mutating/measuring skill with no verification gate** (this caps the dimension at 1 pt regardless of the other checks)
 - **0 pts** — Reference depth violation, wrong SKILL.md casing, or no structure
 
 ---
