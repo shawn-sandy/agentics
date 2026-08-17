@@ -105,6 +105,12 @@ approach, an issue link. A self-evident chore (dependency bump, rename) can
 omit it. Paragraphs separated by blank lines. When the plan was seeded from
 an issue, cite the issue URL here.
 
+Write it so a reader with no prior context — including a future session after
+this one's context is cleared — needs no follow-up question to judge the
+plan. Resumption-specific choices (what was decided and why) belong in
+`## Decisions`, not here — Context carries the *why now*, Decisions carries
+the *settled how*.
+
 ### `## Decisions`
 
 The settled-choices ledger. One bullet per decision, each naming the choice

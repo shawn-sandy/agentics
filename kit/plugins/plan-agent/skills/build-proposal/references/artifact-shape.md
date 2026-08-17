@@ -17,7 +17,10 @@ only when it carries grounded content.
 3. **TL;DR** *(Tier 2)* — 3–5 lines: the core finding and the recommended path,
    readable on its own.
 4. **Context** — the idea and why it is on the table; what already exists that it
-   touches. Ground the "what exists" in real files/specs, not memory.
+   touches. Ground the "what exists" in real files/specs, not memory. Write it so
+   a reviewer with no prior context needs no follow-up question to evaluate the
+   idea; settled choices meant for later resumption belong in Locked & resolved
+   decisions, not here.
 5. **Core finding** — the **one** central insight, called out as a block quote.
    This is the load-bearing sentence: how the idea relates to what exists. Not a
    summary, not a survey.
@@ -63,7 +66,9 @@ repo-name: <repo>
 <3–5 lines: core finding + recommended path.>
 
 ## Context
-<The idea, why now, and the existing thing it touches — grounded in real sources.>
+<The idea, why now, and the existing thing it touches — grounded in real
+sources. Enough for a reviewer with no prior context to judge it, no
+follow-up needed.>
 
 ## Core finding
 > <The one central insight, as a block quote.>

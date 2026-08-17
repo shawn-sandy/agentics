@@ -1,6 +1,25 @@
 # Changelog
 
 
+## 9.4.2 — Context sections name the no-follow-up bar (2026-08-17)
+
+### Changed
+
+- **`implementation-plan` and `build-proposal` make the "no follow-up
+  question" completeness bar explicit for `## Context`.** The guidance
+  already required Context to be grounded in real files/specs rather than
+  memory, and already routes settled-choices/resumption content to
+  `## Decisions` (`implementation-plan`) or `Locked & resolved decisions`
+  (`build-proposal`) — that split was already correct. This just states the
+  underlying test in words: a reader with no prior context, including a
+  future session after this one's context is cleared, should need no
+  follow-up question to judge the plan or proposal.
+- Touches `implementation-plan/guidelines/section-catalog.md`,
+  `implementation-plan/reference/SKELETON.md`, and
+  `build-proposal/references/artifact-shape.md`. No structural or behavioral
+  change — prose only.
+
+
 ## 9.4.1 — plan-status carries the plan-mode guard (2026-08-14)
 
 ### Fixed
