@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.1.2 — 2026-08-17 — Secret scan on every backup
+
+### Security
+
+- **The backup secret scan runs on every backup, not just the first.** It was
+  gated on "repo has no prior commits", so a token added to `settings.json` (or
+  a hook script) after the initial commit was pushed unattended on every
+  subsequent routine run with no scan and no warning. The scan now covers every
+  source in the Step 3 file list on every run, its pattern list is extended
+  (GitHub fine-grained PATs, GitLab, Stripe, Google, Slack webhooks), and in
+  routine mode the `.sync-log` entry records the matched pattern and file path
+  so an exposure is discoverable rather than silent.
+
+---
+
 ## v1.1.1 — 2026-08-12 — Fix 1.1.0 release defects and harden the clone path
 
 ### Fixed
