@@ -119,8 +119,12 @@ marketplace.json JSON parse — all green before the PR opened.
   plugin errors. Bump versions and changelogs per plugin.
   ```
 
-- settings-restore is missing the plan-mode guard line despite running
-  `rm -rf`/`rsync --delete` (spotted in passing, out of scope here):
+- **Done** — shipped in PR #572 (settings-sync 1.1.4, merged 2026-08-17):
+  both skills carry the guard as Step 0, list `ToolSearch, ExitPlanMode` in
+  `allowed-tools`, and are registered in the WRITE_HEAVY manifest.
+  Original item — settings-restore was missing the plan-mode guard line
+  despite running `rm -rf`/`rsync --delete` (spotted in passing, out of
+  scope here):
 
   ```text
   In the agentics repo, add the verbatim plan-mode guard line required by
