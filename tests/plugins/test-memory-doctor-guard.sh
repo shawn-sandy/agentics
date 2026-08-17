@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Integration test for the memory-tools write guard (plan step 4).
-# Extracts the parse check that agentic-memory-management and path-rules-advisor
-# ship in their SKILL.md and runs it against fixture CLAUDE.md files in a temp
-# dir — never a real CLAUDE.md. Covers both directions: valid frontmatter is
-# rewritten and diffed, malformed frontmatter is reported and the file is left
-# untouched.
+# Runs the shipped bin/memory-verify-write wrapper — the check both
+# agentic-memory-management and path-rules-advisor document as their post-write
+# gate — against fixture CLAUDE.md files in a temp dir, never a real CLAUDE.md.
+# Covers both directions: valid frontmatter is rewritten and diffed, malformed
+# frontmatter is reported and the file is left untouched.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 DOCTOR="$ROOT/kit/plugins/memory-tools/skills/agentic-memory-management/SKILL.md"
 ADVISOR="$ROOT/kit/plugins/memory-tools/skills/path-rules-advisor/SKILL.md"
+WRAPPER="$ROOT/kit/plugins/memory-tools/bin/memory-verify-write"
 # path-rules-advisor is split core-plus-references: the STOP contract and the
 # in-core link stay in SKILL.md, the executable check lives under references/.
 # Assertions about shipped *code* therefore scan the skill directory, while the
@@ -51,9 +52,12 @@ MISSING=""
 [ -f "$ADVISOR" ] || MISSING="$MISSING path-rules-advisor/SKILL.md"
 grep -qF 'Verify the write' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:heading"
 grep -qF 'Verify the write' "$ADVISOR" 2>/dev/null || MISSING="$MISSING advisor:heading"
-grep -qF 'git --no-pager diff -- "$TARGET"' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:diff"
+# The runnable check is the bin/ wrapper, invoked by bare name in command
+# position — a `${CLAUDE_PLUGIN_ROOT}`-anchored or heredoc form is refused by
+# the Bash tool ("Contains expansion") and never runs for anybody.
+grep -qE '^[[:space:]]*memory-verify-write([[:space:]]|$)' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:wrapper"
 bundle_file "$ADVISOR"
-grep -qF 'git --no-pager diff -- "$TARGET"' "$BUNDLE" || MISSING="$MISSING advisor:diff"
+grep -qE '^[[:space:]]*memory-verify-write([[:space:]]|$)' "$BUNDLE" || MISSING="$MISSING advisor:wrapper"
 grep -qF 'REPORT rather than write' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:gate"
 grep -qF 'REPORT rather than write' "$ADVISOR" 2>/dev/null || MISSING="$MISSING advisor:gate"
 if [ -z "$MISSING" ]; then pass; else fail "missing:$MISSING"; fi
@@ -78,12 +82,14 @@ for f in "$DOCTOR" "$ADVISOR"; do
   NAME=$(basename "$(dirname "$f")")
   TOOLS=$(grep -m1 '^allowed-tools:' "$f")
   # Commands are extracted from the shipped bash block, not hardcoded here, so a
-  # third command added to the guard is covered automatically.
+  # second command added to the guard is covered automatically. Since the guard
+  # moved into bin/memory-verify-write, the documented block carries exactly one
+  # command — the wrapper's bare name.
   bundle_file "$f"
   CMDS=$(awk '/^```bash$/,/^```$/' "$BUNDLE" \
-    | grep -oE '^[[:space:]]*(git|python3|node|jq|sed|awk)[^|;&]*' \
+    | grep -oE '^[[:space:]]*(git|python3|node|jq|sed|awk|memory-verify-write)[^|;&]*' \
     | sed 's/^[[:space:]]*//' | sort -u)
-  if [ "$(printf '%s' "$CMDS" | grep -c .)" -lt 2 ]; then
+  if [ "$(printf '%s' "$CMDS" | grep -c .)" -lt 1 ]; then
     MISSING="$MISSING $NAME:[extracted-no-commands]"
   fi
   while IFS= read -r CMD; do
@@ -102,39 +108,29 @@ EOF
 done
 if [ -z "$MISSING" ]; then pass; else fail "allowed-tools does not cover:$MISSING"; fi
 
-# --- Extract the shipped check so the test exercises the real thing -----------
+# --- The shipped check is the wrapper; run the real thing ----------------------
+# Both skills document one command — bin/memory-verify-write — so every
+# behavioral check below runs that wrapper itself. There is no extraction step
+# left to drift: mutating verify_write.py fails here directly, in both the
+# pass and the fail direction.
 
-extract_check() {
-  # Buffer to a file rather than piping. `awk` exits at the heredoc terminator,
-  # so on a pipe the producer keeps writing into a closed reader and dies of
-  # SIGPIPE; with `set -o pipefail` that surfaces as 141 and `set -e` aborts the
-  # whole test before check 3 — silently skipping every check after it. It only
-  # survives today because the bytes trailing the heredoc happen to fit the
-  # 64 KiB pipe buffer, which is a property of the current reference files, not
-  # a guarantee. A file has no reader to close.
-  bundle_file "$1"
-  awk '/^python3 - "\$TARGET" <<'"'"'EOF'"'"'$/ {grab=1; next} grab && /^EOF$/ {exit} grab {print}' "$BUNDLE"
-}
-
-extract_check "$DOCTOR" > "$TMP/check.py"
-extract_check "$ADVISOR" > "$TMP/check-advisor.py"
-
-echo "3. The parse check is extractable from both skills and identical..."
-if [ -s "$TMP/check.py" ] && cmp -s "$TMP/check.py" "$TMP/check-advisor.py"; then
-  pass "$(wc -l < "$TMP/check.py" | tr -d ' ') lines"
+echo "3. The shipped wrapper is executable and resolves its python target..."
+CHECK_TARGET="$(sed -n 's|.*exec [a-z0-9]* "\$(dirname "\$0")/\([^"]*\)".*|\1|p' "$WRAPPER" 2>/dev/null || true)"
+if [ -x "$WRAPPER" ] && [ -n "$CHECK_TARGET" ] && [ -f "$(dirname "$WRAPPER")/$CHECK_TARGET" ]; then
+  pass "memory-verify-write -> $CHECK_TARGET"
 else
-  fail "check block missing from a skill or the two copies have drifted"
+  fail "bin/memory-verify-write is missing, not executable, has no recognizable exec line, or points at a missing target"
 fi
 
 # Guard-then-write, modelling the skills' verification gate: the check runs on
 # the target before the overwrite, and a non-zero exit means REPORT, not write.
 guarded_write() {
   local target="$1" new="$2"
-  if [ -f "$target" ] && ! python3 "$TMP/check.py" "$target" >/dev/null 2>&1; then
+  if [ -f "$target" ] && ! "$WRAPPER" "$target" >/dev/null 2>&1; then
     return 1
   fi
   printf '%s' "$new" > "$target"
-  python3 "$TMP/check.py" "$target" >/dev/null
+  "$WRAPPER" "$target" >/dev/null
 }
 
 # --- Case: valid frontmatter is rewritten and diffed --------------------------
@@ -171,7 +167,7 @@ fi
 echo "6. Malformed frontmatter is reported and the file is left untouched..."
 printf -- '---\nname: broken\n\n# Project\n\n- Rule\n' > "$TMP/malformed.md"
 BEFORE="$(cksum < "$TMP/malformed.md")"
-OUT="$(python3 "$TMP/check.py" "$TMP/malformed.md" 2>&1 || true)"
+OUT="$("$WRAPPER" "$TMP/malformed.md" 2>&1 || true)"
 if guarded_write "$TMP/malformed.md" 'REPLACED' 2>/dev/null; then
   fail "guard allowed a write over malformed frontmatter"
 elif [ "$(cksum < "$TMP/malformed.md")" != "$BEFORE" ]; then
@@ -184,7 +180,7 @@ fi
 
 echo "7. A non key/value frontmatter line is reported..."
 printf -- '---\nname: fixture\njust a sentence\n---\n\n# Project\n' > "$TMP/badline.md"
-if python3 "$TMP/check.py" "$TMP/badline.md" >/dev/null 2>&1; then
+if "$WRAPPER" "$TMP/badline.md" >/dev/null 2>&1; then
   fail "check passed on a frontmatter line that is not a YAML key/value"
 else
   pass
@@ -192,13 +188,13 @@ fi
 
 echo "8. An empty body is reported..."
 printf -- '---\nname: fixture\n---\n\n' > "$TMP/emptybody.md"
-OUT="$(python3 "$TMP/check.py" "$TMP/emptybody.md" 2>&1 || true)"
+OUT="$("$WRAPPER" "$TMP/emptybody.md" 2>&1 || true)"
 if printf '%s' "$OUT" | grep -qF 'EMPTY'; then pass; else fail "expected an EMPTY report, got: $OUT"; fi
 
 echo "9. Block scalars and nested values are not reported as malformed..."
 printf -- '---\ndescription: >\n  folded text continuing here\npaths:\n  - "src/**"\n---\n\n# Project\n' > "$TMP/blockscalar.md"
-OUT="$(python3 "$TMP/check.py" "$TMP/blockscalar.md" 2>&1 || true)"
-if python3 "$TMP/check.py" "$TMP/blockscalar.md" >/dev/null 2>&1; then
+OUT="$("$WRAPPER" "$TMP/blockscalar.md" 2>&1 || true)"
+if "$WRAPPER" "$TMP/blockscalar.md" >/dev/null 2>&1; then
   pass "folded scalar + nested list"
 else
   fail "valid YAML block scalar reported as malformed: $OUT"
@@ -206,7 +202,7 @@ fi
 
 echo "10. A frontmatter-less file with a body still passes..."
 printf -- '# Project\n\n- Rule\n' > "$TMP/nofm.md"
-if python3 "$TMP/check.py" "$TMP/nofm.md" >/dev/null 2>&1; then pass; else fail "check rejected a valid frontmatter-less file"; fi
+if "$WRAPPER" "$TMP/nofm.md" >/dev/null 2>&1; then pass; else fail "check rejected a valid frontmatter-less file"; fi
 
 echo
 if [ "$FAILURES" -eq 0 ]; then

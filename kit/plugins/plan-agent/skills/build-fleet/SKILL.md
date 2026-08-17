@@ -134,8 +134,24 @@ you when each agent finishes.
 
 ## Step 4 — Report
 
-When the agents report back, print one table: plan, branch, PR, status,
-blocked-on. Tick the checklist. Then stop.
+When the agents report back, verify before ticking. A fleet agent's summary is
+a self-report, and the reason `build-feature` Step 8 gives for checking its own
+delegations applies verbatim here: "`Skill()` has no documented return value,
+so a failed or partial delegation is silent." For each PR a subagent reports,
+run:
+
+```bash
+gh pr view "<pr-url>" --json state,headRefName
+```
+
+substituting the reported URL. A row is green only when the command succeeds,
+`headRefName` matches the branch the agent reported, and `state` shows the PR
+really exists on the remote (`OPEN`; `MERGED` only if someone merged it
+mid-run). If `gh pr view` errors, or the branch or state contradicts the
+report, mark that row **unverified — reported by agent** instead of green.
+
+Then print one table: plan, branch, PR, status, blocked-on. Tick the checklist
+only for verified rows. Then stop.
 
 ## Merging
 

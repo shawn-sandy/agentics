@@ -116,7 +116,8 @@ Report:
 ## Step 5 — Suggest Tests with Rationale
 
 Load `references/output-guide.md` for the full output template and suggestion
-principles.
+principles. Its closing Worked Example (`parseDuration`) shows the specificity
+every suggestion should match.
 
 For each suggestion provide: **What** (behavior), **Why** (blast radius if
 missing), **How** (approach + key assertions), **Where** (file path). Group by

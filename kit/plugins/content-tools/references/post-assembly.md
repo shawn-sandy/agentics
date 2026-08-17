@@ -72,6 +72,42 @@ Close the post with a link back to the source artifact.
 
 If the target file already exists, ask before overwriting.
 
+### Worked example
+
+With the example `CONTENT.md` from `references/content-config.md` (keys
+`title`, `description`, `pubDate`, `author`; `draft_flag: draft: true`;
+extension `.mdx`), a converted artifact lands at `src/content/blog/<slug>.mdx`
+shaped like this:
+
+~~~mdx
+---
+title: Render Pipeline Notes
+description: How the demo batches draw calls, extracted from the artifact.
+pubDate: 2026-08-17
+author: Shawn
+draft: true
+---
+
+The prose rewritten for a cold reader — rung 1, plain Markdown, nothing to
+scope or escape beyond the Phase 6 rules.
+
+<div class="artifact-embed artifact-embed--render-pipeline-notes">
+  <style>{`
+    .artifact-embed--render-pipeline-notes details { border: 1px solid #ccc; }
+  `}</style>
+  <details>
+    <summary>Show the frame timings</summary>
+    <p>Batch sizes per frame, still interactive.</p>
+  </details>
+</div>
+
+[View the original artifact](https://example.com/artifacts/render-pipeline)
+~~~
+
+The configured key names appear verbatim — `pubDate`, never `date` — and
+`draft: true` is the unpublished value written exactly as configured, never
+inverted.
+
 ## Phase 9 — Verify
 
 Run the configured `build_command`. **This is the authoritative gate** — a

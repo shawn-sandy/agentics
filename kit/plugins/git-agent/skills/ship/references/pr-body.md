@@ -87,6 +87,30 @@ an unchecked box is honest, a false checkmark is not.
 
 Omit the `## Linked Issues` section entirely if Step 7.5 found no issue references.
 
+**Worked example** — the shape and honesty bar to match.
+
+Title: `fix(gallery): escape HTML in card titles`
+
+```markdown
+## Summary
+- Escape user-supplied card titles before they are interpolated into gallery HTML
+- Add regression coverage for titles containing `<script>` and `&`
+
+## Changes
+Card titles flowed into the generated `index.html` unescaped, so a title
+containing markup broke the gallery layout. `renderCard()` now routes every
+title through `escapeHtml()` before interpolation.
+
+## Test Plan
+- [x] `node --test tests/gallery.test.mjs` — 14 passing, including the two new
+  title-escaping cases
+- [ ] Open `docs/media/index.html` in a browser and confirm a title containing
+  `<b>` renders literally
+
+## Linked Issues
+Closes https://github.com/acme/widgets/issues/482
+```
+
 For GitHub, run:
 
 ```

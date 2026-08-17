@@ -133,6 +133,8 @@ gh pr create --title "<title>" --body "<body>"
 Closes <url>
 ```
 
+**Worked example** (compact copy of the ship skill's `references/pr-body.md` example — this agent is self-contained and cannot read that file): title `fix(gallery): escape HTML in card titles`; Summary bullets "Escape user-supplied card titles before they are interpolated into gallery HTML" and "Add regression coverage for titles containing `<script>` and `&`"; Changes, one short paragraph naming what broke and the fix; `Closes https://github.com/acme/widgets/issues/482` — only when Step 4.5 returned that URL.
+
 Omit the `## Linked Issues` section entirely if Step 4.5 found no issue references.
 
 Report the PR URL returned by `gh pr create` and **STOP**.

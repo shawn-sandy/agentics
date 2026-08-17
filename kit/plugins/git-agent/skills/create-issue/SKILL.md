@@ -158,13 +158,16 @@ glab issue create \
   --label "<label1>,<label2>"
 ```
 
-On failure (auth, missing label, etc.), fall back to the web opener:
+On failure (auth, missing label, etc.), fall back to the web opener, passing the approved draft through so the title and body the user just confirmed are not lost:
 ```bash
-gh issue create --web    # GitHub
-glab issue create --web  # GitLab
+# GitHub
+gh issue create --web --title "<title>" --body "<body>"
+
+# GitLab
+glab issue create --web --title "<title>" --description "<body>"
 ```
 
-When the `--web` fallback is used, skip the post-creation browser open below — the user is already in the browser.
+Drop `--label` on this path — a bad label is a likely cause of the original failure; mention the intended labels in the report instead. When the `--web` fallback is used, skip the post-creation browser open below — the user is already in the browser — and report via the fourth Phase 8 outcome. **Never print an issue number on this path** — the browser form is prefilled, but no issue exists until the user submits it.
 
 **After successful CLI creation, open the issue in the browser:**
 
@@ -189,15 +192,16 @@ When the `--web` fallback is used, skip the post-creation browser open below —
 
 ### Phase 8 — Report
 
-Print the issue URL and number. Then indicate what happened with the browser:
+Print the issue URL and number (except on the web-fallback path, where neither exists). Then indicate what happened with the browser:
 
 - **Browser opened:** "Opened issue #\<number\> in your browser."
 - **`--no-open` was passed:** "Browser open suppressed (`--no-open`). Issue URL: \<url\>"
 - **Browser open failed:** "Issue created at \<url\> — browser could not be opened (see warning above)."
+- **CLI creation failed (web fallback):** "CLI creation failed (\<error\>). Opened a prefilled browser form — no issue exists until you submit it." Never print an issue number on this path.
 
 ## Reference Files
 
-- `references/bug-report.md` — bug issue body skeleton
+- `references/bug-report.md` — bug issue body skeleton, plus a filled worked example
 - `references/feature-request.md` — feature request body skeleton
 - `references/general-issue.md` — general/selection/session body skeleton
 - `references/plan-issue.md` — plan-to-issue body skeleton (objective, step checklist, acceptance criteria)

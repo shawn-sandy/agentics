@@ -1,5 +1,22 @@
 # Changelog
 
+## v4.1.1 — 2026-08-17 — the write gate actually runs
+
+### Fixed
+
+- **The mandatory post-write verification gate is now executable.** Both
+  call sites (`agentic-memory-management` Step 7 and `path-rules-advisor`'s
+  write-verification reference) shipped a bash block containing `TARGET=...`
+  expansions the Bash tool textually refuses — the repo's own guard test
+  ledgered them as known-broken call sites, so the skills' central check
+  errored on first run, every run. The check now ships as
+  `bin/memory-verify-write` (wrapper) + `scripts/verify_write.py` (the exact
+  former inline semantics: diff vs git, frontmatter parse, non-empty body),
+  invoked by bare name with a literal path. The KNOWN_BROKEN ledger entries
+  are deleted and the guard test now mutation-tests the shipped wrapper in
+  both pass and fail directions. `allowed-tools` narrows from
+  `Bash(git *), Bash(python3 *)` to `Bash(memory-verify-write *)`.
+
 ## v4.1.0 — 2026-07-29 — Split `path-rules-advisor` into a core plus references
 
 ### Changed

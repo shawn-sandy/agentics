@@ -158,6 +158,8 @@ echo "2. The fixed call sites invoke their bin/ wrapper by bare name..."
 # backtick, which is not whitespace. Indent is allowed: export-session's command
 # sits inside a numbered list.
 declare -a SITES=(
+  "memory-tools/skills/agentic-memory-management/SKILL.md:memory-verify-write"
+  "memory-tools/skills/path-rules-advisor/references/write-verification.md:memory-verify-write"
   "skill-reviewer/skills/auditing-allowed-tools/SKILL.md:skill-reviewer-scan-tools"
   "skill-reviewer/commands/check-description.md:skill-reviewer-measure-description"
   "wcag-compliance-reviewer/skills/wcag-compliance-reviewer/SKILL.md:wcag-check"
@@ -266,9 +268,7 @@ echo "5. The known unfixed expansion call sites are exactly the documented set..
 # file to one name, so a second broken invocation added to an already-listed
 # file would leave the list identical and the check green. Counts, not line
 # numbers — the latter churn on unrelated edits and fail noisily for no reason.
-KNOWN_BROKEN="memory-tools/skills/agentic-memory-management/SKILL.md:1
-memory-tools/skills/path-rules-advisor/references/write-verification.md:1
-social-media-tools/references/rendering-pipeline.md:2
+KNOWN_BROKEN="social-media-tools/references/rendering-pipeline.md:2
 social-media-tools/skills/media-library/SKILL.md:2
 social-media-tools/skills/save-artifact/SKILL.md:1
 social-media-tools/skills/share-blog/SKILL.md:1

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.1 — 2026-08-17 — a finished post to imitate
+
+### Changed
+
+- **`references/post-assembly.md` Phase 8 gains a worked example** of the
+  final MDX post, derived from the documented example CONTENT.md: the exact
+  frontmatter block with the configured key names (`title` / `description` /
+  `pubDate` / `author` / `draft: true`, written as configured, never
+  inverted), a rung-1 prose block, a rung-2 scoped-CSS `<details>` embed
+  matching the mdx-safety container pattern, and the closing source-artifact
+  link. The exact output shape was previously left to inference.
+
 ## 1.1.0 — 2026-07-29
 
 ### Changed

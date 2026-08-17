@@ -138,3 +138,67 @@ defaults in their own Draft Copy phase.
 - **Substack**: Newsletter voice — more reflective than LinkedIn, more substantive
   than Twitter; lead with a teachable principle; add a sentence of context or opinion;
   no hashtags
+
+### Worked Examples
+
+One representative code change — replacing a hand-rolled debounce timer on a
+search input with an AbortController fetch-cancellation pattern — rendered once
+per platform. These show the structure and instructional voice to aim for;
+adapt the angle to the actual content, never copy verbatim. Skills with
+content-specific templates (share-blog, share-video) follow their own
+skill-local references instead.
+
+**LinkedIn:**
+
+```
+Debouncing a search input delays requests — it doesn't cancel the ones already
+in flight. A slow early response can still land last and overwrite fresh results.
+
+I replaced a hand-rolled debounce timer with an AbortController: each keystroke
+aborts the previous fetch before starting the next, so the network can never
+race the UI.
+
+The pattern:
+
+1. Keep one controller per input; call controller.abort() before every new request.
+2. Pass controller.signal into fetch — the browser drops the stale request for you.
+3. Catch AbortError and do nothing; it's the expected path, not a failure.
+
+If your "flickering search results" bug survives a debounce, this is why — you
+throttled the requests, but never cancelled them.
+
+More async JavaScript patterns like this on my feed — follow along to keep learning.
+
+#JavaScript #WebDev #AsyncPatterns
+```
+
+**Twitter/X:**
+
+```
+Debounce delays requests — it doesn't cancel them. A slow early response can
+still overwrite fresh results. One AbortController per input, abort before each
+new fetch, and the last keystroke always wins. #JavaScript
+```
+
+**Bluesky:**
+
+```
+A debounce timer doesn't stop the race — it only spaces requests out. Swapped
+our hand-rolled search debounce for an AbortController: abort the in-flight
+fetch on every keystroke, catch the AbortError, done. The stale-results flicker
+is gone.
+```
+
+**Substack:**
+
+```
+I spent an afternoon on a search box that flickered stale results — with a
+debounce already in place.
+
+The lesson: debouncing spaces requests out, but the requests that do fire can
+still finish out of order. Cancellation, not timing, is the real fix. An
+AbortController per input — abort before each new fetch, treat AbortError as
+the expected path — and the last keystroke always wins.
+
+I write about async patterns like this — subscribe to keep learning.
+```

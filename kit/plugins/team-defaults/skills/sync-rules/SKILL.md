@@ -10,7 +10,8 @@ Copy the rule files bundled with this plugin into the user's global rules direct
 
 ## Source and destination
 
-- Source: `${CLAUDE_PLUGIN_ROOT}/skills/sync-rules/rules/`
+- Source: the `rules/` directory bundled beside this SKILL.md (`skills/sync-rules/rules/` inside the plugin's install directory, the one Claude Code exposes as `${CLAUDE_PLUGIN_ROOT}`)
+- **Resolve the plugin root first.** Before composing any `cp` or `diff` command, resolve the plugin root to the absolute directory containing this SKILL.md and write that literal path into the command — a literal `${CLAUDE_PLUGIN_ROOT}` in a Bash call is refused ("Contains expansion") and never runs.
 - Destination: `~/.claude/rules/` (create it if missing, including `reference/`)
 
 Files to sync:
@@ -31,8 +32,10 @@ Files to sync:
    - Different → mark as **conflict**.
 2. **Report the sync plan** as a short table (file, status) before writing anything.
 3. **Confirm conflicts.** If any file is in conflict, ask the user per file (overwrite / keep local) with `AskUserQuestion` before overwriting. New files need no confirmation.
-4. **Copy** the approved files, then list exactly what was written.
-5. Never touch any file in `~/.claude/rules/` that this plugin does not ship — the destination may contain the user's own rules.
+4. **Copy** the approved files.
+5. **Verify the copy.** Re-run `diff -q` source-vs-destination for every file just copied and report each one as identical. Any difference or missing destination file is a failure — name the file, report it loudly, and stop; never report the sync as successful past a mismatch.
+6. **List** exactly what was written and verified.
+7. Never touch any file in `~/.claude/rules/` that this plugin does not ship — the destination may contain the user's own rules.
 
 ## Notes
 

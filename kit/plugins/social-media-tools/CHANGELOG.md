@@ -1,5 +1,23 @@
 # Changelog — social-media-tools
 
+## v2.23.3 — 2026-08-17 — worked posts per platform; save-artifact proves the publish
+
+### Changed
+
+- **`references/platforms.md` gains one worked example post per platform**
+  (LinkedIn, Twitter/X, Bluesky, Substack) under Default Per-Platform Copy
+  Formats — a single representative subject (replacing a hand-rolled debounce
+  with AbortController fetch-cancellation), takeaway-first instructional
+  voice, every example measured within its platform's character limit. The
+  seven skills drafting from the one-line format bullets previously had no
+  filled example anywhere in their reference chain.
+- **`save-artifact` verifies the publish before reporting it.** Its
+  build-artifacts script deliberately always exits 0, so "Published artifact
+  to docs/artifacts/" could be a lie. Step 4 now checks the published copy
+  exists and the gallery index checksum actually changed; Step 5 reports
+  **Verified published** vs **Inbox only** and never claims an unconfirmed
+  publish.
+
 
 ## v2.23.2 — 2026-08-17 — close the scrub-coverage holes
 
