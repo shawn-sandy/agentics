@@ -13,217 +13,253 @@ eng-artifact-url: https://claude.ai/code/artifact/2ff94a2d-c204-4d4a-ab83-a9cfad
 
 | Metric | Value |
 |---|---|
-| Repo changes | 0 (diagnostic session) |
-| Files changed | 0 |
-| Decisions | 4 |
+| Files changed | 4 |
+| Pins moved | 5 |
+| Decisions | 8 |
 | Open items | 5 |
 
-`/git-agent:post-merge-cleanup` was reported broken. It is not broken — it was
-never loaded. This worktree resolves `git-agent@agentics-kit` to **4.15.0** at
-project scope, and the skill first shipped in **4.19.0** (`e1e8840`, PR #565).
-The skill's own suite passes 28/28 against the worktree sources; no code was
-changed, and the fix (`claude plugin update ... --scope project`) was left
-unapplied pending the user's call on which remediation path to take.
+`/git-agent:post-merge-cleanup` was reported broken. It was never loaded: this
+worktree resolved `git-agent@agentics-kit` to 4.15.0 at project scope while the
+skill first shipped in 4.19.0 (`e1e8840`, PR #565). The skill's own suite passes
+28/28, so nothing under `kit/plugins/git-agent/` was at fault.
 
-**Diff budget:** opted in per the command, but there was nothing to spend it on.
-Session mode with a clean tree — `git status --porcelain` empty, zero hunks.
+The session then applied the fix across every live agentics directory, and while
+building a script to do it, found that `claude plugin update --scope project`
+run from a directory with **no** project row does not no-op — it silently
+updates some other project's row. That discovery is now the load-bearing
+constraint in `scripts/update-worktree-plugins.sh`.
+
+**Diff budget:** opted in. One file carries logic — `scripts/update-worktree-plugins.sh`
+(4,026 bytes, untracked) — and was read in full. The three committed files are
+generated or prose and were taken from their commit body.
 
 ## Architecture and code paths
 
-The finding lives entirely in the plugin resolution chain. Nothing in
-`kit/plugins/git-agent/` is implicated.
+Two mechanisms matter here. Neither lives in `kit/plugins/`.
+
+### 1. How a skill name resolves to a file
 
 ```mermaid
 flowchart TD
-  A["kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md<br/>(source, this worktree)"] -->|"published via PR #565"| B[".claude-plugin/marketplace.json<br/>version: 4.19.0"]
-  B --> C["~/.claude/plugins/marketplaces/agentics-kit/<br/>(marketplace clone, current)"]
-  C --> D["~/.claude/plugins/cache/agentics-kit/git-agent/&lt;version&gt;/<br/>4.10.0 · 4.11.0 · 4.13.0 · 4.14.4 · 4.15.0 · 4.18.0 · 4.19.0"]
-  E[".claude/settings.json<br/>enabledPlugins (checked in)"] -->|"first session in a new projectPath"| F["~/.claude/plugins/installed_plugins.json<br/>row: {scope, projectPath, version}"]
+  A["kit/plugins/git-agent/skills/<br/>post-merge-cleanup/SKILL.md"] -->|"PR #565"| B[".claude-plugin/marketplace.json<br/>version: 4.19.0"]
+  B --> C["~/.claude/plugins/marketplaces/<br/>agentics-kit/ (clone)"]
+  C --> D["~/.claude/plugins/cache/agentics-kit/git-agent/&lt;version&gt;/"]
+  E[".claude/settings.json<br/>enabledPlugins (checked in)"] -->|"first session in a new projectPath"| F["installed_plugins.json<br/>row: scope, projectPath, version"]
   F -->|"pins one version, never re-resolved"| D
-  F --> G["skills loaded for this session"]
-  D -.->|"4.15.0/skills/ has no post-merge-cleanup"| G
+  F --> G["skills loaded this session"]
+  D -.->|"4.15.0/skills/ lacks post-merge-cleanup"| G
 ```
 
-*Follow the `installed_plugins.json` row — it is the only thing that decides which cached version a directory sees.*
+*The `installed_plugins.json` row is the only thing deciding which cached version a directory sees.*
 
-**What to read first, in order:**
+**Read first, in order:**
 
 1. `~/.claude/plugins/installed_plugins.json` — `plugins["git-agent@agentics-kit"]`
    is an **array**, one row per install site:
    `{scope, projectPath, installPath, version, installedAt, lastUpdated}`.
-   A `scope: project` row shadows the `scope: user` row. This file is the
-   authority; `~/.claude/plugins/config.json` is `{"repositories": {}}` and holds
-   nothing relevant.
-2. `.claude/settings.json:23` — `enabledPlugins` declares
-   `"git-agent@agentics-kit": true`, alongside `extraKnownMarketplaces`. The file
+   A `scope: project` row shadows the `scope: user` row, silently. This file is
+   the authority; `~/.claude/plugins/config.json` is `{"repositories": {}}`.
+2. `.claude/settings.json:23` — `enabledPlugins` names the plugin, and the file
    is **tracked in git**, so every worktree checkout carries it.
 3. `~/.claude/plugins/cache/agentics-kit/git-agent/<version>/skills/` — the
-   version-keyed cache, shared across all projects. `4.15.0/skills/` and
-   `4.14.4/skills/` have no `post-merge-cleanup` directory; `4.19.0/skills/` does.
+   version-keyed cache, shared across projects, so an update is a pin rewrite
+   with no download.
 
-**The pin mechanism, four steps:**
+The pin happens once: a new worktree is a distinct `projectPath`, its first
+session resolves the plugin *as of that moment*, writes a concrete `version`,
+and nothing re-resolves it. Install timestamps track worktree creation, not
+plugin releases.
 
-1. `.claude/settings.json` lists the plugin and is checked in.
-2. A new worktree is a full checkout at a new path — Claude Code treats each
-   worktree path as a distinct `projectPath`.
-3. The first session there reads `enabledPlugins`, resolves the plugin against
-   the marketplace *as of that moment*, and writes a `scope: project` row with a
-   concrete `version`.
-4. That version is fixed. Nothing re-resolves it, and project scope shadows user
-   scope — so a user-level 4.19.0 stays invisible in that directory.
+### 2. The `--scope project` fall-through
 
-Install timestamps confirm it: they track worktree creation, not plugin releases.
+```mermaid
+flowchart TD
+  S["claude plugin update X --scope project<br/>(cwd = some directory)"] --> Q{"does cwd own a<br/>project-scoped row?"}
+  Q -->|yes| R["updates that row<br/>— the intended behaviour"]
+  Q -->|no| W["does NOT no-op:<br/>updates some OTHER project's row"]
+  W --> X["observed: a worktree of an<br/>unrelated repo, already deleted"]
+```
 
-| Version | Installed | Path |
-|---|---|---|
-| 4.14.4 | 08-12 12:43 | `devbox/agentics` (main checkout) |
-| 4.14.4 | 08-12 12:47 | `festive-clarke-e9f4a5` *(directory deleted)* |
-| 4.15.0 | 08-12 17:01 | `build-proposal-refactor-da22e9` *(directory deleted)* |
-| 4.15.0 | 08-14 18:44 | `insights-review-skill-ba0347` |
-| 4.15.0 | 08-14 19:23 | `intelligent-dubinsky-b80fde` |
-| 4.15.0 | 08-14 19:53 | `modest-elion-eff4c2` |
-| 4.15.0 | 08-14 19:55 | `lucid-haslett-a66e8b` (this session) |
+*Why the script never enters a directory that has no row of its own.*
 
-The user row moved to 4.19.0 on 08-16. No project row followed. 7 agentics rows,
-21 project rows across all repos, 15 live worktrees.
+`scripts/update-worktree-plugins.sh` is built around that branch:
+
+- `git worktree list --porcelain | awk '/^worktree /{print $2}'` enumerates live
+  worktrees of *this* repo. Membership is tested by `os.path.realpath` identity,
+  not a path substring, so a similarly-named checkout elsewhere is never swept in.
+- An embedded `python3` heredoc filters `installed_plugins.json` to rows that are
+  `scope == "project"`, whose `projectPath` still exists, and whose realpath is
+  in the live set. Everything else is skipped — that is the guard.
+- The loop `cd`s into each target because `claude plugin update` has no `--cwd`
+  and no bulk form.
+- Work list goes through a temp file, not `mapfile`: macOS ships bash 3.2.
 
 ## Decisions
 
-**Diagnose, do not apply the fix.** `claude plugin update git-agent@agentics-kit
---scope project` was identified and handed back unrun. It mutates plugin config
-outside the repo and requires a session restart to take effect either way, so
-running it would have changed user state without making the result observable in
-this session. The user asked why it was broken, not to fix it.
+**Diagnose before fixing, then fix when asked.** The first pass identified
+`claude plugin update ... --scope project` and deliberately left it unrun — it
+mutates config outside the repo and needs a restart regardless, and the ask was
+"why is it broken", not "fix it". When the fix was requested it was applied to
+all four live agentics directories.
 
-**Treat the session's own available-skills listing as primary evidence.** The
-listing showed only `create-issue`, `merge`, and `ship-autonomous` from git-agent
-— direct observation of what the runtime actually loaded, stronger than any
-inference from source files. Cross-checked against `ls` on the version cache.
+**Treat the session's own available-skills listing as primary evidence.** It
+showed only `create-issue`, `merge`, and `ship-autonomous` from git-agent —
+direct observation of what the runtime loaded, stronger than inference from
+source. Cross-checked with `ls` on the version cache.
 
 **Rule out `scope-guard.py` by reading it, not by running the skill.** The
-PreToolUse hook added in `744f6e1` was the first suspect, since it sits in front
-of every Bash call and post-merge-cleanup is a destructive-command skill.
-`is_candidate()` (`kit/plugins/git-agent/hooks/scope-guard.py:139`) admits `git`
-only when `git_args(tokens)[0] == "stash"`, so `git worktree remove` and
-`git branch -d` never reach a rule. Ruled out without touching a worktree.
+PreToolUse hook from `744f6e1` was the first suspect. `is_candidate()`
+(`kit/plugins/git-agent/hooks/scope-guard.py:139`) admits `git` only when
+`git_args(tokens)[0] == "stash"`, so `git worktree remove` never reaches a rule.
 
-**Retract the first remediation recommendation.** The initial answer called
-dropping project-scoped installs "the cheap answer" before reading what holds
-them. `.claude/settings.json` turned out to be checked in, which makes that a
-repo-visible change with consequences for cloners, not local bookkeeping. The
-retraction was stated plainly rather than quietly amended.
+**Retract the first remediation recommendation.** Calling "drop the project-scoped
+installs" the cheap answer preceded reading what holds them. `.claude/settings.json`
+is checked in, making that a repo-visible change affecting cloners.
+
+**Guard the script on has-a-row rather than trusting cwd.** The obvious design —
+run the update in every live worktree and let the CLI no-op — is actively unsafe
+given the fall-through. Only directories that already own a row are entered.
+
+**Drop the version comparison from the script.** The first draft read the target
+from the main checkout's `marketplace.json` and got 4.11.0 for a plugin at
+4.19.0. Worktrees check out different refs, so no working-tree file states what
+is current. `claude plugin update` resolves against the marketplace clone and
+prints "already at the latest version", so it is the authority.
+
+**Do not work around the `rm` denial.** Deleting the retired memory files is
+blocked at the permission layer by the user's own global rule. `mv`,
+`find -delete`, and `python3 os.remove` are the same delete in disguise; the
+refusal was reported with the command to run instead.
+
+**Keep the recap on one URL.** Both runs of `/artifact-tools:eng-recap` publish
+through the `eng-artifact-url:` key in this record, so the shared link shows
+current state rather than minting a second page.
 
 ## Tradeoffs and rejected options
 
-Three remediation paths were laid out; none was chosen, because the choice turns
-on a question only the user can answer — whether the checked-in `enabledPlugins`
-list exists for them or for people cloning the repo.
+**Three remediation paths, one chosen.** Per-worktree update on demand (no repo
+change, recurring cost) was taken. Dropping `git-agent` from checked-in
+`enabledPlugins` would permanently fix *new* worktrees but costs auto-enable on
+a fresh clone — a real loss for a marketplace repo that dogfoods its own plugins
+— and clears no existing rows. Updating only the main checkout was rejected once
+the ask covered every worktree. To revisit the middle option: decide whether
+`enabledPlugins` exists for the maintainer or for cloners.
 
-**Per-worktree update on demand.** No repo change; recurring cost. Cheap per
-instance — the version cache is shared, so an update rewrites a JSON pin and
-downloads nothing.
+**Script generality vs. one-off.** The scratchpad driver hardcoded
+`devbox/agentics` and a `4.19.0` target. The committed version takes a
+`plugin@marketplace` argument, derives worktrees from `git worktree list`, and
+has no target constant — the cost is a `python3` heredoc instead of a `grep`.
 
-```bash
-claude plugin update git-agent@agentics-kit --scope project
-```
+**Filtering vs. running everywhere.** Running the update in all 15 live worktrees
+is fewer lines and was tested first. Rejected outright once the fall-through
+appeared: it would mutate unrelated repos.
 
-**Drop `git-agent` from checked-in `enabledPlugins`.** Permanently fixes *new*
-worktrees, which would inherit only the user-scoped install. Costs auto-enable on
-a fresh clone — a real loss for a marketplace repo that partly exists to
-dogfood its own plugins — and does nothing to the 7 rows already written. To
-revisit: decide the audience of `enabledPlugins` first.
-
-**Update the main checkout only.** Worktrees are short-lived; the main checkout
-at 4.14.4 has been stale four versions and is the one that persists. Accepts that
-worktrees stay stale by design.
+**Committing the script into PR #566.** Left untracked. That PR is docs-only, and
+folding a script in muddies the diff.
 
 ## Learnings
 
-**Tried and abandoned: the scope-guard hypothesis.** `744f6e1` had just added a
-PreToolUse scope guard to git-agent, and "new hook + skill that shells out to
-destructive git commands" was a tidier story than a version pin. Reading
-`is_candidate()` killed it in one pass. Worth knowing the guard's actual blast
-radius: repo-wide `--write`/`--fix` formatter runs, and `git stash pop|apply`
-with no explicit ref. Nothing else.
+**Tried and abandoned — the scope-guard hypothesis.** "New PreToolUse hook +
+destructive-command skill" was a tidier story than a version pin, and wrong.
+Worth knowing the guard's real blast radius: repo-wide `--write`/`--fix`
+formatter runs, and `git stash pop|apply` with no ref. Nothing else.
 
-**Tried and abandoned: the "systemic skill loading bug" read.** Five git-agent
-skills were missing from the session listing — `branch-agent`, `commit-agent`,
-`pr-agent`, `ship`, and `post-merge-cleanup` — which looked like a loader
-failure. Four of them carry `disable-model-invocation: true` in frontmatter and
-are user-invocable only, so their absence is correct. Only `post-merge-cleanup`,
-which has no such flag, was signal. Checking frontmatter across all skills before
-theorizing would have skipped this detour.
+**Tried and abandoned — the systemic loader bug read.** Five git-agent skills
+were missing from the listing. Four carry `disable-model-invocation: true` and
+are user-invocable only, so their absence is correct; only `post-merge-cleanup`
+was signal. Checking frontmatter across all skills first would have skipped it.
 
-**Gotcha: a correct user-scoped install is not evidence the skill is available.**
-User scope showed 4.19.0 with the skill present on disk the whole time. Scope
-shadowing is silent — there is no warning that a project row is overriding a
-newer user row.
+**Tried and abandoned — "just run the update everywhere".** Probing it updated
+`devbox/513/.claude/worktrees/wire-dashboard-impact-grid-d56c80` (4.14.4 →
+4.19.0), an already-deleted worktree in an unrelated repo. Practical harm nil,
+but it is an unrequested change to another project, and it killed the simple
+design.
 
-**Gotcha: `installed_plugins.json` rows are never reaped.** Two of the seven
-agentics rows point at worktree directories that no longer exist. Deleting a
-worktree leaves its pin behind indefinitely.
+**Gotcha — a correct user-scoped install is not evidence a skill is available.**
+User scope was 4.19.0 with the file on disk the entire time. Scope shadowing is
+silent: no warning that a project row overrides a newer user row.
 
-**Gotcha: `~/.claude/plugins/config.json` is a dead end.** It reads
-`{"repositories": {}}`. Install state lives in `installed_plugins.json`.
+**Gotcha — no working-tree file tells you the current plugin version.** Different
+worktrees sit on different refs, so `marketplace.json` read from one of them is
+whatever branch it happens to be on.
+
+**Gotcha — macOS bash 3.2 has no `mapfile`.** The first driver died on it before
+running anything, so no partial state.
+
+**Gotcha — `installed_plugins.json` rows are never reaped.** Deleting a worktree
+leaves its pin forever; 2 of 7 agentics rows and 9 of 15 in `devbox/513` are
+orphans.
+
+**Gotcha — a chat "yes" cannot lift a permission-layer denial.** `rm` is denied
+outright by the user's global rules; re-asking in conversation does not reach
+that layer.
 
 ## Tests and verification
 
-**Ran:** `tests/plugins/test-post-merge-cleanup.sh` → **28/28 pass** against the
-worktree sources. This is what establishes the skill is not defective; the report
-of "not working" would otherwise have been indistinguishable from a real bug.
+**The fix is now verified — this corrects the first version of this recap,**
+which listed it as reasoned-but-unobserved. All four live agentics directories
+were updated and re-read from `installed_plugins.json`: **0 live rows remain
+behind 4.19.0**, and the install path now resolving carries `post-merge-cleanup`
+in `skills/`.
 
-**Verified by direct inspection:**
-
-- `ls` on `cache/agentics-kit/git-agent/{4.14.4,4.15.0}/skills/` — no
-  `post-merge-cleanup` directory. `4.19.0/skills/` has it, with matching
-  frontmatter.
-- `installed_plugins.json` parsed for every `git-agent@agentics-kit` row, with an
-  `os.path.isdir` existence check per `projectPath`.
-- `git ls-files --error-unmatch .claude/settings.json` — confirmed tracked.
-- `claude plugin update --help` — confirmed `--scope user|project|local|managed`.
+| Check | Result |
+|---|---|
+| `tests/plugins/test-post-merge-cleanup.sh` | 28/28 pass |
+| Live agentics rows behind 4.19.0, after update | 0 (was 4) |
+| `update-worktree-plugins.sh` — default, behind-plugin, no-rows, bad-flag | 4/4 behave; bad flag exits 2 |
+| `bash -n` on the script | clean |
+| Guard excludes worktrees without a pin | 15 live, 5 listed |
+| `git ls-files --error-unmatch .claude/settings.json` | tracked |
 
 **Knowingly untested:**
 
-- **The fix itself.** `claude plugin update ... --scope project` was never run.
-  The claim that it makes the skill resolve after a restart is reasoned from the
-  scope model, not observed.
-- **The skill end-to-end.** Only its test suite ran. `post-merge-cleanup` has
-  still never executed against a real merged branch and worktree in this session,
-  which is the thing the original bug report was actually reaching for.
+- **`post-merge-cleanup` end-to-end.** Only its suite ran. It has still never
+  executed against a real merged branch and worktree — the thing the original
+  report was reaching for.
+- **The script's failure path.** `FAILED` counting and the non-zero exit were
+  never exercised; every update in this session succeeded.
+- **The script on a non-agentics repo.** Written to be generic, only run here.
 
 ## Review follow-ups and tech debt
 
-- **Main checkout is four versions stale.** `/Users/shawnsandy/devbox/agentics`
-  pinned at 4.14.4 while HEAD ships 4.19.0. It is the long-lived directory, so it
-  matters more than any worktree.
-- **Open decision blocking remediation.** Is checked-in `enabledPlugins` for the
-  maintainer or for cloners? Every path above depends on the answer.
-- **No bulk update across worktrees.** `--scope project` acts on one cwd. With 15
-  live worktrees there is no single command to move them all.
-- **Stale rows accumulate.** Nothing prunes `installed_plugins.json` when a
-  worktree is removed; 2 of 7 agentics rows are already orphaned.
-- **Dogfooding ceiling on `post-merge-cleanup` itself.** The skill's job includes
-  clearing merged worktrees, and this pin behaviour means it is least likely to
-  be present in exactly the aging worktrees it was written to clean up. Upgrade
-  path: if the skill is meant to be reachable everywhere, it belongs somewhere
-  that is not per-project version-pinned.
+- **Seven retired memory files still on disk.** Consolidation removed their index
+  pointers, so they no longer load into context, but `rm` is denied at the
+  permission layer. Command handed to the user.
+- **Orphaned pin rows accumulate.** 2 in agentics, 9 in `devbox/513`, including
+  the one this session touched by accident. Only `claude plugin uninstall` at
+  that scope clears them; nothing prunes automatically.
+- **`scripts/update-worktree-plugins.sh` is untracked** and has no test under
+  `tests/`. It is the kind of script the repo would normally pin with one.
+- **No upstream fix for the fall-through.** The guard is a workaround in one
+  script; anyone running `claude plugin update --scope project` by hand from the
+  wrong directory hits the same trap.
+- **`post-merge-cleanup`'s dogfooding ceiling.** It clears merged worktrees, yet
+  the pin behaviour makes it least likely to exist in the aging worktrees it was
+  written for. Upgrade path: if it must be reachable everywhere, it belongs
+  somewhere not per-project version-pinned.
 
 ## Files touched
 
-**Repo source: none.** `git status --porcelain` was empty at the start and end of
-the session. No plugin file, test, or config was modified.
-
-**Read for diagnosis (unmodified):**
+**Committed** (`c85471f`, on [PR #566](https://github.com/shawn-sandy/agentics/pull/566)):
 
 | Path | Why |
 |---|---|
-| `kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md` | Confirm the skill and its safety contract exist as shipped |
-| `kit/plugins/git-agent/hooks/scope-guard.py` | Rule out the PreToolUse guard as the blocker |
-| `.claude/settings.json` | Source of `enabledPlugins`; established it is checked in |
-| `tests/plugins/test-post-merge-cleanup.sh` | Executed; 28/28 |
+| `docs/plans/sessions/document-worktree-plugin-pinning-session.md` | This record; carries `eng-artifact-url:` |
+| `docs/artifacts/eng-recap-2026-08-16.html` | Published recap, mermaid inlined as static SVG |
+| `docs/artifacts/index.html` | Gallery index rebuilt by `build-artifacts-index.sh` |
 
-**Outside the repo (read only):** `~/.claude/plugins/installed_plugins.json`,
-`~/.claude/plugins/config.json`, and the `cache/agentics-kit/git-agent/*/skills/`
-version directories.
+**Untracked:**
 
-**Created:** this record.
+| Path | Why |
+|---|---|
+| `scripts/update-worktree-plugins.sh` | Bulk pin update across worktrees, guarded on has-a-row |
+
+**Read for diagnosis, unmodified:** `kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md`,
+`kit/plugins/git-agent/hooks/scope-guard.py`, `kit/plugins/git-agent/skills/pr-agent/SKILL.md`,
+`.claude/settings.json`, `tests/plugins/test-post-merge-cleanup.sh`.
+
+**Outside the repo:** `installed_plugins.json` (5 rows moved — main, 3 worktrees,
+1 unintended in `devbox/513`); the memory directory under
+`~/.claude/projects/-Users-shawnsandy-devbox-agentics/memory/` (1 memory added,
+`MEMORY.md` rewritten 58 → 55 lines, 7 files retired from the index but not yet
+deleted).
