@@ -1,6 +1,29 @@
 # Changelog
 
 
+## 9.4.3 — review-plan edits the spec, not the render (2026-08-17)
+
+(9.4.2 is on a separate in-flight branch; this entry deliberately skips it.)
+
+- **`review-plan` detects spec vs legacy mode in Step 1** (spec mode when
+  `<stem>.md` exists with a `# Plan:` heading, mirroring finalize-plan's
+  `resolve-and-modes.md`). In spec mode, accepted improvements are applied to
+  the markdown spec — mapped selector-by-selector to Objective, Acceptance
+  Criteria, step Why/Verify lines, and Verification — and the plan is
+  re-rendered with `plan-agent-render`. Previously every edit and the appended
+  Team Review went into the rendered HTML, which the pipeline's own
+  render-on-spec-write hook regenerates and silently discards; the skill was
+  announcing "Plan updated in place" on work designed to be deleted.
+- **The Team Review now survives re-renders** in spec mode: appended to the
+  spec as a `## Team Review (timestamp)` section (report headings demoted to
+  `###`), which the spec parser carries through rather than dropping.
+- **Step 7 verifies and tallies**: after applying, the edited file is re-read
+  and each accepted edit confirmed present; the announcement carries
+  "applied N of M accepted edits; skipped: <targets>". In background mode a
+  non-empty skipped list makes the report lead with `REVIEW INCOMPLETE` —
+  previously a run that matched zero selectors still announced full success.
+  `agent-review-plan` and the `review-plan-bg` dispatch carry the same tally.
+
 ## 9.4.1 — plan-status carries the plan-mode guard (2026-08-14)
 
 ### Fixed

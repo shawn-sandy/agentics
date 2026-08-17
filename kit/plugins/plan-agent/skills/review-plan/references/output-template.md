@@ -81,9 +81,9 @@ This template is used to structure the team's synthesis of reviewer findings and
 - `action: edit` — replace the targeted element's content.
 - `action: append` — add content to the end of the targeted element.
 - `action: insert after` — insert a new sibling immediately after the named anchor heading or element.
-- All inserted content must be HTML-escaped (e.g., `<` becomes `&lt;`).
+- All inserted content must be HTML-escaped (e.g., `<` becomes `&lt;`) — legacy mode only. In spec mode (Step 1's edit mode), targets map to spec sections and content is written as markdown.
 - Never modify `<style>` or `<script>` blocks.
-- Skip rows whose target element cannot be matched in the source plan.
+- Skip rows whose target element cannot be matched in the source plan; every skipped row feeds Step 7's applied/skipped tally.
 - The `Source / Rationale` column names the originating reviewer plus a one-line why for each edit; it feeds the per-finding triage in Step 6b — Walkthrough & Analysis.
 
 ### Triage Outcome

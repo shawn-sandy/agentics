@@ -244,7 +244,43 @@ copy it as well.
 If the user chose "Restore new and modified only", skip files/directories where
 the diff status was `unchanged`.
 
-### Step 7 — Save config
+### Step 7 — Verify the restore
+
+The copy is not the result — verify it. A failed rsync entry, a `cp` error
+that scrolled past, or a lost executable bit leaves a partial restore that
+would otherwise be reported as complete.
+
+Re-run the Step 4 comparison for **every entry that was restored** (skip
+entries the user excluded in Step 5):
+
+- **Files** — compare against the repo copy with `diff -q`. Anything other
+  than identical → `FAILED: <entry>`.
+- **Directories** — repeat the same `find`-based comparison from Step 4.
+  Every file must now classify as `unchanged` — any added, modified, or
+  deleted remainder → `FAILED: <entry>`, listing the differing paths.
+
+**Executable bits.** If `hooks/` was restored, verify no script lost its
+execute bit:
+
+```bash
+find ~/.claude/hooks -type f ! -perm -u+x
+```
+
+Empty output passes. Every path it prints is
+`FAILED: hooks/<file> (not executable — non-executable hooks are silently
+inert)`.
+
+Collect the results:
+
+- **Verified** — entries that now compare identical (and, for `hooks/`, are
+  executable).
+- **FAILED** — everything else, each with a one-line reason.
+
+Step 9 reports only these verified results — never the planned list from
+Step 3 or the preview counts from Step 4. If anything is FAILED, the restore
+is **incomplete** and the report must say so.
+
+### Step 8 — Save config
 
 If `~/.claude/settings-sync.json` does not exist or `repoPath` differs, write
 it:
@@ -258,13 +294,29 @@ it:
 
 Preserve any existing keys.
 
-### Step 8 — Report
+### Step 9 — Report
 
-Output a summary:
+This step is reached only through Step 7 — every count and list below comes
+from its verified results, never from the Step 3 list or the Step 4 preview.
+
+If Step 7 recorded any FAILED entries, lead with them and say the restore is
+incomplete:
 
 ```
-Settings restored from <repo-path>.
-  Restored: <count> files (<list>)
+Restore INCOMPLETE — verification failed for <n> of <total> entries.
+  FAILED: <entry> (<reason>)
+  Verified: <count> files (<list>)
+  Skipped (not in backup): <list or "none">
+  Skipped (unchanged): <list or "none">
+
+Re-run restore to retry the failed entries — the backup repo is unchanged.
+```
+
+Otherwise output:
+
+```
+Settings restored and verified from <repo-path>.
+  Verified: <count> files (<list>)
   Skipped (not in backup): <list or "none">
   Skipped (unchanged): <list or "none">
 

@@ -21,6 +21,7 @@ When invoked with `--background` (typically via `/plan-agent:review-plan-bg <pat
 - **Requires an explicit plan path** — will not glob or prompt for a file.
 - **Skips all `AskUserQuestion` calls** — no interactive prompts.
 - **Defaults to "review + update plan in place"** — always applies improvements directly.
+- **Reports the applied/skipped tally** — Step 7's verify pass still runs; if any accepted edit was skipped, the final report leads with `REVIEW INCOMPLETE`, never the success line.
 - **Implies `--skip-analysis`** — the Step 6b walkthrough never runs unattended.
 - **Safe for unattended execution** — no user interaction required at any step.
 
@@ -42,7 +43,12 @@ Default: glob `docs/plans/*.html` excluding `index.html`, use most recently modi
 
 If no file is found, output: "`Plan file not found. Provide an explicit path or place a plan HTML file in docs/plans/.`" and stop.
 
-Announce: `"Reviewing plan: <resolved-path>"`
+**Determine the edit mode** from the resolved stem (`<stem>` = the resolved plan's path without its extension), mirroring finalize-plan's `references/resolve-and-modes.md`:
+
+- **Spec mode** — `<stem>.md` exists and its first markdown heading (after any YAML frontmatter block) is `# Plan:`. The spec is the source of truth: the render pipeline regenerates `<stem>.html` from it on every spec write, discarding hand-edits to the HTML — so Step 7 edits the spec and re-renders.
+- **Legacy mode** — no such spec (or the `.md` beside the plan is not a spec). Step 7 edits `<stem>.html` directly, as before the markdown-first pipeline.
+
+Announce: `"Reviewing plan: <resolved-path> (<spec|legacy> mode)"`
 
 ### Step 2 — Choose output mode
 
@@ -137,16 +143,42 @@ Declining the gate is **not** equivalent to `--skip-analysis`: the gate was stil
 
 Pass 1 is skipped when `output_mode = "review only"`; Pass 2 always runs. (When the Step 6b gate was declined via "Review only": no edits applied, Team Review still appended.)
 
-**Pass 1 — Inline edits:** When the Step 6b walkthrough ran, iterate **only** `accepted_edits` — findings accepted as-is plus revised-modified findings. The full-table fallback — iterating every row of the "Inline Edits to Apply" table — fires **only** when the walkthrough was bypassed: `--skip-analysis`, background mode, or the "Apply all" gate choice. Declining the gate ("Review only") is **not** a fallback case. For each edit, apply one `Edit` call against the resolved plan:
+**Pass 1 — Inline edits:** When the Step 6b walkthrough ran, iterate **only** `accepted_edits` — findings accepted as-is plus revised-modified findings. The full-table fallback — iterating every row of the "Inline Edits to Apply" table — fires **only** when the walkthrough was bypassed: `--skip-analysis`, background mode, or the "Apply all" gate choice. Declining the gate ("Review only") is **not** a fallback case. Apply the edits per the Step 1 edit mode:
+
+**Spec mode:** edit `<stem>.md` — never the HTML, which the pipeline regenerates from the spec, deleting hand-edits. Map each row's selector target to its spec section and apply one `Edit` call against the spec, writing markdown (no HTML escaping):
+
+| Selector target | Spec target |
+|---|---|
+| `.objective-card` | the `## Objective` paragraph |
+| `#criteria-list li#acN` (edit) | the matching bullet under `## Acceptance Criteria` (preserve its `- [ ]`/`- [x]` marker) |
+| `#criteria-list` (append) | a new `- [ ]` bullet at the end of `## Acceptance Criteria` |
+| `.step-card #step-N .step-why` | step N's `Why:` line under `## Steps` |
+| `.step-card #step-N .verify-body` | step N's `Verify:` line under `## Steps` |
+| `.step-card:nth-child(N)` (insert after) | a new numbered step after step N under `## Steps` (renumber the steps that follow) |
+| `.verification-section` | the `## Verification` prose |
+
+After the last edit, re-render — the same invocation build and finalize-plan use:
+
+```bash
+plan-agent-render "<stem>.md" -o "<stem>.html"
+```
+
+Bare name, never a path — this plugin's `bin/` is on `PATH`. A non-zero exit means an edit broke the spec format: fix the markdown and re-run, never hand-edit the HTML to compensate.
+
+**Legacy mode:** for each edit, apply one `Edit` call against the resolved plan HTML:
 - `edit` — replace targeted element's content.
 - `append` — add to the end of the element.
 - `insert after "[anchor]"` — insert new sibling after anchor.
 
 HTML-escape all inserted content. Never modify `<style>` or `<script>`.
 
-Skip rows whose target cannot be matched (log warning, continue).
+**Both modes:** skip rows whose target cannot be matched (log warning, continue). Every skipped row feeds the tally below — a skip is never silent.
 
-**Pass 2 — Append team review:** Use `Edit` to append a new `<details>` section before `</main>`:
+**Pass 2 — Append team review:**
+
+**Spec mode:** use `Edit` to append a `## Team Review (YYYY-MM-DD HH:MM UTC)` section to the end of `<stem>.md`, demoting the synthesized report's own `##` headings to `###` so they nest under it and never collide with spec section names. Then re-render as in Pass 1. The renderer ignores sections it does not recognize, so the review persists in the spec — the source of truth — rather than in HTML the next re-render would discard.
+
+**Legacy mode:** use `Edit` to append a new `<details>` section before `</main>`:
 ```html
 <details id="team-review-TIMESTAMP" class="team-review">
   <summary>Team Review (YYYY-MM-DD HH:MM:SS UTC)</summary>
@@ -156,9 +188,13 @@ Skip rows whose target cannot be matched (log warning, continue).
 </details>
 ```
 
-When the Step 6b walkthrough ran, the review body also includes a triage-outcome summary — accepted findings (applied as-is), modified findings (with their revised content), and rejected findings (recorded but not applied) — per the "Triage Outcome" subsection of `references/output-template.md`.
+When the Step 6b walkthrough ran, the appended review — either mode — also includes a triage-outcome summary — accepted findings (applied as-is), modified findings (with their revised content), and rejected findings (recorded but not applied) — per the "Triage Outcome" subsection of `references/output-template.md`.
 
-Announce: "`Plan updated in place: <resolved-path>`"
+**Verify, then announce:** re-read the edited file (`<stem>.md` in spec mode, the plan HTML in legacy mode) and confirm each accepted edit's content is actually present; any edit whose content did not land moves to the skipped list. Count `N` = edits confirmed present, `M` = accepted edits. Announce:
+
+"`Plan updated in place: <resolved-path> (<spec|legacy> mode) — applied N of M accepted edits; skipped: <targets, or "none">`"
+
+**Background mode:** when the skipped list is non-empty, the final report must lead with `REVIEW INCOMPLETE` and carry the same tally instead of the success line — a skipped edit is a reported failure, not a warning nobody sees.
 
 ### Step 8 — Clean up the team
 

@@ -45,7 +45,9 @@ do not wait for it to finish.
      ```
      Run the plan-agent review team on "<resolved-path>" in background mode.
      Invoke Skill(skill: "plan-agent:review-plan", args: "<resolved-path> --background")
-     and report the path updated in place when done.
+     and report the path updated in place when done, carrying the skill's
+     applied/skipped tally; if any accepted edit was skipped, report
+     REVIEW INCOMPLETE instead of the success line.
      ```
 
 2. As soon as the agent is dispatched, return control with a single-line ack:
