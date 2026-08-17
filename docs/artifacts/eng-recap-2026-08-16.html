@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plugin version pinning across git worktrees</title>
+</head>
+<body>
+<style>
+  :root {
+    --ground: #F6F7F9;
+    --surface: #FFFFFF;
+    --surface-sunk: #EDEFF3;
+    --ink: #16191F;
+    --ink-soft: #5A616E;
+    --ink-faint: #858C99;
+    --accent: #2E5C8A;
+    --accent-soft: #E3EAF3;
+    --stale: #9A5C15;
+    --stale-soft: #F6EADA;
+    --fresh: #2A6249;
+    --fresh-soft: #E1EFE8;
+    --rule: #DEE2E9;
+    --rule-strong: #C6CCD6;
+    --code-bg: #EFF1F5;
+
+    --font-display: ui-serif, "Iowan Old Style", "Source Serif Pro", "Palatino Linotype", Georgia, serif;
+    --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101318;
+      --surface: #171B22;
+      --surface-sunk: #1D222B;
+      --ink: #E4E7EC;
+      --ink-soft: #99A1AF;
+      --ink-faint: #6E7683;
+      --accent: #86AFDC;
+      --accent-soft: #1C2B3C;
+      --stale: #DB9B52;
+      --stale-soft: #2E2416;
+      --fresh: #74BE9A;
+      --fresh-soft: #14261D;
+      --rule: #262C36;
+      --rule-strong: #333B47;
+      --code-bg: #1B2029;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #101318;
+    --surface: #171B22;
+    --surface-sunk: #1D222B;
+    --ink: #E4E7EC;
+    --ink-soft: #99A1AF;
+    --ink-faint: #6E7683;
+    --accent: #86AFDC;
+    --accent-soft: #1C2B3C;
+    --stale: #DB9B52;
+    --stale-soft: #2E2416;
+    --fresh: #74BE9A;
+    --fresh-soft: #14261D;
+    --rule: #262C36;
+    --rule-strong: #333B47;
+    --code-bg: #1B2029;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .prose { max-width: 42rem; }
+
+  .masthead { display: flex; flex-direction: column; gap: 0.9rem; }
+
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 2.9rem);
+    line-height: 1.12;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .standfirst {
+    font-size: 1.06rem;
+    color: var(--ink-soft);
+    max-width: 42rem;
+    margin: 0;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .stat {
+    background: var(--surface);
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.7rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+
+  .stat-label {
+    font-size: 0.74rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  section { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h3 {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.4;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  p { margin: 0; }
+  .prose p + p { margin-top: 0.85rem; }
+
+  ul { margin: 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  ol { margin: 0; padding-left: 1.35rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  li { max-width: 40rem; }
+
+  strong { font-weight: 650; }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.855em;
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 2px;
+    overflow-wrap: break-word;
+  }
+
+  pre.block {
+    font-family: var(--font-mono);
+    font-size: 0.83rem;
+    line-height: 1.6;
+    background: var(--code-bg);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-left: 2px solid var(--accent);
+    border-radius: 3px;
+    padding: 0.85rem 1rem;
+    margin: 0;
+    overflow-x: auto;
+  }
+  pre.block code { background: none; padding: 0; font-size: inherit; }
+
+  .entries { display: flex; flex-direction: column; gap: 1.4rem; }
+
+  .entry {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-left: 0.95rem;
+    border-left: 1px solid var(--rule-strong);
+  }
+  .entry p, .entry ul { max-width: 40rem; }
+  .entry-alert { border-left-color: var(--stale); }
+
+  .pin {
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+    font-variant-numeric: tabular-nums;
+    padding: 0.1em 0.45em;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .pin-stale { background: var(--stale-soft); color: var(--stale); }
+  .pin-fresh { background: var(--fresh-soft); color: var(--fresh); }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 3px; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.9rem;
+    background: var(--surface);
+  }
+
+  th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--ink-faint);
+    background: var(--surface-sunk);
+    padding: 0.6rem 0.85rem;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  td {
+    padding: 0.55rem 0.85rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    color: var(--ink-soft);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); }
+  td.path { font-family: var(--font-mono); font-size: 0.84rem; color: var(--ink); }
+
+  .figure { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .diagram-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1.1rem 0.75rem;
+    overflow-x: auto;
+  }
+
+  .caption {
+    font-size: 0.83rem;
+    color: var(--ink-faint);
+    font-style: italic;
+    max-width: 40rem;
+  }
+
+  .callout {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.95rem 1.1rem;
+    font-size: 0.94rem;
+    color: var(--ink);
+    max-width: 44rem;
+  }
+  .callout-warn { background: var(--stale-soft); }
+  .callout .lede {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.35rem;
+  }
+  .callout-warn .lede { color: var(--stale); }
+
+  .verdict { display: flex; flex-direction: column; gap: 0.9rem; }
+  .verdict-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: baseline;
+    max-width: 42rem;
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    padding: 0.2em 0.5em;
+    border-radius: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 5.4rem;
+    text-align: center;
+  }
+  .tag-pass { background: var(--fresh-soft); color: var(--fresh); }
+  .tag-gap { background: var(--stale-soft); color: var(--stale); }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.2rem;
+    font-size: 0.83rem;
+    color: var(--ink-faint);
+    max-width: 42rem;
+  }
+
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible, :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* Gallery copy: mermaid rendered to static SVG with a light palette baked in,
+     so its card is pinned light on both grounds rather than following a token. */
+  .diagram-card { background: #FFFFFF; border-color: #DEE2E9; }
+  .diagram-card svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">Engineering recap &middot; 2026-08-16 &middot; agentics</div>
+    <h1>Plugin version pinning across git worktrees</h1>
+    <p class="standfirst">
+      <code>/git-agent:post-merge-cleanup</code> was reported broken. It was never loaded: this
+      worktree resolved <code>git-agent@agentics-kit</code> to
+      <span class="pin pin-stale">4.15.0</span> at project scope while the skill first shipped in
+      <span class="pin pin-fresh">4.19.0</span> (<code>e1e8840</code>, PR&nbsp;#565). The skill's own
+      suite passes 28/28, so nothing under <code>kit/plugins/git-agent/</code> was at fault.
+    </p>
+  </header>
+
+  <section>
+    <div class="eyebrow">At a glance</div>
+    <div class="stats">
+      <div class="stat"><span class="stat-value">4</span><span class="stat-label">Files changed</span></div>
+      <div class="stat"><span class="stat-value">5</span><span class="stat-label">Pins moved</span></div>
+      <div class="stat"><span class="stat-value">8</span><span class="stat-label">Decisions</span></div>
+      <div class="stat"><span class="stat-value">5</span><span class="stat-label">Open items</span></div>
+    </div>
+    <div class="prose">
+      <p>
+        The session then applied the fix across every live agentics directory, and while building a
+        script to do it, found that <code>claude plugin update --scope project</code> run from a
+        directory with <strong>no</strong> project row does not no-op — it silently updates some
+        other project's row. That discovery is now the load-bearing constraint in
+        <code>scripts/update-worktree-plugins.sh</code>.
+      </p>
+      <p>
+        <strong>Diff budget:</strong> opted in. One file carries logic —
+        <code>scripts/update-worktree-plugins.sh</code> (4,026 bytes, untracked) — and was read in
+        full. The three committed files are generated or prose and were taken from their commit body.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Architecture and code paths</div>
+    <h2>Two mechanisms matter, neither in <code>kit/plugins/</code></h2>
+
+    <h3>1. How a skill name resolves to a file</h3>
+    <div class="figure">
+      <div class="diagram-card">
+        <svg id="claude-mermaid-0" width="716.59375" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="798" viewBox="0 0 716.59375 798" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-0{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-0 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-0 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-0 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-0 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-0 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-0 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-0 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-0 .marker.cross{stroke:#a8adb8;}#claude-mermaid-0 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;}#claude-mermaid-0 p{margin:0;}#claude-mermaid-0 .label{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;color:#f2f3f5;}#claude-mermaid-0 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-0 .cluster-label span{color:#f2f3f5;}#claude-mermaid-0 .cluster-label span p{background-color:transparent;}#claude-mermaid-0 .label text,#claude-mermaid-0 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node ellipse,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .rough-node .label text,#claude-mermaid-0 .node .label text,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-anchor:middle;}#claude-mermaid-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-0 .rough-node .label,#claude-mermaid-0 .node .label,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-align:center;}#claude-mermaid-0 .node.clickable{cursor:pointer;}#claude-mermaid-0 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-0 .arrowheadPath{fill:#efece7;}#claude-mermaid-0 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-0 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-0 .edgeLabel{background-color:rgb(16, 19, 24);text-align:center;}#claude-mermaid-0 .edgeLabel p{background-color:rgb(16, 19, 24);}#claude-mermaid-0 .edgeLabel rect{opacity:0.5;background-color:rgb(16, 19, 24);fill:rgb(16, 19, 24);}#claude-mermaid-0 .labelBkg{background-color:rgba(16, 19, 24, 0.5);}#claude-mermaid-0 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .cluster text{fill:#f2f3f5;}#claude-mermaid-0 .cluster span{color:#f2f3f5;}#claude-mermaid-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-0 rect.text{fill:none;stroke-width:0;}#claude-mermaid-0 .icon-shape,#claude-mermaid-0 .image-shape{background-color:rgb(16, 19, 24);text-align:center;}#claude-mermaid-0 .icon-shape p,#claude-mermaid-0 .image-shape p{background-color:rgb(16, 19, 24);padding:2px;}#claude-mermaid-0 .icon-shape .label rect,#claude-mermaid-0 .image-shape .label rect{opacity:0.5;background-color:rgb(16, 19, 24);fill:rgb(16, 19, 24);}#claude-mermaid-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-0 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-0 [data-look="neo"].node rect,#claude-mermaid-0 [data-look="neo"].cluster rect,#claude-mermaid-0 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node path{stroke:url(#claude-mermaid-0-gradient);stroke-width:1px;}#claude-mermaid-0 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-0 [data-look="neo"].node circle{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-0 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path,#claude-mermaid-0 .cluster rect{stroke-width:2px;}#claude-mermaid-0 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-0_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M187.242,110L187.242,116.167C187.242,122.333,187.242,134.667,187.242,146.333C187.242,158,187.242,169,187.242,174.5L187.242,180" id="claude-mermaid-0-L_A_B_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A_B_0" data-points="W3sieCI6MTg3LjI0MjE4NzUsInkiOjExMH0seyJ4IjoxODcuMjQyMTg3NSwieSI6MTQ3fSx7IngiOjE4Ny4yNDIxODc1LCJ5IjoxODR9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M187.242,286L187.242,294.167C187.242,302.333,187.242,318.667,187.242,334.333C187.242,350,187.242,365,187.242,372.5L187.242,380" id="claude-mermaid-0-L_B_C_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_C_0" data-points="W3sieCI6MTg3LjI0MjE4NzUsInkiOjI4Nn0seyJ4IjoxODcuMjQyMTg3NSwieSI6MzM1fSx7IngiOjE4Ny4yNDIxODc1LCJ5IjozODR9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M187.242,462L187.242,470.167C187.242,478.333,187.242,494.667,192.435,510.449C197.627,526.232,208.013,541.463,213.205,549.079L218.398,556.695" id="claude-mermaid-0-L_C_D_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_D_0" data-points="W3sieCI6MTg3LjI0MjE4NzUsInkiOjQ2Mn0seyJ4IjoxODcuMjQyMTg3NSwieSI6NTExfSx7IngiOjIyMC42NTEyNzg0MDkwOTA5LCJ5Ijo1NjB9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M546.484,274L546.484,284.167C546.484,294.333,546.484,314.667,546.484,332.333C546.484,350,546.484,365,546.484,372.5L546.484,380" id="claude-mermaid-0-L_E_F_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_F_0" data-points="W3sieCI6NTQ2LjQ4NDM3NSwieSI6Mjc0fSx7IngiOjU0Ni40ODQzNzUsInkiOjMzNX0seyJ4Ijo1NDYuNDg0Mzc1LCJ5IjozODR9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M493.47,462L482.369,470.167C471.268,478.333,449.066,494.667,421.894,510.707C394.722,526.747,362.58,542.493,346.51,550.367L330.439,558.24" id="claude-mermaid-0-L_F_D_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_D_0" data-points="W3sieCI6NDkzLjQ3MDQ4MTE3ODk3NzI1LCJ5Ijo0NjJ9LHsieCI6NDI2Ljg2MzI4MTI1LCJ5Ijo1MTF9LHsieCI6MzI2Ljg0Njk5MDQxMTkzMTgsInkiOjU2MH1d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M573.075,462L578.643,470.167C584.212,478.333,595.348,494.667,600.916,517.5C606.484,540.333,606.484,569.667,606.484,599C606.484,628.333,606.484,657.667,581.371,680.298C556.258,702.93,506.031,718.86,480.918,726.826L455.805,734.791" id="claude-mermaid-0-L_F_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_G_0" data-points="W3sieCI6NTczLjA3NTI4NDA5MDkwOTEsInkiOjQ2Mn0seyJ4Ijo2MDYuNDg0Mzc1LCJ5Ijo1MTF9LHsieCI6NjA2LjQ4NDM3NSwieSI6NTk5fSx7IngiOjYwNi40ODQzNzUsInkiOjY4N30seyJ4Ijo0NTEuOTkxODI3NzEzODE1OCwieSI6NzM2fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M247.242,638L247.242,646.167C247.242,654.333,247.242,670.667,259.534,686.642C271.825,702.618,296.407,718.237,308.699,726.046L320.99,733.855" id="claude-mermaid-0-L_D_G_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_D_G_0" data-points="W3sieCI6MjQ3LjI0MjE4NzUsInkiOjYzOH0seyJ4IjoyNDcuMjQyMTg3NSwieSI6Njg3fSx7IngiOjMyNC4zNjYzMTM3MzM1NTI2LCJ5Ijo3MzZ9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(187.2421875, 147)"><g class="label" data-id="L_A_B_0" transform="translate(-31.4921875, -12)"><foreignObject width="62.984375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>PR #565</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B_C_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_C_D_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(546.484375, 335)"><g class="label" data-id="L_E_F_0" transform="translate(-100, -24)"><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="edgeLabel"><p>first session in a new projectPath</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(426.86328125, 511)"><g class="label" data-id="L_F_D_0" transform="translate(-100, -24)"><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="edgeLabel"><p>pins one version, never re-resolved</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_F_G_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(247.2421875, 687)"><g class="label" data-id="L_D_G_0" transform="translate(-100, -24)"><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="edgeLabel"><p>4.15.0/skills/ lacks post-merge-cleanup</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-0-flowchart-A-0" data-look="classic" transform="translate(187.2421875, 59)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-B-1" data-look="classic" transform="translate(187.2421875, 235)"><rect class="basic label-container" style="" x="-146.6171875" y="-51" width="293.234375" height="102"></rect><g class="label" style="" transform="translate(-116.6171875, -36)"><rect></rect><foreignObject width="233.234375" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>.claude-plugin/marketplace.jsonversion: 4.19.0</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-C-3" data-look="classic" transform="translate(187.2421875, 423)"><rect class="basic label-container" style="" x="-179.2421875" y="-39" width="358.484375" height="78"></rect><g class="label" style="" transform="translate(-149.2421875, -24)"><rect></rect><foreignObject width="298.484375" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>~/.claude/plugins/marketplaces/agentics-kit/ (clone)</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-D-5" data-look="classic" transform="translate(247.2421875, 599)"><rect class="basic label-container" style="" x="-152.3828125" y="-39" width="304.765625" height="78"></rect><g class="label" style="" transform="translate(-122.3828125, -24)"><rect></rect><foreignObject width="244.765625" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>~/.claude/plugins/cache/agentics-kit/git-agent//</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-E-6" data-look="classic" transform="translate(546.484375, 235)"><rect class="basic label-container" style="" x="-162.109375" y="-39" width="324.21875" height="78"></rect><g class="label" style="" transform="translate(-132.109375, -24)"><rect></rect><foreignObject width="264.21875" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>.claude/settings.jsonenabledPlugins (checked in)</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-F-7" data-look="classic" transform="translate(546.484375, 423)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>installed_plugins.jsonrow: scope, projectPath, version</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-G-11" data-look="classic" transform="translate(366.86328125, 763)"><rect class="basic label-container" style="" x="-119.1953125" y="-27" width="238.390625" height="54"></rect><g class="label" style="" transform="translate(-89.1953125, -12)"><rect></rect><foreignObject width="178.390625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>skills loaded this session</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="claude-mermaid-0-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-0-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-0-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg>
+      </div>
+      <p class="caption">
+        The <code>installed_plugins.json</code> row is the only thing deciding which cached version a
+        directory sees.
+      </p>
+    </div>
+
+    <h4 style="margin:0;font:inherit;font-weight:650">Read first, in order</h4>
+    <ol>
+      <li>
+        <code>~/.claude/plugins/installed_plugins.json</code> —
+        <code>plugins["git-agent@agentics-kit"]</code> is an <strong>array</strong>, one row per
+        install site: <code>{scope, projectPath, installPath, version, installedAt, lastUpdated}</code>.
+        A <code>scope: project</code> row shadows the <code>scope: user</code> row, silently. This
+        file is the authority; <code>~/.claude/plugins/config.json</code> is
+        <code>{"repositories": {}}</code>.
+      </li>
+      <li>
+        <code>.claude/settings.json:23</code> — <code>enabledPlugins</code> names the plugin, and the
+        file is <strong>tracked in git</strong>, so every worktree checkout carries it.
+      </li>
+      <li>
+        <code>~/.claude/plugins/cache/agentics-kit/git-agent/&lt;version&gt;/skills/</code> — the
+        version-keyed cache, shared across projects, so an update is a pin rewrite with no download.
+      </li>
+    </ol>
+
+    <div class="prose">
+      <p>
+        The pin happens once: a new worktree is a distinct <code>projectPath</code>, its first session
+        resolves the plugin <em>as of that moment</em>, writes a concrete <code>version</code>, and
+        nothing re-resolves it. Install timestamps track worktree creation, not plugin releases.
+      </p>
+    </div>
+
+    <h3>2. The <code>--scope project</code> fall-through</h3>
+    <div class="figure">
+      <div class="diagram-card">
+        <svg id="claude-mermaid-1" width="586" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="750" viewBox="0 0 586 750" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-1{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-1 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-1 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-1 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-1 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-1 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-1 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-1 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-1 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-1 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-1 .marker.cross{stroke:#a8adb8;}#claude-mermaid-1 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:16px;}#claude-mermaid-1 p{margin:0;}#claude-mermaid-1 .label{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;color:#f2f3f5;}#claude-mermaid-1 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-1 .cluster-label span{color:#f2f3f5;}#claude-mermaid-1 .cluster-label span p{background-color:transparent;}#claude-mermaid-1 .label text,#claude-mermaid-1 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-1 .node rect,#claude-mermaid-1 .node circle,#claude-mermaid-1 .node ellipse,#claude-mermaid-1 .node polygon,#claude-mermaid-1 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-1 .rough-node .label text,#claude-mermaid-1 .node .label text,#claude-mermaid-1 .image-shape .label,#claude-mermaid-1 .icon-shape .label{text-anchor:middle;}#claude-mermaid-1 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-1 .rough-node .label,#claude-mermaid-1 .node .label,#claude-mermaid-1 .image-shape .label,#claude-mermaid-1 .icon-shape .label{text-align:center;}#claude-mermaid-1 .node.clickable{cursor:pointer;}#claude-mermaid-1 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-1 .arrowheadPath{fill:#efece7;}#claude-mermaid-1 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-1 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-1 .edgeLabel{background-color:rgb(16, 19, 24);text-align:center;}#claude-mermaid-1 .edgeLabel p{background-color:rgb(16, 19, 24);}#claude-mermaid-1 .edgeLabel rect{opacity:0.5;background-color:rgb(16, 19, 24);fill:rgb(16, 19, 24);}#claude-mermaid-1 .labelBkg{background-color:rgba(16, 19, 24, 0.5);}#claude-mermaid-1 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-1 .cluster text{fill:#f2f3f5;}#claude-mermaid-1 .cluster span{color:#f2f3f5;}#claude-mermaid-1 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-1 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-1 rect.text{fill:none;stroke-width:0;}#claude-mermaid-1 .icon-shape,#claude-mermaid-1 .image-shape{background-color:rgb(16, 19, 24);text-align:center;}#claude-mermaid-1 .icon-shape p,#claude-mermaid-1 .image-shape p{background-color:rgb(16, 19, 24);padding:2px;}#claude-mermaid-1 .icon-shape .label rect,#claude-mermaid-1 .image-shape .label rect{opacity:0.5;background-color:rgb(16, 19, 24);fill:rgb(16, 19, 24);}#claude-mermaid-1 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-1 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-1 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-1 [data-look="neo"].node rect,#claude-mermaid-1 [data-look="neo"].cluster rect,#claude-mermaid-1 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node path{stroke:url(#claude-mermaid-1-gradient);stroke-width:1px;}#claude-mermaid-1 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-1 [data-look="neo"].node circle{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-1 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 .node rect,#claude-mermaid-1 .node circle,#claude-mermaid-1 .node polygon,#claude-mermaid-1 .node path,#claude-mermaid-1 .cluster rect{stroke-width:2px;}#claude-mermaid-1 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-1_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-1_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-1_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-1_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M293,110L293,114.167C293,118.333,293,126.667,293,134.333C293,142,293,149,293,152.5L293,156" id="claude-mermaid-1-L_S_Q_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_S_Q_0" data-points="W3sieCI6MjkzLCJ5IjoxMTB9LHsieCI6MjkzLCJ5IjoxMzV9LHsieCI6MjkzLCJ5IjoxNjB9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M227.909,372.909L212.924,389.924C197.94,406.94,167.97,440.97,152.985,463.485C138,486,138,497,138,502.5L138,508" id="claude-mermaid-1-L_Q_R_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q_R_0" data-points="W3sieCI6MjI3LjkwOTM2NTU1ODkxMjM4LCJ5IjozNzIuOTA5MzY1NTU4OTEyNH0seyJ4IjoxMzgsInkiOjQ3NX0seyJ4IjoxMzgsInkiOjUxMn1d" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M358.091,372.909L373.076,389.924C388.06,406.94,418.03,440.97,433.015,463.485C448,486,448,497,448,502.5L448,508" id="claude-mermaid-1-L_Q_W_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_Q_W_0" data-points="W3sieCI6MzU4LjA5MDYzNDQ0MTA4NzYsInkiOjM3Mi45MDkzNjU1NTg5MTI0fSx7IngiOjQ0OCwieSI6NDc1fSx7IngiOjQ0OCwieSI6NTEyfV0=" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path><path d="M448,590L448,594.167C448,598.333,448,606.667,448,614.333C448,622,448,629,448,632.5L448,636" id="claude-mermaid-1-L_W_X_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_W_X_0" data-points="W3sieCI6NDQ4LCJ5Ijo1OTB9LHsieCI6NDQ4LCJ5Ijo2MTV9LHsieCI6NDQ4LCJ5Ijo2NDB9XQ==" data-look="classic" marker-end="url(#claude-mermaid-1_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_S_Q_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(138, 475)"><g class="label" data-id="L_Q_R_0" transform="translate(-12.4765625, -12)"><foreignObject width="24.953125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>yes</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(448, 475)"><g class="label" data-id="L_Q_W_0" transform="translate(-9.0859375, -12)"><foreignObject width="18.171875" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>no</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_W_X_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-1-flowchart-S-0" data-look="classic" transform="translate(293, 59)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>claude plugin update X --scope project(cwd = some directory)</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-Q-1" data-look="classic" transform="translate(293, 299)"><polygon points="139,0 278,-139 139,-278 0,-139" class="label-container" transform="translate(-138.5, 139)"></polygon><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>does cwd own aproject-scoped row?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-R-3" data-look="classic" transform="translate(138, 551)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>updates that row— the intended behaviour</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-W-5" data-look="classic" transform="translate(448, 551)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>does NOT no-op:updates some OTHER project's row</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-1-flowchart-X-7" data-look="classic" transform="translate(448, 691)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>observed: a worktree of anunrelated repo, already deleted</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="claude-mermaid-1-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-1-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-1-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg>
+      </div>
+      <p class="caption">
+        Why the script never enters a directory that has no row of its own.
+      </p>
+    </div>
+
+    <div class="prose">
+      <p><code>scripts/update-worktree-plugins.sh</code> is built around that branch:</p>
+    </div>
+    <ul>
+      <li>
+        <code>git worktree list --porcelain | awk '/^worktree /{print $2}'</code> enumerates live
+        worktrees of <em>this</em> repo. Membership is tested by <code>os.path.realpath</code>
+        identity, not a path substring, so a similarly-named checkout elsewhere is never swept in.
+      </li>
+      <li>
+        An embedded <code>python3</code> heredoc filters <code>installed_plugins.json</code> to rows
+        that are <code>scope == "project"</code>, whose <code>projectPath</code> still exists, and
+        whose realpath is in the live set. Everything else is skipped — that is the guard.
+      </li>
+      <li>
+        The loop <code>cd</code>s into each target because <code>claude plugin update</code> has no
+        <code>--cwd</code> and no bulk form.
+      </li>
+      <li>Work list goes through a temp file, not <code>mapfile</code>: macOS ships bash 3.2.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decisions</div>
+    <div class="entries">
+
+      <div class="entry">
+        <h3>Diagnose before fixing, then fix when asked</h3>
+        <p>
+          The first pass identified <code>claude plugin update ... --scope project</code> and
+          deliberately left it unrun — it mutates config outside the repo and needs a restart
+          regardless, and the ask was "why is it broken", not "fix it". When the fix was requested it
+          was applied to all four live agentics directories.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Treat the session's own available-skills listing as primary evidence</h3>
+        <p>
+          It showed only <code>create-issue</code>, <code>merge</code>, and
+          <code>ship-autonomous</code> from git-agent — direct observation of what the runtime loaded,
+          stronger than inference from source. Cross-checked with <code>ls</code> on the version cache.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Rule out <code>scope-guard.py</code> by reading it, not by running the skill</h3>
+        <p>
+          The PreToolUse hook from <code>744f6e1</code> was the first suspect.
+          <code>is_candidate()</code> (<code>kit/plugins/git-agent/hooks/scope-guard.py:139</code>)
+          admits <code>git</code> only when <code>git_args(tokens)[0] == "stash"</code>, so
+          <code>git worktree remove</code> never reaches a rule.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Retract the first remediation recommendation</h3>
+        <p>
+          Calling "drop the project-scoped installs" the cheap answer preceded reading what holds
+          them. <code>.claude/settings.json</code> is checked in, making that a repo-visible change
+          affecting cloners.
+        </p>
+      </div>
+
+      <div class="entry entry-alert">
+        <h3>Guard the script on has-a-row rather than trusting cwd</h3>
+        <p>
+          The obvious design — run the update in every live worktree and let the CLI no-op — is
+          actively unsafe given the fall-through. Only directories that already own a row are entered.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Drop the version comparison from the script</h3>
+        <p>
+          The first draft read the target from the main checkout's <code>marketplace.json</code> and
+          got <span class="pin pin-stale">4.11.0</span> for a plugin at
+          <span class="pin pin-fresh">4.19.0</span>. Worktrees check out different refs, so no
+          working-tree file states what is current. <code>claude plugin update</code> resolves against
+          the marketplace clone and prints "already at the latest version", so it is the authority.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Do not work around the <code>rm</code> denial</h3>
+        <p>
+          Deleting the retired memory files is blocked at the permission layer by the user's own
+          global rule. <code>mv</code>, <code>find -delete</code>, and <code>python3 os.remove</code>
+          are the same delete in disguise; the refusal was reported with the command to run instead.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Keep the recap on one URL</h3>
+        <p>
+          Both runs of <code>/artifact-tools:eng-recap</code> publish through the
+          <code>eng-artifact-url:</code> key in the session record, so the shared link shows current
+          state rather than minting a second page.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Tradeoffs and rejected options</div>
+    <div class="entries">
+
+      <div class="entry">
+        <h3>Three remediation paths, one chosen</h3>
+        <p>
+          Per-worktree update on demand (no repo change, recurring cost) was taken. Dropping
+          <code>git-agent</code> from checked-in <code>enabledPlugins</code> would permanently fix
+          <em>new</em> worktrees but costs auto-enable on a fresh clone — a real loss for a
+          marketplace repo that dogfoods its own plugins — and clears no existing rows. Updating only
+          the main checkout was rejected once the ask covered every worktree. To revisit the middle
+          option: decide whether <code>enabledPlugins</code> exists for the maintainer or for cloners.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Script generality vs. one-off</h3>
+        <p>
+          The scratchpad driver hardcoded <code>devbox/agentics</code> and a <code>4.19.0</code>
+          target. The committed version takes a <code>plugin@marketplace</code> argument, derives
+          worktrees from <code>git worktree list</code>, and has no target constant — the cost is a
+          <code>python3</code> heredoc instead of a <code>grep</code>.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Filtering vs. running everywhere</h3>
+        <p>
+          Running the update in all 15 live worktrees is fewer lines and was tested first. Rejected
+          outright once the fall-through appeared: it would mutate unrelated repos.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Committing the script into PR #566</h3>
+        <p>
+          Left untracked. That PR is docs-only, and folding a script in muddies the diff.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Learnings</div>
+    <div class="entries">
+
+      <div class="entry">
+        <h3>Tried and abandoned &mdash; the scope-guard hypothesis</h3>
+        <p>
+          "New PreToolUse hook + destructive-command skill" was a tidier story than a version pin, and
+          wrong. Worth knowing the guard's real blast radius: repo-wide
+          <code>--write</code>/<code>--fix</code> formatter runs, and
+          <code>git stash pop|apply</code> with no ref. Nothing else.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Tried and abandoned &mdash; the systemic loader bug read</h3>
+        <p>
+          Five git-agent skills were missing from the listing. Four carry
+          <code>disable-model-invocation: true</code> and are user-invocable only, so their absence is
+          correct; only <code>post-merge-cleanup</code> was signal. Checking frontmatter across all
+          skills first would have skipped it.
+        </p>
+      </div>
+
+      <div class="entry entry-alert">
+        <h3>Tried and abandoned &mdash; "just run the update everywhere"</h3>
+        <p>
+          Probing it updated <code>devbox/513/.claude/worktrees/wire-dashboard-impact-grid-d56c80</code>
+          (<span class="pin pin-stale">4.14.4</span> → <span class="pin pin-fresh">4.19.0</span>), an
+          already-deleted worktree in an unrelated repo. Practical harm nil, but it is an unrequested
+          change to another project, and it killed the simple design.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Gotcha &mdash; a correct user-scoped install is not evidence a skill is available</h3>
+        <p>
+          User scope was 4.19.0 with the file on disk the entire time. Scope shadowing is silent: no
+          warning that a project row overrides a newer user row.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Gotcha &mdash; no working-tree file tells you the current plugin version</h3>
+        <p>
+          Different worktrees sit on different refs, so <code>marketplace.json</code> read from one of
+          them is whatever branch it happens to be on.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Gotcha &mdash; macOS bash 3.2 has no <code>mapfile</code></h3>
+        <p>The first driver died on it before running anything, so no partial state.</p>
+      </div>
+
+      <div class="entry">
+        <h3>Gotcha &mdash; <code>installed_plugins.json</code> rows are never reaped</h3>
+        <p>
+          Deleting a worktree leaves its pin forever; 2 of 7 agentics rows and 9 of 15 in
+          <code>devbox/513</code> are orphans.
+        </p>
+      </div>
+
+      <div class="entry">
+        <h3>Gotcha &mdash; a chat "yes" cannot lift a permission-layer denial</h3>
+        <p>
+          <code>rm</code> is denied outright by the user's global rules; re-asking in conversation
+          does not reach that layer.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Tests and verification</div>
+
+    <div class="callout">
+      <span class="lede">Correction to the first version of this recap</span>
+      The fix is now <strong>verified</strong>, not reasoned-but-unobserved. All four live agentics
+      directories were updated and re-read from <code>installed_plugins.json</code>: <strong>0 live
+      rows remain behind 4.19.0</strong>, and the install path now resolving carries
+      <code>post-merge-cleanup</code> in <code>skills/</code>.
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Check</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td class="path">tests/plugins/test-post-merge-cleanup.sh</td><td>28/28 pass</td></tr>
+          <tr><td>Live agentics rows behind 4.19.0, after update</td><td class="num">0 (was 4)</td></tr>
+          <tr><td class="path">update-worktree-plugins.sh</td><td>default, behind-plugin, no-rows, bad-flag — 4/4 behave; bad flag exits 2</td></tr>
+          <tr><td class="path">bash -n</td><td>clean</td></tr>
+          <tr><td>Guard excludes worktrees without a pin</td><td class="num">15 live, 5 listed</td></tr>
+          <tr><td class="path">git ls-files --error-unmatch .claude/settings.json</td><td>tracked</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="verdict">
+      <div class="verdict-row">
+        <span class="tag tag-gap">Untested</span>
+        <span>
+          <strong><code>post-merge-cleanup</code> end-to-end.</strong> Only its suite ran. It has still
+          never executed against a real merged branch and worktree — the thing the original report was
+          reaching for.
+        </span>
+      </div>
+      <div class="verdict-row">
+        <span class="tag tag-gap">Untested</span>
+        <span>
+          <strong>The script's failure path.</strong> <code>FAILED</code> counting and the non-zero
+          exit were never exercised; every update in this session succeeded.
+        </span>
+      </div>
+      <div class="verdict-row">
+        <span class="tag tag-gap">Untested</span>
+        <span>
+          <strong>The script on a non-agentics repo.</strong> Written to be generic, only run here.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Review follow-ups and tech debt</div>
+    <ul>
+      <li>
+        <strong>Seven retired memory files still on disk.</strong> Consolidation removed their index
+        pointers, so they no longer load into context, but <code>rm</code> is denied at the permission
+        layer. Command handed to the user.
+      </li>
+      <li>
+        <strong>Orphaned pin rows accumulate.</strong> 2 in agentics, 9 in <code>devbox/513</code>,
+        including the one this session touched by accident. Only <code>claude plugin uninstall</code>
+        at that scope clears them; nothing prunes automatically.
+      </li>
+      <li>
+        <strong><code>scripts/update-worktree-plugins.sh</code> is untracked</strong> and has no test
+        under <code>tests/</code>. It is the kind of script the repo would normally pin with one.
+      </li>
+      <li>
+        <strong>No upstream fix for the fall-through.</strong> The guard is a workaround in one script;
+        anyone running <code>claude plugin update --scope project</code> by hand from the wrong
+        directory hits the same trap.
+      </li>
+      <li>
+        <strong><code>post-merge-cleanup</code>'s dogfooding ceiling.</strong> It clears merged
+        worktrees, yet the pin behaviour makes it least likely to exist in the aging worktrees it was
+        written for. Upgrade path: if it must be reachable everywhere, it belongs somewhere not
+        per-project version-pinned.
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="eyebrow">Files touched</div>
+
+    <h3>Committed (<code>c85471f</code>, on PR #566)</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Path</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="path">docs/plans/sessions/document-worktree-plugin-pinning-session.md</td><td>This record; carries <code>eng-artifact-url:</code></td></tr>
+          <tr><td class="path">docs/artifacts/eng-recap-2026-08-16.html</td><td>Published recap, mermaid inlined as static SVG</td></tr>
+          <tr><td class="path">docs/artifacts/index.html</td><td>Gallery index rebuilt by <code>build-artifacts-index.sh</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Untracked</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Path</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="path">scripts/update-worktree-plugins.sh</td><td>Bulk pin update across worktrees, guarded on has-a-row</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <p>
+        <strong>Read for diagnosis, unmodified:</strong>
+        <code>kit/plugins/git-agent/skills/post-merge-cleanup/SKILL.md</code>,
+        <code>kit/plugins/git-agent/hooks/scope-guard.py</code>,
+        <code>kit/plugins/git-agent/skills/pr-agent/SKILL.md</code>,
+        <code>.claude/settings.json</code>,
+        <code>tests/plugins/test-post-merge-cleanup.sh</code>.
+      </p>
+      <p>
+        <strong>Outside the repo:</strong> <code>installed_plugins.json</code> (5 rows moved — main,
+        3 worktrees, 1 unintended in <code>devbox/513</code>); the memory directory under
+        <code>~/.claude/projects/-Users-shawnsandy-devbox-agentics/memory/</code> (1 memory added,
+        <code>MEMORY.md</code> rewritten 58 → 55 lines, 7 files retired from the index but not yet
+        deleted).
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    Session record: <code>docs/plans/sessions/document-worktree-plugin-pinning-session.md</code>
+    &middot; session <code>8ce579d2</code> &middot; second publish, same URL
+  </footer>
+
+</div>
+</body>
+</html>
