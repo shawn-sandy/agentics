@@ -1,5 +1,18 @@
 # Changelog — git-agent
 
+## v4.19.1 — 2026-08-17 — ship no longer declares success against a dead PR
+
+### Fixed
+
+- **`ship` and `agent-ship` check PR/MR state before stopping at an "existing"
+  PR.** Step 6 ran `gh pr view --json url`, which also resolves merged and
+  closed PRs — so a re-ship on a branch whose PR had merged reported "Pushed
+  to existing PR" and never opened a new one. Both now query `state` and STOP
+  only on `"OPEN"` (GitHub) / `"opened"` (GitLab); merged, closed, or
+  no-PR-found proceeds to create a fresh one. This ports the fix `pr-agent`
+  received in v3.3.2 and which ship never picked up; ship/SKILL.md's summary
+  line no longer paraphrases the buggy semantic.
+
 ## v4.19.0 — 2026-08-15 — post-merge cleanup that looks before it deletes
 
 ### Added

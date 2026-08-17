@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.1.3 — 2026-08-17 — Restore is verified, not assumed
+
+(v1.1.2 is on a separate in-flight branch; this entry deliberately skips it.)
+
+### Changed
+
+- **`settings-restore` gains Step 7 — Verify the restore.** The skill
+  overwrites `~/.claude/` with `rm -rf`/`rsync --delete` semantics but
+  reported "Restored: N files" from the planning step, never from
+  re-comparison — a failed rsync entry, a `cp` error that scrolled past, or a
+  hook script restored without its execute bit read as a complete restore.
+  The new gate re-runs the Step 4 comparison for every restored entry
+  (files via `diff -q`, directories via the same find-based classification),
+  requires everything to compare identical, and explicitly checks
+  `~/.claude/hooks` for lost execute bits (non-executable hooks are silently
+  inert). The report is reachable only through the gate: failures lead with
+  `Restore INCOMPLETE — verification failed for <n> of <total> entries.` and
+  success says "restored and verified" with counts from verified results
+  only.
+
 ## v1.1.1 — 2026-08-12 — Fix 1.1.0 release defects and harden the clone path
 
 ### Fixed
