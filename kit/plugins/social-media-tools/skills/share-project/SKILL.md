@@ -161,10 +161,24 @@ If no release data found, inform the user and STOP.
 
 ## Phase 4 — Security Scrub
 
-Combine extracted content and invoke `security-scrub`:
+Write the combined extracted content (metadata, commits, changelog and README
+excerpts from Phases 2–3) to the scrub input file:
 
-- `SCRUB RESULT: BLOCKED` → show masked content, STOP.
-- `SCRUB RESULT: WARN` → continue with `⚠ WARN — <reason>` label.
+```bash
+mkdir -p ~/.claude/tmp
+```
+
+Write the combined content to `~/.claude/tmp/scrub-input.txt`, then invoke:
+
+```
+Skill(skill: "social-media-tools:security-scrub", args: "Scan the file at ~/.claude/tmp/scrub-input.txt for secrets before sharing.")
+```
+
+Check the returned `GATE RESULT` line — not `SCRUB RESULT`; the WARN/LOW user
+gate runs inside `security-scrub`, and its answer is what authorizes continuing:
+
+- `GATE RESULT: BLOCKED` or `GATE RESULT: CANCELLED` → **STOP.** Do not proceed to Phase 5.
+- `GATE RESULT: APPROVED` → proceed. Missing or unrecognized → **STOP**, report gate failure.
 
 ---
 

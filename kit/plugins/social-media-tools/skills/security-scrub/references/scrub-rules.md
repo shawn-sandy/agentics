@@ -4,9 +4,15 @@
 
 | Severity | Pattern | Examples | Action |
 |----------|---------|---------|--------|
-| HIGH | `sk-[A-Za-z0-9]{20,}` | OpenAI/Anthropic API keys | BLOCK |
+| HIGH | `sk-[A-Za-z0-9-]{20,}` | OpenAI/Anthropic API keys — hyphen in class so `sk-ant-api03-…` matches | BLOCK |
 | HIGH | `ghp_[A-Za-z0-9]{36}` | GitHub personal access tokens | BLOCK |
 | HIGH | `ghs_[A-Za-z0-9]{36}` | GitHub server tokens | BLOCK |
+| HIGH | `gho_[A-Za-z0-9]{36}` | GitHub OAuth tokens | BLOCK |
+| HIGH | `github_pat_[A-Za-z0-9_]{22,}` | GitHub fine-grained personal access tokens | BLOCK |
+| HIGH | `glpat-[A-Za-z0-9_-]{20,}` | GitLab personal access tokens | BLOCK |
+| HIGH | `sk_live_[A-Za-z0-9]{24,}` | Stripe live secret keys | BLOCK |
+| HIGH | `AIza[A-Za-z0-9_-]{35}` | Google API keys | BLOCK |
+| HIGH | `hooks\.slack\.com/services/T[A-Za-z0-9]+/B[A-Za-z0-9]+/[A-Za-z0-9]+` | Slack incoming-webhook URLs | BLOCK |
 | HIGH | `AKIA[A-Z0-9]{16}` | AWS access key IDs | BLOCK |
 | HIGH | `xoxb-[0-9]{11}-[0-9]{11}-[A-Za-z0-9]{24}` | Slack bot tokens | BLOCK |
 | HIGH | `xoxp-[A-Za-z0-9-]{72,}` | Slack user tokens | BLOCK |
@@ -25,6 +31,7 @@
 | LOW | `172\.(1[6-9]|2[0-9]|3[01])\.[0-9]+\.[0-9]+` | Internal IP (172.16-31.x.x) | NOTE |
 | LOW | `\.internal\b` | Internal service hostnames | NOTE |
 | LOW | `localhost:[0-9]{4,5}` | Localhost port references | NOTE |
+| LOW | `[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}` | Email addresses (PII) | NOTE |
 
 ## File-Path Block List
 
