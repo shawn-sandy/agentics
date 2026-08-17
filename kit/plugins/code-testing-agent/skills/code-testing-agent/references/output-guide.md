@@ -6,6 +6,7 @@ Output template and suggestion principles for Step 5 — suggesting tests with r
 
 - [Output Template](#output-template)
 - [Suggestion Principles](#suggestion-principles)
+- [Worked Example](#worked-example)
 
 ---
 
@@ -85,3 +86,37 @@ Tests for trivial code (simple getters, pass-through methods, one-line wrappers)
 7. **Specify mocking strategy when relevant.** If a test requires mocking an external service, database, or file system, state what to mock and why — do not leave it implicit.
 
 8. **Cover thoroughly, not trivially.** Aim for 5–10 behavior-driven suggestions for a typical file; add more if needed to reach the coverage target. Tag trivial tests `[coverage-only]` with a note explaining their limited behavioral value. Never leave coverage gaps unacknowledged — if a function or branch is intentionally not tested, explain why in the Coverage Assessment.
+
+---
+
+## Worked Example
+
+One filled-in suggestion at the specificity Step 5 expects. Target: a small
+helper `parseDuration(input: string): number` in `src/utils/duration.ts` that
+converts strings like `"1h30m"` into milliseconds. Framework: Vitest.
+
+~~~markdown
+#### Test: should convert "1h30m" to 5,400,000 milliseconds
+
+**What:** Parsing a combined hours-and-minutes string returns the exact
+millisecond total (90 minutes at 60,000 ms each).
+**Why:** Every scheduler delay flows through this helper — a silent unit mixup
+(seconds vs. milliseconds) makes every timeout 1000x off with no error thrown.
+**Code reference:** `src/utils/duration.ts:12` — `parseDuration()`
+**Approach:**
+
+```ts
+import { describe, expect, it } from "vitest";
+import { parseDuration } from "../src/utils/duration";
+
+describe("parseDuration", () => {
+  it("should convert '1h30m' to 5,400,000 milliseconds", () => {
+    expect(parseDuration("1h30m")).toBe(5_400_000);
+  });
+});
+```
+~~~
+
+What makes this complete: the name is a behavior sentence, **What** states one
+observable behavior, **Why** names the blast radius, the code reference is a
+real location, and the snippet runs as written with one reason to fail.

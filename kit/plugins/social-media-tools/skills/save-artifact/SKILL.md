@@ -128,9 +128,13 @@ echo "Saved artifact → $target"
 
 The copy above lands in the gitignored inbox and is not yet deployed. Run
 `plan-agent`'s `build-artifacts-index.sh` to copy every inbox artifact into the
-committed `docs/artifacts/` tree and rebuild `docs/artifacts/index.html`. This is
-best-effort: the script always exits 0, and if `plan-agent` is not installed the
-save still succeeds (the inbox copy is kept).
+committed `docs/artifacts/` tree and rebuild `docs/artifacts/index.html`. The
+script always exits 0, so its exit status says nothing about whether the
+publish landed — verify the outputs instead: the published copy (same basename
+as the Step 3 target) must exist under `docs/artifacts/`, and the gallery index
+must exist and have changed. The block below captures a checksum of the index
+before the run and compares it after. If `plan-agent` is not installed the save
+still succeeds (the inbox copy is kept).
 
 Locate the bundled script the same way `setup-sites` does (versioned cache,
 direct install, or `--plugin-dir` load), then run it with the project root:
@@ -142,7 +146,15 @@ BUILD_ARTIFACTS=$( { \
   find "$PWD"            -path "*/plan-agent/hooks/build-artifacts-index.sh"   -type f 2>/dev/null; \
 } | head -1 )
 if [ -n "$BUILD_ARTIFACTS" ]; then
-  bash "$BUILD_ARTIFACTS" "$PWD" && echo "Published artifact to docs/artifacts/"
+  idx="docs/artifacts/index.html"
+  before="$(cksum "$idx" 2>/dev/null || echo missing)"
+  bash "$BUILD_ARTIFACTS" "$PWD"
+  after="$(cksum "$idx" 2>/dev/null || echo missing)"
+  if [ -f "docs/artifacts/$(basename "$target")" ] && [ -f "$idx" ] && [ "$after" != "$before" ]; then
+    echo "Published artifact to docs/artifacts/"
+  else
+    echo "saved to inbox, publish did not land — rerun build-artifacts-index.sh"
+  fi
 else
   echo "plan-agent not found — artifact saved to .claude/artifacts/ but not yet published"
 fi
@@ -150,7 +162,14 @@ fi
 
 ## Step 5 — Report
 
-Tell the user the inbox path (`$target`) and the published copy under
-`docs/artifacts/`. Remind them to commit the `docs/artifacts/` changes (the
-inbox itself is gitignored). Note whether the gallery was published (Step 4) or
-`plan-agent` was not found and publishing still needs to run.
+Report according to what Step 4 verified — never claim a publish that was not
+confirmed:
+
+- **Verified published** — Step 4 printed the success line after confirming the
+  published copy and the changed gallery index exist. Tell the user the inbox
+  path (`$target`) and the published copy under `docs/artifacts/`, and remind
+  them to commit the `docs/artifacts/` changes (the inbox itself is gitignored).
+- **Inbox only** — Step 4 reported the publish did not land, or `plan-agent`
+  was not found. Tell the user the artifact is saved at `$target` but **not
+  published**, and that `build-artifacts-index.sh` still needs to run before
+  there is anything under `docs/artifacts/` to commit.
