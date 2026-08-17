@@ -87,8 +87,8 @@ Zero exit → `git push`.
 
 ## Step 6: Check for Existing PR/MR
 
-Read `references/pr-body.md` (bundled with this skill) — its Step 6 section. If a
-PR/MR exists, report its URL and **STOP**.
+Read `references/pr-body.md` (bundled with this skill) — its Step 6 section.
+**STOP** only on an **open** PR/MR; merged or closed → Step 7.
 
 ## Step 7: Detect Base Branch
 

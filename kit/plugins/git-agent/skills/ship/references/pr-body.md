@@ -8,7 +8,7 @@ these in the same strict order as the steps in `SKILL.md`.
 For GitHub, run:
 
 ```
-gh pr view --json url
+gh pr view --json state,url
 ```
 
 For GitLab, run:
@@ -17,8 +17,13 @@ For GitLab, run:
 glab mr view --output json
 ```
 
-If a PR/MR already exists, output: "Pushed to existing PR/MR: <url>" and
-**STOP**. The new commit is already on the remote.
+If the result contains `"state":"OPEN"` (GitHub) or `"state": "opened"`
+(GitLab), output: "Pushed to existing PR/MR: <url>" and **STOP**. Do not
+create a duplicate. The new commit is already on the remote.
+
+If the result contains `"state":"MERGED"` or `"state":"CLOSED"` (GitHub) or
+`"state": "merged"` or `"state": "closed"` (GitLab), or if the command exits
+non-zero (no PR/MR found), proceed to Step 7 and create a fresh PR/MR.
 
 ## Step 7: Detect Base Branch
 

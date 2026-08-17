@@ -10,7 +10,7 @@ Review existing tests against the source code they cover. Identify quality issue
 
 ## When not to use
 
-Does not run tests — use running-tests. Does not suggest broad new test suites — use code-testing-agent. It may suggest targeted new P1 tests to cover critical gaps as described in Step 7.
+Does not run the project's existing suites — use running-tests; Step 7 does execute the test file(s) it edits, to verify its own fixes. Does not suggest broad new test suites — use code-testing-agent. It may suggest targeted new P1 tests to cover critical gaps as described in Step 7.
 
 ## Table of Contents
 
@@ -198,7 +198,7 @@ Evaluate each test across these 9 dimensions:
 2. **Test Naming** — Are tests named as behavior sentences? Flag vague names like "test1", "testFunction", "it works".
 3. **Assertion Focus** — Does each test have one reason to fail? Flag tests with 5+ assertions testing different behaviors.
 4. **Coverage Gaps** — Cross-reference source code analysis (Step 4) against what the tests actually cover. Identify critical paths, error paths, and edge cases with no test.
-5. **Mock Hygiene** — Are mocks appropriate? Flag over-mocking (mocking internals of the system under test), under-mocking (real calls to external services), stale mocks (mock behavior doesn't match current API).
+5. **Mock Hygiene** — Are mocks appropriate? Flag over-mocking (mocking internals of the system under test), under-mocking (real calls to external services), stale mocks (mock behavior doesn't match current API). A stale-mock finding must quote both sides as evidence: the mock's return shape or signature **and** the current real signature from the source it stands in for. No paired quotes, no finding.
 6. **Test Fragility** — Will the test break if implementation changes but behavior stays the same? Flag: testing internal method calls, asserting on specific log messages, snapshot tests of unstable output.
 7. **Setup/Teardown Isolation** — Is shared state leaking between tests? Flag: missing cleanup, global variable mutation, database state not reset.
 8. **Plan Alignment** — If a plan exists, do the tests verify the plan's key behaviors, edge cases, and acceptance criteria? List plan requirements with no corresponding test.
@@ -295,7 +295,11 @@ Apply fixes to the test file(s) using the project's conventions. Include:
 - Updated test names where flagged
 - Proper cleanup for isolation issues
 
-After applying, suggest: "Run `[test command]` to verify the updated tests pass."
+**Then verify the edits — applying fixes is not done.** Done means the edits are applied **and** the runner has executed them. Run the edited test file(s) via `Bash` using the framework detected in Step 5, scoped to only the file(s) touched (e.g. `[test command] [edited-test-file]`), and interpret the results:
+
+- **All green** — report: "Applied [N] fixes. Ran `[test command]`: [X] passed." Include the runner's output.
+- **Collection errors, or previously-passing tests now failing** — the edits broke the suite. Fix and re-run — max 3 iterations. Still broken at iteration 3 is a hard stop: revert the breaking edit(s), re-run to confirm the suite is back to its pre-review state, and report which fixes were reverted and why — do not claim success.
+- **A new P1 gap test failing against the current source** — that is the coverage gap being confirmed: a finding, not a defect. Report it as such — never weaken the test to force a pass.
 
 **If the user says no or wants to fix manually:**
 
