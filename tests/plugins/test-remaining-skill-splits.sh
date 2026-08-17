@@ -236,12 +236,34 @@ else
   # `description:` line, which is why this reads the opening block and not the
   # whole file.
   fm() { awk 'NR==1&&/^---$/{f=1;next} f&&/^---$/{exit} f' ; }
+  # DOCUMENTED_DRIFT — deliberate frontmatter changes in flight, one entry per
+  # skill as "name:sha256-of-new-frontmatter-block". An entry only excuses the
+  # exact pinned content, and it goes STALE the moment $BASE_REF catches up
+  # (now == was) — the check then fails until the entry is removed, so the
+  # ledger cannot silently outlive the change it documents.
+  #
+  #   path-rules-advisor — memory-tools 4.1.1 narrowed allowed-tools from
+  #   Bash(git *), Bash(python3 *) to Bash(memory-verify-write *) when the
+  #   inline verification block became a bin/ wrapper.
+  DOCUMENTED_DRIFT="
+path-rules-advisor:5a4b82afb17508816ac4bf638655692f1008be67adb53cab3ea08d3dba4cdc79
+"
   while IFS='|' read -r skill _; do
     [ -n "$skill" ] || continue
     name="$(basename "$(dirname "$skill")")"
     now=$(fm < "$skill")
     was=$(git show "$BASE_REF:$skill" | fm)
-    [ "$now" = "$was" ] || MISSING="$MISSING $name"
+    if [ "$now" = "$was" ]; then
+      case "$DOCUMENTED_DRIFT" in
+        *"$name:"*) MISSING="$MISSING $name(stale-drift-entry:remove-it)";;
+      esac
+      continue
+    fi
+    now_sha=$(printf '%s\n' "$now" | shasum -a 256 | cut -d' ' -f1)
+    case "$DOCUMENTED_DRIFT" in
+      *"$name:$now_sha"*) ;;  # deliberate, documented above
+      *) MISSING="$MISSING $name";;
+    esac
   done <<< "$TARGETS"
   if [ -z "$MISSING" ]; then pass "whole block, not just named keys"; else fail "frontmatter block drifted:$MISSING"; fi
 fi

@@ -46,9 +46,11 @@ Each write site ends the same way:
 
 ## Verify the write
 
-Run this after **every** write, without exception. Substitute the path just
-written for the placeholder; the executable diff-back and the frontmatter parse
-check live in `references/write-verification.md` — read and run it there.
+Run this after **every** write, without exception:
+`memory-verify-write <absolute-path-to-file-just-written>` — substitute the
+path just written for the placeholder. The executable diff-back and the
+frontmatter parse check live in `references/write-verification.md` — read and
+run it there.
 
 The rule it enforces stays here: the check must show the resulting diff and
 confirm the written file still parses with valid frontmatter and a non-empty
