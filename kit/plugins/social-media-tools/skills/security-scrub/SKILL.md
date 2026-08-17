@@ -23,9 +23,15 @@ Run `Grep` against the content for HIGH, MEDIUM, and LOW patterns from the table
 Key regex groups to scan:
 
 ```
-sk-[A-Za-z0-9]{20,}
+sk-[A-Za-z0-9-]{20,}
 ghp_[A-Za-z0-9]{36}
 ghs_[A-Za-z0-9]{36}
+gho_[A-Za-z0-9]{36}
+github_pat_[A-Za-z0-9_]{22,}
+glpat-[A-Za-z0-9_-]{20,}
+sk_live_[A-Za-z0-9]{24,}
+AIza[A-Za-z0-9_-]{35}
+hooks\.slack\.com/services/T[A-Za-z0-9]+/B[A-Za-z0-9]+/[A-Za-z0-9]+
 AKIA[A-Z0-9]{16}
 xoxb-[0-9]{11}-[0-9]{11}-[A-Za-z0-9]{24}
 xoxp-[A-Za-z0-9-]{72,}
@@ -36,6 +42,11 @@ secret\s*[=:]\s*\S{4,}
 token\s*[=:]\s*\S{8,}
 api_key\s*[=:]\s*\S{8,}
 ```
+
+The `sk-` character class includes the hyphen deliberately — Anthropic keys
+(`sk-ant-api03-…`) contain hyphens and would otherwise scan clean. The table in
+`references/scrub-rules.md` is the source of truth; this list mirrors it and
+`tests/plugins/test-scrub-patterns.sh` fails if the two drift.
 
 For the private-key pattern (`-----BEGIN ...`), pass via `-e` to avoid the leading dash being parsed as a grep option:
 ```
