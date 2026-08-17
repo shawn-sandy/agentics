@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.2 — 2026-08-17 — sync-rules verifies its copies
+
+### Changed
+
+- **`sync-rules` verifies every copy before declaring done**: a new step
+  re-runs `diff -q` source-vs-destination per copied file and treats any
+  mismatch as a loud failure, and a setup bullet tells the agent to resolve
+  the plugin root to an absolute path first — a literal
+  `${CLAUDE_PLUGIN_ROOT}` in a Bash call is refused by the tool, so the
+  documented command otherwise never runs.
+
 ## 0.2.1 — 2026-08-14 — css-generator computes its contrast ratios
 
 ### Fixed

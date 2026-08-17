@@ -1,7 +1,7 @@
 ---
 name: agentic-memory-management
 description: "Audits and optimizes CLAUDE.md project memory files. Checks adherence to Claude Code best practices and produces actionable fixes. Use when the user asks to audit, optimize, or diagnose a CLAUDE.md."
-allowed-tools: AskUserQuestion, Bash(git *), Bash(python3 *), Glob, Grep, Read, Write
+allowed-tools: AskUserQuestion, Bash(memory-verify-write *), Glob, Grep, Read, Write
 ---
 
 Audit and optimize a CLAUDE.md / project memory file against Claude Code best practices.

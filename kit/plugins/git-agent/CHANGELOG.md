@@ -1,5 +1,30 @@
 # Changelog — git-agent
 
+## v4.19.2 — 2026-08-17 — worked examples, and a fallback that keeps the draft
+
+### Changed
+
+- **One canonical worked PR body** now lives in `ship/references/pr-body.md`
+  (Step 8): real title, real Summary bullets, a Test Plan with one checked box
+  naming its result and one honest unchecked box, a real `Closes` URL.
+  `pr-agent` points at it; the self-contained background agents (`agent-pr`,
+  `agent-ship`) embed a compact copy matching their own template shape. Every
+  PR body spec was previously bracket-placeholders only, in contrast to
+  commit messages (three examples) and branch naming (good/bad table).
+- **`create-issue` ships a filled bug-issue example** in
+  `references/bug-report.md` — the exact file Phase 5 reads at drafting time.
+
+### Fixed
+
+- **`create-issue`'s failure fallback no longer discards the approved
+  draft.** The bare `gh issue create --web` became
+  `gh issue create --web --title "<title>" --body "<body>"` (glab
+  equivalent included); labels move to the report on that path since a bad
+  label is a likely cause of the original failure. Phase 8 gains the honest
+  fourth outcome: "CLI creation failed (<error>). Opened a prefilled browser
+  form — no issue exists until you submit it." No issue number is ever
+  printed on that path.
+
 ## v4.19.1 — 2026-08-17 — ship no longer declares success against a dead PR
 
 ### Fixed

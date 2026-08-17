@@ -150,6 +150,9 @@ Output a summary table in the chat:
 ```
 
 List found tokens (with file or grep match) and missing tokens separately.
+If the objective test ran in Step 4, add an `Objective test` row to the table —
+`pass (<run command>)` or `fail (<run command>)` — and note when a failure
+capped an 80%+ score at `in-progress`.
 
 Then ask via `AskUserQuestion`:
 

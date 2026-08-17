@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.5.2 — 2026-08-17 — the output guide shows a finished suggestion
+
+### Changed
+
+- **`references/output-guide.md` gains a Worked Example**: a filled
+  suggestion for a `parseDuration("1h30m")` helper — behavior-sentence test
+  name, concrete What/Why/Code-reference/Approach, and a runnable Vitest
+  snippet — where the template was bracket-placeholders end to end. Step 5
+  points at it as the specificity bar every suggestion should match.
+
 ## v3.5.1 — 2026-08-17 — The tests you write get run before you say done
 
 ### Changed

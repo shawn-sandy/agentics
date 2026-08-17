@@ -1,7 +1,7 @@
 ---
 name: path-rules-advisor
 description: "Creates path-specific rule files in .claude/rules/. Analyzes project structure and generates scoped rules for file types or directories. Use when the user wants to add path-specific rules."
-allowed-tools: AskUserQuestion, Bash(git *), Bash(python3 *), Edit, Glob, Read, Write
+allowed-tools: AskUserQuestion, Bash(memory-verify-write *), Edit, Glob, Read, Write
 ---
 
 Analyze the project and CLAUDE.md to recommend and create path-specific rule files in `.claude/rules/`. Follow the mode determined by the user's message.
@@ -47,8 +47,8 @@ Each write site ends the same way:
 ## Verify the write
 
 Run this after **every** write, without exception. Substitute the path just
-written for `$TARGET`; the executable diff-back and the frontmatter parse check
-live in `references/write-verification.md` — read and run it there.
+written for the placeholder; the executable diff-back and the frontmatter parse
+check live in `references/write-verification.md` — read and run it there.
 
 The rule it enforces stays here: the check must show the resulting diff and
 confirm the written file still parses with valid frontmatter and a non-empty
