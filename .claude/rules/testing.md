@@ -3,6 +3,16 @@ paths:
   - "tests/**"
 ---
 
+# Testing
+
+## Running tests
+
+`bash tests/run-all.sh` runs every test under `tests/` — new files matching
+`test-*.sh` / `test-*.mjs` / `*.test.mjs` are picked up automatically, so a
+new test needs no CI wiring. The skip list, with a reason per entry, lives at
+the top of the runner. CI runs the same script on every PR
+(`check-plugin-versions.yml`).
+
 # Test Fixtures
 
 `tests/fixtures/valid-plugin/` passes every validation check — use it for

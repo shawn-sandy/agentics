@@ -2,6 +2,26 @@
 
 
 
+## v2.5.2 — 2026-08-17 — the rubric scores verification gates
+
+### Changed
+
+- **Dimension 3 gains a Verification gate check** (Warning): skills that write
+  or edit files, mutate git/remote state, or report measured values must
+  define how they verify their own output before declaring done. A mutating
+  or measuring skill without one now caps Dimension 3 at 1 pt — previously a
+  file-mutating skill with no completion gate could score 10/10, which is how
+  five such skills shipped in this repo before the 2026-08-17 audit caught
+  them.
+- **`references/best-practices.md` gains a Verification Gate section** under
+  Workflow Patterns: the gate-per-mutation-type table (re-read the edit,
+  execute the written file, query the remote, tool-measure the number) and
+  the done-means-artifact-plus-check rule the rubric now scores. The
+  authoring-side twin lives in `.claude/rules/plugin-patterns.md`;
+  `tests/plugins/test-verification-gate-rule.sh` holds the two in sync.
+
+
+
 ## v2.5.1 — 2026-08-10 — the plugin's hook actually registers
 
 ### Fixed
