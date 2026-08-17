@@ -103,7 +103,14 @@ marketplace.json JSON parse — all green before the PR opened.
 
 ## next-steps
 
-- Tier 3 (leverage point) from the audit:
+- **Done** — all four sub-items shipped together in PR #569 (`ab2f769`,
+  merged 2026-08-17): the verification-gate and worked-example requirements
+  in `plugin-patterns.md` with `tests/plugins/test-verification-gate-rule.sh`
+  as the retention grep, the Warning-level Dimension 3 rubric check in
+  skill-reviewer's `audit-steps.md`, `tests/run-all.sh` with its documented
+  skip list wired into `check-plugin-versions.yml`, and
+  `scripts/build-dist.mjs` setting `exitCode=1` on any plugin error.
+  Original item — Tier 3 (leverage point) from the audit:
 
   ```text
   In the agentics repo, implement Tier 3 of the 2026-08-17 agent-prompting
