@@ -1,7 +1,7 @@
 ---
 name: settings-restore
 description: "Restores Claude Code settings from a backup repo or clone URL. Clones on a new machine, then confirms before overwriting ~/.claude/. Use when the user asks to restore settings or set up a new machine."
-allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
+allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, ToolSearch, ExitPlanMode
 argument-hint: "[repo-path-or-url]"
 ---
 
@@ -23,6 +23,10 @@ Load `references/file-manifest.md` from the plugin root for the complete list
 of files to restore, opt-in targets, and exclusions.
 
 ## Steps
+
+### Step 0 — Exit plan mode
+
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ### Step 1 — Resolve the backup source
 

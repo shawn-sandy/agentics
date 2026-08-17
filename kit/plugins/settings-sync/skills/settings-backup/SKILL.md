@@ -1,7 +1,7 @@
 ---
 name: settings-backup
 description: "Backs up Claude Code user settings to a git repo. Commits and pushes config files unattended; routine-compatible. Use when the user asks to back up or sync their Claude Code settings."
-allowed-tools: Bash, Read, Write, Edit, AskUserQuestion
+allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, ToolSearch, ExitPlanMode
 argument-hint: "[repo-path]"
 ---
 
@@ -22,6 +22,10 @@ Load `references/file-manifest.md` from the plugin root for the complete list
 of files to back up, opt-in targets, and exclusions.
 
 ## Steps
+
+### Step 0 — Exit plan mode
+
+**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 ### Step 1 — Resolve the backup repo path
 

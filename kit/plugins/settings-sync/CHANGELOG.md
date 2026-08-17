@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.1.4 — 2026-08-17 — Plan-mode guard on backup and restore
+
+### Changed
+
+- **`settings-backup` and `settings-restore` carry the plan-mode guard.** Both
+  skills run `rm -rf`/`rsync --delete` semantics but had no Step 0 exit from
+  plan mode, so a plan-mode invocation could stall or narrate the mutation
+  instead of performing it. Each now opens with the verbatim guard line
+  required by `plugin-patterns.md`, lists `ToolSearch, ExitPlanMode` in
+  `allowed-tools`, and is enforced by the WRITE_HEAVY manifest in
+  `tests/plugins/test-exitplanmode-guard.sh`. Flagged in the 2026-08-17 audit.
+
+---
+
 ## v1.1.3 — 2026-08-17 — Restore is verified, not assumed
 
 ### Changed
