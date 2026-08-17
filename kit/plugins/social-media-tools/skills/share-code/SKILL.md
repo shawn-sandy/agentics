@@ -1,7 +1,7 @@
 ---
 name: share-code
 description: "Generates social copy and a dark-mode card image for code changes. Detects changes from git, picks a template, and screenshots via Playwright. Use when asked to share a code change."
-allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob
+allowed-tools: AskUserQuestion, Read, Write, Bash, ToolSearch, ExitPlanMode, SendUserFile, Glob, Skill
 ---
 
 # share-code
@@ -16,6 +16,7 @@ supported platform (see `$PLUGIN_DIR/references/platforms.md`).
 | 0 — Locate | Locate `templates/` and derive `PLUGIN_DIR` |
 | 1 — Clarify | Auto-detect from git; ask platform + tone |
 | 1c — Reuse check | Scan `docs/media/social/` for existing posts; offer reuse |
+| 1d — Scrub | Run `security-scrub` on the extracted git content |
 | 2 — Draft | Write platform-aware copy |
 | 3 — Pick template | diff → diff-card, feature → feature-card, insight → quote-card |
 | 4 — Populate | Read template, substitute `{{VARIABLES}}` including `{{COPY_PANELS}}` |
@@ -97,6 +98,31 @@ FILE_PREFIX=<detected-card-type>   # diff, feature, or quote
 ```
 
 Read `$PLUGIN_DIR/references/reuse-check.md` and follow its procedure.
+
+---
+
+## Phase 1d — Security Scrub
+
+The diff hunks, commit subjects, and changelog excerpts gathered in Phase 1 are
+about to be published on a card. Write them to the scrub input file:
+
+```bash
+mkdir -p ~/.claude/tmp
+git diff HEAD~1 > ~/.claude/tmp/scrub-input.txt 2>/dev/null
+git log --oneline -5 >> ~/.claude/tmp/scrub-input.txt 2>/dev/null
+head -30 CHANGELOG.md >> ~/.claude/tmp/scrub-input.txt 2>/dev/null
+```
+
+Then invoke:
+
+```
+Skill(skill: "social-media-tools:security-scrub", args: "Scan the file at ~/.claude/tmp/scrub-input.txt for secrets before sharing.")
+```
+
+Check the returned `GATE RESULT` line (the gate runs inside `security-scrub`):
+
+- `GATE RESULT: BLOCKED` or `GATE RESULT: CANCELLED` → **STOP.** Do not proceed to Phase 2.
+- `GATE RESULT: APPROVED` → proceed. Missing or unrecognized → **STOP**, report gate failure.
 
 ---
 

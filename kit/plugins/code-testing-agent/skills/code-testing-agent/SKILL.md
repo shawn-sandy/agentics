@@ -15,7 +15,9 @@ target is defined.
 
 ## When not to use
 
-Does not run tests — use running-tests. Does not review code quality — use code-review-agent.
+Does not run the project's existing test suites — use running-tests; it does
+execute the test files it writes (Step 6a). Does not review code quality — use
+code-review-agent.
 
 ## Table of Contents
 
@@ -114,7 +116,8 @@ Report:
 ## Step 5 — Suggest Tests with Rationale
 
 Load `references/output-guide.md` for the full output template and suggestion
-principles.
+principles. Its closing Worked Example (`parseDuration`) shows the specificity
+every suggestion should match.
 
 For each suggestion provide: **What** (behavior), **Why** (blast radius if
 missing), **How** (approach + key assertions), **Where** (file path). Group by
@@ -128,6 +131,27 @@ Ask: "Would you like me to write the test file(s)? I will create [path(s)] with
 the tests above."
 
 - **Yes** — write complete files using detected conventions (Priority 1 + 2;
-  confirm before including Priority 3). Suggest `[test command]` to verify.
+  confirm before including Priority 3), then run them (Step 6a).
 - **No** — "The suggestions above should give you a clear starting point."
-- **Partial** — write only the requested subset.
+- **Partial** — write only the requested subset, then run them (Step 6a).
+
+### Step 6a — Run the Written Tests
+
+Writing files is not done — done means the files are written **and** the runner
+has executed them. Run the framework command detected in Step 4 via `Bash`,
+scoped to only the file(s) just written (e.g. `[test command] [written-file]`).
+
+Interpret the runner's output:
+
+- **Compile, import, or collection errors** are defects in the written tests.
+  Fix and re-run — max 3 iterations. Still failing at iteration 3 is a hard
+  stop: show the runner output, name the broken file(s), and report the failure
+  honestly — do not claim success.
+- **Failing assertions** that expose a real behavior gap in the source are
+  findings, not defects. Report each as an untested-behavior finding — never
+  weaken an assertion to force a pass.
+
+Report:
+`"Wrote [N] test file(s). Ran [test command]: [X] passed, [Y] failed, [Z]
+errored."` — include the runner's output, and flag each legitimately failing
+test as a behavior-gap finding.

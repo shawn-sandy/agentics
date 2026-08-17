@@ -1,7 +1,6 @@
 # Changelog — social-media-tools
 
-
-## v2.23.1 — 2026-08-17 — screenshots verify themselves before delivery
+## v2.23.4 — 2026-08-17 — screenshots verify themselves before delivery
 
 ### Fixed
 
@@ -13,6 +12,59 @@
   threshold (a blank/solid-color capture compresses far smaller than a
   populated card); either check failing routes to the existing Fallback
   message instead of silently delivering a bad image.
+
+(Authored as v2.23.1 on a branch that predated v2.23.2–v2.23.3; ships as v2.23.4.)
+
+## v2.23.3 — 2026-08-17 — worked posts per platform; save-artifact proves the publish
+
+### Changed
+
+- **`references/platforms.md` gains one worked example post per platform**
+  (LinkedIn, Twitter/X, Bluesky, Substack) under Default Per-Platform Copy
+  Formats — a single representative subject (replacing a hand-rolled debounce
+  with AbortController fetch-cancellation), takeaway-first instructional
+  voice, every example measured within its platform's character limit. The
+  seven skills drafting from the one-line format bullets previously had no
+  filled example anywhere in their reference chain.
+- **`save-artifact` verifies the publish before reporting it.** Its
+  build-artifacts script deliberately always exits 0, so "Published artifact
+  to docs/artifacts/" could be a lie. Step 4 now checks the published copy
+  exists and the gallery index checksum actually changed; Step 5 reports
+  **Verified published** vs **Inbox only** and never claims an unconfirmed
+  publish.
+
+
+## v2.23.2 — 2026-08-17 — close the scrub-coverage holes
+
+Findings from an agent-prompting audit (context/constraints/composition): three
+of the four fixes below are places where a skill could publish repo content
+with either no secret scan or a scan whose result was read wrong. Version
+2.23.1 (screenshot output verification) is on a separate in-flight branch;
+this entry deliberately skips over it.
+
+### Security
+
+- **`share-code` gains Phase 1d — Security Scrub.** It was the one code-sharing
+  skill with no scrub at all, despite putting real diff hunks and commit
+  content onto publicly shared cards, and despite being the generic "share
+  this" fallback route. The extracted git content is now written to the scrub
+  input file and gated on `GATE RESULT` before any copy is drafted. `Skill`
+  added to `allowed-tools` so the gate is invocable.
+- **The `sk-` key pattern now matches real Anthropic keys.** The character
+  class excluded hyphens, so `sk-ant-api03-…` scanned clean and the scrub
+  reported PASS. New pattern: `sk-[A-Za-z0-9-]{20,}`. Also added HIGH rows for
+  GitHub `gho_`/`github_pat_`, GitLab `glpat-`, Stripe `sk_live_`, Google
+  `AIza`, and Slack webhook URLs, plus a LOW email-PII row. The SKILL.md Step 2
+  mirror list is updated in sync, and the new
+  `tests/plugins/test-scrub-patterns.sh` fails if the two drift — it also
+  carries a regression canary proving the hyphen-less legacy pattern misses
+  `sk-ant` keys.
+- **`share-project` gates on `GATE RESULT`, not `SCRUB RESULT`.** The old
+  Phase 4 branched on the scrub classification alone, which bypassed the user
+  gate inside `security-scrub` — a "Cancel" answer at the WARN prompt was
+  followed by instructions saying continue. It now uses the same standard
+  block as `share-selection` and `share-github`: BLOCKED/CANCELLED/missing all
+  STOP.
 
 
 ## v2.23.0 — 2026-08-08 — the media gallery matches the rest of the site

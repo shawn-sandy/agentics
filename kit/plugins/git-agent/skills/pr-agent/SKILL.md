@@ -114,6 +114,8 @@ gh pr create --title "<title>" --body "<body>"
 Closes <url>
 ```
 
+A filled worked example of this body — real title, a `[x]` naming its result, an honest `[ ]`, a real `Closes` URL — is in `../ship/references/pr-body.md` (Step 8 section, bundled with this plugin's ship skill); match its shape.
+
 **Test Plan rules:** this skill does not run tests, so list what a reviewer
 should run (the project's test/lint commands, plus any manual step for
 user-facing changes). If a check was actually run earlier in this session,

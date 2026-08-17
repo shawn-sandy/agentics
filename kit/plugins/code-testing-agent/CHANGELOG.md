@@ -1,5 +1,36 @@
 # Changelog
 
+## v3.5.2 — 2026-08-17 — the output guide shows a finished suggestion
+
+### Changed
+
+- **`references/output-guide.md` gains a Worked Example**: a filled
+  suggestion for a `parseDuration("1h30m")` helper — behavior-sentence test
+  name, concrete What/Why/Code-reference/Approach, and a runnable Vitest
+  snippet — where the template was bracket-placeholders end to end. Step 5
+  points at it as the specificity bar every suggestion should match.
+
+## v3.5.1 — 2026-08-17 — The tests you write get run before you say done
+
+### Changed
+
+- **`code-testing-agent` Step 6a runs the test files it writes.** The skill
+  wrote files and ended with "Suggest `[test command]` to verify" — handing
+  verification to the user despite having Bash. Done is redefined: files
+  written **and** the runner executed them, output shown. Compile/import/
+  collection errors are defects with a bounded fix loop (max 3 iterations,
+  then an honest hard stop); failing assertions that expose real behavior
+  gaps are findings, never weakened to force a pass.
+- **`reviewing-tests` Step 7 verifies its own edits the same way**: run the
+  edited file(s), report pass/fail with runner output, and if the edits broke
+  collection or previously-passing tests, fix within 3 iterations or revert
+  and report which fixes were reverted. A new P1 gap test failing against
+  current source is the coverage gap being confirmed — a finding, not a
+  defect.
+- **Stale-mock findings need paired evidence**: the mock's return shape or
+  signature **and** the current real signature it stands in for. No paired
+  quotes, no finding.
+
 ## v3.5.0 — 2026-07-29 — Split `tdd-fix` into a core plus references
 
 ### Changed

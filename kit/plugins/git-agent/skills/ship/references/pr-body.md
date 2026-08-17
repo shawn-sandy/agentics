@@ -8,7 +8,7 @@ these in the same strict order as the steps in `SKILL.md`.
 For GitHub, run:
 
 ```
-gh pr view --json url
+gh pr view --json state,url
 ```
 
 For GitLab, run:
@@ -17,8 +17,13 @@ For GitLab, run:
 glab mr view --output json
 ```
 
-If a PR/MR already exists, output: "Pushed to existing PR/MR: <url>" and
-**STOP**. The new commit is already on the remote.
+If the result contains `"state":"OPEN"` (GitHub) or `"state": "opened"`
+(GitLab), output: "Pushed to existing PR/MR: <url>" and **STOP**. Do not
+create a duplicate. The new commit is already on the remote.
+
+If the result contains `"state":"MERGED"` or `"state":"CLOSED"` (GitHub) or
+`"state": "merged"` or `"state": "closed"` (GitLab), or if the command exits
+non-zero (no PR/MR found), proceed to Step 7 and create a fresh PR/MR.
 
 ## Step 7: Detect Base Branch
 
@@ -81,6 +86,30 @@ mark it `[x]` and name the result. **Never mark a box that was not verified** �
 an unchecked box is honest, a false checkmark is not.
 
 Omit the `## Linked Issues` section entirely if Step 7.5 found no issue references.
+
+**Worked example** — the shape and honesty bar to match.
+
+Title: `fix(gallery): escape HTML in card titles`
+
+```markdown
+## Summary
+- Escape user-supplied card titles before they are interpolated into gallery HTML
+- Add regression coverage for titles containing `<script>` and `&`
+
+## Changes
+Card titles flowed into the generated `index.html` unescaped, so a title
+containing markup broke the gallery layout. `renderCard()` now routes every
+title through `escapeHtml()` before interpolation.
+
+## Test Plan
+- [x] `node --test tests/gallery.test.mjs` — 14 passing, including the two new
+  title-escaping cases
+- [ ] Open `docs/media/index.html` in a browser and confirm a title containing
+  `<b>` renders literally
+
+## Linked Issues
+Closes https://github.com/acme/widgets/issues/482
+```
 
 For GitHub, run:
 

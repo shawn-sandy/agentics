@@ -1,5 +1,28 @@
 # Changelog
 
+## v3.3.4 — 2026-08-17 — Findings must survive a re-read before they are reported
+
+### Changed
+
+- **`code-review-agent` gains a Verify Findings step** between the checklist
+  and the report: every finding's cited file:line is re-Read, the verbatim
+  snippet is pasted into the finding, and anything the snippet does not
+  substantiate is dropped or explicitly labeled **Unconfirmed**. The review is
+  not complete until every Critical Issue and Breaking Change carries a
+  verbatim quote from the current file. Reviewers that skip the re-read
+  produce plausible-looking-but-wrong findings — the audit that prompted this
+  found the workflow went checklist → format → report with only a passive
+  "be specific" tip in between.
+- **The background `agent-code-reviewer` gets the same gate as a workflow
+  step** ("Verify evidence"): re-Read cited lines, attach the exact snippet,
+  discard unsubstantiated findings, and check new findings against the known
+  false positives in agent memory before reporting. It runs unattended, where
+  a wrong finding flows straight to another agent — the passive
+  "high confidence" filter had no procedure behind it.
+- **A filled example finding now sits under the agent's output schema** (SQL
+  injection, with snippet and fix), so the unattended path carries a worked
+  example instead of bracket placeholders only.
+
 ## v3.3.3 — 2026-07-16 — Delegate agent-file review to skill-reviewer
 
 ### Fixed

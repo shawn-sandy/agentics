@@ -13,6 +13,7 @@ flexible guide, not a rigid process.
 
 - [Step 0: Resolve Target Files](#step-0-resolve-target-files)
 - [Review Checklist](#review-checklist)
+- [Verify Findings](#verify-findings)
 - [Review Format](#review-format)
 - [Example Review](#example-review)
 - [Tips for Effective Reviews](#tips-for-effective-reviews)
@@ -49,6 +50,19 @@ Once target files are confirmed, proceed to the Review Checklist for each file.
 
 Read [references/review-checklist.md](references/review-checklist.md) for the
 full six-dimension checklist. Apply each dimension to every file under review.
+
+## Verify Findings
+
+Before reporting, re-verify every finding against the code it cites:
+
+1. **Re-Read each cited location** — For every finding, Read the file at its
+   cited line numbers again and paste the verbatim snippet into the finding.
+2. **Drop or downgrade unconfirmed findings** — If the snippet does not show
+   the claimed issue, drop the finding or downgrade it with an explicit
+   **Unconfirmed** label.
+
+The review is not complete until every Critical Issue and Breaking Change
+carries a verbatim quote from the current file.
 
 ## Review Format
 

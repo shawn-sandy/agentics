@@ -1,7 +1,7 @@
 ---
 name: agentic-memory-management
 description: "Audits and optimizes CLAUDE.md project memory files. Checks adherence to Claude Code best practices and produces actionable fixes. Use when the user asks to audit, optimize, or diagnose a CLAUDE.md."
-allowed-tools: AskUserQuestion, Bash(git *), Bash(python3 *), Glob, Grep, Read, Write
+allowed-tools: AskUserQuestion, Bash(memory-verify-write *), Glob, Grep, Read, Write
 ---
 
 Audit and optimize a CLAUDE.md / project memory file against Claude Code best practices.
@@ -198,38 +198,12 @@ Write only the file that was audited in Step 1, and only after both confirmation
 
 ## Step 7 — Verify the write
 
-Run immediately after the Step 6 write. Show the resulting diff, then assert the file still parses
-and still has a body.
+Run immediately after the Step 6 write, substituting the path written in Step 6 for the
+placeholder. `memory-verify-write` is a bundled `bin/` wrapper on the Bash tool's PATH; it shows
+the resulting diff, then asserts the file still parses and still has a body.
 
 ```bash
-TARGET=<substitute the path written in Step 6 — not a literal>
-if git ls-files --error-unmatch "$TARGET" >/dev/null 2>&1; then
-  git --no-pager diff -- "$TARGET"
-else
-  git --no-pager diff --no-index -- /dev/null "$TARGET" || true
-fi
-python3 - "$TARGET" <<'EOF'
-import sys
-path = sys.argv[1]
-text = open(path, encoding='utf-8').read()
-body = text
-if text.startswith('---\n'):
-    end = text.find('\n---', 3)
-    if end == -1:
-        sys.exit(f"MALFORMED: {path} opens a frontmatter block that is never closed")
-    for n, line in enumerate(text[4:end].splitlines(), 2):
-        # Indented lines are nested values or block-scalar continuations, which
-        # carry no colon of their own. Only top-level keys are checked.
-        if not line.strip() or line[:1] in (' ', '\t'):
-            continue
-        s = line.strip()
-        if not s.startswith(('#', '- ')) and ':' not in s:
-            sys.exit(f"MALFORMED: {path} line {n}: expected a YAML key/value, got {s!r}")
-    body = text[end + 4:]
-if not body.strip():
-    sys.exit(f"EMPTY: {path} has no body content")
-print(f"OK: {path} parses, {len(body.strip().splitlines())} body lines")
-EOF
+memory-verify-write <absolute-path-to-memory-file>
 ```
 
 If the command exits non-zero, **STOP**. Report the failure with the file path and the printed

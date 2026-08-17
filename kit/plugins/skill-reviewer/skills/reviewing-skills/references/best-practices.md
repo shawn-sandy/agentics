@@ -16,6 +16,7 @@ Reference criteria for the `reviewing-skills` audit. Each section maps to a scor
 - [Workflow Patterns](#workflow-patterns)
   - [Checklist Workflow](#checklist-workflow)
   - [Feedback Loop](#feedback-loop)
+  - [Verification Gate](#verification-gate)
   - [Template Pattern](#template-pattern)
   - [Conditional Workflow](#conditional-workflow)
 - [Design Patterns](#design-patterns)
@@ -318,6 +319,28 @@ For quality-critical or iterative output, define an explicit validator → fix �
 ```
 
 Include a stop condition to prevent infinite loops.
+
+### Verification Gate
+
+A skill that writes or edits files, mutates git/remote state, or reports
+measured values must define how it verifies its own output before declaring
+done. Done means artifact + check, not artifact alone. Agents rarely produce
+obviously wrong work — they produce plausible-looking work and confidently
+declare completion; only a verification step catches the difference.
+
+| Skill does | The gate is |
+|------------|-------------|
+| Writes or edits a file | Re-read the result and confirm the change is present (diff, parse, or targeted read) |
+| Writes an executable or test | Execute it and show the runner's output |
+| Mutates git or a remote | Query the state the command claims to have created (`git rev-parse`, `gh pr view --json state`) |
+| Reports a measurement | The number comes from a tool run pasted into the report — never estimated |
+
+Redefine "done" explicitly: *"Do not report success until [the check] passes;
+if it cannot pass, report the failure honestly."* Bound any fix loop (see
+Feedback Loop) and end at an honest stop state, never a fabricated success.
+
+Scored by Dimension 3 (Warning when absent in a mutating or measuring skill —
+caps the dimension at 1 pt).
 
 ### Template Pattern
 

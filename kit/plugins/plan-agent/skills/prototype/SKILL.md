@@ -2,7 +2,7 @@
 name: prototype
 model: opus
 description: "Generates a runnable static-HTML prototype from a plan, idea, or design. Produces one self-contained, framework-free clickable file under docs/prototypes/. Use when asked to prototype a mockup."
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_console_messages, mcp__claude-in-chrome__read_page
 ---
 
 ## Plan Agent — Prototype
@@ -192,7 +192,19 @@ credential, token, key, email, or other PII.
   — it ships with this plugin in `bin/`, which Claude Code puts on the Bash
   tool's `PATH`, and defaults to the current directory. Invoke it by bare name,
   never by path.
-- Open the prototype in the browser, screenshot it, and `SendUserFile` the
-  prototype path.
+- Open the prototype in the browser (`navigate` to its `file://` path), then
+  verify it actually ran — a screenshot is not evidence, and the failure mode
+  Step 5 guards against is invisible in one: a wrong escaping of
+  `{{SEED_JSON}}` or `{{PROTO_MODEL}}` dies as a silent `JSON.parse` throw,
+  and the empty table it leaves behind looks fine in a picture.
+  - `read_console_messages` — assert **zero errors**. Any `SyntaxError` /
+    `JSON.parse` error means the Step 5 escaping rules were violated.
+  - `read_page` — assert the **2–3 seed rows** from Step 3 are present in the
+    table and the **summary badge** shows the success signal. Report the
+    measured values (row count, badge text), not a claim that it "looks
+    right".
+  - On failure: fix the escaping per Step 5, rewrite the file, and re-run both
+    checks before delivering.
+- `SendUserFile` the prototype path.
 - Report **what to validate**: the data shapes, the core flow, and whether the
   success signal reads true.

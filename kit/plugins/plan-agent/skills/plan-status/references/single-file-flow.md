@@ -100,8 +100,12 @@ analysis entirely. Instead, ask the user via `AskUserQuestion`:
 > "No extractable implementation signals found in this plan (no backtick-quoted
 > file paths or names). Please set the status manually."
 
-Offer options (default: `todo`): `todo`, `in-progress`, `completed`, `draft`. Use the
-user-selected value as the status and proceed to Step 6.
+Offer options (default: `todo`): `todo`, `in-progress`, `completed`. Never
+offer `draft` — the plan renderer's status enum accepts only those three
+values, so a written `draft` is rejected and silently falls back to `todo` at
+render time. If the user supplies `draft` as a free-form answer anyway, map it
+to `todo` before writing. Use the resulting value as the status and proceed to
+Step 6.
 
 **For each extracted token**, check both:
 
@@ -114,6 +118,21 @@ user-selected value as the status and proceed to Step 6.
 - 0% of tokens found → status = `todo`
 - 1–79% of tokens found → status = `in-progress`
 - 80%+ of tokens found → status = `completed`
+
+**Execute the objective test (spec plans only):** grep evidence proves the
+plan's files exist, not that its objective works. When the resolved plan is a
+spec whose `## Tests` section opens with an objective-verification bullet
+carrying a `Run:` command, execute that command with `Bash` and capture the
+exit status — mirroring `finalize-plan` Step 3c
+(`../finalize-plan/references/evidence-analysis.md`):
+
+- Exit 0 → keep the score-derived status.
+- Non-zero → cap the status at `in-progress`, even when 80%+ of tokens were
+  found. Record the command and exit status for Step 6, and tell the user the
+  plan's stated objective does not pass end-to-end.
+
+Plans with no `## Tests` objective bullet or no `Run:` command skip this — the
+token score stands alone.
 
 ### Step 6 — Present findings and confirm
 
@@ -131,6 +150,9 @@ Output a summary table in the chat:
 ```
 
 List found tokens (with file or grep match) and missing tokens separately.
+If the objective test ran in Step 4, add an `Objective test` row to the table —
+`pass (<run command>)` or `fail (<run command>)` — and note when a failure
+capped an 80%+ score at `in-progress`.
 
 Then ask via `AskUserQuestion`:
 

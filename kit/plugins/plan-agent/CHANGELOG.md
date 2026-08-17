@@ -1,7 +1,9 @@
 # Changelog
 
 
-## 9.4.2 — Context sections name the no-follow-up bar (2026-08-17)
+## 9.4.5 — Context sections name the no-follow-up bar (2026-08-17)
+
+(Authored as 9.4.2 on a branch that predated 9.4.3–9.4.4; ships as 9.4.5.)
 
 ### Changed
 
@@ -19,6 +21,53 @@
   `build-proposal/references/artifact-shape.md`. No structural or behavioral
   change — prose only.
 
+## 9.4.4 — four skills verify their own output (2026-08-17)
+
+- **`markdown-to-html` gains a Step 5b output gate** modeled on
+  plans-library's: a `python3` `html.parser` check asserting the doctype on
+  line 1, `</html>` at EOF, skip-link + `<main id="main-content">`, one
+  `<section>` per parsed `##` heading, and (plan mode) step-card count equals
+  parsed step count — html-spec.md's "Required in every generated HTML file"
+  list as the assertion set. A truncated Write or dropped section was
+  previously reported as success. `Bash(python3 *)` added to allowed-tools so
+  the gate runs prompt-free.
+- **`build-fleet` verifies subagent self-reports** before ticking the fleet
+  table: `gh pr view --json state,headRefName` per reported PR, unverifiable
+  rows marked "unverified — reported by agent" — build-feature Step 8's
+  delegation rationale, now applied where it was missing.
+- **`prototype` asserts runtime state instead of screenshotting it**: Step 9
+  requires zero console errors and the seed rows + summary badge present in
+  the DOM with measured values (read via the same `mcp__claude-in-chrome__`
+  family the skill already uses; `read_console_messages` and `read_page`
+  added to allowed-tools). A silent `JSON.parse` throw previously shipped as
+  a "done" prototype behind a blank-table screenshot.
+- **`plan-status` executes the plan's own objective test** when the spec's
+  `## Tests` carries a `Run:` command (mirroring finalize-plan Step 3c) and
+  caps grep-derived status at `in-progress` on non-zero exit; the manual
+  fallback drops `draft`, a value the renderer's status enum rejects.
+
+## 9.4.3 — review-plan edits the spec, not the render (2026-08-17)
+
+(9.4.2 was on a then-in-flight branch; its content later shipped as 9.4.5.)
+
+- **`review-plan` detects spec vs legacy mode in Step 1** (spec mode when
+  `<stem>.md` exists with a `# Plan:` heading, mirroring finalize-plan's
+  `resolve-and-modes.md`). In spec mode, accepted improvements are applied to
+  the markdown spec — mapped selector-by-selector to Objective, Acceptance
+  Criteria, step Why/Verify lines, and Verification — and the plan is
+  re-rendered with `plan-agent-render`. Previously every edit and the appended
+  Team Review went into the rendered HTML, which the pipeline's own
+  render-on-spec-write hook regenerates and silently discards; the skill was
+  announcing "Plan updated in place" on work designed to be deleted.
+- **The Team Review now survives re-renders** in spec mode: appended to the
+  spec as a `## Team Review (timestamp)` section (report headings demoted to
+  `###`), which the spec parser carries through rather than dropping.
+- **Step 7 verifies and tallies**: after applying, the edited file is re-read
+  and each accepted edit confirmed present; the announcement carries
+  "applied N of M accepted edits; skipped: <targets>". In background mode a
+  non-empty skipped list makes the report lead with `REVIEW INCOMPLETE` —
+  previously a run that matched zero selectors still announced full success.
+  `agent-review-plan` and the `review-plan-bg` dispatch carry the same tally.
 
 ## 9.4.1 — plan-status carries the plan-mode guard (2026-08-14)
 

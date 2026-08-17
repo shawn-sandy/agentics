@@ -48,10 +48,18 @@ Do not coordinate with the parent session.
 
    Replace `<path>` with the absolute path of the plan file.
 
-3. When the skill completes, report the path that was updated in place:
+3. When the skill completes, report the path that was updated in place,
+   carrying the skill's Step 7 applied/skipped tally verbatim:
 
    ```
-   Plan review complete. Plan updated in place: <path>
+   Plan review complete. Plan updated in place: <path> — applied N of M accepted edits; skipped: none
+   ```
+
+   If the skill reported any skipped edits, report a failure line instead —
+   never the success line:
+
+   ```
+   REVIEW INCOMPLETE: <path> — applied N of M accepted edits; skipped: <targets>
    ```
 
    Stop. Do not perform any additional analysis, follow-up tasks, or

@@ -1,7 +1,7 @@
 ---
 name: markdown-to-html
 description: "Converts a markdown file into a self-contained HTML page. Produces styled output with syntax highlighting and responsive layout. Use when the user asks to convert a markdown file or plan to HTML."
-allowed-tools: Agent, AskUserQuestion, Bash(open *), Bash(realpath *), Glob, Grep, Read, TodoWrite, Write
+allowed-tools: Agent, AskUserQuestion, Bash(open *), Bash(python3 *), Bash(realpath *), Glob, Grep, Read, TodoWrite, Write
 ---
 
 # Markdown to HTML
@@ -26,6 +26,7 @@ This skill converts the source markdown into a viewable HTML file at any lifecyc
 - [Step 3 — Resolve theme](#step-3--resolve-theme)
 - [Step 4 — Check for existing output file](#step-4--check-for-existing-output-file)
 - [Step 5 — Synthesize and write HTML](#step-5--synthesize-and-write-html)
+- [Step 5b — Verify the generated HTML](#step-5b--verify-the-generated-html)
 - [Step 6 — Offer to open in browser](#step-6--offer-to-open-in-browser)
 - [Step 7 — Report](#step-7--report)
 
@@ -49,6 +50,7 @@ Otherwise, use `TodoWrite` to create todos:
 - Step 3: Resolve theme
 - Step 4: Check for existing output
 - Step 5: Synthesize and write HTML
+- Step 5b: Verify the generated HTML
 - Step 6: Offer to open in browser
 - Step 7: Report
 
@@ -246,6 +248,68 @@ markdown-render `<h1>`, `<h2>`, or fenced code block content.
 - SVG node click listeners (plan mode only, when diagram present)
 
 Write the completed HTML to the derived output path via `Write`.
+
+### Step 5b — Verify the generated HTML
+
+Step 5 synthesizes the document freehand, so what landed on disk — not the
+intent — is what gets checked, the same way `plans-library` verifies its
+generated index before opening it. The assertion set is the spec's
+"Required in every generated HTML file" list (`reference/html-spec.md`,
+Semantic Rules); this gate checks its machine-checkable subset with Python's
+`html.parser`.
+
+Run the check below, substituting four values: the real output path for
+`docs/plans/add-auth.html`, the resolved mode (`plan` or `doc`), the number of
+`##` sections parsed in Step 2, and the parsed step count (pass `0` in doc
+mode):
+
+```bash
+python3 - docs/plans/add-auth.html plan 6 4 <<'EOF'
+import sys
+from html.parser import HTMLParser
+
+path, mode = sys.argv[1], sys.argv[2]
+want_sections, want_steps = int(sys.argv[3]), int(sys.argv[4])
+html = open(path, encoding='utf-8').read()
+errors = []
+if html.split('\n', 1)[0].strip() != '<!DOCTYPE html>':
+    errors.append('line 1 is not <!DOCTYPE html>')
+if not html.rstrip().endswith('</html>'):
+    errors.append(f'TRUNCATED: {path} does not end with </html>')
+
+class Audit(HTMLParser):
+    sections = steps = 0
+    skip_link = main = False
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        cls = (a.get('class') or '').split()
+        if tag == 'a' and 'skip-link' in cls and a.get('href') == '#main-content':
+            self.skip_link = True
+        if tag == 'main' and a.get('id') == 'main-content':
+            self.main = True
+        if tag == 'section':
+            self.sections += 1
+        if tag == 'li' and 'step-card' in cls:
+            self.steps += 1
+
+p = Audit()
+p.feed(html)
+if not p.skip_link:
+    errors.append('missing skip-link <a href="#main-content" class="skip-link">')
+if not p.main:
+    errors.append('missing <main id="main-content">')
+if p.sections != want_sections:
+    errors.append(f'{p.sections} <section> elements, expected {want_sections}')
+if mode == 'plan' and p.steps != want_steps:
+    errors.append(f'{p.steps} step cards, expected {want_steps}')
+sys.exit('; '.join(errors) if errors else 0)
+EOF
+```
+
+Exit 0 → proceed to Step 6. Non-zero → the file does not match what Step 2
+parsed — most often a truncated write, a dropped `<section>`, or a missing
+landmark. Fix the HTML (re-run Step 5 for the affected part) and re-run this
+check. Do not proceed to Steps 6–7 until it exits 0.
 
 ### Step 6 — Offer to open in browser
 

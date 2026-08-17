@@ -162,9 +162,11 @@ Tier 1 — This plan changes application code
 Run everything and confirm it passes.
 `;
 
-/** sha256 of renderUnphased() under the renderer as it stood BEFORE phases
- * (plan-agent 8.5.1). Regenerate only for a deliberate shell change. */
-const BASELINE_SHA256 = '9b19b47208b1ce560adfcc4c9c12ee90a3bf5d8b44b88d8c4277902cc371dace';
+/** sha256 of renderUnphased() under the current renderer. Regenerate only for
+ * a deliberate shell change. Re-derived 2026-08-17 for the 9.1.0 design
+ * retune (#537), which changed the shared CSS deliberately but left the
+ * 8.5.1-era baseline in place — the check had been failing on main since. */
+const BASELINE_SHA256 = '4c35c28b72c1ad8822c46bb31bd84aa1520ce6c6fd9303c8a068ddb1ad90accb';
 
 const render = (parsed, stem) =>
   renderPlanHtml(parsed, {
