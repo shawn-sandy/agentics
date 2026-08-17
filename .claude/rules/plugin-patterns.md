@@ -54,6 +54,33 @@ already knows.
 Read-only skills, and dispatchers whose downstream skill carries its own guard,
 omit the line and drop `ToolSearch`/`ExitPlanMode` from `allowed-tools`.
 
+## The verification gate
+
+A skill, command, or agent that mutates the filesystem, git state, or a remote
+defines how it verifies its own output before declaring done. Done means
+artifact + check, not artifact alone: re-read the edit, re-run the comparison,
+execute the written file, or query the remote for the state the command claims
+to have created. Agents rarely produce obviously wrong work — they produce
+plausible-looking work and confidently declare completion, and only a
+verification step catches the difference.
+
+Canonical implementations to copy rather than reinvent:
+
+- `memory-tools` — "Verify the write": post-write diff + parse check with an
+  explicit STOP-and-restore path.
+- `plan-agent/skills/build/references/completion-gates.md` — mandatory bounded
+  fix loop (3 attempts), escalate rather than fake success.
+- `settings-sync/skills/settings-restore` Step 7 — re-run the comparison after
+  a destructive copy; report verified counts, never planned ones.
+
+A skill that emits structured output (a report, a table, a fixed format) ships
+one worked example of that output — a filled instance, not a bracket-placeholder
+schema. `code-review`'s `references/example-review.md` is the shape to follow.
+
+`tests/plugins/test-verification-gate-rule.sh` holds both requirements in this
+file and in the `reviewing-skills` rubric; new-skill reviews score them via
+`/skill-reviewer:reviewing-skills` Dimension 3.
+
 ## Skill descriptions
 
 Three parts, ≤200 chars total:
