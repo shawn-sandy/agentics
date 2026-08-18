@@ -53,7 +53,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "TOPLEVEL=$(git rev-parse --show-toplevel 2>/dev/null) && test -n \"$TOPLEVEL\" && test -f \"$TOPLEVEL/scripts/ensure-plugins.sh\" && bash \"$TOPLEVEL/scripts/ensure-plugins.sh\" || true"
+            "command": "TOPLEVEL=$(git rev-parse --show-toplevel 2>/dev/null) && test -n \"$TOPLEVEL\" && test -f \"$TOPLEVEL/scripts/ensure-plugins.sh\" && bash \"$TOPLEVEL/scripts/ensure-plugins.sh\" || true",
+            "async": true,
+            "asyncTimeout": 300000
           }
         ]
       }

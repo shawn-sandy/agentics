@@ -2,7 +2,7 @@
 status: completed
 type: fix
 created: 2026-08-17
-modified: 2026-08-17
+modified: 2026-08-18
 repo-name: agentics
 ---
 
@@ -70,6 +70,42 @@ silent once there is nothing to do.
 - Install path: uninstalling one plugin and re-running reinstalled it and
   printed `OK: installed 1 agentics-kit plugin(s)`.
 - All twelve present in `installed_plugins.json` at user scope.
+
+## review round — PR #575
+
+Automated review raised four findings. Three were confirmed against the code and
+fixed; one was declined.
+
+1. **Blocking session startup** (fixed). The hook ran synchronously, so a fresh
+   container's twelve installs sat in front of session start, with the CLI's
+   600-second default timeout as the worst case. Now `"async": true` with an
+   explicit `"asyncTimeout": 300000` — the CLI's own async default is 15 s,
+   which is shorter than a real cold install. Nothing is lost by deferring:
+   the plugins could never load in the session that installs them anyway.
+2. **Scope-blind skip check** (fixed). The old check grepped
+   `installed_plugins.json` for the plugin id alone, so an id carrying only a
+   project- or local-scoped row counted as installed and the needed user-scope
+   install was skipped. *Reproduced, not theorised:* after
+   `claude plugin uninstall content-tools@agentics-kit` removed the user row,
+   a stale `project` row remained and the old check skipped it. The check now
+   parses rows and requires `scope == "user"`, with an id-only grep fallback
+   where python3 is absent, and `--scope user` is passed explicitly.
+3. **Failures reported as no-ops** (fixed). Without `set -e`, a failed
+   marketplace query left `ids` empty and the script exited 0 silently; failed
+   installs were discarded. Failures are now counted and warned to stderr while
+   the exit stays 0, so the hook remains failure-tolerant without lying.
+4. **Pin marketplace and plugin revisions to a reviewed sha** (declined). The
+   concern is real in general but is not introduced here: `extraKnownMarketplaces`
+   already tracks the same unpinned repo, and every manual `/plugin install`
+   already resolves the same way. The "upstream" is this repository, whose main
+   branch is itself gated by pull request, and installs already record a
+   `gitCommitSha` per row for provenance. Adding `ref`/`sha` to every
+   `git-subdir` source would couple each plugin version bump to a sha update and
+   change the release process — a deliberate decision to make on its own, not a
+   side effect of this fix.
+
+*Verify:* scope logic exercised over project-only, local-only, user-only, and
+mixed rows; both failure paths exercised with a stubbed `claude` that fails.
 
 ## notes
 
