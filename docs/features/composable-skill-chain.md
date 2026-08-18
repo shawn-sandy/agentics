@@ -69,8 +69,9 @@ all in `tdd-loop/SKILL.md` unless noted:
 - An implementation-only mode for `tdd-loop` that tolerates a dirty tree, makes
   no commit, opens no PR, and still requires a feature branch. Leaving the work
   uncommitted is the load-bearing half — without it the chain still dead-ends.
-- The same mode for `tdd-fix` — it terminates the chain identically, committing
-  at `tdd-fix/SKILL.md:89` and opening a PR at `:96`.
+- The same mode for `tdd-fix`, which terminates the chain the same way today:
+  it commits at `tdd-fix/SKILL.md:89`, then opens a PR at `:96`. Under the mode
+  it does neither.
 - Scoping the `tdd-loop:285` prohibition to the default mode, since an
   implementation-only run never touches `gh pr checks`.
 - One executable chain test, modeled on the existing
