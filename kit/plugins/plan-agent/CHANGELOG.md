@@ -1,6 +1,40 @@
 # Changelog
 
 
+## 9.5.0 — Plans can point at a design canvas (2026-08-17)
+
+### Added
+
+- **`design:` frontmatter key.** A plan spec can now carry the URL of its
+  Claude Design canvas — a multi-artboard design published as an Artifact.
+  The renderer emits it as a `plan-design` meta tag and a header
+  "View design" link, following the same http(s)-only rule as `issue:`: any
+  other scheme is dropped with a warning rather than rendered as a clickable
+  anchor. The canvas is *linked*, never embedded, so a plan keeps opening
+  from `file://` and publishing to GitHub Pages.
+- **`Design it` and `Prototype it` in the `implementation-plan` Step 8 menu.**
+  `Prototype it` runs the `prototype` skill, which until now was reachable
+  only as a separate command. `Design it` seeds a canvas from the plan's
+  objective and UI-bearing steps, or links one you already made, then records
+  the URL as `design:` and re-renders. Because the `design` tool can only
+  create or re-seed a canvas — never patch one — re-seeding a plan that
+  already carries a canvas requires an explicit confirmation, since it
+  discards edits made by hand in the published artifact. The tool sits behind
+  `/design consent`; until that is granted the option degrades to offering
+  `Prototype it` in one line and never blocks the plan flow.
+
+### Changed
+
+- **`build` implements UI steps against a linked canvas.** When the spec
+  carries `design:`, Step 2 fetches the artifact, reads its `.dc.html`
+  artboards, and builds each screen to match rather than inventing layout,
+  naming in the completion report which artboard each step was built against.
+  A failed fetch is a one-line note, not an aborted run. Adds `WebFetch` to
+  the skill's `allowed-tools`.
+- **`prototype` accepts a canvas URL** as a fifth input kind, beside a plan
+  path, an image path, a `figma.com` URL, and a raw idea.
+
+
 ## 9.4.5 — Context sections name the no-follow-up bar (2026-08-17)
 
 (Authored as 9.4.2 on a branch that predated 9.4.3–9.4.4; ships as 9.4.5.)

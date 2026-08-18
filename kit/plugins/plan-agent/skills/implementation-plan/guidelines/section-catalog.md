@@ -256,7 +256,12 @@ be `http(s)`; any other scheme is dropped with a warning rather than rendered,
 since escaping leaves a `javascript:` value clickable. Any tracker may be
 linked, but only `github.com` and GitLab URLs can be *closed* on completion —
 those are the two the `gh`/`glab` CLIs can drive; a Jira or Linear link
-renders and is then left alone. `glance` must not restate the objective: the
+renders and is then left alone. `design` is the full URL of the plan's Claude Design canvas — the renderer
+emits it as the `plan-design` meta tag and a header "View design" link, and
+`build` fetches it to implement UI steps against the artboards. Same
+`http(s)`-only rule as `issue`, for the same reason. The canvas is *linked*,
+never embedded: a plan must keep opening from `file://` and publishing to
+GitHub Pages, which an iframe to claude.ai would break. `glance` must not restate the objective: the
 objective is the *what*; the glance is *why it matters* and *how we'll know
 it worked*, written for someone who wasn't in the planning session. Unknown
 keys (e.g. `priority`) are preserved in the spec but not rendered today.

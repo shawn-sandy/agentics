@@ -1873,8 +1873,8 @@ const icon = (id) => `<svg class="icon" aria-hidden="true"><use href="#${id}"/><
 
 /* ── Template functions — args are pre-escaped HTML strings ────────── */
 
-/** <head> meta tags. `workflow`/`prototype`/`issue` may be empty → tag omitted entirely. */
-export function metaTags({ status, effort, type, created, repo, file, path, md, implement, goal, workflow, prototype, issue }) {
+/** <head> meta tags. `workflow`/`prototype`/`issue`/`design` may be empty → tag omitted entirely. */
+export function metaTags({ status, effort, type, created, repo, file, path, md, implement, goal, workflow, prototype, issue, design }) {
   const tags = [
     `<meta name="plan-status" content="${status}">`,
     `<meta name="plan-effort" content="${effort}">`,
@@ -1890,6 +1890,7 @@ export function metaTags({ status, effort, type, created, repo, file, path, md, 
   if (workflow) tags.push(`<meta name="plan-workflow" content="${workflow}">`);
   if (prototype) tags.push(`<meta name="plan-prototype" content="${prototype}">`);
   if (issue) tags.push(`<meta name="plan-issue" content="${issue}">`);
+  if (design) tags.push(`<meta name="plan-design" content="${design}">`);
   return tags.join('\n');
 }
 
@@ -1905,8 +1906,12 @@ export function metaTags({ status, effort, type, created, repo, file, path, md, 
  *
  * `issueHref` is the tracking ticket's full URL, empty when the spec carries
  * no `issue:` key — same all-or-nothing anchor, same no-CSS-of-its-own rule.
+ *
+ * `designHref` is the plan's Claude Design canvas URL, empty when the spec
+ * carries no `design:` key. A link, never an embed — the canvas lives on
+ * claude.ai and the plan page must stay self-contained. Same no-CSS rule.
  */
-export function header({ title, status, effortLabel, created, repo, type, prototypeHref, issueHref, issueLabel }) {
+export function header({ title, status, effortLabel, created, repo, type, prototypeHref, issueHref, issueLabel, designHref }) {
   const prototypeLink = prototypeHref
     ? `\n        <a class="prototype-link" href="${prototypeHref}"
            aria-label="View the interactive prototype for this plan">View prototype</a>`
@@ -1914,6 +1919,10 @@ export function header({ title, status, effortLabel, created, repo, type, protot
   const issueLink = issueHref
     ? `\n        <a class="issue-link" href="${issueHref}"
            aria-label="View the tracking issue for this plan">${issueLabel || 'Tracking issue'}</a>`
+    : '';
+  const designLink = designHref
+    ? `\n        <a class="design-link" href="${designHref}"
+           aria-label="View the design canvas for this plan">View design</a>`
     : '';
   return `<header class="plan-header">
   <div class="plan-header-inner">
@@ -1931,7 +1940,7 @@ export function header({ title, status, effortLabel, created, repo, type, protot
                 aria-label="Save this plan as PDF">Save as PDF</button>
         <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
                 aria-pressed="false" aria-label="Use dark theme">Dark</button>
-        <span class="effort-badge" aria-label="Effort level">${effortLabel}</span>${prototypeLink}${issueLink}
+        <span class="effort-badge" aria-label="Effort level">${effortLabel}</span>${prototypeLink}${issueLink}${designLink}
         <span class="status-badge">${status}</span>
       </div>
     </div>

@@ -517,13 +517,23 @@ EOF
    - Options (when workflow prompt exists):
      - `Implement now` — Begin implementing the plan steps, in this session or a fresh one.
      - `Run as workflow` — Launch a dynamic workflow (`/workflows`) to implement steps in parallel with subagents.
+     - `Design it` — Seed a Claude Design canvas from this plan, or link one you already have.
+     - `Prototype it` — Generate a clickable static-HTML prototype from this plan.
      - `Review the plan` — Run the `review-plan` Agent Team on this plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
    - Options (when no workflow prompt):
      - `Implement now` — Begin implementing the plan steps, in this session or a fresh one.
+     - `Design it` — Seed a Claude Design canvas from this plan, or link one you already have.
+     - `Prototype it` — Generate a clickable static-HTML prototype from this plan.
      - `Review the plan` — Run the `review-plan` Agent Team on this plan before implementing.
      - `Edit the plan` — Revise or extend the plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
+
+   `AskUserQuestion` caps a question at four options, so both lists exceed it.
+   Offer the four that fit the plan and put the rest behind the free-text box:
+   drop `Design it` and `Prototype it` for a plan with no UI signal (the same
+   signals Step 5b's UI override tests for), and drop `Edit the plan` when one
+   of them is shown. A user can still ask for any option by typing it.
 
    **If the user answered `Yes — create an issue`:** before acting on the
    next-step choice, invoke
@@ -536,6 +546,49 @@ EOF
    whoever closes it. If the `git-agent` plugin is not installed (the Skill
    call fails to resolve), say so in one line and continue with the
    next-step choice — never block on it.
+
+   **If the user chooses `Design it`:** Ask via `AskUserQuestion` whether to
+   seed a new canvas or link an existing one:
+   - Question: "Seed a new design canvas, or link one you already have?"
+   - Options:
+     - `Seed a new canvas` — Draft artboards from this plan's objective and UI steps.
+     - `Link an existing canvas` — Paste the URL of a canvas you already made.
+
+   **`Seed a new canvas`:** invoke the `design` tool, briefing it with the
+   plan's objective, its UI-bearing steps, and the domain nouns they name, so
+   the artboards cover the screens the plan actually describes. Record the
+   published Artifact URL as a `design:` frontmatter key in the spec and
+   re-render — the renderer turns that key into the `plan-design` meta tag and
+   the header's `View design` link. If the tool's result does not carry the
+   URL, ask the user to paste it rather than guessing.
+
+   **`Link an existing canvas`:** ask for the URL, accept it only if it is
+   `http(s)` — the renderer drops anything else, so a rejected value must be
+   caught here rather than silently vanishing at render time — then write it to
+   `design:` and re-render.
+
+   **When the spec already carries a `design:` key:** report the existing URL
+   and require an explicit confirmation before re-seeding. State plainly that
+   the `design` tool can only create or re-seed a canvas, never patch one, so
+   re-seeding discards any edits made by hand in the published artifact.
+   Linking a different URL is the non-destructive alternative — offer it.
+
+   **When the `design` tool is unavailable** (it is gated behind
+   `/design consent`, and the tool is simply absent until that is granted):
+   say so in one line, name `/design consent` as the fix, and offer
+   `Prototype it` instead. Never block the plan flow on it, and never claim a
+   canvas was created when it was not. Where the user's account does not have
+   canvas saving enabled they get a view-and-export preview rather than an
+   editable canvas — do not promise editing.
+
+   After either path, return to this menu. Leave plan `status` at `todo` —
+   designing is not implementing.
+
+   **If the user chooses `Prototype it`:** Invoke
+   `Skill(skill: "plan-agent:prototype", args: "<plan path>")` with the
+   rendered plan's relative path. It ships in this same plugin, so a
+   resolution failure is a broken skill reference, not a missing dependency.
+   When it finishes, return to this menu. Leave plan `status` at `todo`.
 
    **If the user chooses `Implement now`:** Ask where to implement using
    `AskUserQuestion` with a single question:

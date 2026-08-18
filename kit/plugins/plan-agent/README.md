@@ -89,6 +89,23 @@ skipped when the spec already carries `issue:`, and if `git-agent` is not
 installed the skill notes it in one line and continues — issue creation never
 blocks the plan flow.
 
+Step 8 also offers **`Design it`** and **`Prototype it`**. `Prototype it` runs
+the `prototype` skill on the plan. `Design it` seeds a Claude Design canvas —
+a multi-artboard design published as an Artifact — from the plan's objective
+and UI-bearing steps, or links a canvas you already made, then records the URL
+as the spec's `design:` frontmatter key. The renderer turns that key into a
+`plan-design` meta tag and a header "View design" link, and `build` fetches the
+canvas to implement UI steps against its artboards rather than inventing
+layout. The canvas is linked, never embedded, so the plan page stays
+self-contained for `file://` and GitHub Pages.
+
+The `design` tool sits behind `/design consent`; until that is granted the
+option degrades to offering `Prototype it` in one line and never blocks the
+plan flow. Because the tool can only create or re-seed a canvas — never patch
+one — `Design it` requires an explicit confirmation before re-seeding a plan
+that already carries a `design:` URL, since re-seeding discards edits made by
+hand in the published artifact.
+
 Passing a `.md` plan path enters **conversion mode**: the markdown is treated as authoritative, pre-validated content — Clarify/Align/Interview are skipped, sections map 1:1 to the HTML structure, frontmatter (`created`, `status`) carries over, the output filename swaps the extension to `.html`, and Step 8 asks whether to keep or remove the source `.md`. If the path is missing locally, the skill checks the plan roots and the default branch before asking for direction.
 
 **Full invocation syntax:**
