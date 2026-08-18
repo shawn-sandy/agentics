@@ -42,6 +42,12 @@ all in `tdd-loop/SKILL.md` unless noted:
 
 - Line 46 — STOPs on a dirty tree, which is exactly what `build` hands it.
 - Line 59 — STOPs on `main` / `master`.
+- Lines 137 and 264 (and `tdd-fix/SKILL.md:89`) — commits via `commit-agent`.
+  `tdd-loop` commits **twice**, tests then implementation; line 272 states the
+  branch ends with "exactly two feature commits". This is the blocker that
+  outlasts the others: relaxing the guards and skipping the PR still leaves a
+  **clean** tree, which is precisely the state `ship-autonomous` refuses with
+  "Nothing to ship".
 - Line 277 (and `tdd-fix/SKILL.md:96`) — opens its own PR, making a downstream
   shipper redundant.
 - Line 285 — the explicit prohibition above.
@@ -51,7 +57,8 @@ all in `tdd-loop/SKILL.md` unless noted:
 | Goal | Measurable signal |
 |---|---|
 | A single session can run `build` → tdd → `ship-autonomous` without a guard STOP | The chain-execution test (sub-feature 2) runs the three skills in sequence and reaches a PR URL, in CI, not by grep |
-| The new mode cannot silently degrade the standalone tdd path | Existing `code-testing-agent` suites pass unchanged with no mode flag set |
+| The mode hands `ship-autonomous` a tree it will accept | After a mode run, `git status --porcelain` is non-empty and no `test:`/`feat:`/`fix:` commit was created; the chain test asserts both |
+| The new mode cannot silently degrade the standalone tdd path | Existing `code-testing-agent` suites pass unchanged when the mode is not requested |
 | The chain is never able to land on a protected branch | Feature-branch requirement is retained in the new mode; a test asserts the STOP on `main` still fires |
 | The line-285 prohibition is lifted only where it is actually safe | The prohibition remains for the default mode and is scoped to it in the source text |
 
@@ -59,10 +66,11 @@ all in `tdd-loop/SKILL.md` unless noted:
 
 **In**
 
-- An implementation-only mode for `tdd-loop` that tolerates a dirty tree, opens
-  no PR, and still requires a feature branch.
-- The same mode for `tdd-fix` — it terminates the chain identically at
-  `tdd-fix/SKILL.md:96`.
+- An implementation-only mode for `tdd-loop` that tolerates a dirty tree, makes
+  no commit, opens no PR, and still requires a feature branch. Leaving the work
+  uncommitted is the load-bearing half — without it the chain still dead-ends.
+- The same mode for `tdd-fix` — it terminates the chain identically, committing
+  at `tdd-fix/SKILL.md:89` and opening a PR at `:96`.
 - Scoping the `tdd-loop:285` prohibition to the default mode, since an
   implementation-only run never touches `gh pr checks`.
 - One executable chain test, modeled on the existing
@@ -108,8 +116,16 @@ not cited here while `status: gathering`.
 The mode is one seam: every blocker is a guard or terminal step inside the two
 tdd skills, and none of them requires touching `plan-agent` or `git-agent`.
 
-Touches `tdd-loop/SKILL.md` lines 44-62 (tree and branch guards), 277 (Step 7
-Open PR), 285 (the prohibition), and `tdd-fix/SKILL.md:96` (Step 8 Open PR).
+Touches seven sites. In `tdd-loop/SKILL.md`: lines 44-62 (tree and branch
+guards), 137 (Step 3 commit), 264 (Step 6 commit), 277 (Step 7 Open PR), 285
+(the prohibition). In `tdd-fix/SKILL.md`: 89 (Step 7 commit), 96 (Step 8 Open
+PR).
+
+Sized at the top of M — one domain, roughly six steps, no schema or data
+migration. Per the sizing guide an L would need a hidden seam checked first;
+the candidate split here is "relax the guards" versus "suppress the terminal
+commit and PR steps", and it is not a real seam: ship either half alone and the
+chain still dead-ends, so they cannot be planned independently.
 
 ### 2. chain-execution-test (S) — depends on: tdd-implementation-mode
 
