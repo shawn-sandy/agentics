@@ -1,7 +1,8 @@
 ---
-status: gathering
+status: converged
 type: feature
 created: 2026-08-18
+modified: 2026-08-18
 repo-name: agentics
 ---
 
@@ -74,8 +75,8 @@ all in `tdd-loop/SKILL.md` unless noted:
   it does neither.
 - Scoping the `tdd-loop:285` prohibition to the default mode, since an
   implementation-only run never touches `gh pr checks`.
-- One executable chain test, modeled on the existing
-  `tests/plugins/test-proposal-prompt-pipeline.sh`.
+- One chain test that asserts by executing the chain. No existing test in this
+  repo does that, so it has no model to copy — see sub-feature 2.
 
 **Out**
 
@@ -106,11 +107,18 @@ Retained at Tier 1 because the feature turns on the first item.
   while the feature was fully broken, because the test grepped strings in a
   markdown file. Sub-feature 2 is the mitigation, which is why it is scoped in
   rather than noted.
+- **The repo has no executable chain test to copy, and that may not be an
+  accident.** Every existing pipeline test asserts by grepping skill text.
+  Executing this chain needs `gh` credentials and creates a real PR per run, so
+  sub-feature 2 may find the isolation problem is the reason the gap exists. If
+  it cannot be solved cheaply, the honest outcome is a narrower assertion plus a
+  recorded limitation — not a grep test relabelled as an execution test.
 
 ## Sub-feature breakdown
 
-Dependency-ordered. Prompt files are written at convergence (Step 8) and are
-not cited here while `status: gathering`.
+Dependency-ordered. Each sub-feature's prompt carries this doc's Goals, Scope,
+and Risks, because the paste-ready command below hands `implementation-plan` the
+prompt and never this doc.
 
 ### 1. tdd-implementation-mode (M) — depends on: none
 
@@ -128,17 +136,40 @@ the candidate split here is "relax the guards" versus "suppress the terminal
 commit and PR steps", and it is not a real seam: ship either half alone and the
 chain still dead-ends, so they cannot be planned independently.
 
-### 2. chain-execution-test (S) — depends on: tdd-implementation-mode
+Prompt file: `docs/prompts/feature-composable-skill-chain-tdd-implementation-mode.md`
+
+```text
+/plan-agent:implementation-plan Add an implementation-only mode to tdd-loop and tdd-fix that leaves work uncommitted and opens no PR --from-prompt docs/prompts/feature-composable-skill-chain-tdd-implementation-mode.md
+```
+
+### 2. chain-execution-test (M) — depends on: tdd-implementation-mode
 
 Separate plan because it is harness work, not skill authoring, and because it
 must be able to fail against a broken mode — which means it cannot be written
 by whoever is mid-way through writing the mode.
 
-Models `tests/plugins/test-proposal-prompt-pipeline.sh`, which already exercises
-the `build-proposal` → `prompt` chain end-to-end.
+**There is no existing model to copy.** `tests/plugins/test-proposal-prompt-pipeline.sh`
+is the repo's closest analogue and is worth reading for how it names and scopes
+an objective-verification test across a chain's seams — but it asserts entirely
+with `grep -qF` against SKILL.md text and never executes anything. Copying its
+approach would reproduce exactly the failure this sub-feature exists to prevent,
+the one PR #414 shipped.
+
+Sized M, not S: the plan has to solve execution isolation before it can assert
+anything. Running the real chain means `gh` credentials, live check state, and a
+PR created per run — orphaned on every retry. Deciding between a disposable
+repository and stubbed `gh` calls is the substance of this plan, not a detail
+inside it.
+
+Prompt file: `docs/prompts/feature-composable-skill-chain-chain-execution-test.md`
+
+```text
+/plan-agent:implementation-plan Write a test that executes the build to tdd to ship-autonomous chain and fails when the chain is broken --from-prompt docs/prompts/feature-composable-skill-chain-chain-execution-test.md
+```
 
 ## Next step
 
-Converge this doc (write the two sub-feature prompts), then run each
-sub-feature's paste-ready `/plan-agent:implementation-plan` command in
-dependency order. The feature doc stops here.
+Converged. Run the two paste-ready `/plan-agent:implementation-plan` commands
+above in dependency order — `tdd-implementation-mode` first, then
+`chain-execution-test`, which asserts against what the first one builds. The
+feature doc stops here.
