@@ -62,7 +62,7 @@ ten-section doc:
 | Tier | Signal | Response |
 |---|---|---|
 | **0 — Plan-sized** | Single surface, already clear, would yield one plan | Say so and hand the user the exact command `/plan-agent:implementation-plan <idea>` to run — **write no artifact of either kind** and stop. The feature-doc layer adds nothing to a feature that is already one plan. |
-| **1 — Focused** | One domain, two or three likely sub-features | One research pass; the short shape (Context, Goals, Scope, Sub-feature breakdown). Often a single round. |
+| **1 — Focused** | One domain, two or three likely sub-features | One research pass; the short shape (Context, Goals, Scope, Risks, Sub-feature breakdown). Often a single round. |
 | **2 — Full** | Multiple domains or user-facing surfaces, real product decisions open | The full shape from [references/feature-doc-shape.md](references/feature-doc-shape.md), deepened over rounds. |
 
 The tier is a starting estimate — escalate 1 → 2 if research reveals more
@@ -137,6 +137,13 @@ concurrently. Ground every claim; never speculate from memory.
   direct fetches otherwise.
 - **Quantify** — real counts, file lists, call sites, not estimates.
 
+**No `Agent` available?** Some sessions withhold it. Do the internal sweep
+yourself with `Glob`/`Grep`/`Read`, sequentially — the parallelism is an
+optimization, the grounding is the requirement. Say in the round's report that
+research ran sequentially, so a reader knows the breadth came from one pass
+rather than several. Never let a missing tool become a reason to synthesize
+from memory.
+
 ### Step 3 — Synthesize the feature's shape
 
 State how the feature relates to what exists: what is already there to build
@@ -166,6 +173,16 @@ each round. Never emit empty sections. Do not write sub-feature prompts yet:
 the breakdown may still merge or split, and prompts written per round go
 stale by convergence. When the project is a git repo, offer to commit each
 meaningful round.
+
+**Open every precedent before citing it.** A breakdown entry that points a
+sub-feature at an existing file — "models `X`", "follows the pattern in `Y`",
+"extends `Z`" — is making a claim about what that file does, and the future
+plan will inherit it unchecked. Read the file and confirm it does what you are
+about to say it does. Step 2's *ground every claim* is easy to lose here: the
+citation is written two steps later, from memory of a filename that sounded
+right. A precedent that turns out not to hold is worth more than one that
+does — say so in the entry, because the sub-feature then has no model to copy
+and is almost certainly bigger than it looks.
 
 ### Step 7 — Deepen on request
 

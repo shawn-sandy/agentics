@@ -1,6 +1,40 @@
 # Changelog
 
 
+## 9.4.6 — build-feature: research fallback, Risks at Tier 1, verified precedents (2026-08-18)
+
+Three fixes from the first real run of `build-feature`, which produced
+`docs/features/composable-skill-chain.md` (#579). Each one is a gap the run
+hit, not a speculative hardening.
+
+### Fixed
+
+- **Step 2 has a sequential fallback.** The step assumed `Agent` was
+  available and gave no instruction for sessions that withhold it, so a run
+  without subagents had to improvise. It now says to sweep internally with
+  `Glob`/`Grep`/`Read` instead, report that research ran sequentially, and
+  never treat a missing tool as licence to synthesize from memory. The
+  parallelism was always an optimization; the grounding is the requirement.
+
+### Changed
+
+- **`Risks & tensions` joins the Tier 1 section subset.** Tier 1 previously
+  kept only Context, Goals, Scope, and the breakdown. Risks is the one
+  section that can say the feature might not work, so a short doc without it
+  can only argue for its own conclusion — the failure mode a small feature is
+  most prone to, not least. The reference now states why it is in the subset,
+  and that a genuinely risk-free feature says so in one line rather than
+  dropping the section. Touches `SKILL.md`'s tier table and
+  `references/feature-doc-shape.md`.
+- **Step 6 requires opening every precedent before citing it.** A breakdown
+  entry that says "models `X`" makes a claim the downstream plan inherits
+  unchecked. Step 2's *ground every claim* does not reach here — the citation
+  is written two steps later, from memory of a filename that sounded right.
+  In the #579 run the cited precedent turned out to assert entirely by grep
+  and execute nothing, which resized that sub-feature S to M. The step now
+  notes a precedent that fails to hold is the more valuable finding, since
+  the sub-feature then has no model to copy.
+
 ## 9.4.5 — Context sections name the no-follow-up bar (2026-08-17)
 
 (Authored as 9.4.2 on a branch that predated 9.4.3–9.4.4; ships as 9.4.5.)
