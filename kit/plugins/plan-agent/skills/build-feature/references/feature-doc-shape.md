@@ -2,9 +2,17 @@
 
 The structure a converged feature doc lands on. Write
 `<features-dir>/<slug>.md` in this order. **Tier 1** keeps the short subset
-(Context · Goals & success metrics · Scope · Sub-feature breakdown); **Tier 2**
-uses the full shape and deepens it over rounds. Never emit empty sections —
-add a section only when it carries grounded content.
+(Context · Goals & success metrics · Scope · Risks & tensions · Sub-feature
+breakdown); **Tier 2** uses the full shape and deepens it over rounds. Never
+emit empty sections — add a section only when it carries grounded content.
+
+**Risks is in the Tier 1 subset on purpose.** It is the only section that can
+say the feature might not work — that an assumption is load-bearing, or that
+research could invalidate the split. Drop it and a short doc can only argue
+for its own conclusion, which is the failure mode a small feature is *most*
+prone to, not least. If a Tier 1 feature genuinely carries no risk worth
+naming, that is itself a finding: say so in one line rather than omitting the
+section silently.
 
 ## Section order
 
