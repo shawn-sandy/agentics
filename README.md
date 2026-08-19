@@ -801,7 +801,7 @@ claude --plugin-dir ./kit/plugins/team-defaults
 
 ## Removed Plugins
 
-The following plugins have been removed from the `agentics-kit` marketplace — six at v4.0.0, and two folded into `plan-agent` since. They **will not appear** when browsing or installing from the marketplace — `/plugin install` will not find them.
+The following plugins have been removed from the `agentics-kit` marketplace — six at v4.0.0, one absorbed into `git-agent`, and two folded into `plan-agent` since. They **will not appear** when browsing or installing from the marketplace — `/plugin install` will not find them.
 
 Their source directories have been removed from the repository. De-registering a plugin stops distribution but not loading — a directory left under `kit/plugins/` still loads via `--plugin-dir`, collides by name with a live plugin, and consumes skill-description budget in every session. Git history is the reference, so the source is recoverable:
 
@@ -970,14 +970,16 @@ Two hooks run at `SessionStart`:
 1. **Merge-driver registration** — runs `scripts/setup-merge-driver.sh` so `marketplace.json` and gallery `index.html` conflicts auto-resolve
 2. **Base-branch refresh** — pulls or fetches the default branch so the session starts from current `origin`
 
-Two more run after every file Write/Edit:
+Three more run after every file Write/Edit:
 
 1. **JSON validation** — validates `marketplace.json` syntax
 2. **Uncommitted plan warning** — alerts if plan files are unstaged alongside plugin changes
+3. **Version guard** — when `marketplace.json` is dirty, runs `scripts/check-plugin-versions.mjs` to confirm every touched plugin's version exceeds `origin/main`
 
-A third Write/Edit hook is configured to run a version guard, but the script it
-invokes (`scripts/check-version-bump.sh`) is not in the repo, so it is currently
-a no-op. Run the guard by hand before pushing:
+The version guard compares **committed** state (`origin/main...HEAD`), so it
+catches an un-bumped commit on the next Write/Edit after you commit, not at the
+moment you edit. It does not fetch, so it is only as current as your last
+`git fetch`. Before pushing, run it directly against a fresh base:
 
 ```bash
 git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs
