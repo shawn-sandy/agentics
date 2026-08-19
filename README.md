@@ -760,18 +760,18 @@ claude --plugin-dir ./kit/plugins/team-defaults
 
 | Plugin | Version | Category | Components |
 |--------|---------|----------|------------|
-| [memory-tools](./kit/plugins/memory-tools/README.md) | 4.1.0 | development | 2 skills |
-| [code-review](./kit/plugins/code-review/README.md) | 3.3.3 | development | 1 command, 1 skill, 1 agent |
+| [memory-tools](./kit/plugins/memory-tools/README.md) | 4.1.1 | development | 2 skills |
+| [code-review](./kit/plugins/code-review/README.md) | 3.3.4 | development | 1 command, 1 skill, 1 agent |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.5.2 | security | 1 skill |
-| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.5.1 | development | 1 command, 4 skills, 1 hook |
-| [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.5.0 | testing | 5 skills |
-| [git-agent](./kit/plugins/git-agent/README.md) | 4.19.0 | development | 5 commands, 8 skills, 5 agents, 3 hooks |
-| [settings-sync](./kit/plugins/settings-sync/README.md) | 1.1.1 | productivity | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.23.0 | productivity | 1 command, 17 skills |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 9.4.1 | productivity | 9 commands, 16 skills, 12 agents, 2 hooks |
-| [team-defaults](./kit/plugins/team-defaults/README.md) | 0.2.1 | productivity | 1 skill, 2 agents |
+| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.5.2 | development | 1 command, 4 skills, 1 hook |
+| [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.5.2 | testing | 5 skills |
+| [git-agent](./kit/plugins/git-agent/README.md) | 4.19.2 | development | 5 commands, 8 skills, 5 agents, 3 hooks |
+| [settings-sync](./kit/plugins/settings-sync/README.md) | 1.1.4 | productivity | 2 skills |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.23.4 | productivity | 1 command, 17 skills |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 9.4.6 | productivity | 9 commands, 16 skills, 12 agents, 2 hooks |
+| [team-defaults](./kit/plugins/team-defaults/README.md) | 0.2.2 | productivity | 1 skill, 2 agents |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.12.0 | development | 3 commands, 5 skills |
-| [content-tools](./kit/plugins/content-tools/README.md) | 1.1.0 | documentation | 1 skill |
+| [content-tools](./kit/plugins/content-tools/README.md) | 1.1.1 | documentation | 1 skill |
 
 ---
 
