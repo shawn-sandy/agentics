@@ -35,6 +35,7 @@ A **marketplace system for Claude Code plugins** — enabling discovery, distrib
   - [Accessibility & Performance](#accessibility--performance)
   - [Plugin Development](#plugin-development)
   - [Productivity](#productivity)
+- [How-To Guides](#how-to-guides)
 - [Plugin Reference Table](#plugin-reference-table)
 - [Removed Plugins](#removed-plugins)
 - [Contributing](#contributing)
@@ -775,6 +776,29 @@ claude --plugin-dir ./kit/plugins/team-defaults
 ```
 
 [View Documentation](./kit/plugins/team-defaults/README.md)
+
+---
+
+## How-To Guides
+
+One brief "How do I" entry per skill: the slash command to type, the plain-English phrasing that triggers it, what it actually does, and the gotcha worth knowing. Skills marked command-only cannot be triggered by natural language.
+
+| Plugin | Guide | Skills |
+|--------|-------|--------|
+| artifact-tools | [How do I... artifact-tools](./docs/guides/how-to/artifact-tools.md) | 5 |
+| code-review | [How do I... code-review](./docs/guides/how-to/code-review.md) | 1 |
+| code-testing-agent | [How do I... code-testing-agent](./docs/guides/how-to/code-testing-agent.md) | 5 |
+| content-tools | [How do I... content-tools](./docs/guides/how-to/content-tools.md) | 1 |
+| git-agent | [How do I... git-agent](./docs/guides/how-to/git-agent.md) | 8 |
+| memory-tools | [How do I... memory-tools](./docs/guides/how-to/memory-tools.md) | 2 |
+| plan-agent | [How do I... plan-agent](./docs/guides/how-to/plan-agent.md) | 16 |
+| settings-sync | [How do I... settings-sync](./docs/guides/how-to/settings-sync.md) | 2 |
+| skill-reviewer | [How do I... skill-reviewer](./docs/guides/how-to/skill-reviewer.md) | 4 |
+| social-media-tools | [How do I... social-media-tools](./docs/guides/how-to/social-media-tools.md) | 17 |
+| team-defaults | [How do I... team-defaults](./docs/guides/how-to/team-defaults.md) | 1 |
+| wcag-compliance-reviewer | [How do I... wcag-compliance-reviewer](./docs/guides/how-to/wcag-compliance-reviewer.md) | 1 |
+
+Total: 63 skills across 12 plugins.
 
 ---
 
