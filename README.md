@@ -4,7 +4,7 @@
 
 A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
 
-**Marketplace:** `agentics-kit` v4.0.0 · **13 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
+**Marketplace:** `agentics-kit` v4.0.0 · **12 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
 
 > **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories have been removed from the repository and are recoverable from git history at the commit preceding their deletion. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
@@ -45,6 +45,7 @@ A **marketplace system for Claude Code plugins** — enabling discovery, distrib
 - [Development](#development)
   - [Browsing Docs Online](#browsing-docs-online)
   - [Browsing Docs Locally](#browsing-docs-locally)
+- [Distribution](#distribution)
 - [CI/CD](#cicd)
 - [Resources](#resources)
 - [License](#license)
@@ -82,7 +83,7 @@ The agentics project serves two purposes:
 
 | Purpose | What it contains |
 |---------|-----------------|
-| **Active Plugins** | 13 marketplace plugins in `kit/plugins/` — installable via `/plugin install`, covering code review, planning, testing, git workflows, accessibility, and more |
+| **Active Plugins** | 12 marketplace plugins in `kit/plugins/` — installable via `/plugin install`, covering code review, planning, testing, git workflows, accessibility, and more |
 | **Marketplace Infrastructure** | `agentics-kit` marketplace manifest (`marketplace.json`) that enables installation via `/plugin install` |
 
 Every plugin in this repo is a working, production-quality tool you can install and use immediately.
@@ -129,7 +130,7 @@ agentics/
 │   ├── rules/                    # Scoped authoring rules (plugin patterns, marketplace, testing)
 │   └── settings.json             # Project-level Claude Code settings and hooks
 ├── kit/
-│   └── plugins/                  # 13 plugins in marketplace
+│   └── plugins/                  # 12 plugins in marketplace
 │       ├── artifact-tools/
 │       ├── code-review/
 │       ├── code-testing-agent/
@@ -412,6 +413,8 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 
 | Command | Description |
 |---------|-------------|
+| `/plan-agent:fix <objective>` | Author and implement a fix plan — the `/plan-agent:build` chain, typed as a fix |
+| `/plan-agent:refactor <objective>` | Author and implement a refactor plan — the `/plan-agent:build` chain, typed as a refactor |
 | `/plan-agent:review-plan-bg <path>` | Run the ten-reviewer plan-review Agent Team in the background — validates the path, spawns `agent-review-plan`, and returns an ack immediately |
 | `/plan-agent:deep-grill [plan-file-path]` | Walk each decision branch in a plan with focused questions and codebase exploration |
 | `/plan-agent:plan-status [plan-file-path] [--all]` | Check and update a plan's lifecycle status (todo, in-progress, completed) and type, one file or in bulk |
@@ -426,6 +429,8 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 |-------|------------------------------|
 | `implementation-plan` | Create a plan via `/plan-agent:implementation-plan <objective>` — also auto-activates on plan-document intent |
 | `build` | Implement a plan that already exists via `/plan-agent:build [<plan>]` — walks its steps, ticks the spec, re-renders, and runs the acceptance-criteria, end-to-end-verification, and completion-checklist gates; also auto-activates on "implement the plan at …" intent |
+| `build-feature` | Turn a feature idea into a team feature doc that splits into sized, dependency-ordered sub-features, each of which becomes its own plan |
+| `build-fleet` | Ship a backlog of plans in parallel — one isolated worktree agent per plan, each building its plan, opening a PR, and watching CI |
 | `build-proposal` | Turn a vague idea into a decision-complete proposal, saved as a copy-pasteable prompt (`docs/prompts/proposal-<slug>.md`) authored by delegating to `prompt` — researches web + codebase, separates facts from decisions, then hands off to `implementation-plan`; also writes the deprecated `docs/proposals/<slug>.md` copy through 6.0.x; auto-activates on idea / "should-we" / compare-and-align intent |
 | `review-plan` | Spawn a ten-reviewer Agent Team (architecture, completeness, testability, risk, conventions, product, security, + UI-conditional UX, accessibility, and frontend) to review a plan, synthesize findings, and apply improvements in place |
 | `finalize-plan` | Review a plan for completion evidence with per-criterion verification and mark it completed — manual invoke only |
@@ -458,9 +463,10 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | `rebuild-plans-index` | `PostToolUse` (Write/Edit/MultiEdit) | Auto-regenerates the plans gallery index when plans change |
 | `build-prototypes-index` | `PostToolUse` (Write/Edit/MultiEdit) | Auto-regenerates the prototypes gallery index when `docs/prototypes/` changes |
 | `render-plan-html` | `PostToolUse` (Write/Edit/MultiEdit) | Re-renders a plan's HTML after its source changes |
+| `check-prototype-drift` | `PostToolUse` (Write/Edit/MultiEdit) | Warns when a prototype has drifted from the plan it was generated from |
 | Stress-test nudge | `PostToolUse` (ExitPlanMode) | Suggests running the Step 5b interview or the `review-plan` team before implementing |
 
-> All four Write/Edit hooks are registered through a single `hooks/dispatch.py` entry rather than four matchers, which is why the reference table counts two registrations.
+> All five Write/Edit hooks are registered through a single `hooks/dispatch.py` entry rather than five matchers, which is why the reference table counts two registrations.
 
 ```bash
 claude --plugin-dir ./kit/plugins/plan-agent
@@ -504,6 +510,7 @@ Automated git workflow — create branches, commit with conventional messages, c
 | `create-issue` | File, open, or create a GitHub or GitLab issue from any context — detects the host from the git remote and confirms before creating |
 | `pr-agent` | Create a PR or open a pull request — manual invoke only |
 | `merge` | Merge a PR — checks `MERGEABLE`, green checks, and the lint gate, then merges only with explicit approval; never passes `--delete-branch`. Typing `merge?` routes here deterministically |
+| `post-merge-cleanup` | Clear away a merged branch and its worktree — detects squash-merges, inspects the worktree for uncommitted work first, and asks before every destructive step |
 | `ship` | Ship changes or commit and create a PR — manual invoke only |
 | `ship-autonomous` | Autonomously ship or watch CI — runs the full ship pipeline with CI polling and bounded autofix |
 
@@ -522,6 +529,8 @@ Automated git workflow — create branches, commit with conventional messages, c
 | Hook | Trigger | Purpose |
 |------|---------|---------|
 | `merge-shorthand` | `UserPromptSubmit` | Routes a bare `merge?` prompt to the `merge` skill instead of leaving it to intent matching |
+| `lint-before-commit` | `PreToolUse` (Bash) | Runs the repo's lint gate before a `git commit` lands, so a failing lint blocks the commit rather than CI |
+| `scope-guard` | `PreToolUse` (Bash) | Blocks git commands that would reach outside the branch's intended scope |
 
 ```bash
 claude --plugin-dir ./kit/plugins/git-agent
@@ -605,6 +614,12 @@ Review, plan, and optimize Claude Code skills — audit SKILL.md files across fi
 | `planning-skills` | Plan or scaffold a new skill |
 | `auditing-allowed-tools` | Audit, fix, or review tool permissions |
 | `optimizing-skill-frontmatter` | Optimize SKILL.md frontmatter — manual invoke only |
+
+**Hooks:**
+
+| Hook | Trigger | Purpose |
+|------|---------|---------|
+| Description budget check | `PostToolUse` (Write/Edit/MultiEdit) | Measures the `description` frontmatter whenever a `SKILL.md` is written and warns past the 200-char budget; skips files whose description is unchanged |
 
 ```bash
 claude --plugin-dir ./kit/plugins/skill-reviewer
@@ -690,6 +705,14 @@ claude --plugin-dir ./kit/plugins/social-media-tools
 
 Publish work as live claude.ai artifacts. Every skill runs a blocking `security-scrub` gate before publishing and falls back to local HTML when publishing is unavailable.
 
+**Commands:**
+
+| Command | Description |
+|---------|-------------|
+| `/artifact-tools:eng-recap` | Publish an engineering recap of this session or a pull request — architecture, code paths, tradeoffs, learnings, tests, and review follow-ups, written for the engineer who touches this code next |
+| `/artifact-tools:team-recap` | Publish a detailed, visual recap for the whole team — diagrams, before/after, decisions, and open items, readable by engineers and non-engineers alike |
+| `/artifact-tools:product-doc` | Publish a recap for the product team and stakeholders — features, fixes, decisions, and plan details |
+
 **Skills:**
 
 | Skill | Activates when you ask to... |
@@ -698,6 +721,7 @@ Publish work as live claude.ai artifacts. Every skill runs a blocking `security-
 | `plan-artifact` | Publish or share a plan — republishes to the same URL across sessions via `artifact-url:` frontmatter so viewers watch steps check off live |
 | `prompt-artifact` | Publish or share a prompt saved by `plan-agent:prompt` — one prompt, or the whole filterable library with `--library` |
 | `session-artifact` | Share a session recap — extracts transcript turns into Summary, Decisions, Learnings, and Files touched |
+| `teach-artifact` | Publish an explainer — teaches how the system behind a session or a pull request actually works, rather than recapping what changed |
 
 ```bash
 claude --plugin-dir ./kit/plugins/artifact-tools
@@ -760,24 +784,24 @@ claude --plugin-dir ./kit/plugins/team-defaults
 
 | Plugin | Version | Category | Components |
 |--------|---------|----------|------------|
-| [memory-tools](./kit/plugins/memory-tools/README.md) | 4.1.0 | development | 2 skills |
-| [code-review](./kit/plugins/code-review/README.md) | 3.3.3 | development | 1 command, 1 skill, 1 agent |
+| [memory-tools](./kit/plugins/memory-tools/README.md) | 4.1.1 | development | 2 skills |
+| [code-review](./kit/plugins/code-review/README.md) | 3.3.4 | development | 1 command, 1 skill, 1 agent |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.5.2 | security | 1 skill |
-| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.5.1 | development | 1 command, 4 skills, 1 hook |
-| [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.5.0 | testing | 5 skills |
-| [git-agent](./kit/plugins/git-agent/README.md) | 4.19.0 | development | 5 commands, 8 skills, 5 agents, 3 hooks |
-| [settings-sync](./kit/plugins/settings-sync/README.md) | 1.1.1 | productivity | 2 skills |
-| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.23.0 | productivity | 1 command, 17 skills |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 9.4.1 | productivity | 9 commands, 16 skills, 12 agents, 2 hooks |
-| [team-defaults](./kit/plugins/team-defaults/README.md) | 0.2.1 | productivity | 1 skill, 2 agents |
+| [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.5.2 | development | 1 command, 4 skills, 1 hook |
+| [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.5.2 | testing | 5 skills |
+| [git-agent](./kit/plugins/git-agent/README.md) | 4.19.2 | development | 5 commands, 8 skills, 5 agents, 3 hooks |
+| [settings-sync](./kit/plugins/settings-sync/README.md) | 1.1.4 | productivity | 2 skills |
+| [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.23.4 | productivity | 1 command, 17 skills |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 9.4.7 | productivity | 9 commands, 16 skills, 12 agents, 2 hooks |
+| [team-defaults](./kit/plugins/team-defaults/README.md) | 0.2.2 | productivity | 1 skill, 2 agents |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.12.0 | development | 3 commands, 5 skills |
-| [content-tools](./kit/plugins/content-tools/README.md) | 1.1.0 | documentation | 1 skill |
+| [content-tools](./kit/plugins/content-tools/README.md) | 1.1.1 | documentation | 1 skill |
 
 ---
 
 ## Removed Plugins
 
-The following plugins have been removed from the `agentics-kit` marketplace as of v4.0.0. They **will not appear** when browsing or installing from the marketplace — `/plugin install` will not find them.
+The following plugins have been removed from the `agentics-kit` marketplace — six at v4.0.0, one absorbed into `git-agent`, and two folded into `plan-agent` since. They **will not appear** when browsing or installing from the marketplace — `/plugin install` will not find them.
 
 Their source directories have been removed from the repository. De-registering a plugin stops distribution but not loading — a directory left under `kit/plugins/` still loads via `--plugin-dir`, collides by name with a live plugin, and consumes skill-description budget in every session. Git history is the reference, so the source is recoverable:
 
@@ -790,6 +814,8 @@ git checkout <commit>^ -- kit/plugins/<plugin-name>
 
 | Plugin | Last Version | Removed | Reason | Replacement |
 |--------|-------------|---------|--------|-------------|
+| `product-plans` | 3.4.13 | 2026-08-02 | Folded into `plan-agent` 8.2.0 — its PM, security, and frontend lenses now ship as `plan-reviewer-product`, `-security`, and `-frontend` inside `review-plan` | `/plugin install plan-agent@agentics-kit` then `/plan-agent:review-plan` |
+| `plan-interview` | 3.0.0 | 2026-07-17 | Merged into `plan-agent` 4.0.0 — `documenting-plans`, `markdown-to-html`, `plan-status`, `plan-maintenance`, `deep-grill`, and the ExitPlanMode nudge all carried over | `/plugin install plan-agent@agentics-kit` |
 | `issue-agent` | 0.2.4 | 2026-06-16 | Absorbed into `git-agent` v3.11.0 to reduce plugin count | `/plugin install git-agent@agentics-kit` then `/git-agent:create-issue` |
 | `agent-creator` | 1.1.2 | 2026-05-29 | Redundant with `agentic-plugin-dev` | No replacement — removed from the marketplace |
 | `agent-reviewer` | 1.0.2 | 2026-05-29 | Overlaps with `skill-reviewer` | `/plugin install skill-reviewer@agentics-kit` |
@@ -931,31 +957,53 @@ Detailed patterns live in `.claude/rules/`:
 | File | Scope | Content |
 |------|-------|---------|
 | `plugin-patterns.md` | `kit/plugins/**` | Command/skill patterns, progressive disclosure, pitfalls |
-| `marketplace.md` | global | Categories, tagging, versioning, registration |
+| `marketplace.md` | `kit/plugins/**`, `.claude-plugin/**` | Categories, tagging, versioning, registration |
 | `testing.md` | `tests/**` | Test fixture guidelines |
 | `plan-hygiene.md` | `**/plans/**` | Pre-commit plan file rename checks |
-| `skill-authoring.md` | global | Skill description format, `allowed-tools`, trigger phrases |
+| `skill-authoring.md` | `kit/plugins/**/skills/**` | Skill description format, `allowed-tools`, trigger phrases |
+| `removed-plugins.md` | always (unscoped) | Registry of de-registered plugins; gates re-adding one behind explicit confirmation |
 
 ### Project Hooks (Auto-Active)
 
-Three hooks run automatically after every file Write/Edit:
+Two hooks run at `SessionStart`:
+
+1. **Merge-driver registration** — runs `scripts/setup-merge-driver.sh` so `marketplace.json` and gallery `index.html` conflicts auto-resolve
+2. **Base-branch refresh** — pulls or fetches the default branch so the session starts from current `origin`
+
+Three more run after every file Write/Edit:
 
 1. **JSON validation** — validates `marketplace.json` syntax
 2. **Uncommitted plan warning** — alerts if plan files are unstaged alongside plugin changes
-3. **Version guard** — checks that the plugin version was bumped when `marketplace.json` was modified
+3. **Version guard** — when `marketplace.json` is dirty, runs `scripts/check-plugin-versions.mjs` to confirm every touched plugin's version exceeds `origin/main`
+
+The version guard compares **committed** state (`origin/main...HEAD`), so it
+catches an un-bumped commit on the next Write/Edit after you commit, not at the
+moment you edit. It does not fetch, so it is only as current as your last
+`git fetch`. Before pushing, run it directly against a fresh base:
+
+```bash
+git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs
+```
 
 ### Running Tests
 
+`tests/run-all.sh` is the single entry point — it discovers every
+`tests/**/test-*.sh`, `tests/**/test-*.mjs`, and `tests/**/*.test.mjs` file
+automatically, so a new test needs no wiring. A short skip list at the top of the
+script names the four suites that need a CLI, a deployment, or a built `dist/`,
+each with its reason.
+
 ```bash
-# Run the demo test suite
-bash tests/demo/run.sh
+# Run everything
+bash tests/run-all.sh
+```
 
-# Run the docs/pages smoke tests
-bash tests/pages/test-docs-hub.sh
-bash tests/pages/test-root-redirect.sh
+Individual suites still run on their own:
 
-# Check fixture validity
-ls tests/fixtures/valid-plugin/
+```bash
+bash tests/demo/run.sh                    # demo suite
+bash tests/pages/test-docs-hub.sh         # docs hub smoke test
+bash tests/plugins/test-agent-frontmatter.sh
 ```
 
 ### Browsing Docs Online
@@ -1029,6 +1077,9 @@ GitHub Actions workflows:
 | `claude-code-review.yml` | PR opened / synchronized / reopened | Automated code review as PR comments |
 | `deploy-pages.yml` | Push to `main` (docs changes) | Deploy `docs/` to GitHub Pages |
 | `update-readme.yml` | Every Sunday at 00:00 UTC | Keep the README in sync with `marketplace.json` |
+| `check-plugin-versions.yml` | Pull request | Fail the PR if a touched plugin's `marketplace.json` version does not exceed the base branch, and run the test suite |
+| `publish-dist.yml` | Daily + manual dispatch | Build `dist/` and push it to the `shawn-sandy/agentics-kit` distribution repo |
+| `regen-plans.yml` | Push to `main` (plan changes) | Re-render plan HTML and rebuild the plans gallery index |
 
 To trigger Claude in any issue or PR comment, mention `@claude`:
 

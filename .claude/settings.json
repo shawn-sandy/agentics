@@ -74,7 +74,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "git status --porcelain .claude-plugin/marketplace.json 2>/dev/null | grep -q . && test -f scripts/check-version-bump.sh && VERSION_GUARD_NO_FETCH=1 bash scripts/check-version-bump.sh 2>&1 || true"
+            "command": "git status --porcelain .claude-plugin/marketplace.json 2>/dev/null | grep -q . && node scripts/check-plugin-versions.mjs 2>&1 || true"
           }
         ]
       }
