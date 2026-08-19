@@ -242,10 +242,13 @@ The skill spawns the following reviewers:
   - Testability — test coverage, test specificity, objective-verification test, acceptance criteria verifiability
   - Risk — breaking changes, data safety, concurrency, dependency hazards, rollback feasibility
   - Conventions — naming, file organization, code style, dependency organization, testing patterns
+  - Product — user problem, scope sizing, success metrics, load-bearing assumptions, rollout readiness
+  - Security — authn/authz, data handling, input validation at trust boundaries, secrets, dependency risk
 
 - **UI-conditional reviewers** (spawned only when UI signals detected):
   - UX — user flows, error states, loading states, interaction clarity, responsive design, discoverability
   - Accessibility — WCAG 2.1 AA compliance, keyboard navigation, screen reader support, semantic HTML, motion
+  - Frontend — component boundaries, state placement, render cost, design-system alignment
 
 **UI signal detection:** Scans the plan HTML for references to React, Vue, Svelte, `.tsx`/`.jsx`/`.css`/`.html`, `className`, `style`, Tailwind, buttons, modals, forms, dialogs, dropdowns, pages, components. If 2+ signals or UI-specific keywords are found, the UX, accessibility, and frontend reviewers are spawned.
 

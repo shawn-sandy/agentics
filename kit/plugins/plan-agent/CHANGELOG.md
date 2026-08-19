@@ -1,5 +1,19 @@
 # Changelog
 
+## 9.4.7 — document the product, security, and frontend reviewers (2026-08-19)
+
+### Fixed
+
+- **The `review-plan` reviewer roster in README.md listed seven of ten
+  reviewers.** `product` and `security` (core) and `frontend` (UI-conditional)
+  joined the team in 8.2.0 when `product-plans` was folded in, but the roster
+  list under "The skill spawns the following reviewers" was never updated.
+  Every other line in the file — the overview, the skill section, the workflow
+  steps, the sample output — already said ten reviewers, and the UI-signal
+  paragraph directly below the list named `frontend` as one of the three
+  spawned. The list was the only place still describing the pre-8.2.0 team.
+  Docs only; no behavior change.
+
 
 ## 9.4.6 — build-feature: research fallback, Risks at Tier 1, verified precedents (2026-08-18)
 
