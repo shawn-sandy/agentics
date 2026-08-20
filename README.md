@@ -490,7 +490,7 @@ claude --plugin-dir ./kit/plugins/plan-agent
 
 #### `git-agent`
 
-Automated git workflow — create branches, commit with conventional messages, create PRs, and merge them once they are green. Auto-links plan issue references in PR descriptions.
+Automated git workflow — create branches, commit with conventional messages, create PRs, and merge them once they are green. Auto-links plan issue references in PR descriptions. By default, every PR-opening flow (`pr-agent`, `ship`, and their background agents) runs an adversarial review of `git diff <base>...HEAD` against a six-point checklist before the PR is created; `ship --no-review` skips this review.
 
 **Commands:**
 
@@ -639,7 +639,7 @@ claude --plugin-dir ./kit/plugins/skill-reviewer
 
 #### `memory-tools`
 
-Audit and optimize CLAUDE.md project memory files against Claude Code best practices.
+Audit and reshape Claude Code project memory — CLAUDE.md files, path-scoped rule files in `.claude/rules/`, and usage-insights follow-through.
 
 **Skills** (activate automatically):
 
@@ -647,12 +647,14 @@ Audit and optimize CLAUDE.md project memory files against Claude Code best pract
 |-------|------------------------------|
 | `agentic-memory-management` | Audit, optimize, or diagnose a CLAUDE.md or project memory file — also activates when Claude appears to be ignoring project instructions |
 | `path-rules-advisor` | Create path-specific rules, add rules for file types or directories, or organize Claude rules in `.claude/rules/` |
+| `implementing-insights` | Implement the findings from a usage-insights report — triages every recommendation against existing config, discovers target repos from `~/.claude/projects/`, and implements only the genuinely open items, one PR per repo change |
 
 ```bash
 claude --plugin-dir ./kit/plugins/memory-tools
 # "Audit my CLAUDE.md file"
 # "Claude keeps ignoring my instructions — what's wrong?"
 # "Create path-specific rules for my src/ directory"
+# "Implement the findings from this insights report"
 ```
 
 [View Documentation](./kit/plugins/memory-tools/README.md)
