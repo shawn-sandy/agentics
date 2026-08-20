@@ -1,5 +1,24 @@
 # Changelog
 
+## v4.3.0 — 2026-08-20 — implementing-insights discovers repos on its own
+
+### Changed
+
+- **`implementing-insights` now resolves target repos discover-first, ask-last.**
+  Step 3 previously asked the user for a path the moment a repo named in a
+  finding was not immediately found. It now builds a repo inventory from
+  `~/.claude/projects/` (the same usage data the insights report is generated
+  from, so every repo the report can name has a slug there), filters out
+  session-worktree slugs, verifies each match is a real git checkout, and only
+  falls back to asking the user to point at their projects directory when a
+  repo still cannot be resolved. No machine-specific layout is assumed — the
+  inventory is rebuilt from scratch on every run, so the skill works for any
+  plugin user, not just this machine.
+- **Workflow-shaped items fall back to `~/.claude/` for users without their own
+  plugin repo.** The layer-placement step assumed every user maintains a
+  personal plugin repo; when none exists, those items now route to the
+  machine-wide `~/.claude/` layer as the next-best fit.
+
 ## v4.2.0 — 2026-08-19 — usage-insights follow-through
 
 ### Added
