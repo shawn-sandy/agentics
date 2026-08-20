@@ -20,7 +20,7 @@ Turns a committed feature idea into a team feature doc that splits into sub-feat
 - **Command** — `/plan-agent:build-feature <feature idea> [--dir <path>] [--tier 0|1|2]`
 - **Say it instead** — "write a feature doc for bulk export and break it into plans"
 - **What happens** — Frames the feature, confirms the ask, researches web and codebase in parallel, then writes `docs/features/<slug>.md` in place each round; at convergence it also writes one saved prompt per sub-feature under the prompts directory.
-- **Watch out** — Tier 0 (already plan-sized) writes no artifact at all and just hands you the `/plan-agent:implementation-plan` command; the skill never writes code or the plans themselves.
+- **Watch out** — Tier 0 (already plan-sized) writes no artifact at all and just hands you the `/plan-agent:implementation-plan` command; the skill never writes code or the plans themselves, even when the request bundles the feature doc with building it.
 
 ## build-fleet
 
@@ -38,7 +38,7 @@ Turns a vague idea into a decision-complete proposal that answers should-we.
 - **Command** — `/plan-agent:build-proposal <idea> [--dir <path>] [--tier 0|1|2]`
 - **Say it instead** — "should we adopt a DESIGN.md convention? think it through with me"
 - **What happens** — Runs a human-steered loop — frame, confirm, research, split facts from decisions, resolve them with you — converging on one living saved prompt at `<prompts-dir>/proposal-<slug>.md` that is copy-pasteable into the planning layer.
-- **Watch out** — Tier 0 ideas write no file by design (downstream `build` depends on that), and the skill stops at the proposal: it never writes code or the implementation plan.
+- **Watch out** — Tier 0 ideas write no file by design (downstream `build` depends on that), and the skill stops at the proposal even when the request also asks to build: it never writes code or the implementation plan without your explicit go-ahead.
 
 ## deep-grill
 
@@ -74,7 +74,7 @@ Generates a self-contained HTML implementation plan from an objective, issue, or
 - **Command** — `/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--tdd|--no-tdd] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]`
 - **Say it instead** — "create an HTML plan for adding a dark mode toggle"
 - **What happens** — Clarifies, aligns, and interviews (unless flagged off), authors a small markdown spec in the plans directory, renders it with `plan-agent-render`, and sends both the `.md` and `.html` back via `SendUserFile`.
-- **Watch out** — Never hand-edit the rendered HTML — every change is a spec edit plus a re-render — and the plan is the deliverable: implementation is a separate, user-initiated step.
+- **Watch out** — Never hand-edit the rendered HTML — every change is a spec edit plus a re-render — and the plan is the deliverable: even a request that bundles planning with building ("plan X and build it") ends at the delivered plan; implementation waits for your explicit approval (Step 8's `Implement now`).
 
 ## markdown-to-html
 
