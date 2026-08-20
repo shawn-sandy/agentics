@@ -99,9 +99,9 @@ Report the commit hash and message on success.
 
 **If a pre-commit hook fails:** report the hook's output verbatim and **STOP**. Do not retry. Do not use `--no-verify`. Do not modify the staged files. Let the parent session surface the failure to the user.
 
-### Step 4.5: Self-Review Before Push
+### Step 4.5: Adversarial Self-Review Before Push
 
-Always runs. There is no user to prompt in a background ship, so there is no opt-out.
+Always runs. There is no user to prompt in a background ship, so there is no opt-out. This agent cannot spawn subagents (`tools` has no Agent), so the review is an inline re-read of the full diff — single pass, one re-read, never a second.
 
 Resolve `<base>` using the procedure in **Step 7: Detect Base Branch**, then run:
 
@@ -111,16 +111,20 @@ git diff <base>...HEAD
 
 If no base branch resolves, note "Skipping self-review: cannot resolve a base branch." in the final report and continue to Step 5.
 
-Critique the diff as a hostile reviewer would. Check specifically for:
+Re-read the diff as a hostile reviewer with no memory of the implementation. Report only defects you can prove with file:line evidence. Check specifically for:
 
-1. **Dropped accessibility attributes** — removed `aria-*`, `role`, `alt`, or live-region markup that the previous version had.
-2. **Double-escaping or encoding changes** in generated output — HTML entities escaped twice, or raw text now passing through an escape it did not before.
-3. **Edge cases in string parsing or truncation** — off-by-one slices, splitting on a character that occurs inside the data (e.g. hyphens), unhandled empty input.
-4. **Responsive or desktop regressions** in image or layout changes — a breakpoint, `srcset`, width, or height silently changed or halved.
+1. **No-op edits** — changes that do not actually alter behavior (CSS losing to specificity, config that silently no-ops when a dependency is missing).
+2. **Vacuous test assertions** — any test that would still pass with the change reverted.
+3. **Regressions introduced by the change itself** — behavior the previous version had that this diff silently drops.
+4. **Unsafe auth/role/key lookups.**
+5. **Secrets or tokens in the diff.**
+6. **Accessibility regressions** in CSS/UI changes — removed `aria-*`, `role`, `alt`, or live-region markup, contrast or focus styles lost.
 
-**This step is report-only. Do not fix anything.** You run unattended with no user watching, and `disallowedTools` denies `Write`, `Edit`, and `NotebookEdit` by design — a background ship agent must never rewrite source. Do not attempt to edit files, and do not route around the restriction with `Bash` (no `sed -i`, no heredoc rewrites, no `git apply`). If a finding warrants a code change, that is the parent session's call, not yours.
+**Exception — check 5:** a proven secret or token is not yet pushed at this step. Report it verbatim to the parent, do not push, do not create a PR, and **STOP**.
 
-This step never blocks the ship. It reports; the ship proceeds either way.
+**Otherwise this step is report-only. Do not fix anything.** You run unattended with no user watching, and `disallowedTools` denies `Write`, `Edit`, and `NotebookEdit` by design — a background ship agent must never rewrite source. Do not attempt to edit files, and do not route around the restriction with `Bash` (no `sed -i`, no heredoc rewrites, no `git apply`). If a finding warrants a code change, that is the parent session's call, not yours.
+
+Other than the check-5 secret stop, this step never blocks the ship. It reports; the ship proceeds either way.
 
 **Report every finding in the final summary**, each with file, line, and what breaks. The parent session cannot see this step's reasoning, so an unreported finding is a silently shipped regression. If there are none, report "Self-review: no findings."
 
@@ -219,6 +223,10 @@ Closes <url>
 
 Omit the `## Linked Issues` section entirely if Step 7.5 found no issue references.
 
+Add a `## Review Notes` section — one line per Step 4.5 finding, with
+file:line — only when the self-review reported findings other than a secret;
+omit it entirely otherwise.
+
 For GitHub, run:
 
 ```
@@ -231,7 +239,7 @@ For GitLab, run:
 glab mr create --title "<title>" --description "<body>"
 ```
 
-Report the PR/MR URL, followed by the Step 4.5 self-review findings — what was fixed and what remains outstanding, or "Self-review: no findings." — and **STOP**.
+Report the PR/MR URL, followed by the Step 4.5 self-review findings — each with file:line, or "Self-review: no findings." — and **STOP**.
 
 ---
 

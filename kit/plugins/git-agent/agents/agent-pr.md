@@ -109,6 +109,31 @@ expansion`, before permission rules are consulted.
 
 Each line of output is a unique issue URL. If any URLs are returned, include a `## Linked Issues` section in the PR body (Step 5) with one `Closes <url>` line per URL. If the script produces no output, skip this section entirely.
 
+### Step 4.7: Adversarial Pre-PR Review (inline, report-only)
+
+This agent cannot spawn subagents (`tools` has no Agent) and must never edit
+source (`disallowedTools` denies `Write`/`Edit` — do not route around it with
+`Bash`). So the review is an inline re-read, and every finding is reported,
+never fixed.
+
+Run `git diff <base>...HEAD` and re-read the full diff as a hostile reviewer
+with no memory of the implementation. Report only defects you can prove with
+file:line evidence. Check specifically for:
+
+1. **No-op edits** — changes that do not actually alter behavior (CSS losing to specificity, config that silently no-ops when a dependency is missing).
+2. **Vacuous test assertions** — any test that would still pass with the change reverted.
+3. **Regressions introduced by the change itself.**
+4. **Unsafe auth/role/key lookups.**
+5. **Secrets or tokens in the diff.**
+6. **Accessibility regressions** in CSS/UI changes.
+
+**Single pass — one re-read, never a second.** Findings go in the PR body
+(Step 5) under a `## Review Notes` section — one line each, with file:line —
+and again in the final report, so the parent session decides what to fix.
+**Exception:** a proven secret or token (check 5) is already on the remote from
+Step 4 — report it verbatim to the parent, never name it in a PR body, do not
+create the PR, and **STOP**. No findings → no section.
+
 ### Step 5: Create Pull Request
 
 Run:
@@ -137,7 +162,11 @@ Closes <url>
 
 Omit the `## Linked Issues` section entirely if Step 4.5 found no issue references.
 
-Report the PR URL returned by `gh pr create` and **STOP**.
+Add a `## Review Notes` section — one line per finding, with file:line — only
+when Step 4.7 reported findings; omit it entirely otherwise.
+
+Report the PR URL returned by `gh pr create`, followed by the Step 4.7
+findings (or "Pre-PR review: no findings."), and **STOP**.
 
 ---
 

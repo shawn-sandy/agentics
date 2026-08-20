@@ -87,6 +87,9 @@ an unchecked box is honest, a false checkmark is not.
 
 Omit the `## Linked Issues` section entirely if Step 7.5 found no issue references.
 
+Add a `## Review Notes` section — one line per finding — only when the
+Step 4.5 self-review left unconfirmed findings; omit it entirely otherwise.
+
 **Worked example** — the shape and honesty bar to match.
 
 Title: `fix(gallery): escape HTML in card titles`

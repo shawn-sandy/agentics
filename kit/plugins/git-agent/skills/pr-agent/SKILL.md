@@ -1,16 +1,16 @@
 ---
 name: pr-agent
 description: "Pushes the branch and creates a pull request. Supports GitHub and GitLab via gh and glab with auto-filled title and body. Use when the user asks to create a PR or open a pull request."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, Agent, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 model: sonnet
 ---
 
-Push the current branch if needed and create a GitHub pull request. This skill does not commit changes or run tests. Follow these steps in strict order. **STOP immediately after step 5.**
+Push the current branch if needed and create a GitHub pull request. This skill does not commit your working-tree changes or run tests (the sole commit it ever makes is Step 4.7's review-fix commit). Follow these steps in strict order. **STOP immediately after step 5.**
 
 ## When not to use
 
-Does not commit changes — use commit-agent first.
+Does not commit your changes — use commit-agent first.
 
 ## Step 0: Exit Plan Mode
 
@@ -89,6 +89,34 @@ For each file listed, use `Grep` to search for the pattern `<meta name="plan-iss
 
 If any URLs are found, include a `## Linked Issues` section in the PR body (Step 5) with one `Closes <url>` line per unique URL. If no plan files are found or none contain issue references, skip this section entirely.
 
+## Step 4.7: Adversarial Pre-PR Review
+
+Mandatory — this is the last gate before the PR exists, and the author of a
+diff is the worst-placed reviewer of it.
+
+Spawn a fresh-context subagent with the `Agent` tool — `subagent_type:
+code-review:agent-code-reviewer` when available, otherwise `general-purpose` —
+substituting the Step 2 `<base>` literally (the subagent starts with no
+context):
+
+> Review the output of `git diff <base>...HEAD` as a hostile reviewer with no
+> memory of the implementation. Report only defects you can prove with
+> file:line evidence. Check specifically for: (a) no-op edits — changes that do
+> not actually alter behavior (CSS losing to specificity, config that silently
+> no-ops when a dependency is missing); (b) vacuous test assertions — any test
+> that would still pass with the change reverted; (c) regressions introduced by
+> the change itself; (d) unsafe auth/role/key lookups; (e) secrets or tokens in
+> the diff; (f) accessibility regressions in CSS/UI changes.
+
+**Single pass — never loop the review.** Confirm each finding against the
+actual source, fix only the confirmed ones, commit them as one
+`fix(<scope>): <description>` commit (Step 4 already pushed, so add — never
+amend), and `git push` again. A finding you cannot confirm goes in the PR body
+(Step 5) under `## Review Notes` instead of blocking. **Exception:** a
+confirmed secret or token (check e) already reached the remote in Step 4 —
+report it verbatim, never name it in the PR body, and **STOP**: it needs
+rotation, not a follow-up commit. No findings → proceed.
+
 ## Step 5: Create Pull Request
 
 Run:
@@ -129,6 +157,9 @@ is unchanged — never invent a marker. A verification that silently did not
 happen reads to a reviewer exactly like one that passed.
 
 Omit the `## Linked Issues` section entirely if Step 4.5 found no issue references.
+
+Add a `## Review Notes` section — one line per finding — only when Step 4.7
+left unconfirmed findings; omit it entirely otherwise.
 
 Output the PR URL returned by `gh pr create` and **STOP**.
 

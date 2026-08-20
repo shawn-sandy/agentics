@@ -75,8 +75,10 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "5. All four regression checks are present (in references/self-review.md)..."
-for term in "accessibility" "escaping" "truncation" "Responsive"; do
+echo "5. All six adversarial checks are present (in references/self-review.md)..."
+# The v4.19.3 checklist. Sourced from the usage analysis that motivated the
+# adversarial review: these are the defect classes PR bots actually caught.
+for term in "no-op edits" "vacuous test assertions" "regressions" "auth/role/key" "secrets or tokens" "accessibility"; do
   if [ -f "$SELF_REVIEW" ] && grep -qi "$term" "$SELF_REVIEW"; then
     echo "  PASS ($term)"
   else
@@ -84,6 +86,16 @@ for term in "accessibility" "escaping" "truncation" "Responsive"; do
     FAILURES=$((FAILURES + 1))
   fi
 done
+
+echo "5.5. The review runs in a fresh context (subagent dispatch)..."
+# One-line phrases only: grep -F cannot match across a wrap (see check 5's note
+# in test-skill-split-git-social.sh).
+if [ -f "$SELF_REVIEW" ] && grep -qF "code-review:agent-code-reviewer" "$SELF_REVIEW" && grep -qi "fresh context" "$SELF_REVIEW"; then
+  echo "  PASS"
+else
+  echo "  FAIL: references/self-review.md must dispatch a fresh-context subagent (code-review:agent-code-reviewer, else general-purpose)"
+  FAILURES=$((FAILURES + 1))
+fi
 
 echo "6. Fixes fold into the Step 4 commit via amend (in references/self-review.md)..."
 if [ -f "$SELF_REVIEW" ] && grep -q "commit --amend --no-edit" "$SELF_REVIEW"; then
@@ -93,11 +105,11 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "7. Re-check is bounded (no unbounded loop) (in references/self-review.md)..."
-if [ -f "$SELF_REVIEW" ] && grep -q "Do not loop a third time" "$SELF_REVIEW"; then
+echo "7. Review is single-pass (no re-review loop) (in references/self-review.md)..."
+if [ -f "$SELF_REVIEW" ] && grep -q "never dispatch a second review" "$SELF_REVIEW"; then
   echo "  PASS"
 else
-  echo "  FAIL: no loop bound stated in references/self-review.md"
+  echo "  FAIL: no single-pass bound stated in references/self-review.md"
   FAILURES=$((FAILURES + 1))
 fi
 
@@ -165,8 +177,8 @@ else
   echo "  PASS"
 fi
 
-echo "15. All four regression checks are present..."
-for term in "accessibility" "escaping" "truncation" "Responsive"; do
+echo "15. All six adversarial checks are present..."
+for term in "no-op edits" "vacuous test assertions" "regressions" "auth/role/key" "secrets or tokens" "accessibility"; do
   if grep -A30 "^### Step 4\.5:" "$AGENT" | grep -qi "$term"; then
     echo "  PASS ($term)"
   else
