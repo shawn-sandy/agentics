@@ -1,5 +1,24 @@
 # Changelog
 
+## 9.4.8 — plan-authoring skills name the mixed-request gate (2026-08-19)
+
+### Changed
+
+- **`implementation-plan`, `build-proposal`, and `build-feature` each gain a
+  mixed-request bullet in their existing Scope Constraint sections.** Usage
+  analysis found Claude repeatedly drifting into implementation mid-planning,
+  forcing the user to interrupt with "don't build anything, write an
+  implementation plan first" — a request like "plan X and build it" was being
+  read as one instruction. Each section now states it directly: a request
+  that bundles planning with building still ends at the delivered
+  plan/proposal/feature doc — deliver it, stop, and wait for the user's
+  explicit approval (e.g. `implementation-plan` Step 8's `Implement now`)
+  before any implementation begins; the original request is never that
+  approval. The constraint already lived in global CLAUDE.md rules, but it
+  belongs inside the plan-authoring skills so it loads exactly when planning
+  starts. Prose only — no workflow, renderer, or hand-off seam change; skills
+  that execute already-approved plans (`build`, `build-fleet`) are untouched.
+
 ## 9.4.7 — document the product, security, and frontend reviewers (2026-08-19)
 
 ### Fixed

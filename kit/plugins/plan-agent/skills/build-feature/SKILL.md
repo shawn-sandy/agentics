@@ -32,6 +32,10 @@ implement, and it does not generate the plans.**
 - Every sub-feature hands off through its paste-ready prompt — plan
   generation stays a user-initiated step, exactly like `build-proposal`'s
   hand-off seam.
+- A mixed request ("spec this feature and build it") still ends at the
+  feature doc: deliver it, stop, and wait for the user's explicit approval
+  before any plan is generated or any implementation begins — the original
+  request is never that approval.
 
 ## Invocation & Arguments
 
