@@ -182,6 +182,11 @@ Echo the resolved objective and effective flags after Step 0.
 - The plan is the deliverable. Implementation is a separate, user-initiated
   step: Step 8's `Implement now` hands off to the `build` skill, which owns
   every source-file write. This constraint is never lifted here.
+- A mixed request does not lift it either. "Plan X and build it" — or any
+  request that bundles planning with building — still ends at the delivered
+  plan: author it, stop, and wait for the user's explicit approval (Step 8's
+  `Implement now`, or an equivalent instruction after delivery) before any
+  implementation begins. The original request is never that approval.
 
 ## What the renderer derives (never author these)
 

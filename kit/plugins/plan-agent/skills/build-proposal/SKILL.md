@@ -32,6 +32,9 @@ author the execution plan.**
 - At convergence the skill **stops** and hands off to the planning layer
   (`/plan-agent:implementation-plan`). The seam: build-proposal owns
   *should-we + what*; planning owns *how*.
+- A mixed request ("look into X and build it") still ends at the proposal:
+  deliver it, stop, and wait for the user's explicit go-ahead before anything
+  is implemented — the original request is never that approval.
 
 If the idea sounds like "fix X" or "build Y now," it is likely Tier 0 — answer
 or route it directly (see the triage), do not spin up the loop.
