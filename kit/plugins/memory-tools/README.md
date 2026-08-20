@@ -100,7 +100,7 @@ Which of these insights recommendations are already covered by my config?
 
 1. Parses the report (file path, artifact URL, or pasted content) into numbered recommendation items
 2. Triages every item against existing config (`~/.claude/`, installed plugins, each target repo) into three buckets: already implemented (cited), conflicts with an existing rule (rejected, cited), or genuinely open
-3. Places each open item at the right config layer — plugin (workflow-shaped), `~/.claude/` (machine-wide), or the target repo (repo-specific)
+3. Places each open item at the right config layer — plugin (workflow-shaped; falls back to `~/.claude/` when the user has no plugin repo), `~/.claude/` (machine-wide), or the target repo (repo-specific), resolving repos discover-first from `~/.claude/projects/` and asking for a projects directory only when discovery fails
 4. Confirms scope, then implements one item per change — one PR per repo change, worktree isolation when parallel agents share a repo
 5. Cleans up worktrees and merged branches, then reports a verified outcome ledger
 
@@ -143,7 +143,7 @@ This is a skills-only plugin — no commands or agents.
 
 ## Version History
 
-Current version: **4.2.0**
+Current version: **4.3.0**
 
 ### Breaking Changes
 

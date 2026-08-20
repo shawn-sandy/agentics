@@ -59,15 +59,29 @@ This is the adaptive step. For each open item, decide the layer:
 
 - **Workflow-shaped behavior** (how PRs, plans, reviews, or ships happen) → the user's own
   plugins — versioned and synced to every machine. Follow that repo's conventions: bump the
-  plugin version, update its CHANGELOG and `marketplace.json`.
+  plugin version, update its CHANGELOG and `marketplace.json`. If the user has no plugin
+  repo of their own, route these to `~/.claude/` instead — machine-wide is the next-best fit.
 - **Machine-wide behavior** (rules, hooks, settings that apply everywhere) → `~/.claude/`
   (CLAUDE.md, `rules/`, `settings.json`). This directory is not a git repo — edit directly,
   no PR.
 - **Repo-specific conventions** (naming, migrations, project hooks) → that repo's
   `CLAUDE.md` or `.claude/settings.json`, via branch and PR.
 
-Resolve each target repo to a local checkout. If a repo named in a finding cannot be found
-locally, ask the user for its path rather than cloning or skipping silently.
+Resolve each target repo to a local checkout — discover first, ask last:
+
+1. Build a repo inventory once per run from `~/.claude/projects/`. Each directory name
+   there is a path slug (non-alphanumeric characters encoded as `-`) of a project the user
+   has opened Claude Code in — and the insights report is generated from this same usage data, so every repo it
+   can name has a slug here. Skip slugs containing `-claude-worktrees-`; those are session
+   worktrees, not repos.
+2. Match each open item's repo to the inventory by name (a repo named `foo-bar` appears as
+   a slug ending in `-foo-bar`). Confirm the decoded path exists and is a git checkout
+   before using it. If a recommendation names no repo, match it by the report's cited
+   per-project evidence — never guess a target from the recommendation text alone.
+3. If a repo still cannot be resolved, ask the user to point at the directory that holds
+   their repos, scan it one level deep for `.git`, and add the results to the inventory
+   for the rest of the run. Never clone, never skip an item silently, and never assume a
+   machine-specific layout — the inventory is rebuilt from scratch on every run.
 
 Constraints on specific item types:
 
@@ -134,5 +148,6 @@ citations), items rejected (with the conflicting rule), and any cleanup performe
 
 - Report or artifact unreadable → ask the user; do not proceed on a partial parse.
 - `gh` unauthenticated or a dirty working tree → report verbatim and stop.
-- A target repo missing locally → ask for the path; never clone unprompted.
+- A target repo unresolved after Step 3 discovery → ask the user to point at their
+  projects directory; never clone unprompted.
 - CI red → read the failure first (`gh run view --log-failed`) before treating it as a defect.
