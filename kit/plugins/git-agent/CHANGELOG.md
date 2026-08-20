@@ -1,5 +1,37 @@
 # Changelog — git-agent
 
+## v4.19.3 — 2026-08-19 — adversarial pre-PR review in every PR-opening flow
+
+### Changed
+
+- **Every flow that opens a PR now runs an adversarial review of
+  `git diff <base>...HEAD` before `gh pr create`.** Usage analysis found the
+  #1 friction is first implementations shipping with real defects — no-op
+  edits, vacuous test assertions, self-introduced regressions, unsafe auth
+  lookups — that only PR review bots catch, at 2–6 review rounds per PR. The
+  review is single-pass and shares one six-point checklist: (a) no-op edits,
+  (b) vacuous test assertions that survive reverting the change, (c)
+  regressions the change itself introduces, (d) unsafe auth/role/key lookups,
+  (e) secrets or tokens in the diff, (f) accessibility regressions in CSS/UI
+  changes.
+- **The interactive skills review in a fresh context.** `pr-agent` (new
+  Step 4.7) and `ship` (Step 4.5, rewritten `references/self-review.md`) spawn
+  a subagent via the `Agent` tool — `code-review:agent-code-reviewer` when
+  available, `general-purpose` otherwise — because the author of a diff is the
+  worst-placed reviewer of it. Confirmed findings are fixed and folded in per
+  each skill's commit conventions (`ship` amends pre-push; `pr-agent` adds a
+  `fix:` commit post-push); unconfirmed findings land in the PR body's
+  `## Review Notes` instead of blocking. `ship-autonomous` opens its PR by
+  invoking `pr-agent`, so it inherits Step 4.7 — its Step 4 now says so
+  rather than duplicating the review (its core sits at the split test's
+  600-word ceiling, and one review per PR is the point).
+- **The background agents review inline.** `agent-pr` (new Step 4.7) and
+  `agent-ship` (Step 4.5 upgraded from the old four-check list) cannot spawn
+  subagents or edit source, so they re-read the full diff cold, report every
+  finding with file:line in the PR body and final report, and never fix. One
+  blocking exception everywhere: a confirmed secret in the diff stops the flow
+  and is never named in a PR body.
+
 ## v4.19.2 — 2026-08-17 — worked examples, and a fallback that keeps the draft
 
 ### Changed

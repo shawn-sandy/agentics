@@ -1,7 +1,7 @@
 ---
 name: ship
 description: "Ships changes by staging, committing, pushing, and opening a PR. Supports GitHub and GitLab in a single guided flow. Use when the user asks to ship changes or commit and create a PR."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Edit, Grep, Glob, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Edit, Grep, Glob, Agent, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---
 
@@ -63,16 +63,17 @@ user fix it.
 
 ## Step 4.5: Self-Review Before Push
 
-Runs by default. Skip this step entirely if the user passed `--no-review`.
+Runs by default; `--no-review` skips it entirely.
 
-Resolve `<base>` with the **Step 7: Detect Base Branch** procedure, then reuse
-it there rather than detecting twice. If none resolves, output "Skipping
-self-review: cannot resolve a base branch." and continue to Step 5.
+Resolve `<base>` via **Step 7: Detect Base Branch**, then reuse it there
+rather than detecting twice. If none resolves, output "Skipping self-review:
+cannot resolve a base branch." and continue to Step 5.
 
-Read `references/self-review.md` (bundled with this skill) — the four regression
-checks, the reporting format, and the amend procedure.
+Read `references/self-review.md` — the fresh-context subagent dispatch, the
+six adversarial checks, and the amend procedure.
 
-This step never blocks the ship. It fixes what it can and reports the rest.
+This step never blocks the ship — sole exception, a confirmed secret
+(reference). It fixes what it confirms and reports the rest.
 
 ## Step 5: Push
 

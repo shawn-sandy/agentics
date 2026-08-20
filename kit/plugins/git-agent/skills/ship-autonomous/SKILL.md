@@ -43,8 +43,7 @@ Hard stops.
 
 ## Step 1: Pre-flight Guards
 
-Run every check in `references/preflight-and-verify.md` (bundled with this
-skill) first.
+Run every check in `references/preflight-and-verify.md` first.
 
 ## Step 2: Branch
 
@@ -62,7 +61,8 @@ Invoke **`git-agent:commit-agent`** (delegated, no prompt); Step 4 pushes.
 
 ## Step 4: Open PR
 
-Invoke the **`git-agent:pr-agent`** skill; capture the PR URL it prints.
+Invoke **`git-agent:pr-agent`**; its Step 4.7 runs the adversarial pre-PR
+review. Capture the PR URL it prints.
 
 ## Step 5: Subscribe to PR Activity (preferred) or Poll CI (fallback)
 
