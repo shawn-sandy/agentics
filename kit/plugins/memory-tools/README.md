@@ -1,6 +1,6 @@
 # memory-tools Plugin
 
-Audits and optimizes CLAUDE.md project memory files against Claude Code best practices. Use this plugin when your CLAUDE.md feels bloated, when Claude seems to be ignoring instructions, or when you want a structured quality score before committing changes.
+Audits and optimizes Claude Code configuration — CLAUDE.md memory files, scoped rules, and usage-insights follow-through. Use this plugin when your CLAUDE.md feels bloated, when Claude seems to be ignoring instructions, when you want a structured quality score before committing changes, or when you have a usage-insights report whose recommendations need triaging and implementing.
 
 ## Installation
 
@@ -18,7 +18,7 @@ claude --plugin-dir ./kit/plugins/memory-tools
 
 ## Usage
 
-This plugin provides two auto-activated skills. Invoke them by describing what you want in plain language — no slash command required.
+This plugin provides three auto-activated skills. Invoke them by describing what you want in plain language — no slash command required.
 
 ### Skills
 
@@ -26,8 +26,9 @@ This plugin provides two auto-activated skills. Invoke them by describing what y
 |-------|-----------|---------------|
 | `memory-tools:agentic-memory-management` | Auto — triggers when user asks to "audit", "optimize", "review", "clean up", or "diagnose" a CLAUDE.md or project memory file; also activates when user reports Claude ignoring instructions | `AskUserQuestion`, `Glob`, `Grep`, `Read`, `Write` |
 | `memory-tools:path-rules-advisor` | Auto — triggers when user wants to create path-specific rules, add rules for file types or directories, or organize `.claude/rules/` | `AskUserQuestion`, `Edit`, `Glob`, `Read`, `Write` |
+| `memory-tools:implementing-insights` | Auto — triggers when user asks to implement or act on a usage-insights report's findings | `Read`, `Grep`, `Glob`, `Bash`, `Edit`, `Write`, `WebFetch`, `Agent`, `AskUserQuestion`, `ToolSearch`, `ExitPlanMode` |
 
-Both skills are auto-activated — there is no manual slash command. Just describe your intent.
+All skills are auto-activated — there is no manual slash command. Just describe your intent.
 
 ---
 
@@ -83,6 +84,30 @@ Organize my Claude rules into scoped files
 
 ---
 
+### implementing-insights
+
+Takes a Claude Code usage-insights report and implements only its genuinely open recommendations across local repos.
+
+**Example prompts:**
+
+```
+Implement the findings from this insights report: docs/insights-2026-08.md
+Act on the usage-insights report at <artifact URL>
+Which of these insights recommendations are already covered by my config?
+```
+
+**What the skill does:**
+
+1. Parses the report (file path, artifact URL, or pasted content) into numbered recommendation items
+2. Triages every item against existing config (`~/.claude/`, installed plugins, each target repo) into three buckets: already implemented (cited), conflicts with an existing rule (rejected, cited), or genuinely open
+3. Places each open item at the right config layer — plugin (workflow-shaped), `~/.claude/` (machine-wide), or the target repo (repo-specific)
+4. Confirms scope, then implements one item per change — one PR per repo change, worktree isolation when parallel agents share a repo
+5. Cleans up worktrees and merged branches, then reports a verified outcome ledger
+
+**Does not cover:** Generating the insights report itself; never merges a PR without explicit approval.
+
+---
+
 ## Purpose
 
 CLAUDE.md files are loaded as system instructions on every Claude Code session. A poorly structured file wastes context, conflicts with other instructions, or includes content irrelevant to most sessions — causing Claude to ignore parts of it silently. This plugin helps you measure and fix those problems before they cause frustration.
@@ -93,12 +118,22 @@ CLAUDE.md files are loaded as system instructions on every Claude Code session. 
 kit/plugins/memory-tools/
 ├── .claude-plugin/
 │   └── plugin.json
+├── bin/
+│   └── memory-verify-write
 ├── skills/
 │   ├── agentic-memory-management/
 │   │   ├── SKILL.md
+│   │   ├── references/
+│   │   │   └── audit-steps.md
+│   │   └── scripts/
+│   │       └── verify_write.py
+│   ├── path-rules-advisor/
+│   │   ├── SKILL.md
 │   │   └── references/
-│   │       └── audit-steps.md
-│   └── path-rules-advisor/
+│   │       ├── rule-modes.md
+│   │       ├── rule-file-format.md
+│   │       └── write-verification.md
+│   └── implementing-insights/
 │       └── SKILL.md
 ├── CHANGELOG.md
 └── README.md
@@ -108,7 +143,7 @@ This is a skills-only plugin — no commands or agents.
 
 ## Version History
 
-Current version: **4.0.0**
+Current version: **4.2.0**
 
 ### Breaking Changes
 
