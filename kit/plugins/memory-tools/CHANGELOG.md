@@ -1,5 +1,20 @@
 # Changelog
 
+## v4.2.0 — 2026-08-19 — usage-insights follow-through
+
+### Added
+
+- **New skill `implementing-insights`** — takes a Claude Code usage-insights
+  report, triages every recommendation against the config that already exists
+  (`~/.claude/`, installed plugins, each target repo), and implements only the
+  genuinely open items — each at the correct config layer (plugin / user-global
+  / repo), one PR per change, with worktree isolation for parallel agents and a
+  verified outcome ledger at the end. Encodes the triage-before-implement
+  workflow from the 2026-08-19 usage-insights session: insights reports repeat
+  themselves, so already-implemented and rule-conflicting suggestions are cited
+  and skipped, never re-implemented. Promoted from a personal skill into the
+  plugin so it is versioned and synced across machines.
+
 ## v4.1.1 — 2026-08-17 — the write gate actually runs
 
 ### Fixed

@@ -1,6 +1,6 @@
 {
   "name": "memory-tools",
-  "description": "Audit and optimize CLAUDE.md project memory files against Claude Code best practices",
+  "description": "Audit and optimize Claude Code configuration — CLAUDE.md memory files, scoped rules, and usage-insights follow-through",
   "author": {
     "name": "Agentics Project"
   },
@@ -10,7 +10,8 @@
     "memory",
     "configuration",
     "optimization",
-    "best-practices"
+    "best-practices",
+    "usage-insights"
   ],
   "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/memory-tools",
   "repository": "https://github.com/shawn-sandy/agentics"
