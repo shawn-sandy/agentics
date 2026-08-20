@@ -790,7 +790,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | code-testing-agent | [How do I... code-testing-agent](./docs/guides/how-to/code-testing-agent.md) | 5 |
 | content-tools | [How do I... content-tools](./docs/guides/how-to/content-tools.md) | 1 |
 | git-agent | [How do I... git-agent](./docs/guides/how-to/git-agent.md) | 8 |
-| memory-tools | [How do I... memory-tools](./docs/guides/how-to/memory-tools.md) | 2 |
+| memory-tools | [How do I... memory-tools](./docs/guides/how-to/memory-tools.md) | 3 |
 | plan-agent | [How do I... plan-agent](./docs/guides/how-to/plan-agent.md) | 16 |
 | settings-sync | [How do I... settings-sync](./docs/guides/how-to/settings-sync.md) | 2 |
 | skill-reviewer | [How do I... skill-reviewer](./docs/guides/how-to/skill-reviewer.md) | 4 |
@@ -798,7 +798,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | team-defaults | [How do I... team-defaults](./docs/guides/how-to/team-defaults.md) | 1 |
 | wcag-compliance-reviewer | [How do I... wcag-compliance-reviewer](./docs/guides/how-to/wcag-compliance-reviewer.md) | 1 |
 
-Total: 63 skills across 12 plugins.
+Total: 64 skills across 12 plugins.
 
 ---
 

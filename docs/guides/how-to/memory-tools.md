@@ -1,6 +1,6 @@
 # How do I... memory-tools
 
-Audit and reshape Claude Code project memory — CLAUDE.md files and the path-scoped rule files in `.claude/rules/`.
+Audit and reshape Claude Code project memory — CLAUDE.md files, the path-scoped rule files in `.claude/rules/`, and usage-insights follow-through.
 
 Install: `/plugin install memory-tools@agentics-kit`
 
@@ -21,3 +21,12 @@ Generates path-scoped rule files under `.claude/rules/` so instructions load onl
 - **Say it instead** — "add a rule that every file under src/api validates its input"
 - **What happens** — With an argument it runs Mode A: parses the glob and description, infers a `<segment>-rules.md` filename, and drafts the file. With no argument it runs Mode B, analyzing the project and CLAUDE.md to propose which rule files are worth extracting.
 - **Watch out** — Two hard stops before any write: creating `.claude/rules/` and each individual file, plus a third if the filename already exists. Every written file is checked with `memory-verify-write` — stop and restore from backup if it exits non-zero.
+
+## implementing-insights
+
+Triages a usage-insights report against existing config and implements only the genuinely open recommendations across local repos.
+
+- **Command** — `/memory-tools:implementing-insights`
+- **Say it instead** — "implement the findings from this insights report"
+- **What happens** — Parses the report (file path, artifact URL, or pasted content) into numbered items, buckets each against existing config (already implemented / conflicts with a rule / genuinely open), places open items at the right config layer (plugin, `~/.claude/`, or the target repo), then implements one item per change — one PR per repo change — and closes with a verified outcome ledger.
+- **Watch out** — Report content is treated as untrusted data; nothing is written before the triage table and an explicit approval gate, and PRs are never merged without approval in the current turn.
