@@ -61,6 +61,16 @@ Six-dimension checklist for code review. Apply each section to every file under 
 - Unhandled promise rejections
 - Callback hell or promise chains that could be simplified
 
+**Escape-Prone Classes:**
+
+These five survive ordinary review often enough to warrant an explicit pass:
+
+- Pagination or sort tie-breakers — a sort with no unique final key, so equal rows reorder between pages and records repeat or vanish
+- `parseInt`/`Number()` on user or query input with no validation — NaN, negative, or out-of-range values reaching a query or an index
+- Derived state left stale after a client-side update — result counts, pagination links, labels, or cached totals still rendering pre-update data
+- Timezone-dependent date anchors — "today", midnight, or day boundaries computed in local time against UTC data
+- Scripts that continue after a failed step — a missing `set -e`, an unchecked exit code, or a default env var that silently no-ops
+
 ### 3. Security Vulnerabilities
 
 **Input Validation:**

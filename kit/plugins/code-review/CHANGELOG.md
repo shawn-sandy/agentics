@@ -1,5 +1,18 @@
 # Changelog
 
+## v3.3.5 — 2026-08-21 — Checklist names the bugs that survive review
+
+### Changed
+
+- **`references/review-checklist.md` section 2 gains an "Escape-Prone Classes"
+  subsection** naming the five defect classes that repeatedly reached PR review
+  bots in 652 sessions of usage data: pagination and sort tie-breakers,
+  unvalidated `parseInt`/`Number()` on user input, derived state left stale
+  after a client-side update, timezone-dependent date anchors, and scripts that
+  continue after a failed step. `agent-code-reviewer` is the subagent that
+  `git-agent`'s pre-PR review dispatches to, so the checklist it reads now
+  names the same defects that review prompt does.
+
 ## v3.3.4 — 2026-08-17 — Findings must survive a re-read before they are reported
 
 ### Changed
