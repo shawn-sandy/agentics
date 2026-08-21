@@ -12,6 +12,13 @@ marketplace **references** them by relative path — it does not embed them.
   `git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs`
   (the script reads `origin/${BASE_REF}` directly, so a stale remote-tracking
   ref compares against the wrong base)
+- **Claude Desktop runs frozen claude.ai copies, not `~/.claude/plugins/cache/`.**
+  It loads snapshots from `~/Library/Application Support/Claude/local-agent-mode-sessions/<a>/<b>/rpm/`,
+  each stamped with the date claude.ai last pulled — so a newly shipped skill is
+  invisible there while working fine in the terminal CLI, and
+  `installed_plugins.json` (the CLI's view) agrees with the repo the whole time.
+  A SessionStart hook warns when they drift; check by hand with
+  `node scripts/check-claude-ai-sync.mjs`. The fix is on claude.ai, never here.
 - **`docs/plans/archive/` is off-limits.** Never glob, grep, or read it unless
   the user names the path.
 - **Two merge drivers auto-resolve conflicts** — `marketplace.json` keeps the
