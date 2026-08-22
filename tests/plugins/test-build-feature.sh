@@ -156,12 +156,23 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "9. Recommend-only: Tier 0 routes to implementation-plan, and the skill never invokes it..."
-if grep -q "implementation-plan <idea>" "$SKILL" \
-  && ! grep -qF 'Skill(skill: "plan-agent:implementation-plan"' "$SKILL"; then
+echo "9. Recommend-only: Tier 0 hands off the doc, never a bare .md, and the skill never invokes the planner..."
+# Tier 0 writes no prompt, so the doc path is the only carrier for its stories,
+# scope cuts, and risks. A handoff of the bare objective drops all three, and a
+# bare positional .md trips implementation-plan's conversion mode on a source
+# with no Steps section — so assert the row names the doc AND forbids the token.
+TIER0="$(grep -m1 -- '0 — Plan-sized' "$SKILL" || true)"
+MISSING=""
+[ -n "$TIER0" ] || MISSING="$MISSING tier-0-row"
+printf '%s' "$TIER0" | grep -qF '/plan-agent:implementation-plan' || MISSING="$MISSING planner-handoff"
+printf '%s' "$TIER0" | grep -qF 'feature doc: <features-dir>/<slug>.md' || MISSING="$MISSING doc-path-in-handoff"
+printf '%s' "$TIER0" | grep -qF 'never hand over the doc path as a bare positional' || MISSING="$MISSING bare-md-warning"
+# Recommend-only: the skill routes to the planner, it never runs it.
+grep -qF 'Skill(skill: "plan-agent:implementation-plan"' "$SKILL" && MISSING="$MISSING invokes-planner"
+if [ -z "$MISSING" ]; then
   echo "  PASS"
 else
-  echo "  FAIL: Tier 0 routing line missing, or the body invokes implementation-plan itself"
+  echo "  FAIL: Tier 0 handoff contract broken:$MISSING"
   FAILURES=$((FAILURES + 1))
 fi
 

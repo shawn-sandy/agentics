@@ -3,6 +3,7 @@ name: prototype
 model: opus
 description: "Generates a runnable static-HTML prototype from a plan, idea, or design. Produces one self-contained, framework-free clickable file under docs/prototypes/. Use when asked to prototype a mockup."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_console_messages, mcp__claude-in-chrome__read_page
+argument-hint: "<plan.html | image | figma-url | one-line idea> [--from-prompt <path>]"
 ---
 
 ## Plan Agent — Prototype
@@ -39,7 +40,26 @@ Produce no plan document — execute the workflow directly.
 
 ## Step 1 — Resolve the input
 
-Read `$ARGUMENTS` (or the conversation-derived text on the model path):
+Read `$ARGUMENTS` (or the conversation-derived text on the model path).
+
+**Strip `--from-prompt <path>` first, wherever it appears.** `build-feature`'s
+sub-feature handoff emits it *after* the objective
+(`/plan-agent:prototype <objective> --from-prompt docs/prompts/feature-<slug>-<sub>.md`),
+so a first-token-only reading would swallow the flag and its path as literal
+idea text and silently lose the prompt. Remove the flag and its value from the
+argument string before the dispatch below, then classify what remains.
+
+**Prompt-source mode** (`--from-prompt <path>` set): the path names a saved
+prompt — a sub-feature prompt from `build-feature`, or a proposal prompt from
+`build-proposal` — not a plan. Read it for the acceptance criteria, scope
+cuts, and UX and accessibility constraints it carries, and treat those as
+binding on the prototype; the remaining argument text is the objective. This
+is context, not conversion: prototype the flow the prompt describes rather
+than mapping its sections onto screens. If the path is unreadable, say so and
+ask before prototyping from the objective alone — building without the
+criteria silently drops the constraints the handoff existed to carry.
+
+Then classify the remaining text:
 
 - If the **first token ends in `.html`**, treat it as a **plan path**. Reduce
   it to its basename for safety, then resolve it under the plans directory

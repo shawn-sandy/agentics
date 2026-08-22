@@ -76,7 +76,7 @@ fourteen-section doc:
 
 | Tier | Signal | Response |
 |---|---|---|
-| **0 — Plan-sized** | Single surface, already clear, would yield one plan | Write the **one-page doc** (Context, Problem & users, Stories, Scope, Risks, Next step — no breakdown, no prompts), then hand the user the exact command `/plan-agent:implementation-plan <idea>` to run. The split adds nothing to a one-plan feature; the stories and scope cuts still do. |
+| **0 — Plan-sized** | Single surface, already clear, would yield one plan | Write the **one-page doc** (Context, Problem & users, Stories, Scope, Risks, Next step — no breakdown, no prompts), then hand the user a paste-ready `/plan-agent:implementation-plan <objective> — feature doc: <features-dir>/<slug>.md`. **Lead with the objective and name the doc in prose; never hand over the doc path as a bare positional `.md` token** — that trips `implementation-plan`'s conversion mode, which 1:1-maps a source that has no Steps section. Tier 0 writes no prompt, so the doc path is the only way the stories, scope cuts, and risks reach the planner. The split adds nothing to a one-plan feature; the stories and scope cuts still do. |
 | **1 — Focused** | One domain, two or three likely sub-features | One research pass; the Tier 1 subset. Often a single round. |
 | **2 — Full** | Multiple domains or user-facing surfaces, real product decisions open | The full shape from [references/feature-doc-shape.md](references/feature-doc-shape.md), deepened over rounds. |
 

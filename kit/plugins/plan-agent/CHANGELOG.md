@@ -26,6 +26,15 @@
 - **Sub-feature entries carry paste-ready handoffs to planning, prototyping,
   and design**, with the prototype and design commands emitted only for
   entries that change something a user sees.
+- **`prototype` now accepts `--from-prompt <path>`.** `build-feature` emits the
+  flag on the prototype handoff for UI-bearing sub-features, but `prototype`
+  had no `argument-hint` and classified only on the first token, so the flag
+  and its path were swallowed as literal idea text and the prompt was silently
+  dropped — the prototype got built from the objective sentence alone, without
+  the acceptance criteria the handoff exists to carry. Step 1 now strips the
+  flag from anywhere in the argument string (the handoff emits it *after* the
+  objective) and reads the prompt for criteria, scope cuts, and UX and
+  accessibility constraints, treating them as binding.
 - `tests/plugins/test-build-feature.sh` — structural smoke test covering the
   frontmatter contract, the tier gate, the Step 8 hand-off, the Step 9 publish
   contract, and the product sections in the shape reference.
@@ -38,7 +47,14 @@
   the only thing the doc carried: a plan says *how*, and nobody downstream
   re-derives *for whom* and *why not the other thing*. Tier 0 keeps Context,
   Problem and users, Stories, Scope, Risks, and Next step, and drops only the
-  breakdown and its sub-feature prompts.
+  breakdown and its sub-feature prompts. Its handoff leads with the objective
+  and names the doc (`... — feature doc: <features-dir>/<slug>.md`) rather than
+  passing a bare `<idea>`: Tier 0 writes no prompt, so the doc path is the only
+  carrier for its stories, scope cuts, and risks. The path is named in prose,
+  never handed over as a bare positional `.md`, which would trip
+  `implementation-plan`'s conversion mode on a source that has no Steps
+  section. README.md's Tier 0 line, which still described the old
+  writes-no-artifact behavior, is corrected to match.
 - **Sub-feature prompts now carry the acceptance criteria** alongside the
   goals, scope cuts, UX and accessibility notes, rollout constraints, and
   risks. The paste-ready command hands the planner the prompt and never the
