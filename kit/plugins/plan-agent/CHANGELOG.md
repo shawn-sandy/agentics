@@ -1,5 +1,50 @@
 # Changelog
 
+## 9.5.0 — build-feature becomes a product feature doc (2026-08-22)
+
+### Added
+
+- **`build-feature` now writes the product content a team needs to accept a
+  feature, not just the split it breaks into.** The doc gains user stories
+  with observable, binary acceptance criteria (including the unhappy path),
+  goals whose baselines are researched rather than estimated, and a release
+  and rollout table covering owner, target, flag, phases, rollback, and
+  dependencies. Stories are drafted at Step 3, before the seams harden, so a
+  seam no story crosses and a story no sub-feature delivers both surface as
+  findings instead of shipping as a doc that reads consistent and is not.
+- **Step 9 publishes the converged doc as a shareable claude.ai artifact.**
+  The doc is rendered to a sibling `.html` first — markdown cannot set its own
+  `<title>` — then published, verified by fetching the returned URL, and the
+  URL recorded as `artifact-url:` in the doc's front-matter so later rounds
+  republish to the same link instead of minting a new one. Publishing is the
+  only step here a human cannot undo by editing a file, so it needs an
+  explicit yes every run: a blanket "don't ask me anything" covers the
+  feature's decisions, never this one. New `--publish` / `--no-publish` flags
+  pre-answer the offer; `--publish` consents for that run only. A failed or
+  unavailable publish costs nothing — the doc and prompts were the deliverable
+  before the offer and still are.
+- **Sub-feature entries carry paste-ready handoffs to planning, prototyping,
+  and design**, with the prototype and design commands emitted only for
+  entries that change something a user sees.
+- `tests/plugins/test-build-feature.sh` — structural smoke test covering the
+  frontmatter contract, the tier gate, the Step 8 hand-off, the Step 9 publish
+  contract, and the product sections in the shape reference.
+
+### Changed
+
+- **Tier 0 now writes a one-page doc instead of writing nothing.** It was
+  routing straight to `implementation-plan` with no artifact, on the reasoning
+  that a one-plan feature has nothing to split. True, but the split was never
+  the only thing the doc carried: a plan says *how*, and nobody downstream
+  re-derives *for whom* and *why not the other thing*. Tier 0 keeps Context,
+  Problem and users, Stories, Scope, Risks, and Next step, and drops only the
+  breakdown and its sub-feature prompts.
+- **Sub-feature prompts now carry the acceptance criteria** alongside the
+  goals, scope cuts, UX and accessibility notes, rollout constraints, and
+  risks. The paste-ready command hands the planner the prompt and never the
+  feature doc, so anything left out of the prompt is unrecoverable downstream
+  — and the criteria are what the plan's own tests get written against.
+
 ## 9.4.8 — plan-authoring skills name the mixed-request gate (2026-08-19)
 
 ### Changed
