@@ -18,6 +18,10 @@
  *   status | type | created | repo | effort | glance | workflow (true/false)
  *   prototype (repo-relative path to the plan's prototype HTML — renders the
  *   plan-prototype meta tag and the header "View prototype" link)
+ *   design (the published design canvas's artifact URL — renders the
+ *   plan-design meta tag and the header "View design" link)
+ *   design-dir (repo-relative directory holding the plan's .dc.html artboards
+ *   — read by the build skill and the drift hook, not rendered)
  *
  * Progress state travels in the spec too (Phase 3 of the proposal): `- [x]`
  * acceptance-criteria bullets render as checked inputs, a `[x]` marker after
@@ -333,6 +337,26 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   const issueNum = (issue.match(/(\d+)\/?$/) || [, ''])[1];
   const issueLabel = issueNum ? `Issue #${issueNum}` : 'Tracking issue';
 
+  // `design:` is the published design canvas's artifact URL, written by
+  // /plan-agent:design once the canvas exists. Rendered as a header link and a
+  // meta tag so the plan and the picture of it stay reachable from each other.
+  //
+  // Modelled on `issue:` above, deliberately NOT on `prototype:`: a prototype
+  // is a repo path that has to be relativized against the output directory,
+  // while a canvas lives at a URL and must be emitted verbatim. Same http(s)
+  // guard for the same reason — escaping leaves a scheme intact, so a spec
+  // carrying `design: javascript:...` would otherwise render as an
+  // ordinary-looking anchor that runs on click. Drop anything else, tag and
+  // link both.
+  //
+  // `design-dir:` is deliberately NOT rendered. It names a local artboard
+  // directory read by the `build` skill and by check-design-drift.py, both of
+  // which read the Markdown spec directly; a meta tag would be a second copy
+  // of a fact with no consumer.
+  const designRaw = (md.design || '').trim();
+  const design = /^https?:\/\//i.test(designRaw) ? designRaw : '';
+  if (designRaw && !design) console.warn(`  ! ${basename(path)}: ignoring non-http(s) design: ${designRaw}`);
+
   // Every prompt ends with the same gate: verify, then record the outcome in
   // the spec. Without it an agent reports "done" on a plan still marked todo.
   //
@@ -447,6 +471,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
       workflow: esc(workflow),
       prototype: prototype ? esc(prototype) : '',
       issue: issue ? esc(issue) : '',
+      design: design ? esc(design) : '',
     }),
     headerHtml: shell.header({
       title: esc(s.title),
@@ -458,6 +483,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
       prototypeHref: prototypeHref ? esc(prototypeHref) : '',
       issueHref: issue ? esc(issue) : '',
       issueLabel: esc(issueLabel),
+      designHref: design ? esc(design) : '',
     }),
     // The rail links to #step-N; the action text is the same inline-rendered
     // HTML the card carries, so a step titled with `code` reads the same in

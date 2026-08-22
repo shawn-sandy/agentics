@@ -1,5 +1,82 @@
 # Changelog
 
+## 9.5.0 — a design phase, so a plan can be seen before it is built (2026-08-21)
+
+`prototype` answers *does this flow work* with a clickable file. `design`
+answers the question that comes first — *what does this look like* — with a
+multi-artboard canvas, and hands it back to the plan as a link.
+
+### Added
+
+- **`design` skill** — `/plan-agent:design <plan.html | idea | image |
+  figma-url>`, or ambient activation on "design this plan" intent. It resolves
+  the input, derives **one artboard per user-facing plan step** (uncapped; a
+  step with no user-facing surface produces none), echoes the artboard list
+  back for confirmation, then delegates *all* authoring and publishing to
+  Claude Code's built-in `design` skill via `Skill(design)`. It reproduces
+  none of the artboard file format, the seeding helper, the contract pin, or
+  the capability roster — a copy of any of those rots the first time the
+  built-in skill moves, and none of it is the part a planning plugin knows
+  anything about. What it owns is the plan-shaped half: input resolution,
+  step-to-artboard derivation, and writing the result back into the spec.
+  Working artboards land under `docs/designs/<plan-slug>/`.
+- **Two frontmatter keys on a plan spec.** `design:` is the published canvas
+  Artifact URL — the renderer emits `<meta name="plan-design">` and a **View
+  design** link in the header actions row. `design-dir:` is the repo-relative
+  artboard directory (`docs/designs/<slug>`), which `build` reads as the
+  visual spec and the drift hook reads to find the artboards. Two keys rather
+  than one slug-derived path, so the pair survives a plan rename that a
+  recomputed directory would not.
+- **`design:` is modelled on the `issue:` block, not on `prototype:`.**
+  `prototype:` relativizes a repo path with `path.relative()`; a canvas lives
+  at a URL and there is nothing to relativize. Only `http(s)` is accepted:
+  escaping leaves a scheme intact, so a spec carrying `design: javascript:...`
+  — imported, or hand-edited — would otherwise render as an ordinary-looking
+  anchor that runs on click. Anything else is dropped for both the meta tag
+  and the link, with a warning on stderr.
+- **`build-designs-index` hook child** — regenerates `docs/designs/index.html`
+  on any write under `docs/designs/`, one card per canvas directory. Forked
+  from `build-prototypes-index.sh`: same two run modes, same always-exit-0
+  contract, so a gallery failure never blocks the write that triggered it.
+- **`check-design-drift` hook child** — reports any user-facing plan step with
+  no covering artboard. It deliberately does **not** compare local artboards
+  against the published canvas: people editing the canvas in the GUI is the
+  feature working, and a check that fires on that is noise, not signal. It is
+  filename and heading comparison only — no network, no parse of the published
+  canvas — because every `dispatch.py` child shares one deadline, so a slow
+  child starves its siblings.
+- **One definition of "user-facing", two consumers.** The skill's derivation
+  rule and the drift check both apply the UI-signal keyword list `review-plan`
+  Step 3b already uses (React, Vue, Svelte, Angular, `.tsx`, `.jsx`, `.css`,
+  `.html`, `className`, `style`, Tailwind, button, modal, form, dialog,
+  dropdown, page, component). Two lists would drift apart, and every
+  housekeeping step would then read as permanent design drift.
+- **`bin/plan-agent-designs-index`** — rebuilds the designs gallery (wraps
+  `hooks/build-designs-index.sh`), alongside the existing
+  `plan-agent-prototypes-index`.
+- **Tests** — `tests/plugins/test-design-plan-link.mjs` (the renderer key,
+  scheme rejection included), `tests/plugins/test-build-designs-index.sh`, and
+  `tests/plugins/test-design-drift.sh`.
+
+### Changed
+
+- **`dispatch.py` gains a `docs/designs/` gate** alongside the existing
+  prototypes gate, fanning out to the two new children on the shared deadline.
+  Writes outside the gated paths are unaffected — it is the same cheap path
+  check that already keeps the dispatcher off every unrelated file edit.
+- **`implementation-plan` Step 8 asks a third question — "Want to see it
+  before building?"** — with options `Prototype`, `Design canvas`, and `No`,
+  gated on the `ui_signals_present` rule from `review-plan` Step 3b. A third
+  *question* in the same `AskUserQuestion` call, never two more options: both
+  existing option lists already sit at the 4-option cap, so there was nowhere
+  to graft the choice on. This is also the first time the existing `prototype`
+  skill is offered anywhere in the planning chain — until now it was reachable
+  only by knowing the command existed.
+- **`build` Step 2 reads the artboards under a spec's `design-dir:`** as the
+  visual spec before implementing, when the key is present. A published canvas
+  nobody opens during implementation is a picture, not a spec. Plans without
+  the key are unchanged.
+
 ## 9.4.8 — plan-authoring skills name the mixed-request gate (2026-08-19)
 
 ### Changed
