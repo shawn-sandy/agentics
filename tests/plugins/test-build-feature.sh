@@ -244,6 +244,73 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
+echo "13. Step 9 publishes consent-gated, renders before publishing, and records the URL..."
+# Prose in this repo wraps at 80 columns, so multi-word assertions are matched
+# against a whitespace-normalized copy — a grep for a wrapped sentence never hits.
+STEP9="$(sed -n '/^### Step 9 —/,/^## Writing Style/p' "$SKILL")"
+STEP9FLAT="$(printf '%s' "$STEP9" | tr '\n' ' ' | tr -s ' ')"
+MISSING=""
+[ -n "$STEP9" ] || MISSING="$MISSING step-9-missing"
+# Publishing is the one irreversible act here; a blanket "stop asking" must not reach it.
+printf '%s' "$STEP9FLAT" | grep -qF 'Never publish without an explicit yes' || MISSING="$MISSING consent-gate"
+# Markdown cannot set its own <title>, so the .md must be rendered before it is published.
+printf '%s' "$STEP9" | grep -qF 'plan-agent:markdown-to-html' || MISSING="$MISSING render-step"
+printf '%s' "$STEP9" | grep -qF 'Artifact(file_path:' || MISSING="$MISSING artifact-call"
+# Artifact is deferred; calling it without ToolSearch fails at runtime.
+printf '%s' "$STEP9" | grep -qF 'select:Artifact' || MISSING="$MISSING toolsearch-select"
+# Without the recorded URL every round mints a new link — the reason to publish at all.
+printf '%s' "$STEP9" | grep -qF 'artifact-url:' || MISSING="$MISSING url-record"
+# A returned URL is not proof the page rendered.
+printf '%s' "$STEP9" | grep -qF 'WebFetch' || MISSING="$MISSING publish-verification"
+# Artifact is absent in some sessions; the file deliverable must survive that.
+printf '%s' "$STEP9FLAT" | grep -qF 'A failed publish does not cost the handoff' || MISSING="$MISSING publish-fallback"
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: Step 9 publish contract incomplete:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "14. The shape reference carries the product-feature sections, not just the split..."
+SHAPE="$REFS/feature-doc-shape.md"
+if python3 - "$SHAPE" <<'PYEOF'
+import sys
+txt = open(sys.argv[1]).read()
+bad = []
+# The sections that make this a product feature doc rather than a plan splitter.
+for h in ("## User stories & acceptance criteria", "## Release & rollout"):
+    if h not in txt:
+        bad.append(f"missing {h!r}")
+# Traceability runs both ways: a story names its deliverer, an entry names what it satisfies.
+for token in ("Delivered by:", "**Satisfies**"):
+    if token not in txt:
+        bad.append(f"missing traceability token {token!r}")
+# A metric without a baseline is a wish; `unmeasured` is the honest escape hatch.
+if "Baseline" not in txt or "unmeasured" not in txt:
+    bad.append("metrics table lacks Baseline or the `unmeasured` escape hatch")
+# Rollback is the row that earns the rollout section.
+if "Rollback" not in txt:
+    bad.append("rollout table lacks Rollback")
+# Three handoffs, and the rule that keeps the extra two off non-UI entries.
+for cmd in ("/plan-agent:implementation-plan", "/plan-agent:prototype", "/impeccable:impeccable"):
+    if cmd not in txt:
+        bad.append(f"missing handoff {cmd!r}")
+if "only for entries with UI surface" not in txt:
+    bad.append("no rule limiting prototype/design handoffs to UI-bearing entries")
+# Tier 0 now writes the product content and drops only the split.
+if "Tier 0 still writes a doc" not in txt:
+    bad.append("Tier 0 does not state that it writes a doc")
+if bad:
+    print("   " + "; ".join(bad))
+sys.exit(1 if bad else 0)
+PYEOF
+then
+  echo "  PASS"
+else
+  echo "  FAIL: product-feature shape contract broken (details above)"
+  FAILURES=$((FAILURES + 1))
+fi
+
 echo ""
 if [ "$FAILURES" -eq 0 ]; then
   echo "=== ALL CHECKS PASSED ==="
