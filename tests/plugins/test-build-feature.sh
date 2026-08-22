@@ -156,23 +156,44 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "9. Recommend-only: Tier 0 hands off the doc, never a bare .md, and the skill never invokes the planner..."
-# Tier 0 writes no prompt, so the doc path is the only carrier for its stories,
-# scope cuts, and risks. A handoff of the bare objective drops all three, and a
-# bare positional .md trips implementation-plan's conversion mode on a source
-# with no Steps section — so assert the row names the doc AND forbids the token.
-TIER0="$(grep -m1 -- '0 — Plan-sized' "$SKILL" || true)"
-MISSING=""
-[ -n "$TIER0" ] || MISSING="$MISSING tier-0-row"
-printf '%s' "$TIER0" | grep -qF '/plan-agent:implementation-plan' || MISSING="$MISSING planner-handoff"
-printf '%s' "$TIER0" | grep -qF 'feature doc: <features-dir>/<slug>.md' || MISSING="$MISSING doc-path-in-handoff"
-printf '%s' "$TIER0" | grep -qF 'never hand over the doc path as a bare positional' || MISSING="$MISSING bare-md-warning"
-# Recommend-only: the skill routes to the planner, it never runs it.
-grep -qF 'Skill(skill: "plan-agent:implementation-plan"' "$SKILL" && MISSING="$MISSING invokes-planner"
-if [ -z "$MISSING" ]; then
+echo "9. Recommend-only: Tier 0 passes its doc via --from-prompt, and the skill never invokes the planner..."
+# Tier 0 writes no prompt, so the doc is the only carrier for its stories, scope
+# cuts, and risks. implementation-plan takes the first POSITIONAL .md as a
+# conversion source and 1:1-maps it, and the doc has no Steps section — so the
+# path must ride behind --from-prompt. Parse the emitted command rather than the
+# surrounding prose: a warning sentence saying "never positional" passes happily
+# next to a command that is exactly that, which is the regression this guards.
+if python3 - "$SKILL" <<'PY'
+import re, sys
+txt = open(sys.argv[1]).read()
+bad = []
+row = next((l for l in txt.splitlines() if '0 — Plan-sized' in l), None)
+if not row:
+    print("   tier-0 row missing")
+    sys.exit(1)
+cmds = [c for c in re.findall(r'`([^`]+)`', row) if '/plan-agent:implementation-plan' in c]
+if not cmds:
+    bad.append("no /plan-agent:implementation-plan handoff in the tier-0 row")
+for cmd in cmds:
+    toks = cmd.split()
+    md = [i for i, t in enumerate(toks) if t.endswith('.md')]
+    if not md:
+        bad.append(f"handoff names no doc at all: {cmd!r}")
+    for i in md:
+        # Positional means: not a recognized flag's value. Only --from-prompt qualifies.
+        if i == 0 or toks[i - 1] != '--from-prompt':
+            bad.append(f"positional .md would trip conversion mode: {toks[i]!r} in {cmd!r}")
+# Recommend-only: it routes to the planner, it never runs it.
+if 'Skill(skill: "plan-agent:implementation-plan"' in txt:
+    bad.append("the skill invokes implementation-plan itself")
+if bad:
+    print("   " + "; ".join(bad))
+sys.exit(1 if bad else 0)
+PY
+then
   echo "  PASS"
 else
-  echo "  FAIL: Tier 0 handoff contract broken:$MISSING"
+  echo "  FAIL: Tier 0 handoff contract broken (details above)"
   FAILURES=$((FAILURES + 1))
 fi
 

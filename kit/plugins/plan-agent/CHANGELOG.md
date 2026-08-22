@@ -47,14 +47,24 @@
   the only thing the doc carried: a plan says *how*, and nobody downstream
   re-derives *for whom* and *why not the other thing*. Tier 0 keeps Context,
   Problem and users, Stories, Scope, Risks, and Next step, and drops only the
-  breakdown and its sub-feature prompts. Its handoff leads with the objective
-  and names the doc (`... — feature doc: <features-dir>/<slug>.md`) rather than
-  passing a bare `<idea>`: Tier 0 writes no prompt, so the doc path is the only
-  carrier for its stories, scope cuts, and risks. The path is named in prose,
-  never handed over as a bare positional `.md`, which would trip
-  `implementation-plan`'s conversion mode on a source that has no Steps
-  section. README.md's Tier 0 line, which still described the old
+  breakdown and its sub-feature prompts. Its handoff is
+  `/plan-agent:implementation-plan <objective> --from-prompt <features-dir>/<slug>.md`
+  rather than a bare `<idea>`: Tier 0 writes no prompt, so the doc is the only
+  carrier for its stories, scope cuts, and risks. The doc rides behind the
+  flag, never as a positional token — `implementation-plan` reads the first
+  *positional* `.md` as a conversion source and would 1:1-map a doc that has
+  no `Steps` section, and a prose `feature doc:` label does not make the path
+  non-positional. README.md's Tier 0 line, which still described the old
   writes-no-artifact behavior, is corrected to match.
+- **`implementation-plan`'s prompt-source mode accepts a Tier 0 feature doc.**
+  `--from-prompt` was documented as naming a saved *proposal prompt*; it now
+  names any context source — proposal prompt, sub-feature prompt, or feature
+  doc — which is what makes the Tier 0 handoff above legal rather than a path
+  that happens to parse. Behaviour was already right for the doc case (read
+  for context, then draft normally, never transcribe); only the contract was
+  too narrow. The section also now states why the flag matters: its value is
+  excluded from the positional-`.md` scan, so it is the flag, not the prose,
+  that keeps a context source out of conversion mode.
 - **Sub-feature prompts now carry the acceptance criteria** alongside the
   goals, scope cuts, UX and accessibility notes, rollout constraints, and
   risks. The paste-ready command hands the planner the prompt and never the

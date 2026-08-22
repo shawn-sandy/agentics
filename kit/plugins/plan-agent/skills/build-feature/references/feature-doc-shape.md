@@ -61,10 +61,11 @@ itself a finding: say so in one line rather than omitting the section silently.
     empty and removed.
 13. **Sub-feature breakdown** *(Tier 1+)* — the load-bearing section for
     splitting; format below.
-14. **Next step** — the handoff line. Tier 0: run
-    `/plan-agent:implementation-plan` once against this doc. Tier 1+: run each
-    sub-feature's paste-ready prompt, in dependency order. The feature doc
-    stops here.
+14. **Next step** — the handoff line. Tier 0: one paste-ready
+    `/plan-agent:implementation-plan <objective> --from-prompt <features-dir>/<slug>.md`
+    — the doc goes behind the flag, never as a positional token, which would
+    be read as a conversion source. Tier 1+: run each sub-feature's paste-ready
+    commands, in dependency order. The feature doc stops here.
 
 ## User stories & acceptance criteria
 

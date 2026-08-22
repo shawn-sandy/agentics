@@ -76,7 +76,7 @@ fourteen-section doc:
 
 | Tier | Signal | Response |
 |---|---|---|
-| **0 — Plan-sized** | Single surface, already clear, would yield one plan | Write the **one-page doc** (Context, Problem & users, Stories, Scope, Risks, Next step — no breakdown, no prompts), then hand the user a paste-ready `/plan-agent:implementation-plan <objective> — feature doc: <features-dir>/<slug>.md`. **Lead with the objective and name the doc in prose; never hand over the doc path as a bare positional `.md` token** — that trips `implementation-plan`'s conversion mode, which 1:1-maps a source that has no Steps section. Tier 0 writes no prompt, so the doc path is the only way the stories, scope cuts, and risks reach the planner. The split adds nothing to a one-plan feature; the stories and scope cuts still do. |
+| **0 — Plan-sized** | Single surface, already clear, would yield one plan | Write the **one-page doc** (Context, Problem & users, Stories, Scope, Risks, Next step — no breakdown, no prompts), then hand the user a paste-ready `/plan-agent:implementation-plan <objective> --from-prompt <features-dir>/<slug>.md`. **Lead with the objective and pass the doc behind `--from-prompt`; never as a positional token, and never labelled in prose** — `implementation-plan` takes the first *positional* `.md` as a conversion source and 1:1-maps it, and a `feature doc:` label does not make the path non-positional. The flag's value is excluded by rule, so the doc arrives as context. Tier 0 writes no prompt, so that doc is the only carrier for its stories, scope cuts, and risks. The split adds nothing to a one-plan feature; the stories and scope cuts still do. |
 | **1 — Focused** | One domain, two or three likely sub-features | One research pass; the Tier 1 subset. Often a single round. |
 | **2 — Full** | Multiple domains or user-facing surfaces, real product decisions open | The full shape from [references/feature-doc-shape.md](references/feature-doc-shape.md), deepened over rounds. |
 
@@ -271,7 +271,8 @@ Skill(skill: "plan-agent:prompt", args: "task --out <prompts-dir>/feature-<slug>
   resolved every decision. This is `prompt`'s standard authoring path — no
   `proposal` type, no changes to the `prompt` skill.
 
-**Tier 0 skips the prompts entirely** and hands the planner the doc path. Go
+**Tier 0 skips the prompts entirely** and hands the planner the doc behind
+`--from-prompt` (see the tier table — never as a positional token). Go
 straight to the handoff line.
 
 **Verify every prompt file before declaring convergence.** `Skill()` has no
