@@ -1,5 +1,5 @@
 ---
-status: todo
+status: in-progress
 type: feature
 created: 2026-08-18
 effort: high
@@ -106,7 +106,7 @@ Risks:
 
 ### Phase: RED
 
-1. Write `tests/plugins/test-design-plan-link.mjs`, modelled on
+1. [x] Write `tests/plugins/test-design-plan-link.mjs`, modelled on
    `tests/plugins/test-prototype-plan-link.mjs`. It asserts four things: a spec
    carrying `design:` and `design-dir:` renders a `plan-design` meta tag plus a
    header anchor whose accessible text is non-empty and whose `href` is the
@@ -120,7 +120,7 @@ Risks:
    missing `plan-design` meta tag, not on a module-resolution error — paste the
    failing assertion.
 
-2. Write `tests/plugins/test-build-designs-index.sh`, modelled on
+2. [x] Write `tests/plugins/test-build-designs-index.sh`, modelled on
    `tests/plugins/test-build-prototypes-index.sh`. It asserts the generator
    writes `docs/designs/index.html` with one escaped card per canvas directory,
    skips its own generated index when re-run, and exits 0 on a directory holding
@@ -130,7 +130,7 @@ Risks:
    Verify: `bash tests/plugins/test-build-designs-index.sh` exits non-zero
    reporting `build-designs-index.sh` not found.
 
-3. Write `tests/plugins/test-design-drift.sh` plus the
+3. [x] Write `tests/plugins/test-design-drift.sh` plus the
    `tests/fixtures/plan-agent/sample-design/` fixture — one plan spec with three
    user-facing steps plus one housekeeping step, and a matching three-artboard
    directory, and one diverged pair where the spec gained a fourth user-facing
@@ -145,7 +145,7 @@ Risks:
 
 ### Phase: GREEN
 
-4. Add `design:` and `design-dir:` handling to **both** copies of
+4. [x] Add `design:` and `design-dir:` handling to **both** copies of
    `build-plan-html.mjs` (`scripts/` and `kit/plugins/plan-agent/scripts/`),
    modelled on the existing `issue:` block near line 313 — http(s) only, drop
    anything else for both the tag and the link — emitting a `plan-design` meta
@@ -156,7 +156,7 @@ Risks:
    Verify: `node tests/plugins/test-design-plan-link.mjs` passes all four
    assertions, including the identical-hash check.
 
-5. Write `kit/plugins/plan-agent/hooks/build-designs-index.sh`, forked from
+5. [x] Write `kit/plugins/plan-agent/hooks/build-designs-index.sh`, forked from
    `build-prototypes-index.sh` and retargeted to `docs/designs/`. Keep the same
    two run modes (hook payload on stdin, or a project root argument) and the same
    `exit 0` guarantee.
@@ -165,7 +165,7 @@ Risks:
    galleries behaving the same way.
    Verify: `bash tests/plugins/test-build-designs-index.sh` passes.
 
-6. Write `kit/plugins/plan-agent/hooks/check-design-drift.py`. It reads the
+6. [x] Write `kit/plugins/plan-agent/hooks/check-design-drift.py`. It reads the
    plan's `design-dir:`, lists `*.dc.html` artboard names in that directory,
    extracts the plan's **user-facing** step headings — applying the same filter
    step 8's derivation uses, so a version bump or a test-file step is never
@@ -176,7 +176,7 @@ Risks:
    Verify: `bash tests/plugins/test-design-drift.sh` passes both the matched and
    diverged fixtures.
 
-7. Add the `docs/designs/` gate to `kit/plugins/plan-agent/hooks/dispatch.py` — a
+7. [x] Add the `docs/designs/` gate to `kit/plugins/plan-agent/hooks/dispatch.py` — a
    `_DESIGNS_MARKER` constant, an `is_design` test alongside `is_prototype`, and
    a fan-out to the two new children sharing the existing deadline. Preserve the
    early `sys.exit(0)` for unrelated writes.
@@ -186,7 +186,7 @@ Risks:
    write through `dispatch.py` and confirm both children ran; repeat with an
    unrelated path and confirm no child process spawned.
 
-8. Write `kit/plugins/plan-agent/skills/design/SKILL.md`, structurally mirroring
+8. [x] Write `kit/plugins/plan-agent/skills/design/SKILL.md`, structurally mirroring
    `skills/prototype/SKILL.md`: Step 0 exit plan mode; Step 1 resolve the input
    (plan path, raw idea, image, or Figma URL — the same input contract prototype
    already documents), warning in one line and proceeding when the resolved plan
@@ -201,7 +201,7 @@ Risks:
    Verify: `bash tests/plugins/test-build-skill.sh` and
    `bash tests/plugins/test-description-budget.sh` both pass.
 
-9. Add the third batched question to `implementation-plan/SKILL.md` Step 8:
+9. [x] Add the third batched question to `implementation-plan/SKILL.md` Step 8:
    "Want to see it before building?" with options `Prototype`, `Design canvas`,
    and `No`. Gate it on the `ui_signals_present` rule quoted from
    `skills/review-plan/SKILL.md:78`. It is a third question in the same
@@ -213,7 +213,7 @@ Risks:
    grep of the edited Step 8 shows three questions in one call with no option
    list longer than four.
 
-10. Teach `skills/build/SKILL.md` Step 2 to read the artboards under a spec's
+10. [x] Teach `skills/build/SKILL.md` Step 2 to read the artboards under a spec's
     `design-dir:` as the visual spec before implementing, when the key is
     present.
     Why: a design nobody implements against is decoration; this is the payoff
@@ -223,13 +223,13 @@ Risks:
 
 ### Phase: VERIFY
 
-11. Run the full suite: `bash tests/run-all.sh`.
+11. [x] Run the full suite: `bash tests/run-all.sh`.
     Why: the three new tests are auto-discovered by the runner's glob, so a
     naming mistake shows up here rather than in CI.
     Verify: the run reports zero failures and names all three new test files as
     executed.
 
-12. Bump `plan-agent` to `9.5.0` in `.claude-plugin/marketplace.json`, regenerate
+12. [x] Bump `plan-agent` to `9.5.0` in `.claude-plugin/marketplace.json`, regenerate
     the root Plugin Reference Table with `node scripts/build-readme-table.mjs`,
     and hand-write the `design` section in
     `kit/plugins/plan-agent/README.md` alongside the existing `prototype` section.
@@ -275,29 +275,29 @@ Tier 1 — This plan changes application code
 
 ## Acceptance Criteria
 
-- [ ] A plan spec carrying `design:` and `design-dir:` renders a `plan-design`
+- [x] A plan spec carrying `design:` and `design-dir:` renders a `plan-design`
       meta tag and a working "View design" header link
-- [ ] A plan spec carrying neither renders neither, and a `javascript:` value
+- [x] A plan spec carrying neither renders neither, and a `javascript:` value
       renders neither
-- [ ] Both copies of `build-plan-html.mjs` hash identically after the change
-- [ ] `docs/designs/index.html` lists every published canvas, rebuilt
+- [x] Both copies of `build-plan-html.mjs` hash identically after the change
+- [x] `docs/designs/index.html` lists every published canvas, rebuilt
       automatically on a write under `docs/designs/`
-- [ ] `check-design-drift.py` reports a plan step with no covering artboard, and
+- [x] `check-design-drift.py` reports a plan step with no covering artboard, and
       stays silent when the canvas is edited in the GUI
 - [ ] `/plan-agent:design <plan.html>` publishes a canvas and writes both keys
       back into the spec
-- [ ] The skill contains no `.dc.html` format rules, no `seed-canvas.mjs`
+- [x] The skill contains no `.dc.html` format rules, no `seed-canvas.mjs`
       invocation, and no `contract:` version string
-- [ ] Step 8 offers Prototype and Design canvas on a UI plan, and offers neither
+- [x] Step 8 offers Prototype and Design canvas on a UI plan, and offers neither
       on a plan with no UI signals
-- [ ] Step 8 still asks at most four options per question
-- [ ] A step with no user-facing surface produces no artboard, and the drift
+- [x] Step 8 still asks at most four options per question
+- [x] A step with no user-facing surface produces no artboard, and the drift
       check does not report it as uncovered
-- [ ] `/plan-agent:design` on a plan with no UI signals warns in one line and
+- [x] `/plan-agent:design` on a plan with no UI signals warns in one line and
       still proceeds
-- [ ] `build` reads the artboards under `design-dir:` before implementing
-- [ ] `bash tests/run-all.sh` passes with zero failures
-- [ ] `check-plugin-versions.mjs` exits 0 against `origin/main`
+- [x] `build` reads the artboards under `design-dir:` before implementing
+- [x] `bash tests/run-all.sh` passes with zero failures
+- [x] `check-plugin-versions.mjs` exits 0 against `origin/main`
 
 ## Verification
 

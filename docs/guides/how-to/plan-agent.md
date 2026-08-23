@@ -49,6 +49,15 @@ Stress-tests a plan's decisions node by node with focused questions.
 - **What happens** — Resolves the plan (argument, open IDE file, `plansDirectory`, then `docs/plans/*.md`), extracts decision nodes into branches, asks a focused question per node with a recommended answer backed by codebase exploration, and ends with a summary of decisions, open questions, and recommended amendments.
 - **Watch out** — It targets implementation plans only — pointed at a `SKILL.md` it stops — and it produces a summary, not edits to the plan.
 
+## design
+
+Publishes a design canvas for a plan, so it can be seen before it is built.
+
+- **Command** — `/plan-agent:design <plan.html | one-line idea | image path | figma-url>`
+- **Say it instead** — "design this plan" / "mock up the screens for this plan"
+- **What happens** — Derives one artboard per user-facing plan step, echoes the list back for correction, then hands authoring and publishing to Claude Code's built-in `design` skill. Working artboards land under `docs/designs/<plan-slug>/`, and the published canvas URL plus that directory are written back as `design:` and `design-dir:` so the plan header gains a **View design** link and `build` reads the artboards as the visual spec.
+- **Watch out** — Steps with no user-facing surface (a version bump, a test file) get no artboard by design, and the drift check never flags them; it also never compares your local artboards against the published canvas, so editing the canvas in the editor is expected, not drift. A plan with no UI signals warns in one line and proceeds rather than refusing.
+
 ## documenting-plans
 
 Generates a prose reference doc from a completed plan.
