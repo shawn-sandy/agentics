@@ -43,7 +43,7 @@ Step 3 corrected `README.md`. Line 9's breaking-change note had asserted the dir
 
 Step 4 updated `.claude/rules/marketplace.md`. The `agentic-plugin-dev` and `code-simplifier` rows previously noted the directories were retained for reference. Those notes were replaced with git-history pointers. The six-row do-not-re-add table and the gate rule both survived intact.
 
-Step 5 fixed the loader. `CLAUDE.local.md` (gitignored) was updated to replace the `ls | xargs` one-liner with a Python one-liner that reads `marketplace.json` and emits exactly the registered plugin `--plugin-dir` flags. This closes the class of defect rather than just its current instance: any future directory dropped into `kit/plugins/` without a manifest entry will not auto-load.
+Step 5 fixed the loader locally. `CLAUDE.local.md` is gitignored, so this change applies only to the current developer's checkout and does not ship to other users. The fix replaced the `ls | xargs` one-liner with a Python one-liner that reads `marketplace.json` and emits exactly the registered plugin `--plugin-dir` flags. The durable, repo-wide protection against unregistered directories auto-loading is the new `tests/plugins/test-no-orphan-plugin-dirs.sh` test (Step 8), not the local loader change.
 
 Step 6 ran `/skill-reviewer:optimizing-skill-frontmatter` over all eight SKILL.md files that failed the 200/80 rule. The skill rewrote each description to the three-part format (short trigger sentence ≤80 chars, capability statement, "Use when" activation trigger) and set `disable-model-invocation` correctly per file. `build-proposal` needed restructuring rather than trimming, as its 195-char description was one unbroken sentence with no three-part shape.
 

@@ -40,7 +40,7 @@ Branch-agent is activated whenever the user asks to create or start a new branch
 ```
 /git-agent:branch-agent                        # auto-generates name from working-tree changes
 /git-agent:branch-agent add-dark-mode-toggle   # uses the supplied phrase as the slug (Case B)
-/git-agent:branch-agent fix/login-redirect     # pre-formed name passed through directly
+/git-agent:branch-agent fix/login-redirect     # pre-formed name, date suffix appended → fix/login-redirect-YYYY-MM-DD
 ```
 
 Auto-generated names now read like commit subjects: `feat/add-login-form-validation-2026-07-11` instead of `feat/src-login-form-valid-2026-07-11`. The date suffix (`-YYYY-MM-DD`) is always appended regardless of path.

@@ -9,7 +9,7 @@
 
 ## What shipped
 
-- Added a `plan` source keyword to `git-agent:create-issue` so a `.md` or `.html` plan file can be turned into a GitHub or GitLab issue — a token ending in `.md`/`.html` implies the source even without the explicit keyword.
+- Added a `plan` source keyword to `git-agent:create-issue` so a `.md` plan file (or an `.html` plan with a sibling `.md` spec) can be turned into a GitHub or GitLab issue — a token ending in `.md`/`.html` implies the source even without the explicit keyword. The resolver always reads the `.md` spec, so an HTML-only plan without a sibling spec cannot use this flow.
 - Created `references/plan-issue.md` with the body skeleton (Objective, Plan path, Steps checklist, Acceptance Criteria, Additional Context) and the `type:` → label mapping.
 - Extended `implementation-plan` Step 8 to batch a second `AskUserQuestion` — "Create a tracking issue for this plan?" — and on yes invoke `git-agent:create-issue plan <spec path>`, recording the returned URL as the `issue:` frontmatter key.
 - When `git-agent` is not installed, the tracking-issue prompt degrades to a one-line notice and the plan flow continues unblocked.

@@ -1,6 +1,6 @@
 # Give the HTML-generating and publishing skills a check they can run
 
-> Nine skills that generate or publish HTML without a verification step each received a runnable output check, covered by new test suites that prove the check fails on bad output.
+> Nine skills were audited: seven received runnable output checks (`plan-artifact`, `diff-artifact`, `session-artifact`, `prompt-artifact`, `plans-library`, `media-library`, and `path-rules-advisor`); `plans-open` was intentionally exempt; and `agentic-memory-doctor` was not found at the expected path.
 
 <!-- generated:start -->
 

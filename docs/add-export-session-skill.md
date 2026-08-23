@@ -11,7 +11,7 @@
 
 - Created `kit/plugins/social-media-tools/skills/export-session/` with `SKILL.md` and `scripts/export_session.py`
 - Skill resolves output directory from `plansDirectory` in `.claude/settings.json`, falls back to `docs/plans/sessions`
-- Python script parses JSONL line-by-line, filters to user/assistant turns, strips harness-injected messages and tool-result-only records, and writes `<date>-<slug>.md` with YAML frontmatter
+- Python script parses JSONL line-by-line, filters to user/assistant turns, strips harness-injected messages and tool-result-only records, and writes `<date>-<slug>-<session_id[:8]>.md` with YAML frontmatter
 - Bundled bin/ wrapper (`social-export-session`) exposes the script on the Bash tool's `PATH` without requiring `${VAR}` substitution in commands
 - Bumped `social-media-tools` to `2.14.0` in `.claude-plugin/marketplace.json` with a CHANGELOG entry
 - Removed the standalone `session-tools` plugin from the marketplace so session export lives in one place
@@ -34,7 +34,7 @@ Third, it delegates conversion to the bundled `social-export-session` bin/ wrapp
 
 The Python script (`export_session.py`) processes the JSONL record-by-record. It skips any record whose `isSidechain` flag is true, and any record whose `type` is not `user` or `assistant`. Within user records it additionally skips messages whose content is composed entirely of `tool_result` blocks — these are intermediate tool outputs, not user-authored text. It also discards text that begins with `<system-reminder>`, `<command-`, `<local-command-`, or `<task-notification` — harness-injected context that should never appear in a readable export.
 
-The output file is named `<date>-<slug>.md`, where the date comes from the first record's timestamp and the slug is derived from the first user message. The file opens with YAML frontmatter carrying `session-id`, `date`, `source`, and `type: session-export`, followed by one Markdown section per conversation turn.
+The output file is named `<date>-<slug>-<session_id[:8]>.md`, where the date comes from the first record's timestamp, the slug is derived from the first user message, and the 8-character session ID prefix makes each filename collision-resistant. The file opens with YAML frontmatter carrying `session-id`, `date`, `source`, and `type: session-export`, followed by one Markdown section per conversation turn.
 
 The `type: session-export` frontmatter tag is the hook for future indexing: the plans gallery can identify exported sessions as a distinct category without inspecting content.
 

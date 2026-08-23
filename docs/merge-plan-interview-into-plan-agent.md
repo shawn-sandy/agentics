@@ -9,7 +9,7 @@
 
 ## What shipped
 
-- Copied five carried-over skill directories (`documenting-plans`, `markdown-to-html`, `plan-status`, `deep-grill`, and the related assets) plus six commands and the `plan-documenter` agent from `plan-interview` into `plan-agent`, preserving directory shape.
+- Copied four carried-over skill directories (`documenting-plans`, `markdown-to-html`, `plan-status`, `deep-grill`, each with their assets) plus six commands (`documenting-plans.md`, `plan-maintenance.md`, `markdown-to-html.md`, `plan-status.md`, `update-plan-status.md`, `deep-grill.md`) and the `plan-documenter` agent from `plan-interview` into `plan-agent`, preserving directory shape.
 - Rewrote every `plan-interview:` namespace reference and intra-plugin path in the copied files to `plan-agent:` across skill bodies, command bodies, the agent, and cross-links.
 - Folded `update-plan-status`'s bulk mode into the moved `plan-status` skill as a directory/all flag, then deleted the standalone `update-plan-status` command.
 - Merged the ExitPlanMode nudge hook from `plan-interview/hooks.json` into `plan-agent/hooks.json` as a new PostToolUse matcher pointing at plan-agent's built-in Step 5b interview.
@@ -40,6 +40,9 @@
 | `tests/publish/smoke-clean-dist.sh` | Smoke test — plan-interview removed from PLUGINS roster | Modified |
 | `tests/publish/test-dist-transforms.mjs` | Transform test — plan-interview assertion repointed to plan-agent | Modified |
 | `tests/plugins/test-save-pdf.sh` | PDF test — origin comment updated | Modified |
+| `kit/plugins/plan-agent/commands/plan-maintenance.md` | Ported command — plan maintenance workflow | Created |
+| `tests/plugins/test-command-delegation.sh` | Delegation test — plan-interview paths repointed to plan-agent | Modified |
+| `kit/plugins/README.md` | Plugin index — plan-agent cross-references updated | Modified |
 
 ## How it works
 
