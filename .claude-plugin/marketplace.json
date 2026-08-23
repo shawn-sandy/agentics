@@ -37,7 +37,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-review"
       },
-      "version": "3.3.4",
+      "version": "3.3.5",
       "description": "Structured multi-dimensional code review across quality, bugs, security, best practices, complexity rating, breaking changes, and regressions",
       "category": "development",
       "tags": [
@@ -121,7 +121,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "4.19.3",
+      "version": "4.19.4",
       "description": "Automated git workflow — create branches, commit with conventional messages, create PRs, and open GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate; ships background subagents and slash commands for fire-and-forget commit/PR/ship/CI-watch plus auto-linking plan issue references in PR descriptions",
       "category": "development",
       "tags": [
@@ -218,7 +218,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "9.6.0",
+      "version": "9.6.1",
       "description": "Plan creation, review, follow-through, and maintenance. Author a Markdown plan spec rendered as self-contained interactive HTML (implementation-plan), implement it end-to-end through the acceptance and completion gates (build), which authors a plan first when the command names none, and review it with a ten-reviewer Agent Team (review-plan) before marking it done (finalize-plan). Ship a whole backlog in parallel with one worktree agent per plan (build-fleet). Also ships build-proposal, build-feature, deep-grill, prompt, prototype, design, documenting-plans, markdown-to-html, plan-status, plan-maintenance, setup-sites, plans-library, and plans-open. Accepts issue URLs and .md plans as input; hooks enforce filenames and rebuild the plan gallery. Full detail in the plugin README.",
       "category": "productivity",
       "tags": [
@@ -251,7 +251,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/team-defaults"
       },
-      "version": "0.2.2",
+      "version": "0.2.3",
       "description": "Shared team defaults — documentation and design-token agents plus a sync-rules skill that installs the team's global rules into ~/.claude/rules/",
       "category": "productivity",
       "tags": [

@@ -31,6 +31,34 @@ Produce no plan document — execute the workflow directly.
   at exactly the post-interview moment the hoist exists to avoid. When those
   artifacts are the only changes, the tree is clean for this purpose: proceed
   silently.
+- **Stale checkout → stop and ask.** A plan is written against a snapshot of
+  the repo. Implementing it from a checkout that predates that snapshot makes
+  every premise in it suspect — "this file is unreferenced", "this helper does
+  not exist yet", "this API still takes two arguments" — and the result is work
+  that is *confidently wrong* rather than obviously broken: it passes its own
+  verification and fails only against reality. Count the distance first:
+
+  ```bash
+  git fetch origin --quiet
+  BASE=$(git symbolic-ref -q --short refs/remotes/origin/HEAD || echo origin/main)
+  git log "HEAD..$BASE" --oneline | wc -l
+  ```
+
+  Resolve `BASE` rather than hardcoding `origin/main` — the third line dies on
+  line 1 in every `master` and `develop` repo otherwise. **Zero** → proceed
+  without comment; a guard that narrates itself on every clean run trains the
+  user to skip reading it. **Non-zero** → report the count and the base branch
+  and ask whether to update or proceed anyway. Never update the checkout on
+  your own: a rebase or merge here can conflict with uncommitted work, and
+  which to run is the user's call.
+- **In a worktree this is the only freshness signal that counts.** A worktree
+  can report a clean tree, an up-to-date upstream, and a branch that exists on
+  origin while still sitting many commits behind the default branch. A
+  SessionStart hook saying "already at origin/main" describes the branch's
+  tracking ref, not the distance from the default branch — it is not this
+  check and does not substitute for it. Detached HEAD, no `origin`, an
+  unresolvable base, or a failed fetch (offline, no auth) → say the check could
+  not run and continue. This is a guard, not a gate.
 
 Resolve the plans directory the way sibling skills do: `--dir` if given, else
 the `planAgent.plansDirectory` / `plansDirectory` setting (project-local

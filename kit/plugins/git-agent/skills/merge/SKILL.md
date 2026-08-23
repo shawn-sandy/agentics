@@ -138,6 +138,33 @@ signal is a gate here — there is no automated gate at all. Say that plainly in
 the Step 3 summary and let the full check list and the user's judgement carry
 the decision.
 
+### When CI never dispatched
+
+A check that is *absent* is not a check that *passed*. An account-level billing
+or quota block, an expired token, or a workflow awaiting approval stops jobs
+from starting at all, so `gh pr checks` has nothing to report — which reads
+identically to a repo that simply has no CI configured. Separate the two before
+summarizing:
+
+```
+gh run list --branch <branch> --limit 5
+gh run view <run-id> --json jobs --jq '.jobs | length'
+gh run view <run-id> --log-failed | wc -c
+```
+
+Treat CI as **never dispatched** when the run list is empty, when a run has an
+empty `jobs` array, or when every job failed *and* `--log-failed` returns zero
+bytes. Duration alone does not discriminate — genuine failures also finish in
+seconds. The empty log is the load-bearing signal;
+`ship-autonomous/references/ci-autofix.md` carries the measurements behind it.
+
+This is **not** a gate — it does not block a merge, and red checks from an
+external blocker are not evidence of a code defect. It is a reporting rule:
+name the block and its likely cause in the Step 3 summary, say which local
+gates were run in its place, and let the user decide with the real picture.
+**Never call a PR "CI green", "checks passed", or "all green" when no job
+produced output** — say "CI never dispatched — <cause>" instead.
+
 If any of these fails — a **required** check pending or failing, conflicts,
 changes requested, a merge state outside the three above, or anything ambiguous
 — print the status summary (checks, review decision, `mergeStateStatus`) **and
