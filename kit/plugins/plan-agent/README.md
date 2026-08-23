@@ -35,11 +35,14 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `plans-open` | Skill | Auto-activates on "open the gallery", "show the plans page" — opens without rebuilding |
 | `setup-sites` | Skill | Command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent — scaffolds the deploy pipeline into any repo |
 | `prototype` | Skill | Command (`/plan-agent:prototype <plan.html \| idea \| image \| figma-url>`) or auto-activates on "prototype this plan / idea / screenshot" intent — generates a runnable static-HTML prototype under `docs/prototypes/` |
-| `dispatch` | Hook (`PostToolUse`) | The plugin's only registered hook. Fires on `Write`/`Edit`/`MultiEdit`, path-gates once, and fans out to the four below only for plan/prototype writes |
+| `design` | Skill | Command (`/plan-agent:design <plan.html \| idea \| image \| figma-url>`) or auto-activates on "design this plan" intent — derives one artboard per user-facing plan step under `docs/designs/<plan-slug>/` and publishes the canvas through Claude Code's built-in `design` skill |
+| `dispatch` | Hook (`PostToolUse`) | The plugin's only registered hook. Fires on `Write`/`Edit`/`MultiEdit`, path-gates once, and fans out to the six below only for plan/prototype/design writes |
 | `validate-plan-filename` | Child of `dispatch` | Validates plan filenames; exits 2 to block a badly-named plan |
 | `rebuild-plans-index` | Child of `dispatch` | Regenerates the plans gallery for non-index `.html` plans |
 | `build-prototypes-index` | Child of `dispatch` | Regenerates the prototypes gallery for `docs/prototypes/` writes |
 | `check-prototype-drift` | Child of `dispatch` | Reports when a prototype has drifted from its own data model or its plan's copy |
+| `build-designs-index` | Child of `dispatch` | Regenerates the designs gallery for `docs/designs/` writes |
+| `check-design-drift` | Child of `dispatch` | Reports a user-facing plan step that no artboard covers |
 
 **Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper reviews, use the `review-plan` Agent Team. Note: `plan-agent:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
 
@@ -159,6 +162,10 @@ The exit menu always offers `Review the plan` as a one-click path to critique th
 
 If Agent Teams are unavailable (Claude Code < 2.1.32 or `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` unset), selecting `Review the plan` surfaces `review-plan`'s guidance and returns to the menu without crashing the planning flow. Plan status stays `todo` throughout — reviewing is not implementing.
 
+**Step 8 — "Want to see it before building?" (conditional):**
+
+When the plan carries UI signals — the same `ui_signals_present` rule `review-plan` Step 3b applies — Step 8 adds a **third question** to its existing batched `AskUserQuestion` call, offering `Prototype` / `Design canvas` / `No`. A third *question*, never two more options: both existing option lists already sit at the 4-option cap, so there is no room to graft the choice onto either. `Prototype` runs `/plan-agent:prototype`, `Design canvas` runs `/plan-agent:design`. This is also the first time `prototype` is offered anywhere in the planning chain — until now it was reachable only by knowing the command existed.
+
 ### HTML plan output
 
 Every plan is a single self-contained `.html` file (no CDN links, no external assets):
@@ -174,6 +181,7 @@ Every plan is a single self-contained `.html` file (no CDN links, no external as
 - **Wish List** — blue-sky / visionary next-steps rendered with a distinct dashed-border treatment
 - **Collapsible sections** — Next Steps and Unresolved Questions use `<details>` for progressive disclosure
 - **Prototype link** *(conditional)* — when the spec's frontmatter carries a `prototype:` key (a repo-relative path, written by `/plan-agent:prototype`), the header actions row gains a **View prototype** link and the `<head>` gains `<meta name="plan-prototype">`. The href is computed with `path.relative()` from the rendered plan's own output directory, so it resolves from a custom or nested `plansDirectory` — never a hard-coded `../prototypes/`. The plans gallery reads the same meta tag and shows a text-bearing `prototype` chip on the card. A spec without the key renders exactly as before
+- **Design link** *(conditional)* — when the spec's frontmatter carries a `design:` key (the published canvas Artifact URL, written by `/plan-agent:design`), the header actions row gains a **View design** link and the `<head>` gains `<meta name="plan-design">`. Modelled on the `issue:` key rather than on `prototype:` — `prototype:` relativizes a repo path, and a canvas lives at a URL with nothing to relativize. Only `http(s)` is accepted: escaping leaves a scheme intact, so a spec carrying `design: javascript:...` — imported or hand-edited — would otherwise render as an ordinary-looking anchor that runs on click. Any other scheme is dropped from both the meta tag and the link, with a warning on stderr. A spec without the key renders exactly as before
 
 Open the `.html` file directly in any browser. No server required.
 
@@ -403,6 +411,33 @@ prototype this plan
 
 Given a plan path it extracts the data model directly; given a raw idea it runs a 3-question interview (entity, action, success signal). Given an **image** it reads the mockup/screenshot and infers the model from the UI shown; given a **Figma URL** it loads the Figma MCP tools to read a screenshot + layer metadata and infers the same way (asking for a screenshot if no Figma MCP server is connected). It then echoes the derived model back for confirmation and writes `docs/prototypes/<verb-target>.html`.
 
+#### `design` — Command or auto-activate
+
+Turns a completed HTML plan, a one-line idea, an image (screenshot/mockup), or a Figma design into a **design canvas** — a multi-artboard visual design published as an Artifact — so a plan can be seen before it is built. Where `prototype` answers *does this flow work*, `design` answers the question that comes first: *what does this look like*.
+
+```
+/plan-agent:design docs/plans/add-fitness-tracker.html
+/plan-agent:design "track gym workouts"
+/plan-agent:design ~/Desktop/dashboard-mockup.png
+/plan-agent:design https://figma.com/file/...
+design this plan
+```
+
+It derives **one artboard per user-facing plan step**, uncapped — a step with no user-facing surface produces none, so a plan of housekeeping steps yields nothing to look at rather than a wall of empty boards. The derived artboard list is echoed back for confirmation before anything is authored.
+
+All authoring and publishing is then delegated to Claude Code's **built-in `design` skill** via `Skill(design)`. This skill reproduces none of it — not the artboard file format, not the seeding helper, not the contract pin, not the capability roster — because a copy of any of those rots the first time the built-in skill moves, and none of it is the part a planning plugin knows anything about. What it owns is the plan-shaped half: resolving the input, deriving the artboards from the steps, and writing the result back into the plan. Working artboards land under `docs/designs/<plan-slug>/`.
+
+Once the canvas is published, the skill writes two keys into the plan's Markdown spec and re-renders:
+
+| Key | Value | Read by |
+|-----|-------|---------|
+| `design:` | The published canvas Artifact URL | The renderer — `<meta name="plan-design">` plus the **View design** header link |
+| `design-dir:` | The repo-relative artboard directory (`docs/designs/<slug>`) | `build` Step 2 as the visual spec; `check-design-drift` to locate the artboards |
+
+Two keys rather than one slug-derived path: the pair survives a plan rename, which a directory recomputed from the plan's own filename would not.
+
+**"User-facing" has exactly one definition.** The derivation rule reuses the UI-signal keyword list `review-plan` Step 3b already applies (React, Vue, Svelte, Angular, `.tsx`/`.jsx`/`.css`/`.html`, `className`, `style`, Tailwind, buttons, modals, forms, dialogs, dropdowns, pages, components). `check-design-drift` applies the identical filter, so the skill and the hook always agree on which steps needed an artboard — two definitions would make every housekeeping step read as permanent drift.
+
 #### `build` — Command or auto-activate
 
 Implements a plan and runs it to done. `implementation-plan` authors the plan and stops; `build` picks it up — in the same session or three days later — walks its steps, ticks the markdown spec, re-renders the HTML, and runs the three completion gates. `status: completed` is written only after end-to-end verification passes, and the skill stops without committing.
@@ -458,6 +493,18 @@ Each warning names both files, the diverging field, and what to re-run. It is de
 It stays silent whenever there is nothing to compare — no model block, no plan, no `proto-model:` line, malformed JSON, or a `proto-source` resolving outside the plans directory — and **always exits 0**, so a drift report about one plan never interrupts work on another.
 
 The comparison only reports; reconciling the two sides is a judgment call left to a human.
+
+#### Designs gallery rebuild (automatic)
+
+`build-designs-index` runs when `dispatch.py` sees a write under `docs/designs/`, leaving the plans and prototypes galleries untouched. It calls `build-designs-index.sh` to regenerate `docs/designs/index.html` — one card per canvas directory, newest-first and escaped. Forked from `build-prototypes-index.sh`: same two run modes, same always-exit-0 contract.
+
+#### Design drift check (automatic)
+
+`check-design-drift` runs after `build-designs-index` on the same `docs/designs/` write. It reports any **user-facing plan step that no artboard covers**, matching artboard filenames and headings against the plan's steps under the same UI-signal filter `/plan-agent:design` used to derive them — one definition, two consumers, so the skill and the check never disagree about which steps needed a board.
+
+It deliberately does **not** compare the local artboards against the published canvas. People editing the canvas in the GUI is the feature working as intended, and a check that fires every time they do is noise rather than signal. It is filename-and-heading comparison only — no network call, no parse of the published canvas — because every `dispatch.py` child shares the dispatcher's single deadline, so one slow child would starve its siblings.
+
+Like every other child it **always exits 0**: a coverage report about one plan never interrupts a write to another.
 
 #### Hook dispatch
 
@@ -516,6 +563,7 @@ plan-agent/
   bin/                      — On the Bash tool's PATH; invoke by bare name, never by path
     plan-agent-render            — Renders a plan spec (wraps scripts/build-plan-html.mjs)
     plan-agent-prototypes-index  — Rebuilds the prototypes gallery (wraps hooks/build-prototypes-index.sh)
+    plan-agent-designs-index     — Rebuilds the designs gallery (wraps hooks/build-designs-index.sh)
     plan-agent-plans-index       — Rebuilds the plans gallery (wraps hooks/build-index.sh)
   skills/
     implementation-plan/
@@ -638,6 +686,10 @@ when no plan was named.
 - **Preconditions** — surfaces a dirty working tree before anything else, chain
   included; then refuses to silently redo a `completed` plan and resumes from
   the first unmarked step
+- **Visual spec** — when the resolved spec carries a `design-dir:` key, Step 2
+  reads the artboards under it before implementing, so a published design
+  canvas is the reference for anything user-facing rather than a picture
+  nobody opened. Specs without the key are unchanged
 - **Three gates** — an **acceptance-criteria gate** (verify and check off each
   criterion), an **end-to-end verification gate** (run the objective test and
   walk the Verification section; on failure, fix and re-verify up to 3 times),

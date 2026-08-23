@@ -24,7 +24,9 @@ spec.
 - `references/resolve-plan.md` — Steps 0-1
 - `references/author-plan-chain.md` — Step 1b
 - `references/phase-checkpoints.md` — Step 2, phased specs
+- `references/design-spec.md` — Step 2, specs carrying a design canvas
 - `references/completion-gates.md` — Steps 3-5
+- `references/re-render.md` — a re-render that exits non-zero
 
 ## Invocation & Arguments
 
@@ -45,13 +47,9 @@ plan-agent-render "<stem>.md" -o "<stem>.html"
 Bare name, never a path — this plugin's `bin/` is on `PATH`. `<stem>` is the
 resolved plan's path without its extension, fixed in Step 1. Run after
 **every** batch of spec edits, status changes included, and as the final
-action. A non-zero exit naming a missing or malformed section means the spec
-edit broke the format: fix the markdown and re-run,
-never hand-edit the HTML to compensate.
-Any other failure — `MODULE_NOT_FOUND`, a missing renderer, a node crash — is
-an environment problem: report it and stop, never rewrite a valid spec.
-The `render-plan-html.py` hook also re-renders on each spec write; run the
-command anyway so a parse failure surfaces here rather than silently.
+action. A non-zero exit means the spec edit broke the format: fix the markdown and
+re-run, never hand-edit the HTML to compensate. Failure modes:
+`references/re-render.md`.
 
 ## Step 1 — Resolve the plan
 
@@ -72,6 +70,10 @@ Set the spec's `status:` to `in-progress` and re-render, then work through each
 step sequentially — apply the changes, verify each step, and mark progress in
 the spec as you go (insert the `[x]` marker after the finished step's number;
 the re-render flips the card and chip).
+
+**Visual spec** (`design-dir:` in the frontmatter): follow
+`references/design-spec.md` before writing code. Its artboards are what the
+user-facing steps are built to match; steps with none are unaffected.
 
 **Phased spec** (`### Phase: <name>` headings in `## Steps`): follow
 `references/phase-checkpoints.md`. It **stops at each boundary by default**;

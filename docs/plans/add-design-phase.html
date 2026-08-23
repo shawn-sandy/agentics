@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="high">
+<html lang="en" data-status="in-progress" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,17 +14,17 @@ try {
   if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
 } catch (e) { /* no storage — prefers-color-scheme decides */ }
 </script>
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="in-progress">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-08-18">
 <meta name="plan-repo" content="agentics">
 <meta name="plan-file" content="add-design-phase.html">
-<meta name="plan-path" content="add-design-phase.html">
-<meta name="plan-md" content="add-design-phase.md">
-<meta name="plan-implement" content="Read and implement all steps in the plan at add-design-phase.md — Give plan-agent a design phase, so a plan can be seen before it is built. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
-<meta name="plan-goal" content="Achieve this goal: Give plan-agent a design phase, so a plan can be seen before it is built. The plan at add-design-phase.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
-<meta name="plan-workflow" content="Run a workflow to implement the plan at add-design-phase.md — Give plan-agent a design phase, so a plan can be seen before it is built. Brief subagents with the plan file at add-design-phase.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-path" content="docs/plans/add-design-phase.html">
+<meta name="plan-md" content="docs/plans/add-design-phase.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-design-phase.md — Give plan-agent a design phase, so a plan can be seen before it is built. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Give plan-agent a design phase, so a plan can be seen before it is built. The plan at docs/plans/add-design-phase.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-workflow" content="Run a workflow to implement the plan at docs/plans/add-design-phase.md — Give plan-agent a design phase, so a plan can be seen before it is built. Brief subagents with the plan file at docs/plans/add-design-phase.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
 <title>Plan: Give plan-agent a design phase, so a plan can be seen before it is built</title>
 <style>
 /* ── Design tokens ─────────────────────────────────────────────────
@@ -1570,7 +1570,7 @@ img, video { max-width: 100%; height: auto; }
         <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
                 aria-pressed="false" aria-label="Use dark theme">Dark</button>
         <span class="effort-badge" aria-label="Effort level">High</span>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">in-progress</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1604,18 +1604,18 @@ img, video { max-width: 100%; height: auto; }
       <summary>13 steps</summary>
       <div class="rail-heading">Steps</div>
       <ul class="rail-steps">
-        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Write <code class="md">tests/plugins/test-design-plan-link.mjs</code>, modelled on <code class="md">tests/plugins/test-prototype-plan-link.mjs</code>. It asserts four things: a spec carrying <code class="md">design:</code> and <code class="md">design-dir:</code> renders a <code class="md">plan-design</code> meta tag plus a header anchor whose accessible text is non-empty and whose <code class="md">href</code> is the artifact URL verbatim; a spec carrying neither renders neither; a spec carrying <code class="md">design: javascript:alert(1)</code> renders neither tag nor anchor; and the two <code class="md">build-plan-html.mjs</code> copies hash identically.</span><span class="rail-state">step 1 of 13</span></a></li>
-        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Write <code class="md">tests/plugins/test-build-designs-index.sh</code>, modelled on <code class="md">tests/plugins/test-build-prototypes-index.sh</code>. It asserts the generator writes <code class="md">docs/designs/index.html</code> with one escaped card per canvas directory, skips its own generated index when re-run, and exits 0 on a directory holding no artboards.</span><span class="rail-state">step 2 of 13</span></a></li>
-        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Write <code class="md">tests/plugins/test-design-drift.sh</code> plus the <code class="md">tests/fixtures/plan-agent/sample-design/</code> fixture — one plan spec with three user-facing steps plus one housekeeping step, and a matching three-artboard directory, and one diverged pair where the spec gained a fourth user-facing step with no artboard. It asserts <code class="md">check-design-drift.py</code> is silent on the matched pair — including its housekeeping step, which must not be reported — and names the uncovered step on the diverged one.</span><span class="rail-state">step 3 of 13</span></a></li>
-        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Add <code class="md">design:</code> and <code class="md">design-dir:</code> handling to <strong class="md">both</strong> copies of <code class="md">build-plan-html.mjs</code> (<code class="md">scripts/</code> and <code class="md">kit/plugins/plan-agent/scripts/</code>), modelled on the existing <code class="md">issue:</code> block near line 313 — http(s) only, drop anything else for both the tag and the link — emitting a <code class="md">plan-design</code> meta tag and a &quot;View design&quot; header action row link. Do not model it on the <code class="md">prototype:</code> block: that relativizes a repo path, and a canvas lives at a URL.</span><span class="rail-state">step 4 of 13</span></a></li>
-        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Write <code class="md">kit/plugins/plan-agent/hooks/build-designs-index.sh</code>, forked from <code class="md">build-prototypes-index.sh</code> and retargeted to <code class="md">docs/designs/</code>. Keep the same two run modes (hook payload on stdin, or a project root argument) and the same <code class="md">exit 0</code> guarantee.</span><span class="rail-state">step 5 of 13</span></a></li>
-        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Write <code class="md">kit/plugins/plan-agent/hooks/check-design-drift.py</code>. It reads the plan&#39;s <code class="md">design-dir:</code>, lists <code class="md">*.dc.html</code> artboard names in that directory, extracts the plan&#39;s <strong class="md">user-facing</strong> step headings — applying the same filter step 8&#39;s derivation uses, so a version bump or a test-file step is never counted — and reports any user-facing step with no artboard covering it. No network calls, no read of the published canvas.</span><span class="rail-state">step 6 of 13</span></a></li>
-        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Add the <code class="md">docs/designs/</code> gate to <code class="md">kit/plugins/plan-agent/hooks/dispatch.py</code> — a <code class="md">_DESIGNS_MARKER</code> constant, an <code class="md">is_design</code> test alongside <code class="md">is_prototype</code>, and a fan-out to the two new children sharing the existing deadline. Preserve the early <code class="md">sys.exit(0)</code> for unrelated writes.</span><span class="rail-state">step 7 of 13</span></a></li>
-        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Write <code class="md">kit/plugins/plan-agent/skills/design/SKILL.md</code>, structurally mirroring <code class="md">skills/prototype/SKILL.md</code>: Step 0 exit plan mode; Step 1 resolve the input (plan path, raw idea, image, or Figma URL — the same input contract prototype already documents), warning in one line and proceeding when the resolved plan carries no UI signals; Step 2 derive one artboard per <strong class="md">user-facing</strong> step, uncapped — a step with no user-facing surface produces no artboard; Step 3 echo the artboard list back for confirmation; Step 4 delegate authoring and publishing to the built-in skill via <code class="md">Skill(design)</code>, writing working files under <code class="md">docs/designs/&lt;plan-slug&gt;/</code>; Step 5 write <code class="md">design:</code> and <code class="md">design-dir:</code> into the spec frontmatter and re-render; Step 6 index and report.</span><span class="rail-state">step 8 of 13</span></a></li>
-        <li><a class="rail-step" href="#step-9"><span class="rail-no">9</span><span class="rail-text">Add the third batched question to <code class="md">implementation-plan/SKILL.md</code> Step 8: &quot;Want to see it before building?&quot; with options <code class="md">Prototype</code>, <code class="md">Design canvas</code>, and <code class="md">No</code>. Gate it on the <code class="md">ui_signals_present</code> rule quoted from <code class="md">skills/review-plan/SKILL.md:78</code>. It is a third question in the same <code class="md">AskUserQuestion</code> call, never two more options — both existing option lists are already at the 4-option cap.</span><span class="rail-state">step 9 of 13</span></a></li>
-        <li><a class="rail-step" href="#step-10"><span class="rail-no">10</span><span class="rail-text">Teach <code class="md">skills/build/SKILL.md</code> Step 2 to read the artboards under a spec&#39;s <code class="md">design-dir:</code> as the visual spec before implementing, when the key is present.</span><span class="rail-state">step 10 of 13</span></a></li>
-        <li><a class="rail-step" href="#step-11"><span class="rail-no">11</span><span class="rail-text">Run the full suite: <code class="md">bash tests/run-all.sh</code>.</span><span class="rail-state">step 11 of 13</span></a></li>
-        <li><a class="rail-step" href="#step-12"><span class="rail-no">12</span><span class="rail-text">Bump <code class="md">plan-agent</code> to <code class="md">9.5.0</code> in <code class="md">.claude-plugin/marketplace.json</code>, regenerate the root Plugin Reference Table with <code class="md">node scripts/build-readme-table.mjs</code>, and hand-write the <code class="md">design</code> section in <code class="md">kit/plugins/plan-agent/README.md</code> alongside the existing <code class="md">prototype</code> section.</span><span class="rail-state">step 12 of 13</span></a></li>
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">tests/plugins/test-design-plan-link.mjs</code>, modelled on <code class="md">tests/plugins/test-prototype-plan-link.mjs</code>. It asserts four things: a spec carrying <code class="md">design:</code> and <code class="md">design-dir:</code> renders a <code class="md">plan-design</code> meta tag plus a header anchor whose accessible text is non-empty and whose <code class="md">href</code> is the artifact URL verbatim; a spec carrying neither renders neither; a spec carrying <code class="md">design: javascript:alert(1)</code> renders neither tag nor anchor; and the two <code class="md">build-plan-html.mjs</code> copies hash identically.</span><span class="rail-state">step 1 of 13, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">tests/plugins/test-build-designs-index.sh</code>, modelled on <code class="md">tests/plugins/test-build-prototypes-index.sh</code>. It asserts the generator writes <code class="md">docs/designs/index.html</code> with one escaped card per canvas directory, skips its own generated index when re-run, and exits 0 on a directory holding no artboards.</span><span class="rail-state">step 2 of 13, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">tests/plugins/test-design-drift.sh</code> plus the <code class="md">tests/fixtures/plan-agent/sample-design/</code> fixture — one plan spec with three user-facing steps plus one housekeeping step, and a matching three-artboard directory, and one diverged pair where the spec gained a fourth user-facing step with no artboard. It asserts <code class="md">check-design-drift.py</code> is silent on the matched pair — including its housekeeping step, which must not be reported — and names the uncovered step on the diverged one.</span><span class="rail-state">step 3 of 13, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Add <code class="md">design:</code> and <code class="md">design-dir:</code> handling to <strong class="md">both</strong> copies of <code class="md">build-plan-html.mjs</code> (<code class="md">scripts/</code> and <code class="md">kit/plugins/plan-agent/scripts/</code>), modelled on the existing <code class="md">issue:</code> block near line 313 — http(s) only, drop anything else for both the tag and the link — emitting a <code class="md">plan-design</code> meta tag and a &quot;View design&quot; header action row link. Do not model it on the <code class="md">prototype:</code> block: that relativizes a repo path, and a canvas lives at a URL.</span><span class="rail-state">step 4 of 13, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">kit/plugins/plan-agent/hooks/build-designs-index.sh</code>, forked from <code class="md">build-prototypes-index.sh</code> and retargeted to <code class="md">docs/designs/</code>. Keep the same two run modes (hook payload on stdin, or a project root argument) and the same <code class="md">exit 0</code> guarantee.</span><span class="rail-state">step 5 of 13, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">kit/plugins/plan-agent/hooks/check-design-drift.py</code>. It reads the plan&#39;s <code class="md">design-dir:</code>, lists <code class="md">*.dc.html</code> artboard names in that directory, extracts the plan&#39;s <strong class="md">user-facing</strong> step headings — applying the same filter step 8&#39;s derivation uses, so a version bump or a test-file step is never counted — and reports any user-facing step with no artboard covering it. No network calls, no read of the published canvas.</span><span class="rail-state">step 6 of 13, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Add the <code class="md">docs/designs/</code> gate to <code class="md">kit/plugins/plan-agent/hooks/dispatch.py</code> — a <code class="md">_DESIGNS_MARKER</code> constant, an <code class="md">is_design</code> test alongside <code class="md">is_prototype</code>, and a fan-out to the two new children sharing the existing deadline. Preserve the early <code class="md">sys.exit(0)</code> for unrelated writes.</span><span class="rail-state">step 7 of 13, done</span></a></li>
+        <li><a class="rail-step done" href="#step-8"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">kit/plugins/plan-agent/skills/design/SKILL.md</code>, structurally mirroring <code class="md">skills/prototype/SKILL.md</code>: Step 0 exit plan mode; Step 1 resolve the input (plan path, raw idea, image, or Figma URL — the same input contract prototype already documents), warning in one line and proceeding when the resolved plan carries no UI signals; Step 2 derive one artboard per <strong class="md">user-facing</strong> step, uncapped — a step with no user-facing surface produces no artboard; Step 3 echo the artboard list back for confirmation; Step 4 delegate authoring and publishing to the built-in skill via <code class="md">Skill(design)</code>, writing working files under <code class="md">docs/designs/&lt;plan-slug&gt;/</code>; Step 5 write <code class="md">design:</code> and <code class="md">design-dir:</code> into the spec frontmatter and re-render; Step 6 index and report.</span><span class="rail-state">step 8 of 13, done</span></a></li>
+        <li><a class="rail-step done" href="#step-9"><span class="rail-no">✓</span><span class="rail-text">Add the third batched question to <code class="md">implementation-plan/SKILL.md</code> Step 8: &quot;Want to see it before building?&quot; with options <code class="md">Prototype</code>, <code class="md">Design canvas</code>, and <code class="md">No</code>. Gate it on the <code class="md">ui_signals_present</code> rule quoted from <code class="md">skills/review-plan/SKILL.md:78</code>. It is a third question in the same <code class="md">AskUserQuestion</code> call, never two more options — both existing option lists are already at the 4-option cap.</span><span class="rail-state">step 9 of 13, done</span></a></li>
+        <li><a class="rail-step done" href="#step-10"><span class="rail-no">✓</span><span class="rail-text">Teach <code class="md">skills/build/SKILL.md</code> Step 2 to read the artboards under a spec&#39;s <code class="md">design-dir:</code> as the visual spec before implementing, when the key is present.</span><span class="rail-state">step 10 of 13, done</span></a></li>
+        <li><a class="rail-step done" href="#step-11"><span class="rail-no">✓</span><span class="rail-text">Run the full suite: <code class="md">bash tests/run-all.sh</code>.</span><span class="rail-state">step 11 of 13, done</span></a></li>
+        <li><a class="rail-step done" href="#step-12"><span class="rail-no">✓</span><span class="rail-text">Bump <code class="md">plan-agent</code> to <code class="md">9.5.0</code> in <code class="md">.claude-plugin/marketplace.json</code>, regenerate the root Plugin Reference Table with <code class="md">node scripts/build-readme-table.mjs</code>, and hand-write the <code class="md">design</code> section in <code class="md">kit/plugins/plan-agent/README.md</code> alongside the existing <code class="md">prototype</code> section.</span><span class="rail-state">step 12 of 13, done</span></a></li>
         <li><a class="rail-step" href="#step-13"><span class="rail-no">13</span><span class="rail-text">Run the feature end to end on a <strong class="md">throwaway</strong> UI plan, so no test canvas lands in the real plan history: author a scratch plan, take the <code class="md">Design canvas</code> branch at Step 8, and confirm the canvas publishes, both frontmatter keys are written, the re-rendered plan carries the header link, and the designs gallery lists the new canvas. Then load the rendered plan in the browser and assert the anchor&#39;s resolved <code class="md">href</code> and its computed text via <code class="md">mcp__claude-in-chrome__javascript_tool</code>, reporting both measured values.</span><span class="rail-state">step 13 of 13</span></a></li>
       </ul>
     </details>
@@ -1634,7 +1634,7 @@ img, video { max-width: 100%; height: auto; }
 
     <div class="plan-implement">
       <span class="plan-implement-label">Implement</span>
-      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at add-design-phase.md — Give plan-agent a design phase, so a plan can be seen before it is built. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-design-phase.md — Give plan-agent a design phase, so a plan can be seen before it is built. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
       <button class="copy-cmd-btn" type="button"
               onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
     </div>
@@ -1646,7 +1646,7 @@ img, video { max-width: 100%; height: auto; }
         <div class="plan-goal">
           <div class="plan-goal-label">Pursue as goal — optimize for the outcome, in parallel</div>
           <div class="plan-goal-inner">
-            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Give plan-agent a design phase, so a plan can be seen before it is built. The plan at add-design-phase.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Give plan-agent a design phase, so a plan can be seen before it is built. The plan at docs/plans/add-design-phase.md describes one approach — use it as reference, but optimize for the outcome. Fan out across parallel subagents where that serves the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
             <button class="copy-goal-btn" type="button"
                     onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
           </div>
@@ -1655,7 +1655,7 @@ img, video { max-width: 100%; height: auto; }
         <div class="plan-workflow">
           <div class="plan-workflow-label">Run as workflow — launch parallel subagents</div>
           <div class="plan-workflow-inner">
-            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at add-design-phase.md — Give plan-agent a design phase, so a plan can be seen before it is built. Brief subagents with the plan file at add-design-phase.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <code id="workflow-cmd" aria-label="Workflow prompt">Run a workflow to implement the plan at docs/plans/add-design-phase.md — Give plan-agent a design phase, so a plan can be seen before it is built. Brief subagents with the plan file at docs/plans/add-design-phase.md. Reserve a final verification phase for the lead agent, not a subagent. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-design-phase.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
             <button class="copy-workflow-btn" type="button"
                     onclick="copyWorkflow(this)" aria-label="Copy workflow prompt to clipboard">Copy</button>
           </div>
@@ -1670,13 +1670,13 @@ img, video { max-width: 100%; height: auto; }
           </div>
           <div class="plan-source-row">
             <span class="plan-source-label">Path</span>
-            <code id="plan-path" aria-label="Plan relative path">add-design-phase.html</code>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/add-design-phase.html</code>
             <button class="copy-src-btn" type="button"
                     onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
           </div>
           <div class="plan-source-row">
             <span class="plan-source-label">Spec</span>
-            <code id="plan-md" aria-label="Plan spec markdown path">add-design-phase.md</code>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/add-design-phase.md</code>
             <button class="copy-src-btn" type="button"
                     onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
           </div>
@@ -1688,12 +1688,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 14 done</span>
+        <span id="progress-label">13 / 14 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="93" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:93%"></div>
       </div>
     </div>
 
@@ -1778,12 +1778,12 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="phase-group" data-phase="RED" style="margin-top:1.5rem;">
           <h3 class="phase-name" style="font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .75rem;">RED</h3>
-        <div class="step-card" id="step-1">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">tests/plugins/test-design-plan-link.mjs</code>, modelled on <code class="md">tests/plugins/test-prototype-plan-link.mjs</code>. It asserts four things: a spec carrying <code class="md">design:</code> and <code class="md">design-dir:</code> renders a <code class="md">plan-design</code> meta tag plus a header anchor whose accessible text is non-empty and whose <code class="md">href</code> is the artifact URL verbatim; a spec carrying neither renders neither; a spec carrying <code class="md">design: javascript:alert(1)</code> renders neither tag nor anchor; and the two <code class="md">build-plan-html.mjs</code> copies hash identically.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1798,12 +1798,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-2">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">tests/plugins/test-build-designs-index.sh</code>, modelled on <code class="md">tests/plugins/test-build-prototypes-index.sh</code>. It asserts the generator writes <code class="md">docs/designs/index.html</code> with one escaped card per canvas directory, skips its own generated index when re-run, and exits 0 on a directory holding no artboards.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1818,12 +1818,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-3">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">tests/plugins/test-design-drift.sh</code> plus the <code class="md">tests/fixtures/plan-agent/sample-design/</code> fixture — one plan spec with three user-facing steps plus one housekeeping step, and a matching three-artboard directory, and one diverged pair where the spec gained a fourth user-facing step with no artboard. It asserts <code class="md">check-design-drift.py</code> is silent on the matched pair — including its housekeeping step, which must not be reported — and names the uncovered step on the diverged one.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1841,12 +1841,12 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="phase-group" data-phase="GREEN" style="margin-top:1.5rem;">
           <h3 class="phase-name" style="font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .75rem;">GREEN</h3>
-        <div class="step-card" id="step-4">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add <code class="md">design:</code> and <code class="md">design-dir:</code> handling to <strong class="md">both</strong> copies of <code class="md">build-plan-html.mjs</code> (<code class="md">scripts/</code> and <code class="md">kit/plugins/plan-agent/scripts/</code>), modelled on the existing <code class="md">issue:</code> block near line 313 — http(s) only, drop anything else for both the tag and the link — emitting a <code class="md">plan-design</code> meta tag and a &quot;View design&quot; header action row link. Do not model it on the <code class="md">prototype:</code> block: that relativizes a repo path, and a canvas lives at a URL.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1861,12 +1861,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-5">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">kit/plugins/plan-agent/hooks/build-designs-index.sh</code>, forked from <code class="md">build-prototypes-index.sh</code> and retargeted to <code class="md">docs/designs/</code>. Keep the same two run modes (hook payload on stdin, or a project root argument) and the same <code class="md">exit 0</code> guarantee.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1881,12 +1881,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-6">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">kit/plugins/plan-agent/hooks/check-design-drift.py</code>. It reads the plan&#39;s <code class="md">design-dir:</code>, lists <code class="md">*.dc.html</code> artboard names in that directory, extracts the plan&#39;s <strong class="md">user-facing</strong> step headings — applying the same filter step 8&#39;s derivation uses, so a version bump or a test-file step is never counted — and reports any user-facing step with no artboard covering it. No network calls, no read of the published canvas.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1901,12 +1901,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-7">
+        <div class="step-card completed" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the <code class="md">docs/designs/</code> gate to <code class="md">kit/plugins/plan-agent/hooks/dispatch.py</code> — a <code class="md">_DESIGNS_MARKER</code> constant, an <code class="md">is_design</code> test alongside <code class="md">is_prototype</code>, and a fan-out to the two new children sharing the existing deadline. Preserve the early <code class="md">sys.exit(0)</code> for unrelated writes.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1921,12 +1921,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-8">
+        <div class="step-card completed" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">kit/plugins/plan-agent/skills/design/SKILL.md</code>, structurally mirroring <code class="md">skills/prototype/SKILL.md</code>: Step 0 exit plan mode; Step 1 resolve the input (plan path, raw idea, image, or Figma URL — the same input contract prototype already documents), warning in one line and proceeding when the resolved plan carries no UI signals; Step 2 derive one artboard per <strong class="md">user-facing</strong> step, uncapped — a step with no user-facing surface produces no artboard; Step 3 echo the artboard list back for confirmation; Step 4 delegate authoring and publishing to the built-in skill via <code class="md">Skill(design)</code>, writing working files under <code class="md">docs/designs/&lt;plan-slug&gt;/</code>; Step 5 write <code class="md">design:</code> and <code class="md">design-dir:</code> into the spec frontmatter and re-render; Step 6 index and report.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1941,12 +1941,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-9">
+        <div class="step-card completed" id="step-9">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the third batched question to <code class="md">implementation-plan/SKILL.md</code> Step 8: &quot;Want to see it before building?&quot; with options <code class="md">Prototype</code>, <code class="md">Design canvas</code>, and <code class="md">No</code>. Gate it on the <code class="md">ui_signals_present</code> rule quoted from <code class="md">skills/review-plan/SKILL.md:78</code>. It is a third question in the same <code class="md">AskUserQuestion</code> call, never two more options — both existing option lists are already at the 4-option cap.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1961,12 +1961,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-10">
+        <div class="step-card completed" id="step-10">
           <div class="step-card-header">
             <div class="step-number">10</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Teach <code class="md">skills/build/SKILL.md</code> Step 2 to read the artboards under a spec&#39;s <code class="md">design-dir:</code> as the visual spec before implementing, when the key is present.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1984,12 +1984,12 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="phase-group" data-phase="VERIFY" style="margin-top:1.5rem;">
           <h3 class="phase-name" style="font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .75rem;">VERIFY</h3>
-        <div class="step-card" id="step-11">
+        <div class="step-card completed" id="step-11">
           <div class="step-card-header">
             <div class="step-number">11</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Run the full suite: <code class="md">bash tests/run-all.sh</code>.</span>
               </div>
               <div class="step-note step-why-note">
@@ -2004,12 +2004,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-12">
+        <div class="step-card completed" id="step-12">
           <div class="step-card-header">
             <div class="step-number">12</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bump <code class="md">plan-agent</code> to <code class="md">9.5.0</code> in <code class="md">.claude-plugin/marketplace.json</code>, regenerate the root Plugin Reference Table with <code class="md">node scripts/build-readme-table.mjs</code>, and hand-write the <code class="md">design</code> section in <code class="md">kit/plugins/plan-agent/README.md</code> alongside the existing <code class="md">prototype</code> section.</span>
               </div>
               <div class="step-note step-why-note">
@@ -2071,23 +2071,23 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1">A plan spec carrying <code class="md">design:</code> and <code class="md">design-dir:</code> renders a <code class="md">plan-design</code> meta tag and a working &quot;View design&quot; header link</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">A plan spec carrying neither renders neither, and a <code class="md">javascript:</code> value renders neither</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">Both copies of <code class="md">build-plan-html.mjs</code> hash identically after the change</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4"><code class="md">docs/designs/index.html</code> lists every published canvas, rebuilt automatically on a write under <code class="md">docs/designs/</code></label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5"><code class="md">check-design-drift.py</code> reports a plan step with no covering artboard, and stays silent when the canvas is edited in the GUI</label>
         </li>
         <li>
@@ -2095,35 +2095,35 @@ img, video { max-width: 100%; height: auto; }
           <label for="ac6"><code class="md">/plan-agent:design &lt;plan.html&gt;</code> publishes a canvas and writes both keys back into the spec</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">The skill contains no <code class="md">.dc.html</code> format rules, no <code class="md">seed-canvas.mjs</code> invocation, and no <code class="md">contract:</code> version string</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8">Step 8 offers Prototype and Design canvas on a UI plan, and offers neither on a plan with no UI signals</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">Step 8 still asks at most four options per question</label>
         </li>
         <li>
-          <input type="checkbox" id="ac10">
+          <input type="checkbox" id="ac10" checked>
           <label for="ac10">A step with no user-facing surface produces no artboard, and the drift check does not report it as uncovered</label>
         </li>
         <li>
-          <input type="checkbox" id="ac11">
+          <input type="checkbox" id="ac11" checked>
           <label for="ac11"><code class="md">/plan-agent:design</code> on a plan with no UI signals warns in one line and still proceeds</label>
         </li>
         <li>
-          <input type="checkbox" id="ac12">
+          <input type="checkbox" id="ac12" checked>
           <label for="ac12"><code class="md">build</code> reads the artboards under <code class="md">design-dir:</code> before implementing</label>
         </li>
         <li>
-          <input type="checkbox" id="ac13">
+          <input type="checkbox" id="ac13" checked>
           <label for="ac13"><code class="md">bash tests/run-all.sh</code> passes with zero failures</label>
         </li>
         <li>
-          <input type="checkbox" id="ac14">
+          <input type="checkbox" id="ac14" checked>
           <label for="ac14"><code class="md">check-plugin-versions.mjs</code> exits 0 against <code class="md">origin/main</code></label>
         </li>
       </ul>
