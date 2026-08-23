@@ -126,13 +126,24 @@ caller supplying a default must **prepend** it for an explicit user value to
 override: the surviving value is the final one, and a default appended after the
 user's arguments would beat them instead.
 
-**Prompt-source mode** (`--from-prompt <path>` set): the path names a saved
-**proposal prompt**, not a plan. This is the `build` chain's proposal handoff.
-Read it for context — the decisions it settled, the constraints it names, the
-approach it recommends — then author a plan through the **normal drafting
-workflow**. This is not conversion: a proposal argues *whether and what*, a plan
-states *how*, so its headings are input, never a step list to transcribe. The
-skip flags are not implied; pass `--quick` explicitly to skip stages.
+**Prompt-source mode** (`--from-prompt <path>` set): the path names a **context
+source**, never a plan. Three shapes reach it — a saved proposal prompt
+(`build-proposal`'s handoff), a sub-feature prompt (`build-feature`'s Tier 1+
+handoff), and a **Tier 0 feature doc** (`build-feature` writes no prompt at
+that tier, so the doc itself is the only carrier for its stories, acceptance
+criteria, scope cuts, and risks). Read it for context — the decisions it
+settled, the constraints it names, the approach it recommends — then author a
+plan through the **normal drafting workflow**. This is not conversion: a
+proposal argues *whether and what*, a feature doc argues *what and for whom*,
+a plan states *how*, so their headings are input, never a step list to
+transcribe. The skip flags are not implied; pass `--quick` explicitly to skip
+stages.
+
+**The flag is what keeps a context source out of conversion mode.** A doc
+handed over as a positional token would set `$MD_SOURCE` and get 1:1-mapped
+even though it has no `Steps` section; naming it as `--from-prompt`'s value
+excludes it by rule 3 above. Prose labels do not — `... — feature doc: x.md`
+still leaves `x.md` positional.
 
 **Type derivation here has one rule: a source `type:` is used only when it is
 already a valid plan type** (`feature`, `fix`, `refactor`, `docs`, `chore`).

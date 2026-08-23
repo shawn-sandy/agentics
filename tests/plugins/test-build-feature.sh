@@ -156,12 +156,47 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "9. Recommend-only: Tier 0 routes to implementation-plan, and the skill never invokes it..."
-if grep -q "implementation-plan <idea>" "$SKILL" \
-  && ! grep -qF 'Skill(skill: "plan-agent:implementation-plan"' "$SKILL"; then
+echo "9. Recommend-only: Tier 0 passes its doc via --from-prompt, and the skill never invokes the planner..."
+# Tier 0 writes no prompt, so the doc is the only carrier for its stories, scope
+# cuts, and risks. implementation-plan takes the first POSITIONAL .md as a
+# conversion source and 1:1-maps it, and the doc has no Steps section — so the
+# path must ride behind --from-prompt. Parse the emitted command rather than the
+# surrounding prose: a warning sentence saying "never positional" passes happily
+# next to a command that is exactly that, which is the regression this guards.
+if python3 - "$SKILL" <<'PY'
+import re, sys
+txt = open(sys.argv[1]).read()
+bad = []
+rows = [l for l in txt.splitlines() if '0 — Plan-sized' in l]
+if not rows:
+    print("   tier-0 row missing")
+    sys.exit(1)
+if not any('/plan-agent:implementation-plan' in c
+           for r in rows for c in re.findall(r'`([^`]+)`', r)):
+    bad.append("no /plan-agent:implementation-plan handoff in the tier-0 row")
+# Scan EVERY handoff in the file, not just the tier row: the guidance is restated
+# elsewhere, and a later edit that reintroduces a positional .md anywhere must fail.
+cmds = [c for c in re.findall(r'`([^`]+)`', txt) if '/plan-agent:implementation-plan' in c]
+for cmd in cmds:
+    toks = cmd.split()
+    md = [i for i, t in enumerate(toks) if t.endswith('.md')]
+    if not md:
+        bad.append(f"handoff names no doc at all: {cmd!r}")
+    for i in md:
+        # Positional means: not a recognized flag's value. Only --from-prompt qualifies.
+        if i == 0 or toks[i - 1] != '--from-prompt':
+            bad.append(f"positional .md would trip conversion mode: {toks[i]!r} in {cmd!r}")
+# Recommend-only: it routes to the planner, it never runs it.
+if 'Skill(skill: "plan-agent:implementation-plan"' in txt:
+    bad.append("the skill invokes implementation-plan itself")
+if bad:
+    print("   " + "; ".join(bad))
+sys.exit(1 if bad else 0)
+PY
+then
   echo "  PASS"
 else
-  echo "  FAIL: Tier 0 routing line missing, or the body invokes implementation-plan itself"
+  echo "  FAIL: Tier 0 handoff contract broken (details above)"
   FAILURES=$((FAILURES + 1))
 fi
 
@@ -241,6 +276,129 @@ then
   echo "  PASS"
 else
   echo "  FAIL: plugin.json has a version key or does not name build-feature"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "13. Step 9 publishes consent-gated in render -> publish -> verify -> record order..."
+# Token presence is not the contract; ORDER is. Presence-only assertions pass on
+# a Step 9 that publishes the .md before rendering, or records artifact-url:
+# before WebFetch confirms the page exists — both of which ship a dead link.
+# Prose here wraps at 80 columns, so sentence matches run against a flattened copy.
+if python3 - "$SKILL" <<'PY'
+import re, sys
+txt = open(sys.argv[1]).read()
+m = re.search(r'^### Step 9 —.*?(?=^## Writing Style)', txt, re.M | re.S)
+if not m:
+    print("   step-9 section missing")
+    sys.exit(1)
+step9 = m.group(0)
+flat = " ".join(step9.split())
+bad = []
+
+# Anchor on the four numbered moves, then assert each carries its own mechanism.
+# Do NOT scan the whole section for a token: artifact-url: legitimately appears in
+# the Publish move too (the republish path passes it as Artifact's url), so a
+# first-occurrence search would read the wrong position and mis-order the check.
+MOVES = [
+    ('1. **Render.**',  'plan-agent:markdown-to-html', 'render via markdown-to-html'),
+    ('2. **Publish.**', 'Artifact(file_path:',         'the Artifact call'),
+    ('3. **Verify.**',  'WebFetch',                    'WebFetch verification'),
+    ('4. **Record.**',  'artifact-url:',               'recording artifact-url:'),
+]
+idx = []
+for marker, _, _ in MOVES:
+    i = step9.find(marker)
+    if i < 0:
+        bad.append(f"missing move {marker!r}")
+    idx.append(i)
+
+if all(i >= 0 for i in idx):
+    order = [m[0] for m in MOVES]
+    if idx != sorted(idx):
+        bad.append("Step 9 moves are out of order; required: " + " -> ".join(order))
+    # Each move must actually contain its mechanism, not merely be named.
+    bounds = idx + [len(step9)]
+    for n, (marker, needle, label) in enumerate(MOVES):
+        block = step9[bounds[n]:bounds[n + 1]]
+        if needle not in block:
+            bad.append(f"{marker} does not carry {label}")
+        # Publishing the .md directly is the documented bug — Artifact gets the .html.
+        if needle == 'Artifact(file_path:':
+            for path in re.findall(r'Artifact\(file_path:\s*"([^"]+)"', block):
+                if not path.endswith('.html'):
+                    bad.append(f"Artifact receives {path!r}, not the rendered .html")
+            # Artifact is deferred; calling it without ToolSearch fails at runtime.
+            if 'select:Artifact' not in block:
+                bad.append("Publish move omits ToolSearch select:Artifact")
+
+# Publishing is the one irreversible act here; a blanket "stop asking" must not reach it.
+if 'Never publish without an explicit yes' not in flat:
+    bad.append("missing consent-gate")
+# Artifact is absent in some sessions; the file deliverable must survive that.
+if 'A failed publish does not cost the handoff' not in flat:
+    bad.append("missing publish-fallback")
+
+if bad:
+    print("   " + "; ".join(bad))
+sys.exit(1 if bad else 0)
+PY
+then
+  echo "  PASS"
+else
+  echo "  FAIL: Step 9 publish contract incomplete (details above)"
+  FAILURES=$((FAILURES + 1))
+fi
+
+echo "14. The shape reference carries the product-feature sections, not just the split..."
+SHAPE="$REFS/feature-doc-shape.md"
+if python3 - "$SHAPE" <<'PYEOF'
+import sys
+txt = open(sys.argv[1]).read()
+bad = []
+# The sections that make this a product feature doc rather than a plan splitter.
+for h in ("## User stories & acceptance criteria", "## Release & rollout"):
+    if h not in txt:
+        bad.append(f"missing {h!r}")
+# Traceability runs both ways: a story names its deliverer, an entry names what it satisfies.
+for token in ("Delivered by:", "**Satisfies**"):
+    if token not in txt:
+        bad.append(f"missing traceability token {token!r}")
+# An entry without rationale, size, and dependency order is a list of names, not a
+# split: rationale is what distinguishes a real seam from an arbitrary slice, and
+# without size and order nobody can sequence the plans the breakdown exists to hand off.
+for field in ("**Rationale**", "**Size**", "**Depends on**"):
+    if field not in txt:
+        bad.append(f"breakdown entry format drops {field!r}")
+# The skeleton is the part authors copy, so it has to carry size and order inline.
+if "(S|M|L) — depends on:" not in txt:
+    bad.append("entry skeleton lacks the inline '(S|M|L) — depends on:' shape")
+# An L entry is a smell worth flagging rather than a size worth accepting quietly.
+for band in ("**S** — one surface", "**M** — one domain", "**L** — crosses domains"):
+    if band not in txt:
+        bad.append(f"sizing guide does not define {band.split(' —')[0]}")
+# A metric without a baseline is a wish; `unmeasured` is the honest escape hatch.
+if "Baseline" not in txt or "unmeasured" not in txt:
+    bad.append("metrics table lacks Baseline or the `unmeasured` escape hatch")
+# Rollback is the row that earns the rollout section.
+if "Rollback" not in txt:
+    bad.append("rollout table lacks Rollback")
+# Three handoffs, and the rule that keeps the extra two off non-UI entries.
+for cmd in ("/plan-agent:implementation-plan", "/plan-agent:prototype", "/impeccable:impeccable"):
+    if cmd not in txt:
+        bad.append(f"missing handoff {cmd!r}")
+if "only for entries with UI surface" not in txt:
+    bad.append("no rule limiting prototype/design handoffs to UI-bearing entries")
+# Tier 0 now writes the product content and drops only the split.
+if "Tier 0 still writes a doc" not in txt:
+    bad.append("Tier 0 does not state that it writes a doc")
+if bad:
+    print("   " + "; ".join(bad))
+sys.exit(1 if bad else 0)
+PYEOF
+then
+  echo "  PASS"
+else
+  echo "  FAIL: product-feature shape contract broken (details above)"
   FAILURES=$((FAILURES + 1))
 fi
 

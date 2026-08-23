@@ -1,5 +1,83 @@
 # Changelog
 
+## 9.6.0 — build-feature becomes a product feature doc (2026-08-23)
+
+### Added
+
+- **`build-feature` now writes the product content a team needs to accept a
+  feature, not just the split it breaks into.** The doc gains user stories
+  with observable, binary acceptance criteria (including the unhappy path),
+  goals whose baselines are researched rather than estimated, and a release
+  and rollout table covering owner, target, flag, phases, rollback, and
+  dependencies. Stories are drafted at Step 3, before the seams harden, so a
+  seam no story crosses and a story no sub-feature delivers both surface as
+  findings instead of shipping as a doc that reads consistent and is not.
+- **Step 9 publishes the converged doc as a shareable claude.ai artifact.**
+  The doc is rendered to a sibling `.html` first — markdown cannot set its own
+  `<title>` — then published, verified by fetching the returned URL, and the
+  URL recorded as `artifact-url:` in the doc's front-matter so later rounds
+  republish to the same link instead of minting a new one. Publishing is the
+  only step here a human cannot undo by editing a file, so it needs an
+  explicit yes every run: a blanket "don't ask me anything" covers the
+  feature's decisions, never this one. New `--publish` / `--no-publish` flags
+  pre-answer the offer; `--publish` consents for that run only. A failed or
+  unavailable publish costs nothing — the doc and prompts were the deliverable
+  before the offer and still are.
+- **Sub-feature entries carry paste-ready handoffs to planning, prototyping,
+  and design**, with the prototype and design commands emitted only for
+  entries that change something a user sees.
+- **`prototype` now accepts `--from-prompt <path>`.** `build-feature` emits the
+  flag on the prototype handoff for UI-bearing sub-features, but `prototype`
+  had no `argument-hint` and classified only on the first token, so the flag
+  and its path were swallowed as literal idea text and the prompt was silently
+  dropped — the prototype got built from the objective sentence alone, without
+  the acceptance criteria the handoff exists to carry. Step 1 now strips the
+  flag from anywhere in the argument string (the handoff emits it *after* the
+  objective) and reads the prompt for criteria, scope cuts, and UX and
+  accessibility constraints, treating them as binding.
+- `tests/plugins/test-build-feature.sh` — structural smoke test covering the
+  frontmatter contract, the tier gate, the Step 8 hand-off, the Step 9 publish
+  contract, and the product sections in the shape reference. Its assertions
+  check contracts rather than the prose describing them: the Tier 0 check
+  parses every emitted `implementation-plan` command and rejects any `.md` not
+  preceded by `--from-prompt`; Step 9 is anchored on its four numbered moves
+  and asserts render → publish → verify → record order, that each move carries
+  its own mechanism, and that `Artifact` receives the rendered `.html`; the
+  breakdown check requires rationale, size, and dependency order. A
+  presence-only assertion passes happily next to a warning that contradicts the
+  command beside it — which is how the Tier 0 handoff bug reached a commit.
+
+### Changed
+
+- **Tier 0 now writes a one-page doc instead of writing nothing.** It was
+  routing straight to `implementation-plan` with no artifact, on the reasoning
+  that a one-plan feature has nothing to split. True, but the split was never
+  the only thing the doc carried: a plan says *how*, and nobody downstream
+  re-derives *for whom* and *why not the other thing*. Tier 0 keeps Context,
+  Problem and users, Stories, Scope, Risks, and Next step, and drops only the
+  breakdown and its sub-feature prompts. Its handoff is
+  `/plan-agent:implementation-plan <objective> --from-prompt <features-dir>/<slug>.md`
+  rather than a bare `<idea>`: Tier 0 writes no prompt, so the doc is the only
+  carrier for its stories, scope cuts, and risks. The doc rides behind the
+  flag, never as a positional token — `implementation-plan` reads the first
+  *positional* `.md` as a conversion source and would 1:1-map a doc that has
+  no `Steps` section, and a prose `feature doc:` label does not make the path
+  non-positional. README.md's Tier 0 line, which still described the old
+  writes-no-artifact behavior, is corrected to match.
+- **`implementation-plan`'s prompt-source mode accepts a Tier 0 feature doc.**
+  `--from-prompt` was documented as naming a saved *proposal prompt*; it now
+  names any context source — proposal prompt, sub-feature prompt, or feature
+  doc — which is what makes the Tier 0 handoff above legal rather than a path
+  that happens to parse. Behaviour was already right for the doc case (read
+  for context, then draft normally, never transcribe); only the contract was
+  too narrow. The section also now states why the flag matters: its value is
+  excluded from the positional-`.md` scan, so it is the flag, not the prose,
+  that keeps a context source out of conversion mode.
+- **Sub-feature prompts now carry the acceptance criteria** alongside the
+  goals, scope cuts, UX and accessibility notes, rollout constraints, and
+  risks. The paste-ready command hands the planner the prompt and never the
+  feature doc, so anything left out of the prompt is unrecoverable downstream
+  — and the criteria are what the plan's own tests get written against.
 ## 9.5.0 — a design phase, so a plan can be seen before it is built (2026-08-21)
 
 `prototype` answers *does this flow work* with a clickable file. `design`
