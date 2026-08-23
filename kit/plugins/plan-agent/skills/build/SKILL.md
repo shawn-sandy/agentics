@@ -47,7 +47,8 @@ plan-agent-render "<stem>.md" -o "<stem>.html"
 Bare name, never a path — this plugin's `bin/` is on `PATH`. `<stem>` is the
 resolved plan's path without its extension, fixed in Step 1. Run after
 **every** batch of spec edits, status changes included, and as the final
-action. A non-zero exit is never fixed in the HTML: read
+action. A non-zero exit means the spec edit broke the format: fix the markdown and
+re-run, never hand-edit the HTML to compensate. Failure modes:
 `references/re-render.md`.
 
 ## Step 1 — Resolve the plan
