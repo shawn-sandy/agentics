@@ -36,6 +36,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Individ
 
 ### Removed
 
+- **team-defaults v0.2.3** — retired as unused and de-registered; source deleted, recoverable from git history. Session logs show zero invocations of `sync-rules` or either bundled agent, and the bundled rule copies had drifted from `~/.claude/rules/` (three of four files differed), so the plugin was a second source of truth nobody read. `settings-sync` already backs up `~/.claude/rules/` and `CLAUDE.md`, which is the distribution job `sync-rules` existed for. `tests/review-gates.test.mjs` loses its section 5, which only asserted on the deleted bundled copy of `review-bot-loops.md`
 - **product-plans v3.4.13** — folded into `plan-agent` 8.2.0 and de-registered; source deleted, recoverable from git history. The panel overlapped `review-plan` on UX and accessibility and differed only in its PM, security, and frontend roles, which now ship as plan reviewers. `product-plans` reviewed Markdown PRDs; `review-plan` reads the HTML plan spec via `extract-plan-spec.mjs`
 
 ### Changed

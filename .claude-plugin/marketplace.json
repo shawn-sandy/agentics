@@ -245,24 +245,6 @@
       ]
     },
     {
-      "name": "team-defaults",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/shawn-sandy/agentics.git",
-        "path": "kit/plugins/team-defaults"
-      },
-      "version": "0.2.3",
-      "description": "Shared team defaults — documentation and design-token agents plus a sync-rules skill that installs the team's global rules into ~/.claude/rules/",
-      "category": "productivity",
-      "tags": [
-        "team",
-        "defaults",
-        "rules",
-        "conventions",
-        "onboarding"
-      ]
-    },
-    {
       "name": "artifact-tools",
       "source": {
         "source": "git-subdir",
@@ -359,6 +341,12 @@
       "version": "3.4.13",
       "removedDate": "2026-08-02",
       "reason": "Folded into plan-agent 8.2.0 — its unique PM, security, and frontend lenses ship as plan-reviewer-product, -security, and -frontend in review-plan; source deleted 2026-08-02, recoverable from git history"
+    },
+    {
+      "name": "team-defaults",
+      "version": "0.2.3",
+      "removedDate": "2026-08-23",
+      "reason": "Retired as unused — zero invocations of sync-rules or either agent across all sessions, and the bundled rule copies had drifted from ~/.claude/rules/. Rule distribution is covered by settings-sync (backs up ~/.claude/rules/ and CLAUDE.md). Source recoverable from git history."
     }
   ]
 }

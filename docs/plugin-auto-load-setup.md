@@ -49,7 +49,6 @@ the durable, automatable mechanism is declarative settings — not a hook.
     "settings-sync@agentics-kit": true,
     "social-media-tools@agentics-kit": true,
     "plan-agent@agentics-kit": true,
-    "team-defaults@agentics-kit": true,
     "artifact-tools@agentics-kit": true
   }
 }
@@ -110,7 +109,6 @@ that the 13 plugins are enabled by default with no per-plugin install.
 | `settings-sync` | Back up & restore Claude Code settings |
 | `social-media-tools` | Generate shareable social cards from code |
 | `plan-agent` | `/plan-agent:implementation-plan` workflow |
-| `team-defaults` | Shared team rules, documentation & design-token agents |
 | `artifact-tools` | Publish diffs, sessions & plans as claude.ai artifacts |
 
 ## Caveats

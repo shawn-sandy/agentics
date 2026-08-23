@@ -17,5 +17,6 @@ The following plugins were deliberately removed from the marketplace. Do not re-
 | `issue-agent` | 2026-06-16 | Absorbed into `git-agent` v3.11.0 — the create-issue skill now lives at `/git-agent:create-issue` |
 | `plan-interview` | 2026-07-17 | Merged into `plan-agent` 4.0.0 (documenting-plans, markdown-to-html, plan-status, plan-maintenance, deep-grill, and the ExitPlanMode nudge carried over); source recoverable from git history |
 | `product-plans` | 2026-08-02 | Folded into `plan-agent` 8.2.0 — the PM, security, and frontend lenses ship as `plan-reviewer-product`, `-security`, `-frontend` in `review-plan`; source recoverable from git history |
+| `team-defaults` | 2026-08-23 | Retired as unused — never invoked; rule distribution is covered by `settings-sync`; the bundled rule copies had drifted from `~/.claude/rules/`; source recoverable from git history |
 
 If a user asks to add any of these back, flag the removal reason and ask for explicit confirmation before proceeding.

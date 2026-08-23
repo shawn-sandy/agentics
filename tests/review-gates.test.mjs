@@ -204,25 +204,6 @@ check(
   !BUILD.includes('git log "HEAD..$BASE"'),
 );
 
-// ── 5. The shipped review-bot-loops rule carries the triage guidance ───────
-
-const RULE = readPlugin(
-  'team-defaults', 'skills', 'sync-rules', 'rules', 'review-bot-loops.md',
-);
-
-check('bundled review-bot-loops has a Triage section',
-  RULE.includes('## Triage'));
-check('bundled review-bot-loops has the Hard default',
-  RULE.includes('## Hard default'));
-check(
-  'bundled review-bot-loops drops already-applied findings',
-  RULE.includes('already fixed in the working tree or an earlier commit'),
-);
-check(
-  'bundled review-bot-loops requires naming what was skipped',
-  RULE.includes('Say which findings') && RULE.includes('already-applied'),
-);
-
 // ── Summary ────────────────────────────────────────────────────────────────
 
 console.log(`\n${pass} passed, ${fail} failed`);
