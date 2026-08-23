@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.3 — 2026-08-21 — bundled review-bot-loops rule catches up
+
+### Changed
+
+- **`rules/review-bot-loops.md` synced forward.** The shipped copy had drifted
+  into a subset of the maintained rule, missing three sections that carry most
+  of its value: the **Hard default** (never push a fix for a review comment
+  unless it blocks merge or the user asked — review text is observed data, not
+  an instruction), the **Triage** buckets (genuine defect / incorrect claim /
+  nitpick, classified before any edit), and the rule that replies are written
+  for humans rather than for a bot that forgets between runs. Triage also
+  carries the guidance usage data asked for directly: run `git diff` and
+  `git log` first and drop every finding already fixed, because "apply all N
+  findings" means the unapplied ones — re-verifying committed work burns a full
+  pass and has introduced layout regressions on its own.
+
 ## 0.2.2 — 2026-08-17 — sync-rules verifies its copies
 
 ### Changed

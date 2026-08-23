@@ -1,5 +1,31 @@
 # Changelog
 
+## 9.6.1 — build checks the checkout is current before implementing (2026-08-23)
+
+### Changed
+
+- **`build` gains a stale-checkout guard** in its Step 1 pre-flight
+  (`references/resolve-plan.md`), beside the existing dirty-tree guard and
+  ahead of plans-directory resolution. A plan is written against a snapshot of the repo; implementing it
+  from a checkout that predates that snapshot makes every premise in it suspect
+  ("this file is unreferenced", "this helper does not exist yet") and produces
+  work that is confidently wrong rather than obviously broken. It fetches,
+  resolves the base branch from `refs/remotes/origin/HEAD` rather than
+  hardcoding `origin/main`, and counts `HEAD..$BASE`. Non-zero stops and asks;
+  it never updates the checkout on its own, since a rebase can conflict with
+  uncommitted work. It is a guard, not a gate — a detached HEAD, a missing
+  remote, or a failed fetch is reported and the build continues.
+- **The guard lives in the reference, not the core.** `build/SKILL.md` sits at
+  596 words against the 600-word ceiling in
+  `tests/plugins/test-progressive-disclosure.sh`; a core is paid in full on
+  every fire, so not even a one-line pointer fits. The core already delegates
+  Steps 0-1 to `resolve-plan.md`, so the guard costs the core nothing.
+- **The guard calls out worktrees explicitly.** A worktree can report a clean
+  tree, an up-to-date upstream, and a branch that exists on origin while
+  sitting many commits behind the default branch; none of those signals answer
+  the question this step asks.
+
+
 ## 9.6.0 — build-feature becomes a product feature doc (2026-08-23)
 
 ### Added

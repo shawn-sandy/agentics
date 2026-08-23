@@ -21,7 +21,16 @@ subagent starts with no context:
 > no-ops when a dependency is missing); (b) vacuous test assertions — any test
 > that would still pass with the change reverted; (c) regressions introduced by
 > the change itself; (d) unsafe auth/role/key lookups; (e) secrets or tokens in
-> the diff; (f) accessibility regressions in CSS/UI changes.
+> the diff; (f) accessibility regressions in CSS/UI changes; (g) pagination or
+> sort tie-breakers — a sort with no unique final key, so equal rows reorder
+> between pages and records repeat or vanish; (h) `parseInt`/`Number()` on user
+> or query input with no validation — NaN, negative, or out-of-range reaching a
+> query or an index; (i) derived state left stale after a client-side update —
+> result counts, pagination links, labels, or cached totals still rendering
+> pre-update data; (j) timezone-dependent date anchors — "today", midnight, or
+> day boundaries computed in local time against UTC data; (k) scripts that
+> continue after a failed step — a missing `set -e`, an unchecked exit code, or
+> a default env var that silently no-ops.
 
 If the `Agent` tool is unavailable, run the same checklist inline against
 `git diff <base>...HEAD` and say so in the report: "Self-review ran inline — no

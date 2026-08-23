@@ -1,5 +1,33 @@
 # Changelog — git-agent
 
+## v4.19.4 — 2026-08-21 — the adversarial review hunts the defects that escape it
+
+### Changed
+
+- **The adversarial pre-PR checklist gains five checks, (g)–(k).** Usage
+  analysis over 652 sessions found that the defects reaching PR review bots
+  were not the six classes 4.19.3 added, but a different, narrower set that
+  ordinary review keeps missing: (g) pagination or sort tie-breakers — a sort
+  with no unique final key, so equal rows reorder between pages; (h)
+  `parseInt`/`Number()` on user or query input with no validation; (i) derived
+  state left stale after a client-side update — counts, links, labels, cached
+  totals; (j) timezone-dependent date anchors computed in local time against
+  UTC data; (k) scripts that continue after a failed step. Both copies of the
+  checklist — `pr-agent` Step 4.7 and `ship/references/self-review.md` — carry
+  the identical eleven-point prompt, and `tests/review-gates.test.mjs` fails if
+  they drift apart.
+- **`merge` distinguishes "CI never dispatched" from "CI passed"** (Step 2, new
+  subsection). A billing block, an expired token, or a workflow awaiting
+  approval stops jobs from starting, so `gh pr checks` reports nothing to fail
+  — indistinguishable from a repo with no CI unless you look. The skill now
+  reads `gh run list` and the jobs array, and treats an empty run list, an
+  empty `jobs` array, or all-failed-with-zero-log-bytes as a non-dispatch. This
+  is a **reporting** rule, not a gate: it never blocks a merge, but it forbids
+  calling a PR "CI green" when no job produced output. Detection previously
+  existed only in `ship-autonomous/references/ci-autofix.md`, which `merge`
+  does not read; the measurements behind the empty-log signal still live
+  there.
+
 ## v4.19.3 — 2026-08-19 — adversarial pre-PR review in every PR-opening flow
 
 ### Changed
