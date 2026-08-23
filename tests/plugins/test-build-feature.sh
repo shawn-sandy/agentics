@@ -373,8 +373,9 @@ for field in ("**Rationale**", "**Size**", "**Depends on**"):
 if "(S|M|L) — depends on:" not in txt:
     bad.append("entry skeleton lacks the inline '(S|M|L) — depends on:' shape")
 # An L entry is a smell worth flagging rather than a size worth accepting quietly.
-if "**S** — one surface" not in txt or "**L** — crosses domains" not in txt:
-    bad.append("sizing guide does not define the S/M/L bands")
+for band in ("**S** — one surface", "**M** — one domain", "**L** — crosses domains"):
+    if band not in txt:
+        bad.append(f"sizing guide does not define {band.split(' —')[0]}")
 # A metric without a baseline is a wish; `unmeasured` is the honest escape hatch.
 if "Baseline" not in txt or "unmeasured" not in txt:
     bad.append("metrics table lacks Baseline or the `unmeasured` escape hatch")
