@@ -1,5 +1,41 @@
 # Changelog
 
+## v3.6.0 — 2026-08-22 — a merge gate that runs on your machine
+
+### Added
+
+- **`verified-change` skill**: the loop for changing code that already works —
+  write the test first, break the implementation on purpose to prove the test
+  can fail, restore under a `trap` with a `cmp -s` proof, implement, then loop
+  on `scripts/verify.sh` for up to 8 attempts before stopping and reporting
+  what was ruled out. `tdd-loop` still owns new features, where red is free and
+  no mutation is needed.
+- **`assets/verify.sh`**: a portable merge gate. Runs typecheck, lint, unit,
+  then e2e, each detecting its own tooling and printing either a real result or
+  an explicit `SKIP (not configured)` — absent is not passing, and the output
+  says which. Stops at the first failure, so later stages never mask it.
+  Detection resolves against `$PWD`, never the script's own location, which is
+  what stops a gate invoked inside a fixture from re-entering the suite that
+  invoked it. A `VERIFY_GATE_ACTIVE` marker refuses a nested run outright.
+- **`bin/install-verify-gate`**: copies the gate into any repo as
+  `scripts/verify.sh`, refusing to overwrite without `--force` and verifying
+  the copy with `cmp` rather than trusting `cp`.
+- **`references/mutation-check.md`**: mutation catalogue by change type, plus
+  the break-and-restore protocol. Restoration is proven with `cmp -s` against a
+  scratchpad copy, never `git diff --quiet`, which ignores untracked files and
+  would report clean over an unrestored mutation of a file the change created.
+- **`references/verification-section.md`**: one filled VERIFICATION section as
+  a worked example, not a bracket schema.
+
+### Notes
+
+- The gate detects shellcheck through a `.shellcheckrc`, not through the binary
+  being installed. Config-driven detection is what the eslint branch does, and
+  it keeps the gate from turning red for everyone the day someone runs
+  `brew install shellcheck`.
+- Playwright reports "browsers not installed" as its own distinct skip, so a
+  missing `npx playwright install` is not mistaken for an absent e2e stage.
+
 ## v3.5.2 — 2026-08-17 — the output guide shows a finished suggestion
 
 ### Changed

@@ -25,6 +25,20 @@ marketplace **references** them by relative path — it does not embed them.
 - `.claude/settings.json` validates `marketplace.json` after every Write/Edit.
 - Requires Claude Code 1.0.33+.
 
+## Merge gate
+
+Never propose a merge until `bash scripts/verify.sh` exits 0 on this machine
+and the PR body's VERIFICATION section is filled in with what was actually
+run. A `SKIP (not configured)` line is a skip, not a pass — record it as one.
+
+GitHub Actions is frequently billing-blocked on this account: a quota-blocked
+run fails every job in seconds with no test output, so red CI is not evidence
+of a defect and green CI is not evidence of correctness. Read
+`gh run view --log-failed` before treating any red check as real.
+
+This rule is honoured, not enforced — nothing blocks a push that skipped it.
+`/code-testing-agent:verified-change` is the skill that runs the loop.
+
 ## Commands
 
 ```bash
