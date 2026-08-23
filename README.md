@@ -802,7 +802,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | team-defaults | [How do I... team-defaults](./docs/guides/how-to/team-defaults.md) | 1 |
 | wcag-compliance-reviewer | [How do I... wcag-compliance-reviewer](./docs/guides/how-to/wcag-compliance-reviewer.md) | 1 |
 
-Total: 64 skills across 12 plugins.
+Total: 65 skills across 12 plugins.
 
 ---
 

@@ -32,11 +32,18 @@ on repos you already trust.
 
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
-Confirm the gate exists at `scripts/verify.sh`. If it does not, install it with
-the bundled wrapper, run from the repo root:
+Confirm the gate exists at `scripts/verify.sh`. If it does not, install it from
+the repo root. Installed as a plugin, the wrapper is already on `PATH`:
 
 ```bash
 install-verify-gate
+```
+
+If that reports `command not found`, this is the project-local copy of the
+skill, which ships no `bin/`. Call the bundled asset directly instead:
+
+```bash
+bash .claude/skills/verified-change/assets/install-verify-gate.sh
 ```
 
 Then run the gate once, before changing anything, and read the output:
@@ -48,7 +55,7 @@ bash scripts/verify.sh
 A gate that is already red is a pre-existing failure, not yours. Report it and
 stop; fixing it is a separate change with its own test.
 
-Open a TodoWrite list with the six steps below.
+Open a TodoWrite list with the seven steps below.
 
 ## Step 1: Write the test first
 

@@ -71,8 +71,12 @@ fi
 # The stage names on the SKIP lines, in the order they were printed. Reading
 # the printed order rather than grepping for each name independently is what
 # makes this an ordering assertion.
+# `|| true` inside the pipeline, not after it: with `set -euo pipefail` a grep
+# that matches nothing exits 1, the assignment inherits it, and the shell dies
+# here — taking the diagnostic below with it. That made the failure message
+# unreachable exactly when a regression would need it.
 SKIP_ORDER="$(printf '%s\n' "$BARE_OUT" \
-  | grep -F 'SKIP (not configured)' \
+  | { grep -F 'SKIP (not configured)' || true; } \
   | awk '{print $1}' \
   | tr '\n' ' ' \
   | sed 's/ *$//')"

@@ -41,8 +41,11 @@ cp path/to/impl.ts "$SCRATCH/impl.ts"
 trap 'cp "$SCRATCH/impl.ts" path/to/impl.ts' EXIT INT TERM
 ```
 
-The trap fires on a normal exit, on Ctrl-C, and on a kill, so there is no path
-out of this shell that leaves the file mutated.
+The trap fires on `EXIT`, `INT` and `TERM`, which covers a normal exit, Ctrl-C,
+and an ordinary kill. It cannot fire on `SIGKILL` (`kill -9`), and no shell can
+— that signal is not trappable. So the scratchpad copy is the recovery path,
+not just a source for the restore: keep it until `cmp` has confirmed the file
+is back, and restore from it by hand if the shell was killed outright.
 
 Then mutate in place, run only the scoped test — not the whole gate, which is
 slow and answers a different question — and read the result:

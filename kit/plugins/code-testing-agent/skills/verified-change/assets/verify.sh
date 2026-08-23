@@ -114,11 +114,16 @@ else
 fi
 
 # --- Stage 2: lint ----------------------------------------------------------
-# shellcheck is detected through .shellcheckrc rather than through the mere
-# presence of the binary. Config-driven detection is what the eslint branch
-# above does, and it is the difference between a project opting into shell
-# linting and a gate that turns red for everyone the day someone runs
+# Detect shellcheck through .shellcheckrc rather than through the mere presence
+# of the binary. Config-driven detection is what the eslint branch above does,
+# and it is the difference between a project opting into shell linting and a
+# gate that turns red for everyone the day someone runs
 # `brew install shellcheck`.
+#
+# The first word is load-bearing: ShellCheck parses any comment beginning with
+# "shellcheck" as a directive, so phrasing this sentence the other way around
+# fails the gate's own lint stage with SC1072/SC1073 before it reads a single
+# project script.
 if npm_script lint; then
   stage lint npm run --silent lint
 elif any_of eslint.config.js eslint.config.mjs eslint.config.cjs .eslintrc .eslintrc.js .eslintrc.json .eslintrc.yml && have npx; then
