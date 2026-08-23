@@ -131,7 +131,7 @@ agentics/
 │   ├── rules/                    # Scoped authoring rules (plugin patterns, marketplace, testing)
 │   └── settings.json             # Project-level Claude Code settings and hooks
 ├── kit/
-│   └── plugins/                  # 12 plugins in marketplace
+│   └── plugins/                  # 11 plugins in marketplace
 │       ├── artifact-tools/
 │       ├── code-review/
 │       ├── code-testing-agent/
@@ -772,7 +772,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | social-media-tools | [How do I... social-media-tools](./docs/guides/how-to/social-media-tools.md) | 17 |
 | wcag-compliance-reviewer | [How do I... wcag-compliance-reviewer](./docs/guides/how-to/wcag-compliance-reviewer.md) | 1 |
 
-Total: 64 skills across 11 plugins.
+Total: 65 skills across 11 plugins.
 
 ---
 
