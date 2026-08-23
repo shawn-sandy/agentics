@@ -390,12 +390,14 @@ Analyze code and suggest specific, purpose-driven tests tied to actual behavior 
 | `running-tests` | Run tests, check if tests pass, or verify changes |
 | `tdd-fix` | TDD-fix a bug or run a red-green cycle — manual invoke only |
 | `tdd-loop` | TDD a new feature or write tests first — manual invoke only |
+| `verified-change` | Prove a change is merge-ready locally, or run the merge gate |
 
 ```bash
 claude --plugin-dir ./kit/plugins/code-testing-agent
 # "What tests should I write for this function?"
 # "Review my test suite for gaps"
 # "TDD fix this bug — write a failing test then make it green"
+# "Prove this change is merge-ready before I open a PR"
 ```
 
 [View Documentation](./kit/plugins/code-testing-agent/README.md)
@@ -789,7 +791,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 |--------|-------|--------|
 | artifact-tools | [How do I... artifact-tools](./docs/guides/how-to/artifact-tools.md) | 5 |
 | code-review | [How do I... code-review](./docs/guides/how-to/code-review.md) | 1 |
-| code-testing-agent | [How do I... code-testing-agent](./docs/guides/how-to/code-testing-agent.md) | 5 |
+| code-testing-agent | [How do I... code-testing-agent](./docs/guides/how-to/code-testing-agent.md) | 6 |
 | content-tools | [How do I... content-tools](./docs/guides/how-to/content-tools.md) | 1 |
 | git-agent | [How do I... git-agent](./docs/guides/how-to/git-agent.md) | 8 |
 | memory-tools | [How do I... memory-tools](./docs/guides/how-to/memory-tools.md) | 3 |
@@ -800,7 +802,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | team-defaults | [How do I... team-defaults](./docs/guides/how-to/team-defaults.md) | 1 |
 | wcag-compliance-reviewer | [How do I... wcag-compliance-reviewer](./docs/guides/how-to/wcag-compliance-reviewer.md) | 1 |
 
-Total: 64 skills across 12 plugins.
+Total: 65 skills across 12 plugins.
 
 ---
 
@@ -814,7 +816,7 @@ Total: 64 skills across 12 plugins.
 | [code-review](./kit/plugins/code-review/README.md) | 3.3.4 | development | 1 command, 1 skill, 1 agent |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.5.2 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.5.2 | development | 1 command, 4 skills, 1 hook |
-| [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.5.2 | testing | 5 skills |
+| [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.6.0 | testing | 6 skills |
 | [git-agent](./kit/plugins/git-agent/README.md) | 4.19.3 | development | 5 commands, 8 skills, 5 agents, 3 hooks |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.1.4 | productivity | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.23.4 | productivity | 1 command, 17 skills |

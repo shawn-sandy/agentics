@@ -29,6 +29,7 @@ All skills declare `allowed-tools` explicitly in their frontmatter for consisten
 | `running-tests` | Auto | "run tests", "check if tests pass", "verify changes" |
 | `tdd-fix` | Manual invoke only | `/code-testing-agent:tdd-fix` |
 | `tdd-loop` | Manual invoke only | `/code-testing-agent:tdd-loop` |
+| `verified-change` | Auto | "prove this is merge-ready", "verify my change locally", "run the merge gate" |
 
 #### code-testing-agent — suggest new tests
 
@@ -109,6 +110,24 @@ Writes failing tests first, then iterates (up to 20 red-green-refactor rounds) u
 /code-testing-agent:tdd-loop implement the password reset flow in src/auth/
 ```
 
+#### verified-change — change working code under a local merge gate
+
+Auto-activates on "prove this is merge-ready", "verify my change locally", "run the merge gate".
+
+For code that already works, where a test written after the fact can pass for the wrong reason. Writes the assertion first, breaks the implementation on purpose to prove the assertion can fail, restores under a `trap` with a `cmp -s` proof, implements, then loops on `scripts/verify.sh` up to 8 times before stopping and reporting what it ruled out.
+
+Use `tdd-loop` instead for a brand-new feature — red is free there and needs no mutation.
+
+Install the gate into any repo with the bundled wrapper, run from the repo root:
+
+```
+install-verify-gate
+```
+
+It writes `scripts/verify.sh` and refuses to overwrite an existing one without `--force`. The gate runs typecheck, lint, unit, then e2e, detecting each stage's tooling in the directory it was invoked from and printing either a real result or `SKIP (not configured)`. It stops at the first failure.
+
+The gate executes whatever tooling the target repo declares, so run it only in repos you already trust.
+
 ## Purpose
 
 Developers often face two problems with testing: either they write tests after the fact that verify implementation details rather than behavior, or they rely on coverage tools to tell them what to test — which leads to many tests that catch nothing useful and few tests that catch real bugs. This plugin takes a different approach: it reads the code, looks for the developer's plan or intent, identifies critical behaviors and fragile areas, and suggests the specific tests that would catch the most damaging failures. At the same time, it ensures suggested tests would meet the project's coverage target — or maximize coverage when no target is defined — so you get both meaningful and thorough test suites.
@@ -184,6 +203,16 @@ Reviews are organized by test file:
 4. Refactors after each passing cycle without breaking tests (refactor)
 5. Repeats up to 20 red-green-refactor rounds until all tests pass
 
+### verified-change (change working code with proof)
+
+1. Runs the gate once before anything changes, so a pre-existing failure is not mistaken for a new one
+2. Writes the regression assertion before touching the implementation
+3. Mutates the implementation on purpose and confirms the assertion goes red
+4. Restores from a scratchpad copy under a `trap` and proves it with `cmp -s`
+5. Implements the change, then loops on `scripts/verify.sh` (max 8 attempts)
+6. Browser-verifies rendered changes at 390px and 1280px, both themes, with an axe run
+7. Emits a VERIFICATION section recording what was actually run
+
 ## Plugin Structure
 
 ```
@@ -203,8 +232,18 @@ plugins/code-testing-agent/
 │   │   └── SKILL.md
 │   ├── tdd-fix/
 │   │   └── SKILL.md
-│   └── tdd-loop/
-│       └── SKILL.md
+│   ├── tdd-loop/
+│   │   └── SKILL.md
+│   └── verified-change/
+│       ├── SKILL.md
+│       ├── assets/
+│       │   ├── install-verify-gate.sh
+│       │   └── verify.sh
+│       └── references/
+│           ├── mutation-check.md
+│           └── verification-section.md
+├── bin/
+│   └── install-verify-gate
 ├── README.md
 └── CHANGELOG.md
 ```

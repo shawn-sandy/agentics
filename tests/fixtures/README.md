@@ -57,6 +57,42 @@ expect(() => {
 }).toThrow('Missing required field: version');
 ```
 
+### verify-gate-bare and verify-gate-failing
+
+Two runnable projects for `tests/test-verify-gate.sh`, the objective test for
+`scripts/verify.sh`.
+
+**Purpose:** exercise the merge gate's two interesting behaviours. `verify-gate-bare`
+has no toolchain at all, so every stage must report `SKIP (not configured)` and the
+gate must still exit 0. `verify-gate-failing` declares a `package.json` `test` script
+that exits 1 with nothing to install, so the gate must exit non-zero, name `unit`,
+and never reach `e2e`.
+
+**Structure:**
+```
+verify-gate-bare/            verify-gate-failing/
+├── .gitkeep                 ├── .gitkeep
+└── README.md                ├── README.md
+                             └── package.json
+```
+
+The `.gitkeep` files are tracked placeholders — git does not commit an empty
+directory, and a fresh clone without them would fail the objective test on a
+missing fixture rather than on a real regression.
+
+**Deliberate departure from the fixture policy.** `.claude/rules/testing.md` says
+fixtures model plugin *structure*, not working behavior. These two are runnable
+projects instead, because a gate can only be exercised against something that
+runs — there is no structural stand-in for "npm test exits 1".
+
+**Naming constraint, load-bearing.** No file in either fixture may be named
+`test-*.sh`, `test-*.mjs`, or `*.test.mjs`. `tests/run-all.sh` discovers with a
+bare `find tests -name 'test-*.sh'` and has no `tests/fixtures/` exclusion, so a
+fixture named that way would join the real suite — and `verify-gate-failing` is
+deliberately failing, which would make "run-all reports 0 failed" unsatisfiable
+by construction. `tests/test-verify-gate.sh` is the only thing allowed to run
+these fixtures.
+
 ## Test Scenarios
 
 ### Valid Plugin Tests
