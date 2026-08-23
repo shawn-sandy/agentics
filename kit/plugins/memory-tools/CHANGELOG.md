@@ -8,15 +8,20 @@
   not the installed mirror.** The mirror lags merged PRs by days; a verification run
   found it missing a skill that had merged that morning, which would have re-opened
   and re-implemented a shipped item.
-- **Step 3 matches a repo by the decoded path's basename, not a slug suffix.** A
-  suffix match resolved `plugins` to `acss-plugins` silently. The git-checkout guard
-  is now named as the disambiguator and kept explicit.
+- **Step 3 reads each project's real path from its session files instead of
+  decoding the directory name.** Every `~/.claude/projects/<dir>/*.jsonl` line
+  carries `"cwd"`; the name-decoding fallback (each `-` is one non-alphanumeric
+  character — `/`, `-`, or a space) is kept only for directories with no sessions.
+  Matching is by the resolved path's basename, not a suffix: `plugins` had resolved
+  to `acss-plugins` silently. Two checkouts sharing a basename now means ask.
 - **Step 3 gives the no-repo-named case a procedure.** Grep the report's cited
   identifiers across each inventory checkout's `git log` and `package.json`; one hit
   is the target, zero or several means ask. Session counts are topic clusters and
   are never used as repo keys.
-- **Step 3 drops scratchpad and temp-dir slugs from the inventory.** A session
-  sandbox under `/private/tmp` had resolved as a repo.
+- **Step 3 drops temp-dir and worktree paths from the inventory by path prefix,
+  not by directory-name substring.** A session sandbox under `/private/tmp` had
+  resolved as a repo; a substring filter would also have hidden a real repo whose
+  name happened to contain the word.
 
 ## v4.3.0 — 2026-08-20 — implementing-insights discovers repos on its own
 

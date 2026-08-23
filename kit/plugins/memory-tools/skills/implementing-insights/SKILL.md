@@ -39,9 +39,10 @@ exists before classifying it:
 
 - `~/.claude/CLAUDE.md`, `~/.claude/rules/*.md`, `~/.claude/settings.json`, `~/.claude/hooks/`
 - Installed plugin skills and agents under `~/.claude/plugins/` (especially the user's own
-  plugins — check the skill bodies, not just the names). For the user's own plugin repo,
-  triage against its `origin/main` checkout after `git fetch` (or `gh pr list --state merged`),
-  never the installed mirror — it lags merged PRs by days and will re-open shipped items.
+  plugins — check the skill bodies, not just the names). For the user's own plugin repo
+  (locate its checkout with the Step 3 inventory — build that first), triage against its
+  `origin/main` after `git fetch` (or `gh pr list --state merged`), never the installed
+  mirror — it lags merged PRs by days and will re-open shipped items.
 - Each target repo's `CLAUDE.md`, `.claude/settings.json`, `.claude/rules/`, `.claude/hooks/`
 
 Classify every item into exactly one bucket:
@@ -71,20 +72,24 @@ This is the adaptive step. For each open item, decide the layer:
 
 Resolve each target repo to a local checkout — discover first, ask last:
 
-1. Build a repo inventory once per run from `~/.claude/projects/`. Each directory name
-   there is a path slug (non-alphanumeric characters encoded as `-`) of a project the user
-   has opened Claude Code in — and the insights report is generated from this same usage data, so every repo it
-   can name has a slug here. Skip slugs containing `-claude-worktrees-` or `-scratchpad`, and
-   any starting with `-private-tmp-` or `-private-var-folders-`; those are session worktrees
-   and temp dirs, not repos.
-2. Decode each slug to a path — every `-` may be `/` or `-`, so there are several candidates
-   per slug — and keep only candidates that exist and contain `.git`. That guard is what
-   disambiguates; keep it. Then match by the decoded path's basename equalling the repo name
-   exactly. A suffix match is not enough: `plugins` must not resolve to `acss-plugins`.
-   If a recommendation names no repo, match by cited identifiers (component names, session
-   labels, package names, file paths): grep each inventory checkout's
-   `git log --all --oneline -i --grep=<id>` and `package.json`. One repo with hits is the
-   target; zero or several means ask. Session counts are topic clusters, never repo keys.
+1. Build a repo inventory once per run from `~/.claude/projects/`. Each directory there
+   belongs to a project the user has opened Claude Code in — and the insights report is
+   generated from this same usage data, so every repo it can name has a directory here.
+   Get the real path from the data, not the name: take the first `"cwd"` value found in
+   any `*.jsonl` session file in the directory (`grep -m1 -o '"cwd":"[^"]*"'` — it is a few
+   lines in, not on line 1). Only for a directory with no session files,
+   fall back to decoding its name — every `-` stands for one non-alphanumeric character
+   (usually `/` or `-`, sometimes a space) — and keep the candidates that exist. Either
+   way, keep only paths that contain `.git`, and drop paths under `/tmp`, `/private/tmp`,
+   or `/var/folders`, or containing `/.claude/worktrees/` — those are temp dirs and session
+   worktrees, not repos. Filter on the resolved path, never on the directory name.
+2. Match by the resolved path's basename equalling the repo name exactly. A suffix match
+   is not enough: `plugins` must not resolve to `acss-plugins`. Two checkouts sharing a
+   basename means ask, not pick. If a recommendation names no repo, match by cited
+   identifiers (component names, session labels, package names, file paths): grep each
+   inventory checkout's `git log --all --oneline -i --grep=<id>` and `package.json`. One
+   repo with hits is the target; zero or several means ask. Session counts are topic
+   clusters, never repo keys.
 3. If a repo still cannot be resolved, ask the user to point at the directory that holds
    their repos, scan it one level deep for `.git`, and add the results to the inventory
    for the rest of the run. Never clone, never skip an item silently, and never assume a
