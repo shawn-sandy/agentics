@@ -1,6 +1,6 @@
 # How do I... code-testing-agent
 
-Covers the test lifecycle: suggesting tests tied to real behavior, auditing an existing suite, running scoped tests, and driving red-green TDD loops.
+Covers the test lifecycle: suggesting tests tied to real behavior, auditing an existing suite, running scoped tests, driving red-green TDD loops, and proving a change is merge-ready without waiting on CI.
 
 Install: `/plugin install code-testing-agent@agentics-kit`
 
@@ -48,3 +48,12 @@ Implements a new feature test-first, looping red-green-refactor until every acce
 - **Say it instead** — Not available; this skill is command-only (`disable-model-invocation: true`).
 - **What happens** — Writes and commits a failing suite covering every criterion, loops up to 20 implementation rounds, runs typecheck and lint (up to 5 gate-fix rounds), commits the implementation as a separate `feat:` commit, and opens a PR.
 - **Watch out** — Pre-flight stops the run on a dirty working tree, a detached HEAD, or `main`/`master`, and it refuses to start without an enumerable list of acceptance criteria; the implementation loop is forbidden from asking you anything mid-run.
+
+## verified-change
+
+Changes code that already works, under a local merge gate, with the regression test written and mutation-checked first.
+
+- **Command** — `/code-testing-agent:verified-change [what you are changing]`
+- **Say it instead** — "prove this change is merge-ready locally"
+- **What happens** — Runs `bash scripts/verify.sh` once before touching anything, so a pre-existing failure is not mistaken for yours (installs the gate with `install-verify-gate` if the repo has none). Writes the regression assertion first, then breaks the implementation on purpose to confirm the assertion can go red, restores from a scratchpad copy under a `trap` and proves the restore with `cmp -s`. Implements, loops the gate up to 8 times, and emits a VERIFICATION section recording what was actually run.
+- **Watch out** — The gate executes whatever tooling the target repo declares, so run it only in repos you already trust. At 8 attempts it stops and reports the failing assertion, the last diff tried, and what it ruled out — it never reports success it does not have. A test that survives its own mutation is rejected and rewritten, not accepted. For a brand-new feature use `tdd-loop` instead; red is free there and needs no mutation.

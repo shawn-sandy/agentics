@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-status="todo" data-effort="high">
+<html lang="en" data-status="completed" data-effort="high">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +14,7 @@ try {
   if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
 } catch (e) { /* no storage — prefers-color-scheme decides */ }
 </script>
-<meta name="plan-status" content="todo">
+<meta name="plan-status" content="completed">
 <meta name="plan-effort" content="high">
 <meta name="plan-type" content="feature">
 <meta name="plan-created" content="2026-08-21">
@@ -1572,7 +1572,7 @@ img, video { max-width: 100%; height: auto; }
         <span class="effort-badge" aria-label="Effort level">High</span>
         <a class="issue-link" href="https://github.com/shawn-sandy/agentics/issues/591"
            aria-label="View the tracking issue for this plan">Issue #591</a>
-        <span class="status-badge">todo</span>
+        <span class="status-badge">completed</span>
       </div>
     </div>
     <div class="plan-meta">
@@ -1606,21 +1606,21 @@ img, video { max-width: 100%; height: auto; }
       <summary>15 steps</summary>
       <div class="rail-heading">Steps</div>
       <ul class="rail-steps">
-        <li><a class="rail-step" href="#step-1"><span class="rail-no">1</span><span class="rail-text">Create <code class="md">tests/fixtures/verify-gate-bare/</code> holding a project with no toolchain at all — a tracked <code class="md">.gitkeep</code> and a one-line <code class="md">README.md</code>, since git does not commit an empty directory and a fresh clone would otherwise fail the objective test — and <code class="md">tests/fixtures/verify-gate-failing/</code> holding one whose unit stage is a <code class="md">package.json</code> <code class="md">test</code> script that exits 1 with no dependencies to install; name no file in either fixture <code class="md">test-*.sh</code>, <code class="md">test-*.mjs</code>, or <code class="md">*.test.mjs</code>, because <code class="md">tests/run-all.sh</code> discovers with a bare <code class="md">find tests -name &#39;test-*.sh&#39;</code> that has no <code class="md">tests/fixtures/</code> exclusion and would run the deliberately-failing fixture as a real suite member</span><span class="rail-state">step 1 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-2"><span class="rail-no">2</span><span class="rail-text">Write <code class="md">tests/test-verify-gate.sh</code> asserting that running the gate in the bare fixture prints a <code class="md">SKIP (not configured)</code> line for each of typecheck, lint, unit, and e2e <strong class="md">in that printed order</strong>, and exits 0; that running it in the failing fixture exits non-zero naming the failed stage; and that no stage after the failed one runs — invoking the gate in every case as <code class="md">(cd &quot;$FIXTURE&quot; &amp;&amp; bash &quot;$ROOT/scripts/verify.sh&quot;)</code> so detection is exercised against the fixture&#39;s working directory rather than the repo root</span><span class="rail-state">step 2 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-3"><span class="rail-no">3</span><span class="rail-text">Write <code class="md">tests/plugins/test-verified-change-skill.sh</code> asserting the skill&#39;s frontmatter carries <code class="md">name</code> and a description within the 200-char budget whose first sentence is within 80, that the file contains the plan-mode guard line verbatim, that <code class="md">.claude/skills/verified-change/SKILL.md</code> is byte-identical to the plugin copy, that <code class="md">scripts/verify.sh</code> is byte-identical to the plugin&#39;s <code class="md">assets/verify.sh</code>, and that <code class="md">CLAUDE.md</code> contains the merge-gate rule; also register <code class="md">verified-change</code> in the hardcoded skill list inside <code class="md">tests/plugins/test-exitplanmode-guard.sh</code> so the guard is enforced by the same repo-wide test that enforces it for every other mutating skill</span><span class="rail-state">step 3 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-4"><span class="rail-no">4</span><span class="rail-text">Write <code class="md">kit/plugins/code-testing-agent/skills/verified-change/assets/verify.sh</code> running typecheck, lint, unit, then e2e in that order, each stage detecting its own tooling and printing either a result or <code class="md">SKIP (not configured)</code>, exiting non-zero at the first real failure without running later stages, and additionally running <code class="md">tests/run-all.sh</code>, <code class="md">node scripts/check-plugin-versions.mjs</code>, and <code class="md">node scripts/build-readme-table.mjs --check</code> when it detects a <code class="md">.claude-plugin/marketplace.json</code>. Resolve <strong class="md">every</strong> detection against <code class="md">$PWD</code>, never against <code class="md">$(dirname &quot;$0&quot;)</code> — the repo&#39;s own scripts set <code class="md">ROOT</code> from <code class="md">$0</code> (<code class="md">tests/run-all.sh</code> line 1), and a gate that did the same would, while running inside <code class="md">tests/fixtures/verify-gate-bare/</code>, still find agentics&#39; <code class="md">.claude-plugin/marketplace.json</code>, re-enter <code class="md">tests/run-all.sh</code>, which re-runs <code class="md">tests/test-verify-gate.sh</code>, which re-invokes the gate: unbounded recursion on the objective test. Belt-and-braces, export a <code class="md">VERIFY_GATE_ACTIVE</code> marker on entry and hard-exit non-zero with a named re-entry error if it is already set. Have the lint stage also detect <code class="md">shellcheck</code> (the deliverable is itself shell), run detected tooling by its plain name without prepending <code class="md">node_modules/.bin</code> to <code class="md">PATH</code>, and open the script with <code class="md">set -euo pipefail</code> and quoted expansions throughout</span><span class="rail-state">step 4 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-5"><span class="rail-no">5</span><span class="rail-text">Copy the template to <code class="md">scripts/verify.sh</code>, mark it executable, and add <code class="md">kit/plugins/code-testing-agent/bin/install-verify-gate</code> — an executable wrapper that copies the plugin&#39;s <code class="md">assets/verify.sh</code> into the target repo&#39;s <code class="md">scripts/</code>, refusing to overwrite an existing file without <code class="md">--force</code></span><span class="rail-state">step 5 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-6"><span class="rail-no">6</span><span class="rail-text">Write <code class="md">kit/plugins/code-testing-agent/skills/verified-change/SKILL.md</code> with the six-step loop — write the test, mutation-check it, restore, implement, iterate on <code class="md">scripts/verify.sh</code> without pausing to ask up to a hard bound of 8 attempts, then stop and report the failing assertion, the last diff tried, and what was ruled out rather than reporting success, and browser-verify UI changes at 390px and 1280px in <strong class="md">both</strong> light and dark themes with an axe run against the real rendered page (never a Storybook iframe), recording measured evidence — computed styles, element boxes, the axe violation count — because a screenshot alone is not evidence — carrying the plan-mode guard verbatim, a <code class="md">When not to use</code> line pointing at <code class="md">tdd-loop</code> for new features, and an <code class="md">allowed-tools</code> list covering every tool it calls</span><span class="rail-state">step 6 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-7"><span class="rail-no">7</span><span class="rail-text">Write <code class="md">references/mutation-check.md</code> giving a mutation catalogue by change type and the safe break-and-restore protocol — copy the file to the scratchpad, mutate in place, run the scoped test, restore from the copy, then prove restoration with <code class="md">cmp -s &quot;$SCRATCH/&lt;file&gt;&quot; &quot;&lt;file&gt;&quot;</code> and hard-stop if it fails, install a shell <code class="md">trap</code> that restores on any exit path including interrupt, and delete the scratchpad copy after a proven restore</span><span class="rail-state">step 7 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Write <code class="md">references/verification-section.md</code> containing one filled VERIFICATION section — every gate with its real result, the mutation applied with its observed failure output, and the screenshot paths — as a worked example rather than a bracket schema</span><span class="rail-state">step 8 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-9"><span class="rail-no">9</span><span class="rail-text">Copy the finished skill directory — <code class="md">SKILL.md</code> <strong class="md">and</strong> both <code class="md">references/</code> files — to <code class="md">.claude/skills/verified-change/</code>, and extend the step-3 parity test to cover the references as well as <code class="md">SKILL.md</code></span><span class="rail-state">step 9 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-10"><span class="rail-no">10</span><span class="rail-text">Bump <code class="md">code-testing-agent</code> from 3.5.2 to 3.6.0 in <code class="md">.claude-plugin/marketplace.json</code>, add the skill to the plugin README and CHANGELOG, and regenerate the root README table with <code class="md">node scripts/build-readme-table.mjs</code></span><span class="rail-state">step 10 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-11"><span class="rail-no">11</span><span class="rail-text">Add the merge-gate rule to <code class="md">CLAUDE.md</code> stating that merging is never proposed until <code class="md">bash scripts/verify.sh</code> is green locally and the PR body&#39;s VERIFICATION section is filled in, and that a billing-blocked CI run is not evidence either way</span><span class="rail-state">step 11 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-12"><span class="rail-no">12</span><span class="rail-text">Run <code class="md">bash tests/run-all.sh</code></span><span class="rail-state">step 12 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-13"><span class="rail-no">13</span><span class="rail-text">Run <code class="md">bash scripts/verify.sh</code> in agentics and read its full output</span><span class="rail-state">step 13 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-14"><span class="rail-no">14</span><span class="rail-text">Run <code class="md">git fetch origin &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs</code></span><span class="rail-state">step 14 of 15</span></a></li>
-        <li><a class="rail-step" href="#step-15"><span class="rail-no">15</span><span class="rail-text">Mutation-check the gate itself by breaking the failure propagation in <code class="md">scripts/verify.sh</code> so a failing stage returns 0, confirming <code class="md">tests/test-verify-gate.sh</code> goes red, then restoring from the scratchpad copy under a <code class="md">trap</code> that also restores on interrupt</span><span class="rail-state">step 15 of 15</span></a></li>
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Create <code class="md">tests/fixtures/verify-gate-bare/</code> holding a project with no toolchain at all — a tracked <code class="md">.gitkeep</code> and a one-line <code class="md">README.md</code>, since git does not commit an empty directory and a fresh clone would otherwise fail the objective test — and <code class="md">tests/fixtures/verify-gate-failing/</code> holding one whose unit stage is a <code class="md">package.json</code> <code class="md">test</code> script that exits 1 with no dependencies to install; name no file in either fixture <code class="md">test-*.sh</code>, <code class="md">test-*.mjs</code>, or <code class="md">*.test.mjs</code>, because <code class="md">tests/run-all.sh</code> discovers with a bare <code class="md">find tests -name &#39;test-*.sh&#39;</code> that has no <code class="md">tests/fixtures/</code> exclusion and would run the deliberately-failing fixture as a real suite member</span><span class="rail-state">step 1 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">tests/test-verify-gate.sh</code> asserting that running the gate in the bare fixture prints a <code class="md">SKIP (not configured)</code> line for each of typecheck, lint, unit, and e2e <strong class="md">in that printed order</strong>, and exits 0; that running it in the failing fixture exits non-zero naming the failed stage; and that no stage after the failed one runs — invoking the gate in every case as <code class="md">(cd &quot;$FIXTURE&quot; &amp;&amp; bash &quot;$ROOT/scripts/verify.sh&quot;)</code> so detection is exercised against the fixture&#39;s working directory rather than the repo root</span><span class="rail-state">step 2 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">tests/plugins/test-verified-change-skill.sh</code> asserting the skill&#39;s frontmatter carries <code class="md">name</code> and a description within the 200-char budget whose first sentence is within 80, that the file contains the plan-mode guard line verbatim, that <code class="md">.claude/skills/verified-change/SKILL.md</code> is byte-identical to the plugin copy, that <code class="md">scripts/verify.sh</code> is byte-identical to the plugin&#39;s <code class="md">assets/verify.sh</code>, and that <code class="md">CLAUDE.md</code> contains the merge-gate rule; also register <code class="md">verified-change</code> in the hardcoded skill list inside <code class="md">tests/plugins/test-exitplanmode-guard.sh</code> so the guard is enforced by the same repo-wide test that enforces it for every other mutating skill</span><span class="rail-state">step 3 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">kit/plugins/code-testing-agent/skills/verified-change/assets/verify.sh</code> running typecheck, lint, unit, then e2e in that order, each stage detecting its own tooling and printing either a result or <code class="md">SKIP (not configured)</code>, exiting non-zero at the first real failure without running later stages, and additionally running <code class="md">tests/run-all.sh</code>, <code class="md">node scripts/check-plugin-versions.mjs</code>, and <code class="md">node scripts/build-readme-table.mjs --check</code> when it detects a <code class="md">.claude-plugin/marketplace.json</code>. Resolve <strong class="md">every</strong> detection against <code class="md">$PWD</code>, never against <code class="md">$(dirname &quot;$0&quot;)</code> — the repo&#39;s own scripts set <code class="md">ROOT</code> from <code class="md">$0</code> (<code class="md">tests/run-all.sh</code> line 1), and a gate that did the same would, while running inside <code class="md">tests/fixtures/verify-gate-bare/</code>, still find agentics&#39; <code class="md">.claude-plugin/marketplace.json</code>, re-enter <code class="md">tests/run-all.sh</code>, which re-runs <code class="md">tests/test-verify-gate.sh</code>, which re-invokes the gate: unbounded recursion on the objective test. Belt-and-braces, export a <code class="md">VERIFY_GATE_ACTIVE</code> marker on entry and hard-exit non-zero with a named re-entry error if it is already set. Have the lint stage also detect <code class="md">shellcheck</code> (the deliverable is itself shell), run detected tooling by its plain name without prepending <code class="md">node_modules/.bin</code> to <code class="md">PATH</code>, and open the script with <code class="md">set -euo pipefail</code> and quoted expansions throughout</span><span class="rail-state">step 4 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Copy the template to <code class="md">scripts/verify.sh</code>, mark it executable, and add <code class="md">kit/plugins/code-testing-agent/bin/install-verify-gate</code> — an executable wrapper that copies the plugin&#39;s <code class="md">assets/verify.sh</code> into the target repo&#39;s <code class="md">scripts/</code>, refusing to overwrite an existing file without <code class="md">--force</code></span><span class="rail-state">step 5 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">kit/plugins/code-testing-agent/skills/verified-change/SKILL.md</code> with the six-step loop — write the test, mutation-check it, restore, implement, iterate on <code class="md">scripts/verify.sh</code> without pausing to ask up to a hard bound of 8 attempts, then stop and report the failing assertion, the last diff tried, and what was ruled out rather than reporting success, and browser-verify UI changes at 390px and 1280px in <strong class="md">both</strong> light and dark themes with an axe run against the real rendered page (never a Storybook iframe), recording measured evidence — computed styles, element boxes, the axe violation count — because a screenshot alone is not evidence — carrying the plan-mode guard verbatim, a <code class="md">When not to use</code> line pointing at <code class="md">tdd-loop</code> for new features, and an <code class="md">allowed-tools</code> list covering every tool it calls</span><span class="rail-state">step 6 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">references/mutation-check.md</code> giving a mutation catalogue by change type and the safe break-and-restore protocol — copy the file to the scratchpad, mutate in place, run the scoped test, restore from the copy, then prove restoration with <code class="md">cmp -s &quot;$SCRATCH/&lt;file&gt;&quot; &quot;&lt;file&gt;&quot;</code> and hard-stop if it fails, install a shell <code class="md">trap</code> that restores on any exit path including interrupt, and delete the scratchpad copy after a proven restore</span><span class="rail-state">step 7 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-8"><span class="rail-no">✓</span><span class="rail-text">Write <code class="md">references/verification-section.md</code> containing one filled VERIFICATION section — every gate with its real result, the mutation applied with its observed failure output, and the screenshot paths — as a worked example rather than a bracket schema</span><span class="rail-state">step 8 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-9"><span class="rail-no">✓</span><span class="rail-text">Copy the finished skill directory — <code class="md">SKILL.md</code> <strong class="md">and</strong> both <code class="md">references/</code> files — to <code class="md">.claude/skills/verified-change/</code>, and extend the step-3 parity test to cover the references as well as <code class="md">SKILL.md</code></span><span class="rail-state">step 9 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-10"><span class="rail-no">✓</span><span class="rail-text">Bump <code class="md">code-testing-agent</code> from 3.5.2 to 3.6.0 in <code class="md">.claude-plugin/marketplace.json</code>, add the skill to the plugin README and CHANGELOG, and regenerate the root README table with <code class="md">node scripts/build-readme-table.mjs</code></span><span class="rail-state">step 10 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-11"><span class="rail-no">✓</span><span class="rail-text">Add the merge-gate rule to <code class="md">CLAUDE.md</code> stating that merging is never proposed until <code class="md">bash scripts/verify.sh</code> is green locally and the PR body&#39;s VERIFICATION section is filled in, and that a billing-blocked CI run is not evidence either way</span><span class="rail-state">step 11 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-12"><span class="rail-no">✓</span><span class="rail-text">Run <code class="md">bash tests/run-all.sh</code></span><span class="rail-state">step 12 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-13"><span class="rail-no">✓</span><span class="rail-text">Run <code class="md">bash scripts/verify.sh</code> in agentics and read its full output</span><span class="rail-state">step 13 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-14"><span class="rail-no">✓</span><span class="rail-text">Run <code class="md">git fetch origin &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs</code></span><span class="rail-state">step 14 of 15, done</span></a></li>
+        <li><a class="rail-step done" href="#step-15"><span class="rail-no">✓</span><span class="rail-text">Mutation-check the gate itself by breaking the failure propagation in <code class="md">scripts/verify.sh</code> so a failing stage returns 0, confirming <code class="md">tests/test-verify-gate.sh</code> goes red, then restoring from the scratchpad copy under a <code class="md">trap</code> that also restores on interrupt</span><span class="rail-state">step 15 of 15, done</span></a></li>
       </ul>
     </details>
   </nav>
@@ -1683,12 +1683,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 15 done</span>
+        <span id="progress-label">15 / 15 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:100%"></div>
       </div>
     </div>
 
@@ -1772,12 +1772,12 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="phase-group" data-phase="RED" style="margin-top:1.5rem;">
           <h3 class="phase-name" style="font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .75rem;">RED</h3>
-        <div class="step-card" id="step-1">
+        <div class="step-card completed" id="step-1">
           <div class="step-card-header">
             <div class="step-number">1</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Create <code class="md">tests/fixtures/verify-gate-bare/</code> holding a project with no toolchain at all — a tracked <code class="md">.gitkeep</code> and a one-line <code class="md">README.md</code>, since git does not commit an empty directory and a fresh clone would otherwise fail the objective test — and <code class="md">tests/fixtures/verify-gate-failing/</code> holding one whose unit stage is a <code class="md">package.json</code> <code class="md">test</code> script that exits 1 with no dependencies to install; name no file in either fixture <code class="md">test-*.sh</code>, <code class="md">test-*.mjs</code>, or <code class="md">*.test.mjs</code>, because <code class="md">tests/run-all.sh</code> discovers with a bare <code class="md">find tests -name &#39;test-*.sh&#39;</code> that has no <code class="md">tests/fixtures/</code> exclusion and would run the deliberately-failing fixture as a real suite member</span>
               </div>
               <div class="step-note step-why-note">
@@ -1792,12 +1792,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-2">
+        <div class="step-card completed" id="step-2">
           <div class="step-card-header">
             <div class="step-number">2</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">tests/test-verify-gate.sh</code> asserting that running the gate in the bare fixture prints a <code class="md">SKIP (not configured)</code> line for each of typecheck, lint, unit, and e2e <strong class="md">in that printed order</strong>, and exits 0; that running it in the failing fixture exits non-zero naming the failed stage; and that no stage after the failed one runs — invoking the gate in every case as <code class="md">(cd &quot;$FIXTURE&quot; &amp;&amp; bash &quot;$ROOT/scripts/verify.sh&quot;)</code> so detection is exercised against the fixture&#39;s working directory rather than the repo root</span>
               </div>
               <div class="step-note step-why-note">
@@ -1812,12 +1812,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-3">
+        <div class="step-card completed" id="step-3">
           <div class="step-card-header">
             <div class="step-number">3</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">tests/plugins/test-verified-change-skill.sh</code> asserting the skill&#39;s frontmatter carries <code class="md">name</code> and a description within the 200-char budget whose first sentence is within 80, that the file contains the plan-mode guard line verbatim, that <code class="md">.claude/skills/verified-change/SKILL.md</code> is byte-identical to the plugin copy, that <code class="md">scripts/verify.sh</code> is byte-identical to the plugin&#39;s <code class="md">assets/verify.sh</code>, and that <code class="md">CLAUDE.md</code> contains the merge-gate rule; also register <code class="md">verified-change</code> in the hardcoded skill list inside <code class="md">tests/plugins/test-exitplanmode-guard.sh</code> so the guard is enforced by the same repo-wide test that enforces it for every other mutating skill</span>
               </div>
               <div class="step-note step-why-note">
@@ -1835,12 +1835,12 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="phase-group" data-phase="GREEN" style="margin-top:1.5rem;">
           <h3 class="phase-name" style="font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .75rem;">GREEN</h3>
-        <div class="step-card" id="step-4">
+        <div class="step-card completed" id="step-4">
           <div class="step-card-header">
             <div class="step-number">4</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">kit/plugins/code-testing-agent/skills/verified-change/assets/verify.sh</code> running typecheck, lint, unit, then e2e in that order, each stage detecting its own tooling and printing either a result or <code class="md">SKIP (not configured)</code>, exiting non-zero at the first real failure without running later stages, and additionally running <code class="md">tests/run-all.sh</code>, <code class="md">node scripts/check-plugin-versions.mjs</code>, and <code class="md">node scripts/build-readme-table.mjs --check</code> when it detects a <code class="md">.claude-plugin/marketplace.json</code>. Resolve <strong class="md">every</strong> detection against <code class="md">$PWD</code>, never against <code class="md">$(dirname &quot;$0&quot;)</code> — the repo&#39;s own scripts set <code class="md">ROOT</code> from <code class="md">$0</code> (<code class="md">tests/run-all.sh</code> line 1), and a gate that did the same would, while running inside <code class="md">tests/fixtures/verify-gate-bare/</code>, still find agentics&#39; <code class="md">.claude-plugin/marketplace.json</code>, re-enter <code class="md">tests/run-all.sh</code>, which re-runs <code class="md">tests/test-verify-gate.sh</code>, which re-invokes the gate: unbounded recursion on the objective test. Belt-and-braces, export a <code class="md">VERIFY_GATE_ACTIVE</code> marker on entry and hard-exit non-zero with a named re-entry error if it is already set. Have the lint stage also detect <code class="md">shellcheck</code> (the deliverable is itself shell), run detected tooling by its plain name without prepending <code class="md">node_modules/.bin</code> to <code class="md">PATH</code>, and open the script with <code class="md">set -euo pipefail</code> and quoted expansions throughout</span>
               </div>
               <div class="step-note step-why-note">
@@ -1855,12 +1855,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-5">
+        <div class="step-card completed" id="step-5">
           <div class="step-card-header">
             <div class="step-number">5</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Copy the template to <code class="md">scripts/verify.sh</code>, mark it executable, and add <code class="md">kit/plugins/code-testing-agent/bin/install-verify-gate</code> — an executable wrapper that copies the plugin&#39;s <code class="md">assets/verify.sh</code> into the target repo&#39;s <code class="md">scripts/</code>, refusing to overwrite an existing file without <code class="md">--force</code></span>
               </div>
               <div class="step-note step-why-note">
@@ -1875,12 +1875,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-6">
+        <div class="step-card completed" id="step-6">
           <div class="step-card-header">
             <div class="step-number">6</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">kit/plugins/code-testing-agent/skills/verified-change/SKILL.md</code> with the six-step loop — write the test, mutation-check it, restore, implement, iterate on <code class="md">scripts/verify.sh</code> without pausing to ask up to a hard bound of 8 attempts, then stop and report the failing assertion, the last diff tried, and what was ruled out rather than reporting success, and browser-verify UI changes at 390px and 1280px in <strong class="md">both</strong> light and dark themes with an axe run against the real rendered page (never a Storybook iframe), recording measured evidence — computed styles, element boxes, the axe violation count — because a screenshot alone is not evidence — carrying the plan-mode guard verbatim, a <code class="md">When not to use</code> line pointing at <code class="md">tdd-loop</code> for new features, and an <code class="md">allowed-tools</code> list covering every tool it calls</span>
               </div>
               <div class="step-note step-why-note">
@@ -1895,12 +1895,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-7">
+        <div class="step-card completed" id="step-7">
           <div class="step-card-header">
             <div class="step-number">7</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">references/mutation-check.md</code> giving a mutation catalogue by change type and the safe break-and-restore protocol — copy the file to the scratchpad, mutate in place, run the scoped test, restore from the copy, then prove restoration with <code class="md">cmp -s &quot;$SCRATCH/&lt;file&gt;&quot; &quot;&lt;file&gt;&quot;</code> and hard-stop if it fails, install a shell <code class="md">trap</code> that restores on any exit path including interrupt, and delete the scratchpad copy after a proven restore</span>
               </div>
               <div class="step-note step-why-note">
@@ -1915,12 +1915,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-8">
+        <div class="step-card completed" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Write <code class="md">references/verification-section.md</code> containing one filled VERIFICATION section — every gate with its real result, the mutation applied with its observed failure output, and the screenshot paths — as a worked example rather than a bracket schema</span>
               </div>
               <div class="step-note step-why-note">
@@ -1935,12 +1935,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-9">
+        <div class="step-card completed" id="step-9">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Copy the finished skill directory — <code class="md">SKILL.md</code> <strong class="md">and</strong> both <code class="md">references/</code> files — to <code class="md">.claude/skills/verified-change/</code>, and extend the step-3 parity test to cover the references as well as <code class="md">SKILL.md</code></span>
               </div>
               <div class="step-note step-why-note">
@@ -1955,12 +1955,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-10">
+        <div class="step-card completed" id="step-10">
           <div class="step-card-header">
             <div class="step-number">10</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bump <code class="md">code-testing-agent</code> from 3.5.2 to 3.6.0 in <code class="md">.claude-plugin/marketplace.json</code>, add the skill to the plugin README and CHANGELOG, and regenerate the root README table with <code class="md">node scripts/build-readme-table.mjs</code></span>
               </div>
               <div class="step-note step-why-note">
@@ -1975,12 +1975,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-11">
+        <div class="step-card completed" id="step-11">
           <div class="step-card-header">
             <div class="step-number">11</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Add the merge-gate rule to <code class="md">CLAUDE.md</code> stating that merging is never proposed until <code class="md">bash scripts/verify.sh</code> is green locally and the PR body&#39;s VERIFICATION section is filled in, and that a billing-blocked CI run is not evidence either way</span>
               </div>
               <div class="step-note step-why-note">
@@ -1998,12 +1998,12 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="phase-group" data-phase="VERIFY" style="margin-top:1.5rem;">
           <h3 class="phase-name" style="font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .75rem;">VERIFY</h3>
-        <div class="step-card" id="step-12">
+        <div class="step-card completed" id="step-12">
           <div class="step-card-header">
             <div class="step-number">12</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Run <code class="md">bash tests/run-all.sh</code></span>
               </div>
               <div class="step-note step-why-note">
@@ -2018,12 +2018,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-13">
+        <div class="step-card completed" id="step-13">
           <div class="step-card-header">
             <div class="step-number">13</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Run <code class="md">bash scripts/verify.sh</code> in agentics and read its full output</span>
               </div>
               <div class="step-note step-why-note">
@@ -2038,12 +2038,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-14">
+        <div class="step-card completed" id="step-14">
           <div class="step-card-header">
             <div class="step-number">14</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Run <code class="md">git fetch origin &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs</code></span>
               </div>
               <div class="step-note step-why-note">
@@ -2058,12 +2058,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-15">
+        <div class="step-card completed" id="step-15">
           <div class="step-card-header">
             <div class="step-number">15</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Mutation-check the gate itself by breaking the failure propagation in <code class="md">scripts/verify.sh</code> so a failing stage returns 0, confirming <code class="md">tests/test-verify-gate.sh</code> goes red, then restoring from the scratchpad copy under a <code class="md">trap</code> that also restores on interrupt</span>
               </div>
               <div class="step-note step-why-note">
@@ -2104,63 +2104,63 @@ img, video { max-width: 100%; height: auto; }
       <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
       <ul class="criteria-list" id="criteria-list">
         <li>
-          <input type="checkbox" id="ac1">
+          <input type="checkbox" id="ac1" checked>
           <label for="ac1"><code class="md">bash scripts/verify.sh</code> exits 0 in agentics and prints an explicit result or SKIP line for every stage</label>
         </li>
         <li>
-          <input type="checkbox" id="ac2">
+          <input type="checkbox" id="ac2" checked>
           <label for="ac2">The same script, unmodified, prints four SKIP lines and exits 0 in a project with no toolchain</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3">A failing stage makes the gate exit non-zero and stops it from running later stages</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4"><code class="md">bash tests/run-all.sh</code> reports 0 failed with both new tests in the PASS list</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5"><code class="md">.claude/skills/verified-change/SKILL.md</code> is byte-identical to the plugin copy and a test fails if they diverge</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6"><code class="md">scripts/verify.sh</code> is byte-identical to the plugin&#39;s <code class="md">assets/verify.sh</code> and a test fails if they diverge</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7"><code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 with code-testing-agent at 3.6.0</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code class="md">node scripts/build-readme-table.mjs --check</code> exits 0</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9"><code class="md">CLAUDE.md</code> states that merging is not proposed until the gate is green and VERIFICATION is filled in</label>
         </li>
         <li>
-          <input type="checkbox" id="ac10">
+          <input type="checkbox" id="ac10" checked>
           <label for="ac10">The skill&#39;s own objective test survives a deliberate mutation of the gate&#39;s failure propagation</label>
         </li>
         <li>
-          <input type="checkbox" id="ac11">
+          <input type="checkbox" id="ac11" checked>
           <label for="ac11">The gate detects every stage relative to the directory it is invoked from, so running it inside <code class="md">tests/fixtures/verify-gate-bare/</code> terminates instead of re-entering <code class="md">tests/run-all.sh</code></label>
         </li>
         <li>
-          <input type="checkbox" id="ac12">
+          <input type="checkbox" id="ac12" checked>
           <label for="ac12"><code class="md">find tests/fixtures/verify-gate-bare tests/fixtures/verify-gate-failing \( -name &#39;test-*.sh&#39; -o -name &#39;test-*.mjs&#39; -o -name &#39;*.test.mjs&#39; \)</code> prints nothing, so <code class="md">tests/run-all.sh</code> never picks the failing fixture up as a suite member</label>
         </li>
         <li>
-          <input type="checkbox" id="ac13">
+          <input type="checkbox" id="ac13" checked>
           <label for="ac13">The mutation-restore proof is <code class="md">cmp -s</code> against the scratchpad copy and fails loudly on an unrestored file even when that file is untracked</label>
         </li>
         <li>
-          <input type="checkbox" id="ac14">
+          <input type="checkbox" id="ac14" checked>
           <label for="ac14"><code class="md">kit/plugins/code-testing-agent/bin/install-verify-gate</code> copies the gate into a scratch repo without any <code class="md">${...}</code> expansion in the documented command</label>
         </li>
         <li>
-          <input type="checkbox" id="ac15">
+          <input type="checkbox" id="ac15" checked>
           <label for="ac15"><code class="md">diff -r kit/plugins/code-testing-agent/skills/verified-change .claude/skills/verified-change</code> prints nothing, references included</label>
         </li>
       </ul>
@@ -2187,27 +2187,42 @@ img, video { max-width: 100%; height: auto; }
         Wrapping up
       </h2>
       <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
-      <div class="completion-checklist" id="completion-checklist">
+      <div class="completion-checklist all-complete" id="completion-checklist">
         <div class="completion-header">
           <span class="completion-badge" id="completion-badge">Required</span>
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
-            <input type="checkbox" id="cc2" disabled>
+            <input type="checkbox" id="cc2" disabled checked>
             <label for="cc2">All acceptance criteria verified and checked off</label>
           </li>
           <li>
-            <input type="checkbox" id="cc3" disabled>
+            <input type="checkbox" id="cc3" disabled checked>
             <label for="cc3">Plan status updated to completed</label>
           </li>
         </ul>
         <div class="completion-report" id="completion-report">
           <h3 class="report-heading">Completion Report</h3>
-          <p class="report-empty">No items to report — all requirements met.</p>
+          <dl class="report-list">
+            <dt>Marketplace stage count</dt>
+            <dd><code class="md">tests/run-all.sh</code> is the auto-detected unit stage, so the marketplace block contributes three stages (marketplace validation, version guard, README freshness) rather than re-running the suite a second time as step 4&#39;s wording implied; step 13&#39;s &quot;unit stage and the three marketplace stages&quot; is what shipped.</dd>
+            <dt>shellcheck detection</dt>
+            <dd>gated on a <code class="md">.shellcheckrc</code>, not on the binary being installed, so the gate does not turn red for everyone the day someone runs <code class="md">brew install shellcheck</code>; this repo has no <code class="md">.shellcheckrc</code>, so lint reports SKIP.</dd>
+            <dt><code class="md">bin/install-verify-gate</code> shape</dt>
+            <dd>it is a pure <code class="md">exec</code> wrapper over <code class="md">assets/install-verify-gate.sh</code>, because check 3 of <code class="md">tests/plugins/test-no-shell-expansion.sh</code> parses every wrapper for an <code class="md">exec &lt;interp&gt; &quot;$(dirname &quot;$0&quot;)/…&quot;</code> line and fails a wrapper that carries logic of its own.</dd>
+            <dt>Re-entry marker escape</dt>
+            <dd><code class="md">tests/test-verify-gate.sh</code> invokes the gate through <code class="md">env -u VERIFY_GATE_ACTIVE</code>, because that test itself runs under the gate whenever the unit stage is <code class="md">tests/run-all.sh</code>; without the escape the marker would refuse the very invocation the test exists to make. It is the one site allowed to clear it, and check 2 asserts the marker still refuses everywhere else.</dd>
+            <dt>Project-local copy scope</dt>
+            <dd><code class="md">.claude/skills/verified-change/</code> is a whole-directory copy including <code class="md">assets/</code>, since the acceptance criterion requires <code class="md">diff -r</code> against the plugin directory to print nothing; that makes three copies of the gate, all held in lockstep by the parity test.</dd>
+            <dt>Version-guard verification method</dt>
+            <dd><code class="md">node scripts/check-plugin-versions.mjs</code> compares <code class="md">origin/main...HEAD</code>, which is empty on an uncommitted branch and therefore passes vacuously; the 3.5.2 to 3.6.0 bump was verified by calling the script&#39;s exported <code class="md">findViolations</code> against the real working-tree change set. The CLI form becomes meaningful once the work is committed.</dd>
+            <dt>Silent-failure bug found by the dogfood</dt>
+            <dd>proving the parity test fails on a forked gate showed it exiting non-zero with no message, because <code class="md">diff | head | sed</code> under <code class="md">set -e</code> killed the script before the report. Fixed with <code class="md">|| true</code>; the proof is what caught it.</dd>
+          </dl>
         </div>
       </div>
     </section>
