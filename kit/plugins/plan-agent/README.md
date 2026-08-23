@@ -105,7 +105,7 @@ Passing a `.md` plan path enters **conversion mode**: the markdown is treated as
 | `--no-clarify` | Skip Step 1 Clarify only |
 | `--no-align` | Skip Step 5 Align only |
 | `--no-interview` | Skip Step 5b Interview (built-in structured interview) |
-| `--from-prompt <path>` | **Prompt-source mode.** Read a saved proposal prompt for context, then author through the normal drafting workflow. Not conversion mode: proposal headings are input, not a step list to transcribe. Passing the same path positionally instead would trigger conversion mode, which is the bug this flag exists to prevent; the two are mutually exclusive and an ambiguous mix is rejected |
+| `--from-prompt <path>` | **Prompt-source mode.** Read a context source and author through the normal drafting workflow. Three shapes reach it: a saved proposal prompt (`build-proposal`), a sub-feature prompt (`build-feature` Tier 1+), and a Tier 0 **feature doc** (`build-feature` writes no prompt at that tier, so the doc is the only carrier for its stories, acceptance criteria, scope cuts, and risks). Not conversion mode: their headings are input, not a step list to transcribe. Passing the same path positionally instead would trigger conversion mode on a source with no `Steps` section — which is the bug this flag exists to prevent, and a prose label like `— feature doc: x.md` does **not** make the path non-positional; the two modes are mutually exclusive and an ambiguous mix is rejected |
 | `--type <kind>` | Set plan `type` in HTML metadata (`feature`, `fix`, `refactor`, `docs`, `chore`) |
 | `--template <name>` | Reserved — only `default` is currently supported; additional variants are planned |
 | `--dir <path>` | Override directory resolution; write the plan to this path |

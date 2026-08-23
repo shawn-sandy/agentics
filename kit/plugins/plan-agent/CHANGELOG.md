@@ -37,7 +37,15 @@
   accessibility constraints, treating them as binding.
 - `tests/plugins/test-build-feature.sh` — structural smoke test covering the
   frontmatter contract, the tier gate, the Step 8 hand-off, the Step 9 publish
-  contract, and the product sections in the shape reference.
+  contract, and the product sections in the shape reference. Its assertions
+  check contracts rather than the prose describing them: the Tier 0 check
+  parses every emitted `implementation-plan` command and rejects any `.md` not
+  preceded by `--from-prompt`; Step 9 is anchored on its four numbered moves
+  and asserts render → publish → verify → record order, that each move carries
+  its own mechanism, and that `Artifact` receives the rendered `.html`; the
+  breakdown check requires rationale, size, and dependency order. A
+  presence-only assertion passes happily next to a warning that contradicts the
+  command beside it — which is how the Tier 0 handoff bug reached a commit.
 
 ### Changed
 

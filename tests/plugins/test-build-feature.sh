@@ -167,13 +167,16 @@ if python3 - "$SKILL" <<'PY'
 import re, sys
 txt = open(sys.argv[1]).read()
 bad = []
-row = next((l for l in txt.splitlines() if '0 — Plan-sized' in l), None)
-if not row:
+rows = [l for l in txt.splitlines() if '0 — Plan-sized' in l]
+if not rows:
     print("   tier-0 row missing")
     sys.exit(1)
-cmds = [c for c in re.findall(r'`([^`]+)`', row) if '/plan-agent:implementation-plan' in c]
-if not cmds:
+if not any('/plan-agent:implementation-plan' in c
+           for r in rows for c in re.findall(r'`([^`]+)`', r)):
     bad.append("no /plan-agent:implementation-plan handoff in the tier-0 row")
+# Scan EVERY handoff in the file, not just the tier row: the guidance is restated
+# elsewhere, and a later edit that reintroduces a positional .md anywhere must fail.
+cmds = [c for c in re.findall(r'`([^`]+)`', txt) if '/plan-agent:implementation-plan' in c]
 for cmd in cmds:
     toks = cmd.split()
     md = [i for i, t in enumerate(toks) if t.endswith('.md')]
@@ -276,30 +279,73 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "13. Step 9 publishes consent-gated, renders before publishing, and records the URL..."
-# Prose in this repo wraps at 80 columns, so multi-word assertions are matched
-# against a whitespace-normalized copy — a grep for a wrapped sentence never hits.
-STEP9="$(sed -n '/^### Step 9 —/,/^## Writing Style/p' "$SKILL")"
-STEP9FLAT="$(printf '%s' "$STEP9" | tr '\n' ' ' | tr -s ' ')"
-MISSING=""
-[ -n "$STEP9" ] || MISSING="$MISSING step-9-missing"
+echo "13. Step 9 publishes consent-gated in render -> publish -> verify -> record order..."
+# Token presence is not the contract; ORDER is. Presence-only assertions pass on
+# a Step 9 that publishes the .md before rendering, or records artifact-url:
+# before WebFetch confirms the page exists — both of which ship a dead link.
+# Prose here wraps at 80 columns, so sentence matches run against a flattened copy.
+if python3 - "$SKILL" <<'PY'
+import re, sys
+txt = open(sys.argv[1]).read()
+m = re.search(r'^### Step 9 —.*?(?=^## Writing Style)', txt, re.M | re.S)
+if not m:
+    print("   step-9 section missing")
+    sys.exit(1)
+step9 = m.group(0)
+flat = " ".join(step9.split())
+bad = []
+
+# Anchor on the four numbered moves, then assert each carries its own mechanism.
+# Do NOT scan the whole section for a token: artifact-url: legitimately appears in
+# the Publish move too (the republish path passes it as Artifact's url), so a
+# first-occurrence search would read the wrong position and mis-order the check.
+MOVES = [
+    ('1. **Render.**',  'plan-agent:markdown-to-html', 'render via markdown-to-html'),
+    ('2. **Publish.**', 'Artifact(file_path:',         'the Artifact call'),
+    ('3. **Verify.**',  'WebFetch',                    'WebFetch verification'),
+    ('4. **Record.**',  'artifact-url:',               'recording artifact-url:'),
+]
+idx = []
+for marker, _, _ in MOVES:
+    i = step9.find(marker)
+    if i < 0:
+        bad.append(f"missing move {marker!r}")
+    idx.append(i)
+
+if all(i >= 0 for i in idx):
+    order = [m[0] for m in MOVES]
+    if idx != sorted(idx):
+        bad.append("Step 9 moves are out of order; required: " + " -> ".join(order))
+    # Each move must actually contain its mechanism, not merely be named.
+    bounds = idx + [len(step9)]
+    for n, (marker, needle, label) in enumerate(MOVES):
+        block = step9[bounds[n]:bounds[n + 1]]
+        if needle not in block:
+            bad.append(f"{marker} does not carry {label}")
+        # Publishing the .md directly is the documented bug — Artifact gets the .html.
+        if needle == 'Artifact(file_path:':
+            for path in re.findall(r'Artifact\(file_path:\s*"([^"]+)"', block):
+                if not path.endswith('.html'):
+                    bad.append(f"Artifact receives {path!r}, not the rendered .html")
+            # Artifact is deferred; calling it without ToolSearch fails at runtime.
+            if 'select:Artifact' not in block:
+                bad.append("Publish move omits ToolSearch select:Artifact")
+
 # Publishing is the one irreversible act here; a blanket "stop asking" must not reach it.
-printf '%s' "$STEP9FLAT" | grep -qF 'Never publish without an explicit yes' || MISSING="$MISSING consent-gate"
-# Markdown cannot set its own <title>, so the .md must be rendered before it is published.
-printf '%s' "$STEP9" | grep -qF 'plan-agent:markdown-to-html' || MISSING="$MISSING render-step"
-printf '%s' "$STEP9" | grep -qF 'Artifact(file_path:' || MISSING="$MISSING artifact-call"
-# Artifact is deferred; calling it without ToolSearch fails at runtime.
-printf '%s' "$STEP9" | grep -qF 'select:Artifact' || MISSING="$MISSING toolsearch-select"
-# Without the recorded URL every round mints a new link — the reason to publish at all.
-printf '%s' "$STEP9" | grep -qF 'artifact-url:' || MISSING="$MISSING url-record"
-# A returned URL is not proof the page rendered.
-printf '%s' "$STEP9" | grep -qF 'WebFetch' || MISSING="$MISSING publish-verification"
+if 'Never publish without an explicit yes' not in flat:
+    bad.append("missing consent-gate")
 # Artifact is absent in some sessions; the file deliverable must survive that.
-printf '%s' "$STEP9FLAT" | grep -qF 'A failed publish does not cost the handoff' || MISSING="$MISSING publish-fallback"
-if [ -z "$MISSING" ]; then
+if 'A failed publish does not cost the handoff' not in flat:
+    bad.append("missing publish-fallback")
+
+if bad:
+    print("   " + "; ".join(bad))
+sys.exit(1 if bad else 0)
+PY
+then
   echo "  PASS"
 else
-  echo "  FAIL: Step 9 publish contract incomplete:$MISSING"
+  echo "  FAIL: Step 9 publish contract incomplete (details above)"
   FAILURES=$((FAILURES + 1))
 fi
 
@@ -317,6 +363,18 @@ for h in ("## User stories & acceptance criteria", "## Release & rollout"):
 for token in ("Delivered by:", "**Satisfies**"):
     if token not in txt:
         bad.append(f"missing traceability token {token!r}")
+# An entry without rationale, size, and dependency order is a list of names, not a
+# split: rationale is what distinguishes a real seam from an arbitrary slice, and
+# without size and order nobody can sequence the plans the breakdown exists to hand off.
+for field in ("**Rationale**", "**Size**", "**Depends on**"):
+    if field not in txt:
+        bad.append(f"breakdown entry format drops {field!r}")
+# The skeleton is the part authors copy, so it has to carry size and order inline.
+if "(S|M|L) — depends on:" not in txt:
+    bad.append("entry skeleton lacks the inline '(S|M|L) — depends on:' shape")
+# An L entry is a smell worth flagging rather than a size worth accepting quietly.
+if "**S** — one surface" not in txt or "**L** — crosses domains" not in txt:
+    bad.append("sizing guide does not define the S/M/L bands")
 # A metric without a baseline is a wish; `unmeasured` is the honest escape hatch.
 if "Baseline" not in txt or "unmeasured" not in txt:
     bad.append("metrics table lacks Baseline or the `unmeasured` escape hatch")
