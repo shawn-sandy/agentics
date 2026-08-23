@@ -4,17 +4,23 @@ PostToolUse dispatcher: the plugin's single entry point for Write/Edit/MultiEdit
 
 Why this exists
 ---------------
-plan-agent ships four PostToolUse hooks (filename validation, plans-index
-rebuild, prototypes-index rebuild, plan HTML render). Registering each one
-directly in hooks.json spawned four interpreters on *every* file edit in
+plan-agent ships six PostToolUse hooks (filename validation, plans-index
+rebuild, plan HTML render, prototypes-index rebuild, prototype drift, and the
+designs-index rebuild and design drift pair). Registering each one
+directly in hooks.json spawned six interpreters on *every* file edit in
 *every* session, purely so each could discover the file was not a plan and
 exit. The hooks `matcher` field is a tool-NAME regex only — it cannot express
 a path condition — so the gate cannot live in hooks.json. It lives here.
 
 This script reads the hook payload once, does one cheap path check, and for
-the overwhelmingly common case (an edit outside the plans/prototypes trees)
+the overwhelmingly common case (an edit outside the plans, prototypes, and
+designs trees)
 exits without spawning anything. Only when the path is plausibly relevant does
 it fan out to the child hooks, which re-apply their own precise filters.
+
+The gate has three independent arms — plans, prototypes, designs — because a
+write can be relevant to one without being relevant to the others, and each arm
+fans out only to its own children.
 
 Contract
 --------
@@ -35,6 +41,7 @@ import time
 
 _FALLBACK_PLANS_DIR = "docs/plans"
 _PROTOTYPES_MARKER = "docs/prototypes/"
+_DESIGNS_MARKER = "docs/designs/"
 _PLAN_EXTENSIONS = (".md", ".html")
 
 # Children run sequentially, so their timeouts must fit inside the dispatcher's
@@ -165,13 +172,19 @@ def main():
     # it would have acted on and break the superset contract above.
     is_prototype = _PROTOTYPES_MARKER in abs_path
 
+    # Same rule for designs, and for the same reason: build-designs-index.sh
+    # gates on `*/docs/designs/*` alone. Artboards are `.dc.html`, but an
+    # extension filter here would drop any other file the canvas directory
+    # grows and break the superset contract.
+    is_design = _DESIGNS_MARKER in abs_path
+
     # Only a .md or .html can be a plan. Test the extension first: it is free,
     # while _plans_dir_candidates() reads settings files off disk.
     is_plan = abs_path.endswith(_PLAN_EXTENSIONS) and _under_any(
         abs_path, _plans_dir_candidates()
     )
 
-    if not (is_plan or is_prototype):
+    if not (is_plan or is_prototype or is_design):
         sys.exit(0)  # the common case — no child process is ever spawned
 
     # ── Fan out ─────────────────────────────────────────────────────────────
@@ -200,6 +213,29 @@ def main():
         codes.append(
             _run(
                 ["python3", os.path.join(_HOOKS_DIR, "check-prototype-drift.py")],
+                raw,
+                deadline,
+            )
+        )
+    if is_design:
+        codes.append(
+            _run(
+                [
+                    "bash",
+                    os.path.join(_HOOKS_DIR, "build-designs-index.sh"),
+                    _project_dir(),
+                ],
+                raw,
+                deadline,
+            )
+        )
+        # Same placement and same reason as the prototype drift check above: it
+        # goes last and must stay cheap, because every child shares one 55s
+        # budget and a child that runs out of it is skipped by the fail-open
+        # path — which would silently stop drift from being detected at all.
+        codes.append(
+            _run(
+                ["python3", os.path.join(_HOOKS_DIR, "check-design-drift.py")],
                 raw,
                 deadline,
             )

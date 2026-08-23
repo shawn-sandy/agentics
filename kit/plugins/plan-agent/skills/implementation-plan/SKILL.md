@@ -126,13 +126,24 @@ caller supplying a default must **prepend** it for an explicit user value to
 override: the surviving value is the final one, and a default appended after the
 user's arguments would beat them instead.
 
-**Prompt-source mode** (`--from-prompt <path>` set): the path names a saved
-**proposal prompt**, not a plan. This is the `build` chain's proposal handoff.
-Read it for context — the decisions it settled, the constraints it names, the
-approach it recommends — then author a plan through the **normal drafting
-workflow**. This is not conversion: a proposal argues *whether and what*, a plan
-states *how*, so its headings are input, never a step list to transcribe. The
-skip flags are not implied; pass `--quick` explicitly to skip stages.
+**Prompt-source mode** (`--from-prompt <path>` set): the path names a **context
+source**, never a plan. Three shapes reach it — a saved proposal prompt
+(`build-proposal`'s handoff), a sub-feature prompt (`build-feature`'s Tier 1+
+handoff), and a **Tier 0 feature doc** (`build-feature` writes no prompt at
+that tier, so the doc itself is the only carrier for its stories, acceptance
+criteria, scope cuts, and risks). Read it for context — the decisions it
+settled, the constraints it names, the approach it recommends — then author a
+plan through the **normal drafting workflow**. This is not conversion: a
+proposal argues *whether and what*, a feature doc argues *what and for whom*,
+a plan states *how*, so their headings are input, never a step list to
+transcribe. The skip flags are not implied; pass `--quick` explicitly to skip
+stages.
+
+**The flag is what keeps a context source out of conversion mode.** A doc
+handed over as a positional token would set `$MD_SOURCE` and get 1:1-mapped
+even though it has no `Steps` section; naming it as `--from-prompt`'s value
+excludes it by rule 3 above. Prose labels do not — `... — feature doc: x.md`
+still leaves `x.md` positional.
 
 **Type derivation here has one rule: a source `type:` is used only when it is
 already a valid plan type** (`feature`, `fix`, `refactor`, `docs`, `chore`).
@@ -500,8 +511,12 @@ EOF
 8. **Implement, Edit, or Exit** — After Step 7 completes, always ask the
    user what to do next.
 
-   Use `AskUserQuestion` with **two questions batched in one call**, the
-   tracking-issue question **first** and the next-step question second:
+   Use `AskUserQuestion` with **three questions batched in one call**, in
+   this order: the tracking-issue question **first**, the see-it-first
+   question **second**, and the next-step question **third**. Each of the
+   first two drops out under its own condition below, so the batch is two
+   questions — or one — whenever a condition applies; the surviving
+   questions keep this relative order.
    - Question: "Create a tracking issue for this plan on GitHub/GitLab?"
    - Options:
      - `Yes — create an issue` — Run the `git-agent:create-issue` skill with this plan.
@@ -511,8 +526,23 @@ EOF
    already carries an `issue:` key** — the plan was seeded from an issue
    (Step 0.5) or one was created in an earlier pass through this menu.
    Creating another would duplicate the backlog item and overwrite the
-   existing link; ask only the next-step question and mention the linked
+   existing link; ask only the remaining questions and mention the linked
    issue URL in one line instead.
+
+   For the see-it-first question:
+   - Question: "Want to see it before building?"
+   - Options:
+     - `Prototype` — Generate a clickable static-HTML prototype under docs/prototypes/.
+     - `Design canvas` — Publish an editable design canvas with one artboard per user-facing step.
+     - `No` — Go straight to the next step.
+
+   **Ask the see-it-first question only when the plan carries UI signals.**
+   Reuse the `ui_signals_present` rule already defined in
+   `skills/review-plan/SKILL.md`, "Step 3b — Detect UI signals" — that file
+   owns the keyword list, and a second definition here would drift from it.
+   On a plan with no UI signals, omit the question entirely: neither
+   `Prototype` nor `Design canvas` is offered, because there is no surface
+   for either to draw.
 
    For the next-step question, **when a workflow prompt was generated**
    (frontmatter `workflow: always` or the renderer's heuristic fired — check
@@ -541,6 +571,27 @@ EOF
    whoever closes it. If the `git-agent` plugin is not installed (the Skill
    call fails to resolve), say so in one line and continue with the
    next-step choice — never block on it.
+
+   **If the user answered `Prototype`:** before acting on the next-step
+   choice, invoke `Skill(skill: "plan-agent:prototype", args: "<plan path>")`
+   with the rendered plan's relative path. That skill owns the derivation,
+   the escaping rules, and its own browser verification; when it finishes,
+   return here and act on the next-step choice.
+
+   **If the user answered `Design canvas`:** before acting on the next-step
+   choice, invoke `Skill(skill: "plan-agent:design", args: "<plan path>")`
+   with the rendered plan's relative path. That skill derives one artboard
+   per user-facing step, delegates authoring to the built-in design skill,
+   and writes `design:` / `design-dir:` back into the spec; when it
+   finishes, return here and act on the next-step choice.
+
+   **If the user answered `No` to the see-it-first question:** continue
+   straight to the next-step choice.
+
+   Both `prototype` and `design` ship in this same plugin, so a resolution
+   failure means a broken skill reference, not a missing dependency —
+   report it as an error in one line and continue with the next-step
+   choice; never block on it.
 
    **If the user chooses `Implement now`:** Ask where to implement using
    `AskUserQuestion` with a single question:
