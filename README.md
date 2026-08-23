@@ -812,7 +812,7 @@ Total: 65 skills across 12 plugins.
 
 | Plugin | Version | Category | Components |
 |--------|---------|----------|------------|
-| [memory-tools](./kit/plugins/memory-tools/README.md) | 4.3.0 | development | 3 skills |
+| [memory-tools](./kit/plugins/memory-tools/README.md) | 4.3.1 | development | 3 skills |
 | [code-review](./kit/plugins/code-review/README.md) | 3.3.4 | development | 1 command, 1 skill, 1 agent |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.5.2 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.5.2 | development | 1 command, 4 skills, 1 hook |
