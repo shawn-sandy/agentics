@@ -390,12 +390,14 @@ Analyze code and suggest specific, purpose-driven tests tied to actual behavior 
 | `running-tests` | Run tests, check if tests pass, or verify changes |
 | `tdd-fix` | TDD-fix a bug or run a red-green cycle — manual invoke only |
 | `tdd-loop` | TDD a new feature or write tests first — manual invoke only |
+| `verified-change` | Prove a change is merge-ready locally, or run the merge gate |
 
 ```bash
 claude --plugin-dir ./kit/plugins/code-testing-agent
 # "What tests should I write for this function?"
 # "Review my test suite for gaps"
 # "TDD fix this bug — write a failing test then make it green"
+# "Prove this change is merge-ready before I open a PR"
 ```
 
 [View Documentation](./kit/plugins/code-testing-agent/README.md)
@@ -789,7 +791,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 |--------|-------|--------|
 | artifact-tools | [How do I... artifact-tools](./docs/guides/how-to/artifact-tools.md) | 5 |
 | code-review | [How do I... code-review](./docs/guides/how-to/code-review.md) | 1 |
-| code-testing-agent | [How do I... code-testing-agent](./docs/guides/how-to/code-testing-agent.md) | 5 |
+| code-testing-agent | [How do I... code-testing-agent](./docs/guides/how-to/code-testing-agent.md) | 6 |
 | content-tools | [How do I... content-tools](./docs/guides/how-to/content-tools.md) | 1 |
 | git-agent | [How do I... git-agent](./docs/guides/how-to/git-agent.md) | 8 |
 | memory-tools | [How do I... memory-tools](./docs/guides/how-to/memory-tools.md) | 3 |
