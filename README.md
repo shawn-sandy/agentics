@@ -142,7 +142,6 @@ agentics/
 │       ├── settings-sync/
 │       ├── skill-reviewer/
 │       ├── social-media-tools/
-│       ├── team-defaults/
 │       └── wcag-compliance-reviewer/
 ├── tests/
 │   └── fixtures/                 # Validation test fixtures
@@ -183,7 +182,6 @@ The marketplace approach uses sparse cloning — only the plugin you install is 
 /plugin install wcag-compliance-reviewer@agentics-kit
 /plugin install settings-sync@agentics-kit
 /plugin install social-media-tools@agentics-kit
-/plugin install team-defaults@agentics-kit
 /plugin install artifact-tools@agentics-kit
 /plugin install content-tools@agentics-kit
 ```
@@ -213,7 +211,6 @@ This repo ships these keys in **project scope** (`.claude/settings.json`). On fi
     "settings-sync@agentics-kit": true,
     "social-media-tools@agentics-kit": true,
     "plan-agent@agentics-kit": true,
-    "team-defaults@agentics-kit": true,
     "artifact-tools@agentics-kit": true,
     "content-tools@agentics-kit": true
   }
@@ -757,32 +754,6 @@ claude --plugin-dir ./kit/plugins/content-tools
 
 ---
 
-#### `team-defaults`
-
-Shared team defaults — bundled rules plus two authoring agents.
-
-**Skills:**
-
-| Skill | Activates when you ask to... |
-|-------|------------------------------|
-| `sync-rules` | Install the bundled team rules (plan-mode, component-driven-ui, typescript-jsdoc, review-bot-loops) into `~/.claude/rules/` with per-file confirmation |
-
-**Agents:**
-
-| Agent | Purpose |
-|-------|---------|
-| `ts-commenter` | Adds or standardizes JSDoc on TypeScript files, optimized for AI-assistant readability |
-| `css-generator` | Extracts design tokens from images into CSS custom properties and utility classes |
-
-```bash
-claude --plugin-dir ./kit/plugins/team-defaults
-# "Sync the team rules"
-```
-
-[View Documentation](./kit/plugins/team-defaults/README.md)
-
----
-
 ## How-To Guides
 
 One brief "How do I" entry per skill: the slash command to type, the plain-English phrasing that triggers it, what it actually does, and the gotcha worth knowing. Skills marked command-only cannot be triggered by natural language.
@@ -799,10 +770,9 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | settings-sync | [How do I... settings-sync](./docs/guides/how-to/settings-sync.md) | 2 |
 | skill-reviewer | [How do I... skill-reviewer](./docs/guides/how-to/skill-reviewer.md) | 4 |
 | social-media-tools | [How do I... social-media-tools](./docs/guides/how-to/social-media-tools.md) | 17 |
-| team-defaults | [How do I... team-defaults](./docs/guides/how-to/team-defaults.md) | 1 |
 | wcag-compliance-reviewer | [How do I... wcag-compliance-reviewer](./docs/guides/how-to/wcag-compliance-reviewer.md) | 1 |
 
-Total: 65 skills across 12 plugins.
+Total: 64 skills across 11 plugins.
 
 ---
 
@@ -821,7 +791,6 @@ Total: 65 skills across 12 plugins.
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.1.4 | productivity | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.23.4 | productivity | 1 command, 17 skills |
 | [plan-agent](./kit/plugins/plan-agent/README.md) | 9.6.1 | productivity | 9 commands, 17 skills, 12 agents, 2 hooks |
-| [team-defaults](./kit/plugins/team-defaults/README.md) | 0.2.3 | productivity | 1 skill, 2 agents |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.12.0 | development | 3 commands, 5 skills |
 | [content-tools](./kit/plugins/content-tools/README.md) | 1.1.1 | documentation | 1 skill |
 
@@ -829,7 +798,7 @@ Total: 65 skills across 12 plugins.
 
 ## Removed Plugins
 
-The following plugins have been removed from the `agentics-kit` marketplace — six at v4.0.0, one absorbed into `git-agent`, and two folded into `plan-agent` since. They **will not appear** when browsing or installing from the marketplace — `/plugin install` will not find them.
+The following plugins have been removed from the `agentics-kit` marketplace — six at v4.0.0, one absorbed into `git-agent`, two folded into `plan-agent`, and one retired as unused since. They **will not appear** when browsing or installing from the marketplace — `/plugin install` will not find them.
 
 Their source directories have been removed from the repository. De-registering a plugin stops distribution but not loading — a directory left under `kit/plugins/` still loads via `--plugin-dir`, collides by name with a live plugin, and consumes skill-description budget in every session. Git history is the reference, so the source is recoverable:
 
@@ -842,6 +811,7 @@ git checkout <commit>^ -- kit/plugins/<plugin-name>
 
 | Plugin | Last Version | Removed | Reason | Replacement |
 |--------|-------------|---------|--------|-------------|
+| `team-defaults` | 0.2.3 | 2026-08-23 | Retired as unused — never invoked in any session; its bundled rule copies had drifted from `~/.claude/rules/`, and `settings-sync` already backs up `~/.claude/rules/` and `CLAUDE.md` | `/plugin install settings-sync@agentics-kit` then `/settings-sync:settings-backup` |
 | `product-plans` | 3.4.13 | 2026-08-02 | Folded into `plan-agent` 8.2.0 — its PM, security, and frontend lenses now ship as `plan-reviewer-product`, `-security`, and `-frontend` inside `review-plan` | `/plugin install plan-agent@agentics-kit` then `/plan-agent:review-plan` |
 | `plan-interview` | 3.0.0 | 2026-07-17 | Merged into `plan-agent` 4.0.0 — `documenting-plans`, `markdown-to-html`, `plan-status`, `plan-maintenance`, `deep-grill`, and the ExitPlanMode nudge all carried over | `/plugin install plan-agent@agentics-kit` |
 | `issue-agent` | 0.2.4 | 2026-06-16 | Absorbed into `git-agent` v3.11.0 to reduce plugin count | `/plugin install git-agent@agentics-kit` then `/git-agent:create-issue` |
