@@ -97,7 +97,7 @@ Passing a `.md` plan path enters **conversion mode**: the markdown is treated as
 **Full invocation syntax:**
 
 ```
-/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--tdd|--no-tdd] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
+/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--tdd|--no-tdd] [--file] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]
 ```
 
 **Flags:**
@@ -108,6 +108,7 @@ Passing a `.md` plan path enters **conversion mode**: the markdown is treated as
 | `--no-clarify` | Skip Step 1 Clarify only |
 | `--no-align` | Skip Step 5 Align only |
 | `--no-interview` | Skip Step 5b Interview (built-in structured interview) |
+| `--file` | Also write and commit `<stem>.html` beside the spec. Publishing to a claude.ai artifact happens either way; the sibling file additionally wins the plan's gallery card and is what tells the render hook to keep it current |
 | `--from-prompt <path>` | **Prompt-source mode.** Read a context source and author through the normal drafting workflow. Three shapes reach it: a saved proposal prompt (`build-proposal`), a sub-feature prompt (`build-feature` Tier 1+), and a Tier 0 **feature doc** (`build-feature` writes no prompt at that tier, so the doc is the only carrier for its stories, acceptance criteria, scope cuts, and risks). Not conversion mode: their headings are input, not a step list to transcribe. Passing the same path positionally instead would trigger conversion mode on a source with no `Steps` section — which is the bug this flag exists to prevent, and a prose label like `— feature doc: x.md` does **not** make the path non-positional; the two modes are mutually exclusive and an ambiguous mix is rejected |
 | `--type <kind>` | Set plan `type` in HTML metadata (`feature`, `fix`, `refactor`, `docs`, `chore`) |
 | `--template <name>` | Reserved — only `default` is currently supported; additional variants are planned |
@@ -141,8 +142,8 @@ The skill enforces the full Steps 1–8 workflow:
 5. **Align** — confirms each step matches the objective (skipped with `--quick`)
 5b. **Interview** — structured interview to stress-test the plan (skipped with `--quick` or `--no-interview`)
 6. **Commit** — commits the plan alongside related changes
-7. **Status** — tracks `todo` → `in-progress` → `completed` via `<html data-status>` and `<meta name="plan-status">`
-8. **Open** — opens the plan in a browser and presents a next-action menu: **Implement now**, **Run as workflow** (complex plans), **Review the plan**, **Edit the plan**, or **Exit**
+7. **Publish** — renders the plan to the scratchpad, publishes it as a claude.ai artifact, writes the URL back to the spec as `artifact-url:`, and reports the link. With `--file`, also writes and commits `<stem>.html` beside the spec. Falls back to file delivery if publishing is unavailable
+8. **Implement, Edit, or Exit** — presents a next-action menu: **Implement now**, **Run as workflow** (complex plans), **Review the plan**, **Edit the plan**, or **Exit**
 
 **Step 8 exit menu — Implement now option:**
 

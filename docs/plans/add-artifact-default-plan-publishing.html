@@ -1617,9 +1617,9 @@ img, video { max-width: 100%; height: auto; }
         <li><a class="rail-step done" href="#step-9"><span class="rail-no">✓</span><span class="rail-text">Teach kit/plugins/plan-agent/scripts/build-plan-html.mjs the <code class="md">artifact-url:</code> frontmatter key, http(s)-guarded exactly like <code class="md">design:</code>, and append to the shared verification-gate tail — only when the key is present — an instruction to republish the plan artifact to that URL via the Artifact tool&#39;s <code class="md">url</code> parameter after the re-render.</span><span class="rail-state">step 9 of 14, done</span></a></li>
         <li><a class="rail-step done" href="#step-10"><span class="rail-no">✓</span><span class="rail-text">Rewrite the delivery path in kit/plugins/plan-agent/skills/implementation-plan/SKILL.md: add <code class="md">--file</code> to the Flags list and argument-hint, add Artifact to allowed-tools, update the description frontmatter, and replace Steps 5d and 7 so every plan renders <code class="md">&lt;stem&gt;.html</code> into the session scratchpad and publishes it with the Artifact tool — re-reading the spec frontmatter immediately beforehand and passing <code class="md">url:</code> whenever <code class="md">artifact-url:</code> is already present, otherwise writing the returned URL back as <code class="md">artifact-url:</code> — reports the URL, and sends the <code class="md">.md</code> spec via SendUserFile; <code class="md">--file</code> additionally writes the <code class="md">.html</code> beside the spec and runs today&#39;s browser-preview flow, and a failed or unavailable publish falls back to file delivery with a one-line notice.</span><span class="rail-state">step 10 of 14, done</span></a></li>
         <li><a class="rail-step done" href="#step-11"><span class="rail-no">✓</span><span class="rail-text">Sweep the downstream skill texts for sibling-<code class="md">.html</code> assumptions: in kit/plugins/plan-agent/skills/build/SKILL.md add &quot;republish via the Artifact tool with <code class="md">url:</code> at each <code class="md">### Phase:</code> boundary stop and on completion, when frontmatter carries <code class="md">artifact-url:</code> and no sibling <code class="md">.html</code> exists&quot;; in skills/finalize-plan/SKILL.md add the same republish rule for the completion re-render; add Artifact to both allowed-tools lines; in skills/plans-library/SKILL.md update the collection description and the no-plans empty-state message to cover artifact-only specs; then audit skills/review-plan, plans-open, plan-status, documenting-plans, and markdown-to-html for paths that expect the <code class="md">.html</code> to exist — fixing each (a reviewer or opener renders the spec to the scratchpad when no sibling exists) or recording it as confirmed sibling-free.</span><span class="rail-state">step 11 of 14, done</span></a></li>
-        <li><a class="rail-step" href="#step-12"><span class="rail-no">12</span><span class="rail-text">Bump plan-agent to 9.7.0 in .claude-plugin/marketplace.json, add the kit/plugins/plan-agent/CHANGELOG.md entry, and update the plugin README&#39;s flag table and workflow sections for <code class="md">--file</code> and artifact-default delivery.</span><span class="rail-state">step 12 of 14</span></a></li>
-        <li><a class="rail-step" href="#step-13"><span class="rail-no">13</span><span class="rail-text">Run the full local gate: <code class="md">bash scripts/verify.sh</code>.</span><span class="rail-state">step 13 of 14</span></a></li>
-        <li><a class="rail-step" href="#step-14"><span class="rail-no">14</span><span class="rail-text">Walk the user-visible rule end-to-end without the model-side Artifact tool: in a temp project, write a spec carrying <code class="md">artifact-url:</code>, simulate the hook event and confirm no sibling appears while the index rebuilds, run plan-agent-plans-index and confirm the card&#39;s href is the claude.ai URL, then add a sibling <code class="md">.html</code>, re-run, and confirm the same plan&#39;s card now links the file.</span><span class="rail-state">step 14 of 14</span></a></li>
+        <li><a class="rail-step done" href="#step-12"><span class="rail-no">✓</span><span class="rail-text">Bump plan-agent to 9.7.0 in .claude-plugin/marketplace.json, add the kit/plugins/plan-agent/CHANGELOG.md entry, and update the plugin README&#39;s flag table and workflow sections for <code class="md">--file</code> and artifact-default delivery.</span><span class="rail-state">step 12 of 14, done</span></a></li>
+        <li><a class="rail-step done" href="#step-13"><span class="rail-no">✓</span><span class="rail-text">Run the full local gate: <code class="md">bash scripts/verify.sh</code>.</span><span class="rail-state">step 13 of 14, done</span></a></li>
+        <li><a class="rail-step done" href="#step-14"><span class="rail-no">✓</span><span class="rail-text">Walk the user-visible rule end-to-end without the model-side Artifact tool: in a temp project, write a spec carrying <code class="md">artifact-url:</code>, simulate the hook event and confirm no sibling appears while the index rebuilds, run plan-agent-plans-index and confirm the card&#39;s href is the claude.ai URL, then add a sibling <code class="md">.html</code>, re-run, and confirm the same plan&#39;s card now links the file.</span><span class="rail-state">step 14 of 14, done</span></a></li>
       </ul>
     </details>
   </nav>
@@ -1682,12 +1682,12 @@ img, video { max-width: 100%; height: auto; }
     <div class="progress-wrap" id="progress">
       <div class="progress-header">
         <span>Definition of done</span>
-        <span id="progress-label">0 / 9 done</span>
+        <span id="progress-label">7 / 9 done</span>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progress-bar"
-             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
-             aria-label="Plan progress" style="width:0%"></div>
+        <div class="progress-bar-fill has-progress" id="progress-bar"
+             role="progressbar" aria-valuenow="78" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:78%"></div>
       </div>
     </div>
 
@@ -2009,12 +2009,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-12">
+        <div class="step-card completed" id="step-12">
           <div class="step-card-header">
             <div class="step-number">12</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Bump plan-agent to 9.7.0 in .claude-plugin/marketplace.json, add the kit/plugins/plan-agent/CHANGELOG.md entry, and update the plugin README&#39;s flag table and workflow sections for <code class="md">--file</code> and artifact-default delivery.</span>
               </div>
               <div class="step-note step-why-note">
@@ -2032,12 +2032,12 @@ img, video { max-width: 100%; height: auto; }
 
         <div class="phase-group" data-phase="VERIFY" style="margin-top:1.5rem;">
           <h3 class="phase-name" style="font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .75rem;">VERIFY</h3>
-        <div class="step-card" id="step-13">
+        <div class="step-card completed" id="step-13">
           <div class="step-card-header">
             <div class="step-number">13</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Run the full local gate: <code class="md">bash scripts/verify.sh</code>.</span>
               </div>
               <div class="step-note step-why-note">
@@ -2052,12 +2052,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-14">
+        <div class="step-card completed" id="step-14">
           <div class="step-card-header">
             <div class="step-number">14</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Walk the user-visible rule end-to-end without the model-side Artifact tool: in a temp project, write a spec carrying <code class="md">artifact-url:</code>, simulate the hook event and confirm no sibling appears while the index rebuilds, run plan-agent-plans-index and confirm the card&#39;s href is the claude.ai URL, then add a sibling <code class="md">.html</code>, re-run, and confirm the same plan&#39;s card now links the file.</span>
               </div>
               <div class="step-note step-why-note">
@@ -2107,31 +2107,31 @@ img, video { max-width: 100%; height: auto; }
           <label for="ac2"><code class="md">/plan-agent:implementation-plan &lt;objective&gt; --file</code> writes <code class="md">&lt;stem&gt;.html</code> beside the spec and the plan still publishes and records <code class="md">artifact-url:</code> — the gallery card links the file.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac3">
+          <input type="checkbox" id="ac3" checked>
           <label for="ac3"><code class="md">plan-agent-plans-index</code> cards an artifact-only spec with href equal to its artifact URL and an artifact chip, and the card links the <code class="md">.html</code> path instead whenever a sibling file exists.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac4">
+          <input type="checkbox" id="ac4" checked>
           <label for="ac4">Artifact cards carry <code class="md">target=&quot;_blank&quot; rel=&quot;noopener&quot;</code> and an sr-only &quot;opens on claude.ai&quot; note, and a spec whose <code class="md">artifact-url:</code> is not http(s) yields no card and a stderr warning.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac5">
+          <input type="checkbox" id="ac5" checked>
           <label for="ac5">A spec write event with no sibling <code class="md">.html</code> creates no sibling but still rebuilds the gallery index; with a sibling present the hook re-renders it unchanged from today.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac6">
+          <input type="checkbox" id="ac6" checked>
           <label for="ac6">The rendered implement, goal, and workflow prompts of a spec carrying <code class="md">artifact-url:</code> instruct republishing to that URL; a spec without the key renders with the gate tail unchanged.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac7">
+          <input type="checkbox" id="ac7" checked>
           <label for="ac7">Merging two gallery indexes where the same plan is published on only one side yields exactly one card, keyed by the <code class="md">data-local</code> stem.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac8">
+          <input type="checkbox" id="ac8" checked>
           <label for="ac8"><code class="md">bash scripts/verify.sh</code> exits 0 including the three new tests, the extended merge test, and the existing build-index parity test.</label>
         </li>
         <li>
-          <input type="checkbox" id="ac9">
+          <input type="checkbox" id="ac9" checked>
           <label for="ac9">plan-agent reads 9.7.0 in .claude-plugin/marketplace.json and <code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> passes after a fresh <code class="md">git fetch origin</code>.</label>
         </li>
       </ul>
@@ -2161,7 +2161,7 @@ img, video { max-width: 100%; height: auto; }
         </div>
         <ul class="completion-list" id="completion-list">
           <li>
-            <input type="checkbox" id="cc1" disabled>
+            <input type="checkbox" id="cc1" disabled checked>
             <label for="cc1">All step TODOs marked as done</label>
           </li>
           <li>
