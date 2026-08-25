@@ -90,7 +90,11 @@ function metas(html) {
       // sentence punctuation, then compare for equality.
       const named = (text.match(/https?:\/\/[^\s"'<>]+/g) ?? [])
         .map((u) => u.replace(/[.,;:)\]]+$/, ''));
-      check(`${name} prompt names the artifact URL`, named.includes(ARTIFACT_URL),
+      // Explicit `===` rather than named.includes(...): `named` is an array, so
+      // includes() is already exact-equality membership, but CodeQL cannot infer
+      // the receiver type and reads it as a string substring test.
+      check(`${name} prompt names the artifact URL`,
+        named.some((u) => u === ARTIFACT_URL),
         named.join(' ') || '(no url in prompt)');
     }
   }
