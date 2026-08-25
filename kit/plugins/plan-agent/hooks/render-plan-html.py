@@ -6,8 +6,12 @@ written.
 Invoked by hooks/dispatch.py (registered on Write/Edit/MultiEdit), which only
 calls this script for paths under the plans directory. Triggers only when the
 written file is a Markdown plan spec (first heading is "# Plan:") inside the
-configured plans directory. Renders <stem>.html next to the spec via
-build-plan-html.mjs —
+configured plans directory AND <stem>.html already exists beside it. That
+existence check is the file-published signal: a plan delivered as a claude.ai
+artifact has no sibling, and rendering one would resurrect the file its author
+chose not to publish. Such a write still rebuilds the gallery index, since the
+card reads its title, status and step markers from the spec. Otherwise renders
+<stem>.html next to the spec via build-plan-html.mjs —
 preferring the copy bundled with this plugin ($CLAUDE_PLUGIN_ROOT/scripts/),
 falling back to the consumer project's scripts/build-plan-html.mjs; when
 neither exists the hook silently skips. After a successful render it rebuilds
@@ -142,12 +146,23 @@ def main():
     if not _is_plan_spec(path, plans_dir):
         sys.exit(0)
 
+    spec = os.path.abspath(path)
+    sibling = os.path.splitext(spec)[0] + ".html"
+
+    # A sibling's existence IS the file-published signal. A plan delivered as a
+    # claude.ai artifact deliberately has none, so rendering one here would
+    # resurrect the very file its author chose not to publish — and would do it
+    # again on every later spec edit. The index rebuild still runs: an
+    # artifact-mode edit changes title, status and step markers, all of which
+    # the gallery card reads straight out of the spec.
+    if not os.path.isfile(sibling):
+        _rebuild_index(project, plans_dir)
+        sys.exit(0)
+
     renderer = _find_renderer(project)
     if renderer is None:
         sys.exit(0)
 
-    spec = os.path.abspath(path)
-    sibling = os.path.splitext(spec)[0] + ".html"
     try:
         result = subprocess.run(
             ["node", renderer, spec, "-o", sibling],

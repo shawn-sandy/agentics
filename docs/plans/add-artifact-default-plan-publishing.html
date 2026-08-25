@@ -1613,10 +1613,10 @@ img, video { max-width: 100%; height: auto; }
         <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Extend the collection in kit/plugins/plan-agent/hooks/build-index.sh: after the <code class="md">.html</code> walk, walk the same tree for <code class="md">.md</code> specs whose frontmatter carries an http(s) <code class="md">artifact-url:</code> (any other scheme skipped with a stderr warning) and whose stem has no <code class="md">.html</code> in the collection, parse title from the <code class="md"># Plan:</code> heading, status, type, effort, and created from frontmatter, and step totals from numbered items and <code class="md">[x]</code> markers under <code class="md">## Steps</code>, emit a card whose href is the artifact URL with <code class="md">target=&quot;_blank&quot; rel=&quot;noopener&quot;</code>, an artifact chip in the meta row, and an sr-only &quot;opens on claude.ai&quot; span, stamp every card — file and artifact alike — with a <code class="md">data-local</code> attribute holding the plan&#39;s plans-dir-relative stem (path without extension, so both sides of a publish flip share one key), fold the rule into the script&#39;s own plans-collection count, then copy the file byte-identical over scripts/build-plans-index.sh and docs/plans/build-index.sh.</span><span class="rail-state">step 5 of 14, done</span></a></li>
         <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Re-key the card map in scripts/merge-plans-index.mjs on the <code class="md">data-local</code> stem, falling back to href for cards that predate the attribute.</span><span class="rail-state">step 6 of 14, done</span></a></li>
         <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Apply the same artifact-only-spec rule to <code class="md">plans_count()</code> in kit/plugins/plan-agent/hooks/build-artifacts-index.sh, build-designs-index.sh, and build-prototypes-index.sh.</span><span class="rail-state">step 7 of 14, done</span></a></li>
-        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Guard kit/plugins/plan-agent/hooks/render-plan-html.py: when no <code class="md">&lt;stem&gt;.html</code> exists beside the written spec, skip the sibling render but still trigger the gallery-index rebuild; when the sibling exists, re-render it exactly as today.</span><span class="rail-state">step 8 of 14</span></a></li>
-        <li><a class="rail-step" href="#step-9"><span class="rail-no">9</span><span class="rail-text">Teach kit/plugins/plan-agent/scripts/build-plan-html.mjs the <code class="md">artifact-url:</code> frontmatter key, http(s)-guarded exactly like <code class="md">design:</code>, and append to the shared verification-gate tail — only when the key is present — an instruction to republish the plan artifact to that URL via the Artifact tool&#39;s <code class="md">url</code> parameter after the re-render.</span><span class="rail-state">step 9 of 14</span></a></li>
-        <li><a class="rail-step" href="#step-10"><span class="rail-no">10</span><span class="rail-text">Rewrite the delivery path in kit/plugins/plan-agent/skills/implementation-plan/SKILL.md: add <code class="md">--file</code> to the Flags list and argument-hint, add Artifact to allowed-tools, update the description frontmatter, and replace Steps 5d and 7 so every plan renders <code class="md">&lt;stem&gt;.html</code> into the session scratchpad and publishes it with the Artifact tool — re-reading the spec frontmatter immediately beforehand and passing <code class="md">url:</code> whenever <code class="md">artifact-url:</code> is already present, otherwise writing the returned URL back as <code class="md">artifact-url:</code> — reports the URL, and sends the <code class="md">.md</code> spec via SendUserFile; <code class="md">--file</code> additionally writes the <code class="md">.html</code> beside the spec and runs today&#39;s browser-preview flow, and a failed or unavailable publish falls back to file delivery with a one-line notice.</span><span class="rail-state">step 10 of 14</span></a></li>
-        <li><a class="rail-step" href="#step-11"><span class="rail-no">11</span><span class="rail-text">Sweep the downstream skill texts for sibling-<code class="md">.html</code> assumptions: in kit/plugins/plan-agent/skills/build/SKILL.md add &quot;republish via the Artifact tool with <code class="md">url:</code> at each <code class="md">### Phase:</code> boundary stop and on completion, when frontmatter carries <code class="md">artifact-url:</code> and no sibling <code class="md">.html</code> exists&quot;; in skills/finalize-plan/SKILL.md add the same republish rule for the completion re-render; add Artifact to both allowed-tools lines; in skills/plans-library/SKILL.md update the collection description and the no-plans empty-state message to cover artifact-only specs; then audit skills/review-plan, plans-open, plan-status, documenting-plans, and markdown-to-html for paths that expect the <code class="md">.html</code> to exist — fixing each (a reviewer or opener renders the spec to the scratchpad when no sibling exists) or recording it as confirmed sibling-free.</span><span class="rail-state">step 11 of 14</span></a></li>
+        <li><a class="rail-step done" href="#step-8"><span class="rail-no">✓</span><span class="rail-text">Guard kit/plugins/plan-agent/hooks/render-plan-html.py: when no <code class="md">&lt;stem&gt;.html</code> exists beside the written spec, skip the sibling render but still trigger the gallery-index rebuild; when the sibling exists, re-render it exactly as today.</span><span class="rail-state">step 8 of 14, done</span></a></li>
+        <li><a class="rail-step done" href="#step-9"><span class="rail-no">✓</span><span class="rail-text">Teach kit/plugins/plan-agent/scripts/build-plan-html.mjs the <code class="md">artifact-url:</code> frontmatter key, http(s)-guarded exactly like <code class="md">design:</code>, and append to the shared verification-gate tail — only when the key is present — an instruction to republish the plan artifact to that URL via the Artifact tool&#39;s <code class="md">url</code> parameter after the re-render.</span><span class="rail-state">step 9 of 14, done</span></a></li>
+        <li><a class="rail-step done" href="#step-10"><span class="rail-no">✓</span><span class="rail-text">Rewrite the delivery path in kit/plugins/plan-agent/skills/implementation-plan/SKILL.md: add <code class="md">--file</code> to the Flags list and argument-hint, add Artifact to allowed-tools, update the description frontmatter, and replace Steps 5d and 7 so every plan renders <code class="md">&lt;stem&gt;.html</code> into the session scratchpad and publishes it with the Artifact tool — re-reading the spec frontmatter immediately beforehand and passing <code class="md">url:</code> whenever <code class="md">artifact-url:</code> is already present, otherwise writing the returned URL back as <code class="md">artifact-url:</code> — reports the URL, and sends the <code class="md">.md</code> spec via SendUserFile; <code class="md">--file</code> additionally writes the <code class="md">.html</code> beside the spec and runs today&#39;s browser-preview flow, and a failed or unavailable publish falls back to file delivery with a one-line notice.</span><span class="rail-state">step 10 of 14, done</span></a></li>
+        <li><a class="rail-step done" href="#step-11"><span class="rail-no">✓</span><span class="rail-text">Sweep the downstream skill texts for sibling-<code class="md">.html</code> assumptions: in kit/plugins/plan-agent/skills/build/SKILL.md add &quot;republish via the Artifact tool with <code class="md">url:</code> at each <code class="md">### Phase:</code> boundary stop and on completion, when frontmatter carries <code class="md">artifact-url:</code> and no sibling <code class="md">.html</code> exists&quot;; in skills/finalize-plan/SKILL.md add the same republish rule for the completion re-render; add Artifact to both allowed-tools lines; in skills/plans-library/SKILL.md update the collection description and the no-plans empty-state message to cover artifact-only specs; then audit skills/review-plan, plans-open, plan-status, documenting-plans, and markdown-to-html for paths that expect the <code class="md">.html</code> to exist — fixing each (a reviewer or opener renders the spec to the scratchpad when no sibling exists) or recording it as confirmed sibling-free.</span><span class="rail-state">step 11 of 14, done</span></a></li>
         <li><a class="rail-step" href="#step-12"><span class="rail-no">12</span><span class="rail-text">Bump plan-agent to 9.7.0 in .claude-plugin/marketplace.json, add the kit/plugins/plan-agent/CHANGELOG.md entry, and update the plugin README&#39;s flag table and workflow sections for <code class="md">--file</code> and artifact-default delivery.</span><span class="rail-state">step 12 of 14</span></a></li>
         <li><a class="rail-step" href="#step-13"><span class="rail-no">13</span><span class="rail-text">Run the full local gate: <code class="md">bash scripts/verify.sh</code>.</span><span class="rail-state">step 13 of 14</span></a></li>
         <li><a class="rail-step" href="#step-14"><span class="rail-no">14</span><span class="rail-text">Walk the user-visible rule end-to-end without the model-side Artifact tool: in a temp project, write a spec carrying <code class="md">artifact-url:</code>, simulate the hook event and confirm no sibling appears while the index rebuilds, run plan-agent-plans-index and confirm the card&#39;s href is the claude.ai URL, then add a sibling <code class="md">.html</code>, re-run, and confirm the same plan&#39;s card now links the file.</span><span class="rail-state">step 14 of 14</span></a></li>
@@ -1929,12 +1929,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-8">
+        <div class="step-card completed" id="step-8">
           <div class="step-card-header">
             <div class="step-number">8</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Guard kit/plugins/plan-agent/hooks/render-plan-html.py: when no <code class="md">&lt;stem&gt;.html</code> exists beside the written spec, skip the sibling render but still trigger the gallery-index rebuild; when the sibling exists, re-render it exactly as today.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1949,12 +1949,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-9">
+        <div class="step-card completed" id="step-9">
           <div class="step-card-header">
             <div class="step-number">9</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Teach kit/plugins/plan-agent/scripts/build-plan-html.mjs the <code class="md">artifact-url:</code> frontmatter key, http(s)-guarded exactly like <code class="md">design:</code>, and append to the shared verification-gate tail — only when the key is present — an instruction to republish the plan artifact to that URL via the Artifact tool&#39;s <code class="md">url</code> parameter after the re-render.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1969,12 +1969,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-10">
+        <div class="step-card completed" id="step-10">
           <div class="step-card-header">
             <div class="step-number">10</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Rewrite the delivery path in kit/plugins/plan-agent/skills/implementation-plan/SKILL.md: add <code class="md">--file</code> to the Flags list and argument-hint, add Artifact to allowed-tools, update the description frontmatter, and replace Steps 5d and 7 so every plan renders <code class="md">&lt;stem&gt;.html</code> into the session scratchpad and publishes it with the Artifact tool — re-reading the spec frontmatter immediately beforehand and passing <code class="md">url:</code> whenever <code class="md">artifact-url:</code> is already present, otherwise writing the returned URL back as <code class="md">artifact-url:</code> — reports the URL, and sends the <code class="md">.md</code> spec via SendUserFile; <code class="md">--file</code> additionally writes the <code class="md">.html</code> beside the spec and runs today&#39;s browser-preview flow, and a failed or unavailable publish falls back to file delivery with a one-line notice.</span>
               </div>
               <div class="step-note step-why-note">
@@ -1989,12 +1989,12 @@ img, video { max-width: 100%; height: auto; }
           </div>
         </div>
 
-        <div class="step-card" id="step-11">
+        <div class="step-card completed" id="step-11">
           <div class="step-card-header">
             <div class="step-number">11</div>
             <div class="step-body">
               <div class="step-action">
-                <span class="step-chip">todo</span>
+                <span class="step-chip">done</span>
                 <span class="step-chip-text">Sweep the downstream skill texts for sibling-<code class="md">.html</code> assumptions: in kit/plugins/plan-agent/skills/build/SKILL.md add &quot;republish via the Artifact tool with <code class="md">url:</code> at each <code class="md">### Phase:</code> boundary stop and on completion, when frontmatter carries <code class="md">artifact-url:</code> and no sibling <code class="md">.html</code> exists&quot;; in skills/finalize-plan/SKILL.md add the same republish rule for the completion re-render; add Artifact to both allowed-tools lines; in skills/plans-library/SKILL.md update the collection description and the no-plans empty-state message to cover artifact-only specs; then audit skills/review-plan, plans-open, plan-status, documenting-plans, and markdown-to-html for paths that expect the <code class="md">.html</code> to exist — fixing each (a reviewer or opener renders the spec to the scratchpad when no sibling exists) or recording it as confirmed sibling-free.</span>
               </div>
               <div class="step-note step-why-note">

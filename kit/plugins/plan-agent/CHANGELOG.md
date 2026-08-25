@@ -20,6 +20,29 @@
 
 ### Changed
 
+- **`/plan-agent:implementation-plan` publishes to a claude.ai artifact by
+  default.** Step 7 renders the plan into the scratchpad, publishes it with
+  `Artifact`, writes the returned URL into the spec as `artifact-url:`, and
+  reports the link. The repo gets the `.md` spec and no generated HTML. Pass
+  the new **`--file`** flag to also write and commit `<stem>.html` beside the
+  spec; publishing happens either way, and the sibling wins the gallery card.
+  If `Artifact` is unavailable the skill says so and falls back to file
+  delivery rather than leaving the plan undelivered.
+- **Re-publishing targets the same URL.** Step 7 re-reads the spec's
+  frontmatter immediately before publishing, so a plan edited and re-delivered
+  updates its existing page instead of stranding the link the user already
+  shared. `build` and `finalize-plan` follow the same rule when they re-render
+  after ticking steps or marking completion.
+- **The renderer appends a republish clause to all three prompts.** When a spec
+  carries an `http(s)` `artifact-url:`, the implement, goal, and workflow
+  prompts each end by naming that URL and instructing a republish after the
+  re-render — the only way a fresh-session agent learns the shared page exists.
+  Non-`http(s)` values are dropped with a warning, as `design:` already was.
+- **`render-plan-html.py` no longer creates a sibling that does not exist.** A
+  missing `<stem>.html` is the signal that the plan lives at an artifact;
+  rendering one resurrected the file its author chose not to publish. The
+  gallery index is still rebuilt on those writes, since the card reads title,
+  status, and step markers from the spec.
 - **Every gallery card carries `data-local="<stem>"`**, the plan's
   plans-dir-relative path without its extension, and
   `scripts/merge-plans-index.mjs` keys its union on that instead of on `href`.

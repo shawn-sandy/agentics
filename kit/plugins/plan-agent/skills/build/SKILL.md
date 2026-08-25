@@ -1,7 +1,7 @@
 ---
 name: build
 description: "Implements a plan file that already exists. Walks its steps, ticks the spec, re-renders, and runs the completion gates. Use when asked to implement an existing plan."
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, Artifact
 argument-hint: "[<plan.md|plan.html>] [<objective>] [--type feature|fix|refactor|docs|chore] [--dir <path>]"
 model: opus
 ---
@@ -44,11 +44,12 @@ Per `references/resolve-plan.md`.
 plan-agent-render "<stem>.md" -o "<stem>.html"
 ```
 
-Bare name, never a path — this plugin's `bin/` is on `PATH`. `<stem>` is the
-resolved plan's path without its extension, fixed in Step 1. Run after
-**every** batch of spec edits, status changes included, and as the final
-action. A non-zero exit means the spec edit broke the format: fix the markdown and
-re-run, never hand-edit the HTML to compensate. Failure modes:
+Bare name, never a path — `bin/` is on `PATH`. `<stem>` is the resolved plan's
+path minus extension, from Step 1. Run after **every** batch of spec
+edits, status changes included, and as the final action. **No sibling
+`<stem>.html`?** The plan is an artifact: render to the scratchpad, republish
+to its `artifact-url:`, never create one. Non-zero exit means the spec
+broke the format: fix the markdown, never the HTML. Details:
 `references/re-render.md`.
 
 ## Step 1 — Resolve the plan
