@@ -84,7 +84,14 @@ function metas(html) {
       check(`${name} prompt exists`, text.length > 0);
       check(`${name} prompt instructs republishing`, /republish/i.test(text),
         text.slice(-160));
-      check(`${name} prompt names the artifact URL`, text.includes(ARTIFACT_URL));
+      // Whole-token match, not a substring: the prompt must name THIS url, and
+      // "…/test-123" is also a substring of "…/test-1234" and of any host that
+      // merely embeds it. Extract each URL the prompt carries, drop trailing
+      // sentence punctuation, then compare for equality.
+      const named = (text.match(/https?:\/\/[^\s"'<>]+/g) ?? [])
+        .map((u) => u.replace(/[.,;:)\]]+$/, ''));
+      check(`${name} prompt names the artifact URL`, named.includes(ARTIFACT_URL),
+        named.join(' ') || '(no url in prompt)');
     }
   }
 }
