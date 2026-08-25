@@ -13,6 +13,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 python3 - "$PROJECT_ROOT" "$SCRIPT_DIR" <<'EOF'
 import glob, json, os, re, sys, html
+from urllib.parse import urlsplit
 from datetime import datetime
 
 project_root = sys.argv[1]
@@ -121,6 +122,20 @@ def get_title(content, fname):
     # keeping regeneration idempotent (no &amp;amp; drift).
     return html.unescape(m.group(1).strip()) if m else os.path.basename(fname)
 
+def is_http_url(value):
+    """A real http(s) URL with a host — parsed, not prefix-matched.
+
+    `https://` and `https:// host/x` both pass a `^https?://` test. The second
+    matters beyond a broken card: build-plan-html.mjs puts the same value into
+    the republish prompt, so the two checks have to agree on what counts."""
+    if not value or any(ch.isspace() for ch in value):
+        return False
+    try:
+        parts = urlsplit(value)
+    except ValueError:
+        return False
+    return parts.scheme.lower() in ('http', 'https') and bool(parts.hostname)
+
 def split_spec(text):
     """(frontmatter dict, body). Partitions each line on its first colon only —
     glance: and artifact-url: values both contain more of them."""
@@ -200,8 +215,8 @@ for f in spec_files:
         continue                       # no link and no file — nothing to open
     if not is_plan_spec(body):
         continue                       # a published document, but not a plan
-    if not re.match(r'https?://', url, re.IGNORECASE):
-        # This href lands raw in a page people click, so the scheme is checked
+    if not is_http_url(url):
+        # This href lands raw in a page people click, so the value is checked
         # here rather than trusted from frontmatter: a hand-edited javascript:
         # or data: value would otherwise turn the gallery into its delivery.
         print(f'[build-index] {os.path.basename(f)}: ignoring non-http(s) artifact-url',

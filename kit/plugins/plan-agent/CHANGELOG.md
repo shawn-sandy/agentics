@@ -33,6 +33,12 @@
   updates its existing page instead of stranding the link the user already
   shared. `build` and `finalize-plan` follow the same rule when they re-render
   after ticking steps or marking completion.
+- **`artifact-url:` is parsed, not prefix-matched.** A `^https?://` test passes
+  `https://` and `https:// host/x`; the second is not merely a dead card link,
+  it lands verbatim in the republish prompt where an agent normalising the
+  space away would publish to a host nobody named. The renderer uses `new
+  URL()`, the gallery and the three `plans_count()` copies use `urlsplit` plus
+  a whitespace check, and all six agree on what counts as a URL.
 - **The renderer appends a republish clause to all three prompts.** When a spec
   carries an `http(s)` `artifact-url:`, the implement, goal, and workflow
   prompts each end by naming that URL and instructing a republish after the

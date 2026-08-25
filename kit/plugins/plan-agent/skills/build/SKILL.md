@@ -40,16 +40,23 @@ Per `references/resolve-plan.md`.
 
 ## Re-render (subroutine)
 
+Sibling exists — overwrite it:
+
 ```bash
 plan-agent-render "<stem>.md" -o "<stem>.html"
 ```
 
-Bare name, never a path — `bin/` is on `PATH`. `<stem>` is the plan's path
-minus extension, from Step 1. Run after **every** batch of spec edits, status
-changes included, and last. **No sibling `<stem>.html`?** The plan is an
-artifact — render to scratchpad and republish, never create one. A non-zero exit means the spec broke the format: fix the markdown and
-re-run, never hand-edit the HTML to compensate. Details:
-`references/re-render.md`.
+No sibling — an artifact plan. Render to scratchpad, republish to its
+`artifact-url:`, never create it:
+
+```bash
+plan-agent-render "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+```
+
+Bare name, never a path; `bin/` is on `PATH`. `<stem>` is from Step 1. Run
+after **every** batch of spec edits, status changes included, and last.
+Non-zero exit means the spec broke the format: fix the markdown,
+never hand-edit the HTML to compensate. `references/re-render.md`.
 
 ## Step 1 — Resolve the plan
 

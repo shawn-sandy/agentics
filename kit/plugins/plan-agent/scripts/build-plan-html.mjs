@@ -363,8 +363,16 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   // prompt an agent will act on. A `javascript:` or `data:` payload in that
   // position is an instruction, not a link, so anything else is dropped and
   // named on stderr rather than passed along.
+  // Parsed, not prefix-matched. `https://` and `https:// host/x` both satisfy a
+  // /^https?:\/\// test, and the second is the one that bites: it does not stay
+  // a dead link, it lands verbatim in the republish clause below, where an
+  // agent normalising the space away would publish to a host nobody named.
   const artifactRaw = (md['artifact-url'] || '').trim();
-  const artifactUrl = /^https?:\/\//i.test(artifactRaw) ? artifactRaw : '';
+  let artifactUrl = '';
+  try {
+    const parsed = new URL(artifactRaw);
+    if (/^https?:$/i.test(parsed.protocol) && parsed.host) artifactUrl = parsed.href;
+  } catch { /* not a URL at all — falls through to the warning */ }
   if (artifactRaw && !artifactUrl) console.warn(`  ! ${basename(path)}: ignoring non-http(s) artifact-url: ${artifactRaw}`);
 
   // Every prompt ends with the same gate: verify, then record the outcome in

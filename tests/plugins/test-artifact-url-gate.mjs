@@ -124,5 +124,28 @@ function metas(html) {
   }
 }
 
+// ── 4. Malformed http(s) values are rejected too ────────────────────────────
+// A scheme-prefix check passes "https://" and "https:// host/x". The second is
+// the dangerous one: it is not merely a dead link, it lands verbatim in a
+// republish instruction, and an agent normalising the space away publishes to
+// a host nobody named.
+for (const [label, value] of [
+  ['empty host', 'https://'],
+  ['space before host', 'https:// evil.example.com/x'],
+  ['scheme-relative', '//evil.example.com/x'],
+]) {
+  const { r, html } = render(`malformed-${label.replace(/\s+/g, '-')}`, `artifact-url: ${value}`);
+  check(`renderer exits 0 on a malformed artifact-url (${label})`, r.status === 0, r.stderr);
+  if (r.status === 0) {
+    const m = metas(html);
+    check(`malformed artifact-url never reaches the prompts (${label})`,
+      !/republish/i.test(m.implement + m.goal + m.workflow),
+      (m.implement.match(/This plan is published[^.]*/) ?? ['(none)'])[0]);
+    check(`malformed artifact-url is warned about (${label})`,
+      /ignoring non-http\(s\) artifact-url/i.test(r.stderr),
+      r.stderr.trim().slice(0, 160) || '(no warning output)');
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

@@ -6,7 +6,7 @@ Plan creation and completion as a Claude Code plugin — invoke `/plan-agent:imp
 
 This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implement/Edit/Exit), required plan structure, and writing style into the `implementation-plan` skill. The skill is both **command-invocable** (`/plan-agent:implementation-plan <objective>`) and **model-invocable** — it auto-activates when you ask to create a plan document, generate an HTML plan, or write a plan file. It does not activate on generic planning questions (those route to built-in Plan Mode). Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans from backlog items, and `.md` plan paths to convert existing markdown plans into the HTML format.
 
-Plans are written as **self-contained `.html` files** — interactive, visually rich, and openable directly in a browser. No markdown output. Complex plans include a workflow prompt for parallel subagent orchestration via Claude Code's `/workflows` runtime.
+Plans are authored as a compact **`.md` spec** — the committed source of truth — and rendered into an interactive, visually rich HTML view. By default that view is **published as a claude.ai artifact** and the repo gets no generated HTML; pass `--file` to also write and commit a self-contained sibling `.html`. Complex plans include a workflow prompt for parallel subagent orchestration via Claude Code's `/workflows` runtime.
 
 The `review-plan` skill uses an **Agent Team** (seven core reviewers plus three UI-conditional reviewers) to review implementation plans in parallel, synthesize findings, and apply improvements directly in place. Detects UI signals (React, Vue, buttons, modals, etc.) and conditionally runs UX, accessibility, and frontend reviewers when present. Requires Agent Teams feature flag and Claude Code ≥ 2.1.32.
 
@@ -169,7 +169,9 @@ When the plan carries UI signals — the same `ui_signals_present` rule `review-
 
 ### HTML plan output
 
-Every plan is a single self-contained `.html` file (no CDN links, no external assets):
+The rendered view is a single self-contained HTML document (no CDN links, no external assets) —
+published as a claude.ai artifact by default, or written beside the spec as `<stem>.html` with
+`--file`:
 
 - **Compute-on-read spec** — the visible plan DOM is the single source of truth; `node <path-to-plan-agent-plugin>/scripts/extract-plan-spec.mjs <plan>` derives a spec-only markdown rendition on demand (objective, context, files, steps with why/verify, tests, acceptance criteria, verification) — a few thousand tokens of spec instead of the full ~21k styled HTML. New plans embed nothing; legacy plans that still carry a `<script type="text/markdown" id="plan-digest">` block are read from it verbatim (un-guarded). Status, checkbox, and progress state are never part of the spec
 - **Status badge** — colour-coded: grey = todo, amber = in-progress, green = completed

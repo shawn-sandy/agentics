@@ -518,8 +518,11 @@ EOF
    happens either way.
 
    7b. **Re-read the spec's frontmatter immediately before publishing.** If it
-   already carries an `artifact-url:`, pass that URL to `Artifact` so the plan
-   updates its existing page instead of claiming a new one. Read it fresh
+   already carries an `artifact-url:` **that parses as an `http(s)` URL with a
+   host**, pass it to `Artifact` so the plan updates its existing page instead
+   of claiming a new one. Anything else — a hand-edited `javascript:` value, a
+   truncated `https://` — is not a page to update: say so in one line, drop the
+   key, and publish fresh. Read it fresh
    rather than trusting a value from earlier in this session — Step 5b and
    Step 6 may have rewritten the file, and publishing to a second URL silently
    strands whatever link the user already shared.
@@ -547,9 +550,13 @@ EOF
    **Fallback — publishing unavailable.** If `Artifact` is not available or the
    call fails, say so in one line, then deliver as a file: render `<stem>.html`
    beside the spec, send it (and the `.md`) via `SendUserFile`, and report the
-   paths. Do not retry silently and do not leave the plan undelivered. The
-   spec keeps no `artifact-url:` in this case, so the sibling `.html` is what
-   the gallery cards — the same result `--file` produces deliberately.
+   paths. Do not retry silently and do not leave the plan undelivered.
+
+   **Leave an existing `artifact-url:` exactly as it is.** A failed republish is
+   a transient outage, not a retirement: clearing the key orphans the page
+   people already have and lets the next publish claim a second one. Only a plan
+   that has never published ends up with no key — and there the sibling `.html`
+   is what the gallery cards, the same result `--file` produces deliberately.
 
 8. **Implement, Edit, or Exit** — After Step 7 completes, always ask the
    user what to do next.

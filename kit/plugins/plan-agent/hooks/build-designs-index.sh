@@ -37,6 +37,7 @@ PROJECT_ROOT="${1:-$(pwd)}"
 # even if the embedded Python raises on chdir, template I/O, or output writes.
 python3 - "$PROJECT_ROOT" <<'EOF' || true
 import json, os, re, sys, html
+from urllib.parse import urlsplit
 from datetime import datetime
 
 project_root = sys.argv[1]
@@ -226,7 +227,16 @@ def plans_count(directory):
                 key, sep, value = line.partition(':')
                 if sep and key.strip() == 'artifact-url':
                     url = value.strip()
-            if not re.match(r'https?://', url, re.IGNORECASE):
+            # Parsed, not prefix-matched — the same rule build-index.sh applies
+            # before it emits a card, because this number has to equal the cards
+            # on that page. `https://` and `https:// host/x` pass a prefix test.
+            if any(ch.isspace() for ch in url):
+                continue
+            try:
+                parts = urlsplit(url)
+            except ValueError:
+                continue
+            if parts.scheme.lower() not in ('http', 'https') or not parts.hostname:
                 continue
             body = text[fm.end():]
             if all(re.search(r'^##[ \t]+' + re.escape(s) + r'[ \t]*$', body, re.MULTILINE)

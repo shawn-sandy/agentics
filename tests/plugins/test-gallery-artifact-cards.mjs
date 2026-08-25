@@ -70,6 +70,16 @@ writeFileSync(join(plansDir, 'draft-keyless.md'), spec({ title: 'Draft the keyle
 writeFileSync(join(plansDir, 'fix-evil-scheme.md'), spec({
   title: 'Fix the evil scheme', artifactUrl: 'javascript:alert(1)',
 }));
+// 4b. Malformed http(s) values: a scheme-prefix check would card these with a
+// broken href. The generator writes hrefs into a page people click, so the
+// value has to parse as a real http(s) URL with a host, not merely start with
+// one.
+writeFileSync(join(plansDir, 'add-empty-host.md'), spec({
+  title: 'Add the empty host plan', artifactUrl: 'https://',
+}));
+writeFileSync(join(plansDir, 'add-spaced-host.md'), spec({
+  title: 'Add the spaced host plan', artifactUrl: 'https:// evil.example.com/x',
+}));
 // 5. Not a plan at all: docs/plans also holds session exports, which carry the
 // same artifact-url: key and no plan sections. The gallery is the *plans*
 // gallery — an artifact-url alone must not promote a non-plan into it.
@@ -125,6 +135,10 @@ check('javascript: scheme is warned about on stderr',
   /fix-evil-scheme|non-http/i.test(build.stderr), build.stderr.trim() || '(empty stderr)');
 check('session export with an artifact-url gets no card',
   !index.includes('add-thing-session'));
+check('malformed artifact-url gets no card',
+  !index.includes('add-empty-host') && !index.includes('add-spaced-host'));
+check('malformed artifact-url is warned about on stderr',
+  /add-empty-host|add-spaced-host/.test(build.stderr), build.stderr.trim() || '(empty stderr)');
 check('no card contains a nested anchor', cards.every((c) => !/<a[\s>]/.test(c.slice(2))));
 
 // ── The other three galleries print the same Plans total ────────────────────
