@@ -33,8 +33,9 @@ or malformed — fix the spec and re-run. A `PostToolUse` hook
 the plans directory is written **and a sibling already exists**, but do not
 rely on it: plugin `hooks.json` files are not registered in every runtime
 (notably the Claude Code desktop app, where they never fire), so a markdown
-edit can silently leave the pair stale. Always run the script explicitly after
-editing a spec — that also surfaces parse errors deterministically.
+edit can silently leave the pair stale.
+Always run the script explicitly after editing a spec — that also surfaces
+parse errors deterministically.
 
 The `.md` spec is the file that gets committed. By default the rendered HTML
 is **not** written into the repo at all: Step 7 renders it to the scratchpad
