@@ -1135,11 +1135,16 @@ function runHook(proj, filePath, extraEnv = {}) {
   });
 }
 
-ok('hook regenerates the sibling HTML for a spec written in the plans dir', () => {
+// A sibling's existence is the file-published signal, so every hook case below
+// seeds one before writing the spec. Without it the hook correctly skips the
+// render (see tests/plugins/test-render-hook-artifact-skip.sh) and these
+// assertions would pass vacuously.
+ok('hook regenerates an existing sibling HTML for a spec written in the plans dir', () => {
   const proj = makeProject();
   const spec = join(proj, 'docs', 'plans', 'sample.md');
   mkdirSync(join(proj, 'docs', 'plans'), { recursive: true });
   writeFileSync(spec, SAMPLE_SPEC);
+  writeFileSync(join(proj, 'docs', 'plans', 'sample.html'), '<html><body>stale</body></html>\n');
   const res = runHook(proj, spec);
   assert.equal(res.status, 0, res.stderr);
   const html = readFileSync(join(proj, 'docs', 'plans', 'sample.html'), 'utf8');
@@ -1153,12 +1158,17 @@ ok('hook ignores markdown outside the plans dir and non-spec markdown inside it'
   mkdirSync(join(proj, 'notes'), { recursive: true });
   const outside = join(proj, 'notes', 'readme.md');
   writeFileSync(outside, SAMPLE_SPEC);
+  // Seeded so the assertion means "left alone", not "the sibling gate skipped it".
+  writeFileSync(join(proj, 'notes', 'readme.html'), '<html><body>stale</body></html>\n');
   assert.equal(runHook(proj, outside).status, 0);
-  assert.ok(!existsSync(join(proj, 'notes', 'readme.html')), 'no HTML outside plans dir');
+  assert.doesNotMatch(readFileSync(join(proj, 'notes', 'readme.html'), 'utf8'), /<title>Plan:/,
+    'markdown outside the plans dir is not rendered');
   const notSpec = join(proj, 'docs', 'plans', 'notes.md');
   writeFileSync(notSpec, '# Notes\n\nJust notes.\n');
+  writeFileSync(join(proj, 'docs', 'plans', 'notes.html'), '<html><body>stale</body></html>\n');
   assert.equal(runHook(proj, notSpec).status, 0);
-  assert.ok(!existsSync(join(proj, 'docs', 'plans', 'notes.html')), 'no HTML for non-spec markdown');
+  assert.doesNotMatch(readFileSync(join(proj, 'docs', 'plans', 'notes.html'), 'utf8'), /<title>Plan:/,
+    'non-spec markdown is not rendered');
   rmSync(proj, { recursive: true, force: true });
 });
 
@@ -1168,12 +1178,16 @@ ok('hook honors plansDirectory from settings.local.json over settings.json', () 
   mkdirSync(join(proj, 'docs', 'plans'), { recursive: true });
   const customSpec = join(proj, 'custom', 'plans', 'sample.md');
   writeFileSync(customSpec, SAMPLE_SPEC);
+  writeFileSync(join(proj, 'custom', 'plans', 'sample.html'), '<html><body>stale</body></html>\n');
   assert.equal(runHook(proj, customSpec).status, 0);
-  assert.ok(existsSync(join(proj, 'custom', 'plans', 'sample.html')), 'custom plans dir re-renders');
+  assert.match(readFileSync(join(proj, 'custom', 'plans', 'sample.html'), 'utf8'), /<title>Plan:/,
+    'custom plans dir re-renders');
   const defaultSpec = join(proj, 'docs', 'plans', 'other.md');
   writeFileSync(defaultSpec, SAMPLE_SPEC);
+  writeFileSync(join(proj, 'docs', 'plans', 'other.html'), '<html><body>stale</body></html>\n');
   assert.equal(runHook(proj, defaultSpec).status, 0);
-  assert.ok(!existsSync(join(proj, 'docs', 'plans', 'other.html')), 'docs/plans ignored when custom dir configured');
+  assert.doesNotMatch(readFileSync(join(proj, 'docs', 'plans', 'other.html'), 'utf8'), /<title>Plan:/,
+    'docs/plans ignored when custom dir configured');
   rmSync(proj, { recursive: true, force: true });
 });
 
@@ -1184,6 +1198,7 @@ ok('hook prefers the plugin-bundled renderer when the project has none', () => {
   mkdirSync(join(proj, 'docs', 'plans'), { recursive: true });
   const spec = join(proj, 'docs', 'plans', 'sample.md');
   writeFileSync(spec, SAMPLE_SPEC);
+  writeFileSync(join(proj, 'docs', 'plans', 'sample.html'), '<html><body>stale</body></html>\n');
   // No project scripts/ dir at all — only the bundled copy can render.
   const res = runHook(proj, spec, { CLAUDE_PLUGIN_ROOT: join(ROOT, 'kit', 'plugins', 'plan-agent') });
   assert.equal(res.status, 0, res.stderr);
@@ -1273,6 +1288,7 @@ ok('hook exits non-zero with stderr when the renderer fails on a broken spec', (
   mkdirSync(join(proj, 'docs', 'plans'), { recursive: true });
   const broken = join(proj, 'docs', 'plans', 'broken.md');
   writeFileSync(broken, '# Plan: Broken\n\nNo sections.\n');
+  writeFileSync(join(proj, 'docs', 'plans', 'broken.html'), '<html><body>stale</body></html>\n');
   const res = runHook(proj, broken);
   assert.equal(res.status, 2);
   assert.match(res.stderr, /not a valid plan spec/);

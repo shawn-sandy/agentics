@@ -13,6 +13,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 python3 - "$PROJECT_ROOT" "$SCRIPT_DIR" <<'EOF'
 import glob, json, os, re, sys, html
+from urllib.parse import urlsplit
 from datetime import datetime
 
 project_root = sys.argv[1]
@@ -87,44 +88,30 @@ def resolve_templates_dir():
 
 templates_dir = resolve_templates_dir()
 
-# ── Collect and sort plan files ────────────────────────────────────────────────
-plan_files = []
+# ── Collect plan sources ───────────────────────────────────────────────────────
+# Two kinds of plan share this gallery. A rendered <stem>.html is a plan whose
+# author kept a local file; a <stem>.md spec carrying an http(s) artifact-url:
+# and no sibling .html is a plan published straight to claude.ai. The .html
+# always wins its stem — a spec still holding the URL from an earlier publish
+# must not card twice, and the file is the copy the author chose to keep.
+html_files, spec_files = [], []
 for dirpath, dirnames, filenames in os.walk(plans_dir):
     dirnames[:] = [d for d in dirnames if not d.startswith('.') and d not in ('archive', 'artifacts')]
     for name in filenames:
         if name.endswith('.html') and name != 'index.html':
-            plan_files.append(os.path.join(dirpath, name))
-def _plan_created_sort_key(path):
-    """In-progress plans first, then plan-created desc; undated plans sort last
-    by filename. The gallery leads with the work actually in flight — 88 cards
-    in pure date order buries the four plans someone is mid-way through.
-    Artifacts live in their own gallery (docs/artifacts/), not here.
-    Reads 4000 chars: the <head> now carries a theme script ahead of the
-    plan-* meta tags."""
-    base = os.path.basename(path)
-    try:
-        with open(path, encoding='utf-8', errors='replace') as fh:
-            head = fh.read(4000)
-        st = re.search(r'<meta\s+name="plan-status"\s+content="([^"]*)"', head)
-        flight = 0 if (st and st.group(1).strip() == 'in-progress') else 1
-        m = re.search(r'<meta\s+name="plan-created"\s+content="([^"]*)"', head)
-        if m:
-            parts = m.group(1).strip().split('-')
-            return (flight, 0, -int(parts[0]), -int(parts[1]), -int(parts[2]), base)
-        return (flight, 1, 0, 0, 0, base)
-    except Exception:
-        pass
-    return (1, 1, 0, 0, 0, base)
+            html_files.append(os.path.join(dirpath, name))
+        elif name.endswith('.md'):
+            spec_files.append(os.path.join(dirpath, name))
 
-plan_files.sort(key=_plan_created_sort_key)
+def stem_of(path):
+    """Plans-dir-relative path minus its extension — a plan's stable identity
+    across a publish flip. scripts/merge-plans-index.mjs keys cards on this
+    rather than on href precisely because the href does not survive one."""
+    return os.path.splitext(os.path.relpath(path, plans_dir))[0]
 
-if not plan_files:
-    print(f'[build-index] no plan files found in {plans_dir} — skipping', file=sys.stderr)
-    sys.exit(0)
+html_stems = {stem_of(f) for f in html_files}
 
-generated_at = datetime.now().strftime('%Y-%m-%d %H:%M')
-
-# ── Parse metadata and build gallery entries ───────────────────────────────────
+# ── Parse metadata ─────────────────────────────────────────────────────────────
 def get_meta(content, name, fallback=''):
     m = re.search(r'<meta\s+name="' + re.escape(name) + r'"\s+content="([^"]*)"', content)
     return m.group(1).strip() if m else fallback
@@ -135,34 +122,158 @@ def get_title(content, fname):
     # keeping regeneration idempotent (no &amp;amp; drift).
     return html.unescape(m.group(1).strip()) if m else os.path.basename(fname)
 
+def is_http_url(value):
+    """A real http(s) URL with a host — parsed, not prefix-matched.
+
+    `https://` and `https:// host/x` both pass a `^https?://` test. The second
+    matters beyond a broken card: build-plan-html.mjs puts the same value into
+    the republish prompt, so the two checks have to agree on what counts."""
+    if not value or any(ch.isspace() for ch in value):
+        return False
+    try:
+        parts = urlsplit(value)
+    except ValueError:
+        return False
+    return parts.scheme.lower() in ('http', 'https') and bool(parts.hostname)
+
+def split_spec(text):
+    """(frontmatter dict, body). Partitions each line on its first colon only —
+    glance: and artifact-url: values both contain more of them."""
+    m = re.match(r'\A---[ \t]*\n(.*?)\n---[ \t]*\n', text, re.DOTALL)
+    if not m:
+        return {}, text
+    fm = {}
+    for line in m.group(1).splitlines():
+        key, sep, value = line.partition(':')
+        if sep and key.strip() and not key.lstrip().startswith('#'):
+            fm[key.strip()] = value.strip()
+    return fm, text[m.end():]
+
+def spec_title(body, fname):
+    m = re.search(r'^#[ \t]+(?:Plan:[ \t]*)?(.+?)[ \t]*$', body, re.MULTILINE)
+    return m.group(1) if m else os.path.basename(fname)
+
+# The sections build-plan-html.mjs refuses to render a spec without. Reused here
+# as the answer to "is this file a plan?" so the gallery and the renderer share
+# one definition instead of drifting apart. It is load-bearing, not defensive:
+# docs/plans also holds session exports, which carry their own artifact-url: and
+# would otherwise be promoted into the plans gallery by the key alone.
+PLAN_SECTIONS = ('Objective', 'Steps', 'Acceptance Criteria', 'Verification')
+
+def is_plan_spec(body):
+    return all(re.search(r'^##[ \t]+' + re.escape(name) + r'[ \t]*$', body, re.MULTILINE)
+               for name in PLAN_SECTIONS)
+
+def spec_steps(body):
+    """(done, total) from the numbered items under ## Steps. A [x] straight
+    after the number is the completed marker the renderer reads, so the gallery
+    counts the same thing the plan page draws. `### Phase:` headings inside the
+    section do not end it — the stop pattern needs exactly two hashes."""
+    m = re.search(r'^##[ \t]+Steps[ \t]*$(.*?)(?=^##[ \t]|\Z)', body, re.MULTILINE | re.DOTALL)
+    if not m:
+        return 0, 0
+    markers = re.findall(r'^[ \t]*\d+\.[ \t]+(\[x\])?', m.group(1), re.MULTILINE)
+    return sum(1 for marker in markers if marker), len(markers)
+
 def e(s):
     return html.escape(str(s))
 
-cards = []
-for f in plan_files:
+entries = []
+for f in html_files:
     try:
         content = open(f, encoding='utf-8', errors='replace').read()
     except Exception:
         continue
-    rel_path = os.path.relpath(f, plans_dir)
-    status   = get_meta(content, 'plan-status', 'todo')
-    ptype    = get_meta(content, 'plan-type',   'untyped')
-    effort   = get_meta(content, 'plan-effort', '').lower()
-    created  = get_meta(content, 'plan-created', '')
-    title = get_title(content, f)
+    entries.append({
+        'href': os.path.relpath(f, plans_dir),
+        'stem': stem_of(f),
+        'base': os.path.basename(f),
+        'title': get_title(content, f),
+        'status': get_meta(content, 'plan-status', 'todo'),
+        'type': get_meta(content, 'plan-type', 'untyped'),
+        'effort': get_meta(content, 'plan-effort', '').lower(),
+        'created': get_meta(content, 'plan-created', ''),
+        'proto': bool(get_meta(content, 'plan-prototype', '')),
+        # Every step is one `class="step-card"`, a finished one adds
+        # ` completed`; the lookahead keeps `step-card-header` (one per step)
+        # and the stylesheet's own `.step-card` rule out of the total.
+        'steps_total': len(re.findall(r'class="step-card(?=[" ])', content)),
+        'steps_done': len(re.findall(r'class="step-card completed"', content)),
+        'artifact': False,
+    })
 
-    prototype = get_meta(content, 'plan-prototype', '')
+for f in spec_files:
+    if stem_of(f) in html_stems:
+        continue                       # the published file wins its stem
+    try:
+        text = open(f, encoding='utf-8', errors='replace').read()
+    except Exception:
+        continue
+    fm, body = split_spec(text)
+    url = fm.get('artifact-url', '')
+    if not url:
+        continue                       # no link and no file — nothing to open
+    if not is_plan_spec(body):
+        continue                       # a published document, but not a plan
+    if not is_http_url(url):
+        # This href lands raw in a page people click, so the value is checked
+        # here rather than trusted from frontmatter: a hand-edited javascript:
+        # or data: value would otherwise turn the gallery into its delivery.
+        print(f'[build-index] {os.path.basename(f)}: ignoring non-http(s) artifact-url',
+              file=sys.stderr)
+        continue
+    steps_done, steps_total = spec_steps(body)
+    entries.append({
+        'href': url,
+        'stem': stem_of(f),
+        'base': os.path.basename(f),
+        'title': spec_title(body, f),
+        'status': fm.get('status', 'todo'),
+        'type': fm.get('type', 'untyped'),
+        'effort': fm.get('effort', '').lower(),
+        'created': fm.get('created', ''),
+        'proto': bool(fm.get('prototype', '')),
+        'steps_total': steps_total,
+        'steps_done': steps_done,
+        'artifact': True,
+    })
+
+def _plan_created_sort_key(entry):
+    """In-progress plans first, then created desc; undated plans sort last by
+    filename. The gallery leads with the work actually in flight — 88 cards in
+    pure date order buries the four plans someone is mid-way through.
+    Artifacts live in their own gallery (docs/artifacts/), not here."""
+    flight = 0 if entry['status'] == 'in-progress' else 1
+    try:
+        year, month, day = (int(x) for x in entry['created'].split('-')[:3])
+        return (flight, 0, -year, -month, -day, entry['base'])
+    except Exception:
+        return (flight, 1, 0, 0, 0, entry['base'])
+
+entries.sort(key=_plan_created_sort_key)
+
+# Emptiness is judged on cardable plans, not on files found: a plans directory
+# holding only specs without an artifact-url has nothing this page can link, and
+# blanking an existing gallery is worse than leaving it alone.
+if not entries:
+    print(f'[build-index] no plan files found in {plans_dir} — skipping', file=sys.stderr)
+    sys.exit(0)
+
+generated_at = datetime.now().strftime('%Y-%m-%d %H:%M')
+
+# ── Build gallery entries ──────────────────────────────────────────────────────
+cards = []
+for entry in entries:
+    status  = entry['status']
+    created = entry['created']
+    effort  = entry['effort']
+    title   = entry['title']
+    steps_done, steps_total = entry['steps_done'], entry['steps_total']
+
     # YYYY-MM, or empty when the plan carries no created date. The gallery
     # script turns it into a heading at load time; nothing between the cards
     # would survive a merge-driver splice.
     month = created[:7] if re.match(r'^\d{4}-\d{2}', created) else ''
-
-    # Step progress, counted out of the rendered plan HTML this loop already
-    # read. Every step is one `class="step-card"`, a finished one adds
-    # ` completed`; the lookahead keeps `step-card-header` (one per step) and
-    # the stylesheet's own `.step-card` rule out of the total.
-    steps_total = len(re.findall(r'class="step-card(?=[" ])', content))
-    steps_done  = len(re.findall(r'class="step-card completed"', content))
 
     status_display = status.replace('-', ' ') if status else 'unstatused'
     # aria-hidden glyph + visually-hidden text: the card layout this replaced
@@ -180,7 +291,14 @@ for f in plan_files:
     # test-prototype-plan-link.mjs asserts the marker is a text-bearing span
     # with no nested anchor (the row is already one).
     proto_txt = (' &middot; <span class="proto-chip" title="This plan has a prototype — '
-                 'open the plan and follow its View prototype link">proto</span>') if prototype else ''
+                 'open the plan and follow its View prototype link">proto</span>') if entry['proto'] else ''
+    # An artifact plan leaves the site when clicked and has no file in the repo.
+    # Both facts are announced twice — a chip for anyone scanning the row, a
+    # visually-hidden note for anyone who only hears the link.
+    artifact_txt = (' &middot; <span class="artifact-chip" title="Published to claude.ai — '
+                    'no local file in this repo">artifact</span>') if entry['artifact'] else ''
+    away_attrs = ' target="_blank" rel="noopener"' if entry['artifact'] else ''
+    away_note  = '<span class="sr-only"> (opens on claude.ai)</span>' if entry['artifact'] else ''
     # Server-rendered so the progress survives with JavaScript off; the
     # gallery script draws the bar beside it from the two data attributes.
     steps_span = (f'\n  <span class="r-steps">{steps_done} / {steps_total} steps</span>'
@@ -189,23 +307,24 @@ for f in plan_files:
     # Row, not card: bare anchor, no nested <a>, no <li>, and
     # `<a class="gallery-card"` kept as the leading attribute pair — all three
     # are what scripts/merge-plans-index.mjs splices on.
-    cards.append(f'''<a class="gallery-card" href="{e(rel_path)}"
-   data-status="{e(status)}" data-type="{e(ptype)}" data-effort="{e(effort)}" data-month="{e(month)}" data-title="{e(title.lower())}" data-steps-done="{steps_done}" data-steps-total="{steps_total}">
+    cards.append(f'''<a class="gallery-card" href="{e(entry["href"])}"{away_attrs}
+   data-local="{e(entry["stem"])}" data-status="{e(status)}" data-type="{e(entry["type"])}" data-effort="{e(effort)}" data-month="{e(month)}" data-title="{e(title.lower())}" data-steps-done="{steps_done}" data-steps-total="{steps_total}">
   <span class="glyph" aria-hidden="true">{glyph}</span><span class="sr-only">{e(status_display)}</span>
   <span class="r-title">{e(title)}</span>
-  <span class="r-meta">{e(ptype)}{effort_txt}{proto_txt}</span>
-  <span class="r-date">{e(created)}</span>{steps_span}
+  <span class="r-meta">{e(entry["type"])}{effort_txt}{proto_txt}{artifact_txt}</span>
+  <span class="r-date">{e(created)}</span>{steps_span}{away_note}
 </a>''')
 
 gallery_entries = '\n'.join(cards)
-# Counted off the cards actually emitted, never off plan_files: the loop above
-# skips anything it cannot open (a broken symlink, a file whose permissions
-# changed between the walk and the read), and every consumer of this number —
-# the page's own "N plans" line, the topbar Plans tab, and the `wrote … (N
-# items)` line the plans-library skill compares its card count against — is
-# claiming how many rows the page has. Sourcing it from the pre-parse list makes
-# all three overstate by exactly the number of files silently dropped, which
-# reads to the skill as a corrupt write.
+# Counted off the cards actually emitted, never off the source lists: the loops
+# above skip anything they cannot open (a broken symlink, a file whose
+# permissions changed between the walk and the read) and every spec with no
+# artifact to link, and every consumer of this number — the page's own "N plans"
+# line, the topbar Plans tab, and the `wrote … (N items)` line the plans-library
+# skill compares its card count against — is claiming how many rows the page
+# has. Sourcing it from the pre-parse list makes all three overstate by exactly
+# the number of files silently dropped, which reads to the skill as a corrupt
+# write.
 plan_count = len(cards)
 
 # ── Topbar ─────────────────────────────────────────────────────────────────────

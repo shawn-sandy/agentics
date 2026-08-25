@@ -357,6 +357,24 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   const design = /^https?:\/\//i.test(designRaw) ? designRaw : '';
   if (designRaw && !design) console.warn(`  ! ${basename(path)}: ignoring non-http(s) design: ${designRaw}`);
 
+  // `artifact-url:` is where the plan lives when it was published to claude.ai
+  // instead of rendered to a file. Same http(s) guard as design:, and here the
+  // stakes are higher: this value is not merely linked, it is pasted into a
+  // prompt an agent will act on. A `javascript:` or `data:` payload in that
+  // position is an instruction, not a link, so anything else is dropped and
+  // named on stderr rather than passed along.
+  // Parsed, not prefix-matched. `https://` and `https:// host/x` both satisfy a
+  // /^https?:\/\// test, and the second is the one that bites: it does not stay
+  // a dead link, it lands verbatim in the republish clause below, where an
+  // agent normalising the space away would publish to a host nobody named.
+  const artifactRaw = (md['artifact-url'] || '').trim();
+  let artifactUrl = '';
+  try {
+    const parsed = new URL(artifactRaw);
+    if (/^https?:$/i.test(parsed.protocol) && parsed.host) artifactUrl = parsed.href;
+  } catch { /* not a URL at all — falls through to the warning */ }
+  if (artifactRaw && !artifactUrl) console.warn(`  ! ${basename(path)}: ignoring non-http(s) artifact-url: ${artifactRaw}`);
+
   // Every prompt ends with the same gate: verify, then record the outcome in
   // the spec. Without it an agent reports "done" on a plan still marked todo.
   //
@@ -374,7 +392,16 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   // the instruction left the gallery stale. Only copyCmd() rebuilds a richer
   // prompt from live DOM; copyGoal()/copyWorkflow() copy this string verbatim,
   // so whatever is missing here is missing on two of the three paths.
-  const verifyTail = `Verify against the plan's Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in ${specPath} — tick each step's [x] marker and each criterion's - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.`;
+  //
+  // When the plan lives at an artifact rather than a file, the re-render is
+  // only half the job — the shared page is what everyone else reads, and it
+  // goes stale the moment the first step is ticked. The clause rides inside
+  // the tail rather than sitting in the skill text because a fresh-session
+  // agent implementing this plan sees only the prompt.
+  const republishClause = artifactUrl
+    ? ` This plan is published at ${artifactUrl} — after re-rendering, republish it to that same URL so the shared page matches the spec.`
+    : '';
+  const verifyTail = `Verify against the plan's Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in ${specPath} — tick each step's [x] marker and each criterion's - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.${republishClause}`;
 
   // A root-level path has no directory segment, so bucket every one of them
   // under a single sentinel — otherwise each bare filename counts as its own

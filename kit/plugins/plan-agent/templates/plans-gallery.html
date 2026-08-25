@@ -470,6 +470,10 @@
       /* A plan that has a prototype is worth spotting in a scan. Inline text,
          never an <a> — the row is already one anchor. */
       .r-meta .proto-chip { color: var(--accent); }
+      /* Same inline-text rule for a plan that lives on claude.ai rather
+         than in this repo. Accent, not signal: it marks where the plan is,
+         not that anything is wrong with it. */
+      .r-meta .artifact-chip { color: var(--accent); }
       .r-date {
         font-family: var(--mono);
         font-size: 0.65rem;

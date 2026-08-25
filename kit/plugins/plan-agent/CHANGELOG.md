@@ -1,5 +1,72 @@
 # Changelog
 
+## 9.7.0 — the plans gallery cards artifact-only plans (2026-08-25)
+
+### Added
+
+- **`hooks/build-index.sh` walks `.md` specs alongside `.html` files.** A spec
+  carrying an `http(s)` `artifact-url:` and no sibling `.html` is a plan
+  published straight to claude.ai with nothing rendered locally, and until now
+  it was invisible to the gallery. It is now carded by its artifact URL, in a
+  new tab, with `rel="noopener"`, an `artifact-chip` in the meta row, and a
+  visually-hidden "(opens on claude.ai)" note. A sibling `.html` always wins
+  its stem: the file is the copy the author chose to keep.
+- **Three gates before a spec is carded** — the URL exists, its scheme is
+  `http(s)`, and the body carries the four sections `build-plan-html.mjs`
+  refuses to render without. The scheme check keeps a hand-edited
+  `javascript:` value out of an href that lands raw in a page people click; the
+  section check keeps `docs/plans/sessions/` exports, which carry their own
+  `artifact-url:`, out of the *plans* gallery.
+
+### Changed
+
+- **`/plan-agent:implementation-plan` publishes to a claude.ai artifact by
+  default.** Step 7 renders the plan into the scratchpad, publishes it with
+  `Artifact`, writes the returned URL into the spec as `artifact-url:`, and
+  reports the link. The repo gets the `.md` spec and no generated HTML. Pass
+  the new **`--file`** flag to also write and commit `<stem>.html` beside the
+  spec; publishing happens either way, and the sibling wins the gallery card.
+  If `Artifact` is unavailable the skill says so and falls back to file
+  delivery rather than leaving the plan undelivered.
+- **Re-publishing targets the same URL.** Step 7 re-reads the spec's
+  frontmatter immediately before publishing, so a plan edited and re-delivered
+  updates its existing page instead of stranding the link the user already
+  shared. `build` and `finalize-plan` follow the same rule when they re-render
+  after ticking steps or marking completion.
+- **`artifact-url:` is parsed, not prefix-matched.** A `^https?://` test passes
+  `https://` and `https:// host/x`; the second is not merely a dead card link,
+  it lands verbatim in the republish prompt where an agent normalising the
+  space away would publish to a host nobody named. The renderer uses `new
+  URL()`, the gallery and the three `plans_count()` copies use `urlsplit` plus
+  a whitespace check, and all six agree on what counts as a URL.
+- **The renderer appends a republish clause to all three prompts.** When a spec
+  carries an `http(s)` `artifact-url:`, the implement, goal, and workflow
+  prompts each end by naming that URL and instructing a republish after the
+  re-render — the only way a fresh-session agent learns the shared page exists.
+  Non-`http(s)` values are dropped with a warning, as `design:` already was.
+- **`render-plan-html.py` no longer creates a sibling that does not exist.** A
+  missing `<stem>.html` is the signal that the plan lives at an artifact;
+  rendering one resurrected the file its author chose not to publish. The
+  gallery index is still rebuilt on those writes, since the card reads title,
+  status, and step markers from the spec.
+- **Every gallery card carries `data-local="<stem>"`**, the plan's
+  plans-dir-relative path without its extension, and
+  `scripts/merge-plans-index.mjs` keys its union on that instead of on `href`.
+  Publishing changes an href, so an href-keyed merge saw one plan as two and
+  grew a duplicate card on every such branch merge. Cards predating the
+  attribute fall back to their href with a trailing `.html` stripped, which
+  lands on the same stem — that is what makes the first merge after this
+  change correct rather than doubling every card in a committed index.
+- **`plans_count()` in `build-artifacts-index.sh`, `build-designs-index.sh`
+  and `build-prototypes-index.sh` applies the same rule.** Each gallery topbar
+  shows a PLANS tab count computed off the filesystem (the four generators run
+  in arbitrary order, so reading a sibling index would report a stale one), so
+  three counters that did not know about artifact-only plans disagreed with
+  the plans page the moment the first one existed.
+- **The "no plan files found — skipping" guard moved to the parsed entry
+  list.** A plans directory holding only specs the gallery cannot link now
+  leaves an existing `index.html` alone instead of blanking it.
+
 ## 9.6.1 — build checks the checkout is current before implementing (2026-08-23)
 
 ### Changed

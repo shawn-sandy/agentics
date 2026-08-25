@@ -4,7 +4,7 @@ model: sonnet
 description: "Marks a plan as completed. Verifies codebase evidence, ticks acceptance criteria, and re-renders the HTML; --all sweeps unmarked plans. Use via /plan-agent:finalize-plan."
 disable-model-invocation: true
 argument-hint: "[plan-file.md|.html] [--all] [--dir <path>]"
-allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile
+allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, Artifact, SendUserFile
 ---
 
 # finalize-plan

@@ -33,11 +33,27 @@ The failure mode this closes: `build` stops at its first phase boundary by desig
 
 Each item names the specific criterion, token gap, or test — never a generic summary. Place the section after `## Acceptance Criteria`.
 
-**5e — Re-render, then check.** Regenerate the HTML from the spec and confirm it succeeded:
+**5e — Re-render, then check.** Regenerate the HTML from the spec and confirm it succeeded.
+
+Where it goes depends on how the plan was delivered, and `<stem>.html`'s
+existence is the signal. **Sibling exists** — the plan is a file; overwrite it:
 
 ```bash
 plan-agent-render "<stem>.md" -o "<stem>.html"
 ```
+
+**No sibling** — the plan lives at a claude.ai artifact. Render to the
+scratchpad and republish to the spec's `artifact-url:`, passing that URL to
+`Artifact` so the shared page updates in place rather than becoming a second
+copy. Completion is exactly when the shared page most needs to be current — it
+is the state everyone else reads:
+
+```bash
+plan-agent-render "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+```
+
+Never write `<stem>.html` in that case: it resurrects a file the author chose
+not to publish and flips the plan's gallery card off its artifact.
 
 `plan-agent-render` ships with this plugin in `bin/`, which Claude Code puts on
 the Bash tool's `PATH` — invoke it by bare name, never by path.
@@ -50,6 +66,10 @@ deliberately kept consistent:
 ```bash
 plan-agent-render "<stem>.md" -o "<stem>.html" --check
 ```
+
+For an artifact-delivered plan point `--check` at the scratchpad render
+instead; it compares a file on disk against a fresh in-memory render, so it
+needs whichever file was just written.
 
 It prints one row per property — `html`, `steps`, `criteria` — and exits
 non-zero if any fails. `html` compares the file on disk against a fresh

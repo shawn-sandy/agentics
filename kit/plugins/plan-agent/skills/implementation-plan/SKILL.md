@@ -2,7 +2,7 @@
 name: implementation-plan
 model: claude-fable-5
 description: "Generates HTML implementation-plan documents. Produces a self-contained .html plan file with steps, acceptance criteria, and metadata. Use when the user asks to create or generate an HTML plan file."
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, WebFetch, WebSearch, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, Artifact, WebFetch, WebSearch, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer
 argument-hint: "<issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--tdd|--no-tdd] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]"
 ---
 
@@ -30,12 +30,19 @@ plan-agent-render <plan>.md -o <plan>.html
 Exit 0 = rendered; exit 1 prints exactly which required section is missing
 or malformed — fix the spec and re-run. A `PostToolUse` hook
 (`hooks/render-plan-html.py`) re-renders the sibling HTML whenever a spec in
-the plans directory is written, but do not rely on it: plugin `hooks.json`
-files are not registered in every runtime (notably the Claude Code desktop
-app, where they never fire), so a markdown edit can silently leave the pair
-stale. Always run the script explicitly after editing a spec — that also
-surfaces parse errors deterministically. Both files — the `.md` source of truth and the
-rendered `.html` — are committed together in the plans directory.
+the plans directory is written **and a sibling already exists**, but do not
+rely on it: plugin `hooks.json` files are not registered in every runtime
+(notably the Claude Code desktop app, where they never fire), so a markdown
+edit can silently leave the pair stale.
+Always run the script explicitly after editing a spec — that also surfaces
+parse errors deterministically.
+
+The `.md` spec is the file that gets committed. By default the rendered HTML
+is **not** written into the repo at all: Step 7 renders it to the scratchpad
+and publishes it as a claude.ai artifact, recording the URL in the spec's
+`artifact-url:` frontmatter. Pass `--file` to also write and commit
+`<stem>.html` beside the spec — that sibling then wins the gallery card, and
+its existence is what tells the render hook to keep it current.
 
 **Guidelines library** (in `guidelines/` beside this file — read the full
 file when the step calls for it, not all up front):
@@ -114,6 +121,8 @@ generate the workflow prompt: set `workflow: always` in the spec
 frontmatter), `--tdd` / `--no-tdd` (force or suppress the
 RED/GREEN/VERIFY/SHIP phase shape, skipping the Step 2 detection either
 way), `--from-prompt <path>` (prompt-source mode, below),
+`--file` (also write the rendered `<stem>.html` beside the spec and commit
+it — publishing to an artifact happens either way; see Step 7),
 `--type <kind>`, `--template <name>` (`default` only;
 variants ship later as renderer style shells), `--dir <path>`,
 `--priority <level>` (written as a `priority:` frontmatter key; preserved
@@ -184,7 +193,8 @@ Echo the resolved objective and effective flags after Step 0.
 
 - Do not edit source files, configs, or any file outside the configured
   `plansDirectory` (or `docs/plans/` when no setting exists). Running the
-  bundled renderer and a local preview server is allowed.
+  bundled renderer, publishing the rendered plan as an artifact, and a local
+  preview server is allowed.
 - Do not apply fixes, refactors, or any change described in the plan's
   steps. `Read`/`Glob`/`Grep`/`Bash` are for read-only exploration.
 - Not for general planning questions — this skill creates plan documents,
@@ -487,26 +497,66 @@ EOF
    in the browser changes only their local DOM/file copy — tool-side state
    belongs in the spec.
 
-7. **Open** — Deliver the plan and verify rendering. Mandatory — do not
-   skip. After all sub-steps complete, proceed immediately to Step 8.
+7. **Publish** — Deliver the plan as a claude.ai artifact. Mandatory — do
+   not skip. After all sub-steps complete, proceed immediately to Step 8.
 
-   **Try browser verification first:**
-   1. Load browser tools via `ToolSearch` with
-      `select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer`.
-      No matches → the browser MCP server is not connected; use the
-      fallback below.
-   2. Find a free port: `python3 -c "import socket; s=socket.socket(); s.bind(('', 0)); print(s.getsockname()[1]); s.close()"`.
-   3. `cd <plan-dir> && python3 -m http.server <port> &`.
-   4. `mcp__claude-in-chrome__tabs_context_mcp` with `createIfEmpty: true`.
-   5. Navigate to `http://localhost:<port>/<plan-filename>` (the `.html`).
-   6. Screenshot (`action: screenshot`, `save_to_disk: true`) and send it
-      to the user.
-   7. Send the plan file via `SendUserFile` (the `.html`; include the `.md`
-      spec so the user has the source too).
-   8. Report the URL and leave the server running.
+   A plan is something people read and share, so its address is a URL by
+   default. The Markdown spec stays in the plans directory and is committed;
+   the rendered HTML is a *view* of it, and by default that view lives on
+   claude.ai rather than as a 60–120 KB generated file in every plan commit.
 
-   **Fallback (no browser tools):** send the `.html` (and `.md`) via
-   `SendUserFile` and report the file paths.
+   7a. **Render to the scratchpad, not beside the spec.** In default mode the
+   repo gets no `.html`:
+
+   ```bash
+   plan-agent-render <spec>.md -o "$SCRATCHPAD/<stem>.html"
+   ```
+
+   With `--file`, render to `<stem>.html` beside the spec instead — that file
+   is committed alongside the spec and, because a sibling exists, it wins the
+   gallery card and the render hook keeps maintaining it. Publishing still
+   happens either way.
+
+   7b. **Re-read the spec's frontmatter immediately before publishing.** If it
+   already carries an `artifact-url:` **that parses as an `http(s)` URL with a
+   host**, pass it to `Artifact` so the plan updates its existing page instead
+   of claiming a new one. Anything else — a hand-edited `javascript:` value, a
+   truncated `https://` — is not a page to update: say so in one line, drop the
+   key, and publish fresh. Read it fresh
+   rather than trusting a value from earlier in this session — Step 5b and
+   Step 6 may have rewritten the file, and publishing to a second URL silently
+   strands whatever link the user already shared.
+
+   7c. **Publish.** Call `Artifact` with the rendered HTML file path, a
+   `favicon`, and a one-sentence `description`. Pass `url` when 7b found one.
+
+   7d. **Write the URL back.** Put the returned URL in the spec's frontmatter
+   as `artifact-url: <url>` (replacing any existing value) and re-render so the
+   generated prompts carry the republish clause — `build-plan-html.mjs` appends
+   it to the implement, goal, and workflow prompts whenever the key is present,
+   which is how a fresh-session agent learns to keep the shared page current.
+
+   In default mode this write is what puts the plan in the gallery at all:
+   `build-index.sh` cards a spec with no sibling `.html` only when it carries
+   an `http(s)` `artifact-url:`. Rebuild the gallery so the card appears now:
+
+   ```bash
+   plan-agent-plans-index
+   ```
+
+   7e. **Report.** Give the user the artifact URL. With `--file`, also send the
+   `.html` and `.md` via `SendUserFile` and name the committed paths.
+
+   **Fallback — publishing unavailable.** If `Artifact` is not available or the
+   call fails, say so in one line, then deliver as a file: render `<stem>.html`
+   beside the spec, send it (and the `.md`) via `SendUserFile`, and report the
+   paths. Do not retry silently and do not leave the plan undelivered.
+
+   **Leave an existing `artifact-url:` exactly as it is.** A failed republish is
+   a transient outage, not a retirement: clearing the key orphans the page
+   people already have and lets the next publish claim a second one. Only a plan
+   that has never published ends up with no key — and there the sibling `.html`
+   is what the gallery cards, the same result `--file` produces deliberately.
 
 8. **Implement, Edit, or Exit** — After Step 7 completes, always ask the
    user what to do next.
@@ -642,7 +692,7 @@ EOF
    gracefully if Agent Teams are unavailable (Claude Code < 2.1.32 or
    `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` unset): relay its guidance and
    return to the Step 8 menu without error. After a successful foreground
-   review, re-render if the spec changed, re-open via the Step 7 sub-steps,
+   review, re-render if the spec changed, republish via the Step 7 sub-steps,
    then loop back to this menu. Leave plan `status` at `todo` — reviewing
    is not implementing.
 
@@ -655,7 +705,8 @@ EOF
 
    **If the user chooses `Edit the plan`:** Ask what to change via
    `AskUserQuestion`, apply the edits to the **spec markdown**, re-render
-   (Step 5d), re-open (Step 7), then loop back to this menu.
+   (Step 5d), republish (Step 7 — 7b reuses the existing `artifact-url:`, so
+   the shared link keeps working), then loop back to this menu.
 
    **If the user chooses `Exit`:** Stop immediately. No implementation, no
    status change — the plan stays at `todo` everywhere.

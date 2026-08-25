@@ -35,6 +35,7 @@ PROJECT_ROOT="${1:-$(pwd)}"
 # even if the embedded Python raises on chdir, template I/O, or output writes.
 python3 - "$PROJECT_ROOT" <<'EOF' || true
 import json, os, re, sys, html
+from urllib.parse import urlsplit
 from datetime import datetime
 
 project_root = sys.argv[1]
@@ -165,16 +166,56 @@ def docs_count(directory):
 
 def plans_count(directory):
     """The plans collection counted the way the plans gallery counts it: a walk
-    that includes nested plans and skips archive/ and artifacts/. A flat listdir
-    here would print a different Plans total on this page than the Plans page
-    prints on its own, which reads as data loss rather than as the two
-    different counting rules it actually is."""
+    that includes nested plans and skips archive/ and artifacts/, plus the
+    artifact-only plans that have no local file at all. A flat listdir here
+    would print a different Plans total on this page than the Plans page prints
+    on its own, which reads as data loss rather than as the two different
+    counting rules it actually is.
+
+    An artifact-only plan is a .md spec with an http(s) artifact-url:, no
+    sibling .html, and the four sections build-plan-html.mjs refuses to render
+    without — the same three gates build-index.sh applies before it emits a
+    card, because this number has to equal the cards on that page. The section
+    check is load-bearing: docs/plans also holds session exports, which carry
+    their own artifact-url:. Kept verbatim in build-artifacts-index.sh,
+    build-designs-index.sh and build-prototypes-index.sh."""
+    sections = ('Objective', 'Steps', 'Acceptance Criteria', 'Verification')
     total = 0
     for dirpath, dirnames, filenames in os.walk(directory):
         dirnames[:] = [d for d in dirnames
                        if not d.startswith('.') and d not in ('archive', 'artifacts')]
-        total += sum(1 for f in filenames
-                     if f.endswith('.html') and f != 'index.html')
+        rendered = {f for f in filenames if f.endswith('.html')}
+        total += sum(1 for f in rendered if f != 'index.html')
+        for f in filenames:
+            if not f.endswith('.md') or f[:-3] + '.html' in rendered:
+                continue
+            try:
+                text = open(os.path.join(dirpath, f), encoding='utf-8', errors='replace').read()
+            except OSError:
+                continue
+            fm = re.match(r'\A---[ \t]*\n(.*?)\n---[ \t]*\n', text, re.DOTALL)
+            if not fm:
+                continue
+            url = ''
+            for line in fm.group(1).splitlines():
+                key, sep, value = line.partition(':')
+                if sep and key.strip() == 'artifact-url':
+                    url = value.strip()
+            # Parsed, not prefix-matched — the same rule build-index.sh applies
+            # before it emits a card, because this number has to equal the cards
+            # on that page. `https://` and `https:// host/x` pass a prefix test.
+            if any(ch.isspace() for ch in url):
+                continue
+            try:
+                parts = urlsplit(url)
+            except ValueError:
+                continue
+            if parts.scheme.lower() not in ('http', 'https') or not parts.hostname:
+                continue
+            body = text[fm.end():]
+            if all(re.search(r'^##[ \t]+' + re.escape(s) + r'[ \t]*$', body, re.MULTILINE)
+                   for s in sections):
+                total += 1
     return total
 
 def apply_shell(text, output_dir, active):
