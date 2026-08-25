@@ -1,5 +1,43 @@
 # Changelog
 
+## 9.7.0 — the plans gallery cards artifact-only plans (2026-08-25)
+
+### Added
+
+- **`hooks/build-index.sh` walks `.md` specs alongside `.html` files.** A spec
+  carrying an `http(s)` `artifact-url:` and no sibling `.html` is a plan
+  published straight to claude.ai with nothing rendered locally, and until now
+  it was invisible to the gallery. It is now carded by its artifact URL, in a
+  new tab, with `rel="noopener"`, an `artifact-chip` in the meta row, and a
+  visually-hidden "(opens on claude.ai)" note. A sibling `.html` always wins
+  its stem: the file is the copy the author chose to keep.
+- **Three gates before a spec is carded** — the URL exists, its scheme is
+  `http(s)`, and the body carries the four sections `build-plan-html.mjs`
+  refuses to render without. The scheme check keeps a hand-edited
+  `javascript:` value out of an href that lands raw in a page people click; the
+  section check keeps `docs/plans/sessions/` exports, which carry their own
+  `artifact-url:`, out of the *plans* gallery.
+
+### Changed
+
+- **Every gallery card carries `data-local="<stem>"`**, the plan's
+  plans-dir-relative path without its extension, and
+  `scripts/merge-plans-index.mjs` keys its union on that instead of on `href`.
+  Publishing changes an href, so an href-keyed merge saw one plan as two and
+  grew a duplicate card on every such branch merge. Cards predating the
+  attribute fall back to their href with a trailing `.html` stripped, which
+  lands on the same stem — that is what makes the first merge after this
+  change correct rather than doubling every card in a committed index.
+- **`plans_count()` in `build-artifacts-index.sh`, `build-designs-index.sh`
+  and `build-prototypes-index.sh` applies the same rule.** Each gallery topbar
+  shows a PLANS tab count computed off the filesystem (the four generators run
+  in arbitrary order, so reading a sibling index would report a stale one), so
+  three counters that did not know about artifact-only plans disagreed with
+  the plans page the moment the first one existed.
+- **The "no plan files found — skipping" guard moved to the parsed entry
+  list.** A plans directory holding only specs the gallery cannot link now
+  leaves an existing `index.html` alone instead of blanking it.
+
 ## 9.6.1 — build checks the checkout is current before implementing (2026-08-23)
 
 ### Changed

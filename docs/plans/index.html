@@ -470,6 +470,10 @@
       /* A plan that has a prototype is worth spotting in a scan. Inline text,
          never an <a> — the row is already one anchor. */
       .r-meta .proto-chip { color: var(--accent); }
+      /* Same inline-text rule for a plan that lives on claude.ai rather
+         than in this repo. Accent, not signal: it marks where the plan is,
+         not that anything is wrong with it. */
+      .r-meta .artifact-chip { color: var(--accent); }
       .r-date {
         font-family: var(--mono);
         font-size: 0.65rem;
@@ -553,7 +557,7 @@
         <a class="mark" href="../index.html">agentics</a>
         <nav class="tabs" aria-label="Collections">
           <a href="../index.html" >Home</a>
-          <a href="index.html" aria-current="page">Plans<span class="n">110</span></a>
+          <a href="index.html" aria-current="page">Plans<span class="n">111</span></a>
           <a href="../prototypes/index.html" >Prototypes<span class="n">2</span></a>
           <a href="../artifacts/index.html" >Artifacts<span class="n">20</span></a>
           <a href="../media/social/index.html" >Social<span class="n">36</span></a>
@@ -567,7 +571,7 @@
         <!-- The bare <p> and the leading number are load-bearing: the merge
              driver's COUNT_RE rewrites `<p>N items`. The prose after it is
              free text. -->
-        <p>110 items &mdash; in flight first, then newest. Search matches titles.</p>
+        <p>111 items &mdash; in flight first, then newest. Search matches titles.</p>
       </div>
       <button
         class="theme-toggle"
@@ -634,8 +638,24 @@
 
     <div class="visible-count" id="visibleCount" aria-live="polite"></div>
 
-    <div class="gallery-grid" id="galleryGrid"><a class="gallery-card" href="remove-exitplanmode-boilerplate.html"
-   data-status="in-progress" data-type="refactor" data-effort="high" data-month="2026-07" data-title="teach the plan-mode guard once, keep it everywhere" data-steps-done="8" data-steps-total="8">
+    <div class="gallery-grid" id="galleryGrid"><a class="gallery-card" href="add-artifact-default-plan-publishing.html"
+   data-local="add-artifact-default-plan-publishing" data-status="in-progress" data-type="feature" data-effort="high" data-month="2026-08" data-title="publish plans as artifacts by default" data-steps-done="4" data-steps-total="14">
+  <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">in progress</span>
+  <span class="r-title">Publish plans as artifacts by default</span>
+  <span class="r-meta">feature &middot; <span class="hi">high</span></span>
+  <span class="r-date">2026-08-24</span>
+  <span class="r-steps">4 / 14 steps</span>
+</a>
+<a class="gallery-card" href="add-design-phase.html"
+   data-local="add-design-phase" data-status="in-progress" data-type="feature" data-effort="high" data-month="2026-08" data-title="give plan-agent a design phase, so a plan can be seen before it is built" data-steps-done="12" data-steps-total="13">
+  <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">in progress</span>
+  <span class="r-title">Give plan-agent a design phase, so a plan can be seen before it is built</span>
+  <span class="r-meta">feature &middot; <span class="hi">high</span></span>
+  <span class="r-date">2026-08-18</span>
+  <span class="r-steps">12 / 13 steps</span>
+</a>
+<a class="gallery-card" href="remove-exitplanmode-boilerplate.html"
+   data-local="remove-exitplanmode-boilerplate" data-status="in-progress" data-type="refactor" data-effort="high" data-month="2026-07" data-title="teach the plan-mode guard once, keep it everywhere" data-steps-done="8" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">in progress</span>
   <span class="r-title">Teach the plan-mode guard once, keep it everywhere</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
@@ -643,7 +663,7 @@
   <span class="r-steps">8 / 8 steps</span>
 </a>
 <a class="gallery-card" href="split-git-social-skills.html"
-   data-status="in-progress" data-type="refactor" data-effort="high" data-month="2026-07" data-title="stop paying 9,758 words to run one git command" data-steps-done="0" data-steps-total="9">
+   data-local="split-git-social-skills" data-status="in-progress" data-type="refactor" data-effort="high" data-month="2026-07" data-title="stop paying 9,758 words to run one git command" data-steps-done="0" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">in progress</span>
   <span class="r-title">Stop paying 9,758 words to run one git command</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
@@ -651,7 +671,7 @@
   <span class="r-steps">0 / 9 steps</span>
 </a>
 <a class="gallery-card" href="add-content-tools-plugin.html"
-   data-status="in-progress" data-type="feature" data-effort="high" data-month="2026-07" data-title="create the content-tools plugin with an artifact-to-post skill" data-steps-done="0" data-steps-total="8">
+   data-local="add-content-tools-plugin" data-status="in-progress" data-type="feature" data-effort="high" data-month="2026-07" data-title="create the content-tools plugin with an artifact-to-post skill" data-steps-done="0" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">in progress</span>
   <span class="r-title">Create the content-tools plugin with an artifact-to-post skill</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
@@ -659,7 +679,7 @@
   <span class="r-steps">0 / 8 steps</span>
 </a>
 <a class="gallery-card" href="clean-up-docs-and-plans.html"
-   data-status="in-progress" data-type="chore" data-effort="high" data-month="2026-06" data-title="clean up and make docs/plans manageable" data-steps-done="7" data-steps-total="8">
+   data-local="clean-up-docs-and-plans" data-status="in-progress" data-type="chore" data-effort="high" data-month="2026-06" data-title="clean up and make docs/plans manageable" data-steps-done="7" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">in progress</span>
   <span class="r-title">Clean up and make docs/plans manageable</span>
   <span class="r-meta">chore &middot; <span class="hi">high</span></span>
@@ -667,742 +687,735 @@
   <span class="r-steps">7 / 8 steps</span>
 </a>
 <a class="gallery-card" href="add-local-merge-gate.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-08" data-title="prove merge readiness locally, without github actions" data-steps-done="15" data-steps-total="15">
+   data-local="add-local-merge-gate" data-status="completed" data-type="feature" data-effort="high" data-month="2026-08" data-title="prove merge readiness locally, without github actions" data-steps-done="15" data-steps-total="15">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Prove merge readiness locally, without GitHub Actions</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-08-21</span>
 </a>
-<a class="gallery-card" href="add-design-phase.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-08" data-title="give plan-agent a design phase, so a plan can be seen before it is built" data-steps-done="0" data-steps-total="13">
-  <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
-  <span class="r-title">Give plan-agent a design phase, so a plan can be seen before it is built</span>
-  <span class="r-meta">feature &middot; <span class="hi">high</span></span>
-  <span class="r-date">2026-08-18</span>
-</a>
 <a class="gallery-card" href="add-post-merge-cleanup-skill.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-08" data-title="look inside the worktree before deleting it" data-steps-done="8" data-steps-total="8">
+   data-local="add-post-merge-cleanup-skill" data-status="completed" data-type="feature" data-effort="high" data-month="2026-08" data-title="look inside the worktree before deleting it" data-steps-done="8" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Look inside the worktree before deleting it</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-08-15</span>
 </a>
 <a class="gallery-card" href="add-insights-review-skill.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-08" data-title="turn the /insights report into changes that actually land" data-steps-done="0" data-steps-total="8">
+   data-local="add-insights-review-skill" data-status="todo" data-type="feature" data-effort="high" data-month="2026-08" data-title="turn the /insights report into changes that actually land" data-steps-done="0" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Turn the /insights report into changes that actually land</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-08-14</span>
 </a>
 <a class="gallery-card" href="add-plan-backlog-fleet-skill.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-08" data-title="a plan-backlog fleet skill for plan-agent" data-steps-done="7" data-steps-total="7">
+   data-local="add-plan-backlog-fleet-skill" data-status="completed" data-type="feature" data-effort="high" data-month="2026-08" data-title="a plan-backlog fleet skill for plan-agent" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">A plan-backlog fleet skill for plan-agent</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-08-14</span>
 </a>
 <a class="gallery-card" href="add-scope-guard-hook.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-08" data-title="add a scope-guard hook for repo-wide formatters and bare stash pops" data-steps-done="9" data-steps-total="9">
+   data-local="add-scope-guard-hook" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-08" data-title="add a scope-guard hook for repo-wide formatters and bare stash pops" data-steps-done="9" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add a scope-guard hook for repo-wide formatters and bare stash pops</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-08-14</span>
 </a>
 <a class="gallery-card" href="harden-ship-preflight.html"
-   data-status="completed" data-type="fix" data-effort="medium" data-month="2026-08" data-title="harden ship pre-flight against environment blockers" data-steps-done="10" data-steps-total="10">
+   data-local="harden-ship-preflight" data-status="completed" data-type="fix" data-effort="medium" data-month="2026-08" data-title="harden ship pre-flight against environment blockers" data-steps-done="10" data-steps-total="10">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Harden ship pre-flight against environment blockers</span>
   <span class="r-meta">fix &middot; medium</span>
   <span class="r-date">2026-08-14</span>
 </a>
 <a class="gallery-card" href="replace-grep-drift-check.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-08" data-title="replace build&#x27;s grep drift check with a deterministic render check" data-steps-done="9" data-steps-total="9">
+   data-local="replace-grep-drift-check" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-08" data-title="replace build&#x27;s grep drift check with a deterministic render check" data-steps-done="9" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Replace build&#x27;s grep drift check with a deterministic render check</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-08-14</span>
 </a>
 <a class="gallery-card" href="create-build-feature-skill.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-08" data-title="create the build-feature skill — feature docs that split into plans" data-steps-done="6" data-steps-total="6">
+   data-local="create-build-feature-skill" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-08" data-title="create the build-feature skill — feature docs that split into plans" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Create the build-feature skill — feature docs that split into plans</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-08-12</span>
 </a>
 <a class="gallery-card" href="fix-lint-gate-defects.html"
-   data-status="completed" data-type="fix" data-effort="high" data-month="2026-08" data-title="make the commit lint gate trustworthy in every repo it lands in" data-steps-done="8" data-steps-total="8">
+   data-local="fix-lint-gate-defects" data-status="completed" data-type="fix" data-effort="high" data-month="2026-08" data-title="make the commit lint gate trustworthy in every repo it lands in" data-steps-done="8" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Make the commit lint gate trustworthy in every repo it lands in</span>
   <span class="r-meta">fix &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-08-10</span>
 </a>
 <a class="gallery-card" href="retune-plan-document-design.html"
-   data-status="completed" data-type="refactor" data-effort="medium" data-month="2026-08" data-title="retune the plan document design" data-steps-done="9" data-steps-total="9">
+   data-local="retune-plan-document-design" data-status="completed" data-type="refactor" data-effort="medium" data-month="2026-08" data-title="retune the plan document design" data-steps-done="9" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Retune the plan document design</span>
   <span class="r-meta">refactor &middot; medium</span>
   <span class="r-date">2026-08-08</span>
 </a>
 <a class="gallery-card" href="add-teach-artifact-skill.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-08" data-title="ship teach-artifact, the artifact-tools skill that teaches instead of recaps" data-steps-done="6" data-steps-total="6">
+   data-local="add-teach-artifact-skill" data-status="completed" data-type="feature" data-effort="high" data-month="2026-08" data-title="ship teach-artifact, the artifact-tools skill that teaches instead of recaps" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Ship teach-artifact, the artifact-tools skill that teaches instead of recaps</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-08-07</span>
 </a>
 <a class="gallery-card" href="refactor-gallery-rows-and-topbar.html"
-   data-status="completed" data-type="refactor" data-effort="high" data-month="2026-08" data-title="give the galleries the row layout and shell the prototype specified" data-steps-done="10" data-steps-total="10">
+   data-local="refactor-gallery-rows-and-topbar" data-status="completed" data-type="refactor" data-effort="high" data-month="2026-08" data-title="give the galleries the row layout and shell the prototype specified" data-steps-done="10" data-steps-total="10">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Give the galleries the row layout and shell the prototype specified</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-08-01</span>
 </a>
 <a class="gallery-card" href="add-publish-preview-skill.html"
-   data-status="todo" data-type="feature" data-effort="medium" data-month="2026-07" data-title="give a work-in-progress plan a public link before the pull request merges" data-steps-done="0" data-steps-total="6">
+   data-local="add-publish-preview-skill" data-status="todo" data-type="feature" data-effort="medium" data-month="2026-07" data-title="give a work-in-progress plan a public link before the pull request merges" data-steps-done="0" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Give a work-in-progress plan a public link before the pull request merges</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-07-31</span>
 </a>
 <a class="gallery-card" href="refactor-plan-and-gallery-design.html"
-   data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="rebuild the plan document and gallery design" data-steps-done="11" data-steps-total="11">
+   data-local="refactor-plan-and-gallery-design" data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="rebuild the plan document and gallery design" data-steps-done="11" data-steps-total="11">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Rebuild the plan document and gallery design</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-31</span>
 </a>
 <a class="gallery-card" href="add-plan-phase-checkpoints.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="phase checkpoints and a decisions ledger for plan specs" data-steps-done="12" data-steps-total="12">
+   data-local="add-plan-phase-checkpoints" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="phase checkpoints and a decisions ledger for plan specs" data-steps-done="12" data-steps-total="12">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Phase checkpoints and a Decisions ledger for plan specs</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-30</span>
 </a>
 <a class="gallery-card" href="add-eng-recap-command.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="give engineers a recap written for them" data-steps-done="6" data-steps-total="6">
+   data-local="add-eng-recap-command" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="give engineers a recap written for them" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Give engineers a recap written for them</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="add-plan-authoring-to-build.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="let `build` author a plan when none is specified" data-steps-done="12" data-steps-total="12">
+   data-local="add-plan-authoring-to-build" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="let `build` author a plan when none is specified" data-steps-done="12" data-steps-total="12">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Let `build` author a plan when none is specified</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="extract-recap-command-core.html"
-   data-status="completed" data-type="refactor" data-effort="medium" data-month="2026-07" data-title="say the recap workflow once, not three times" data-steps-done="7" data-steps-total="7">
+   data-local="extract-recap-command-core" data-status="completed" data-type="refactor" data-effort="medium" data-month="2026-07" data-title="say the recap workflow once, not three times" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Say the recap workflow once, not three times</span>
   <span class="r-meta">refactor &middot; medium</span>
   <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="refactor-build-proposal-to-emit-prompt.html"
-   data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="make build-proposal converge on a saved prompt authored by write-prompt" data-steps-done="12" data-steps-total="12">
+   data-local="refactor-build-proposal-to-emit-prompt" data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="make build-proposal converge on a saved prompt authored by write-prompt" data-steps-done="12" data-steps-total="12">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Make build-proposal converge on a saved prompt authored by write-prompt</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="remove-skill-process-imperatives.html"
-   data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="earn every never — baseline first, then prune" data-steps-done="9" data-steps-total="9">
+   data-local="remove-skill-process-imperatives" data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="earn every never — baseline first, then prune" data-steps-done="9" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Earn every NEVER — baseline first, then prune</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="replace-claude-md-plugin-table.html"
-   data-status="completed" data-type="docs" data-effort="low" data-month="2026-07" data-title="stop paying for a plugin catalog in every session" data-steps-done="5" data-steps-total="5">
+   data-local="replace-claude-md-plugin-table" data-status="completed" data-type="docs" data-effort="low" data-month="2026-07" data-title="stop paying for a plugin catalog in every session" data-steps-done="5" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Stop paying for a plugin catalog in every session</span>
   <span class="r-meta">docs &middot; low</span>
   <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="split-plan-agent-skills.html"
-   data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="stop paying 10,776 words for guidance nobody reads yet" data-steps-done="9" data-steps-total="9">
+   data-local="split-plan-agent-skills" data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="stop paying 10,776 words for guidance nobody reads yet" data-steps-done="9" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Stop paying 10,776 words for guidance nobody reads yet</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="split-remaining-plugin-skills.html"
-   data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="stop paying 10,545 words every time these six skills fire" data-steps-done="9" data-steps-total="9">
+   data-local="split-remaining-plugin-skills" data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="stop paying 10,545 words every time these six skills fire" data-steps-done="9" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Stop paying 10,545 words every time these six skills fire</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-27</span>
 </a>
 <a class="gallery-card" href="add-prototype-plan-linking.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="make a plan and its prototype aware of each other" data-steps-done="9" data-steps-total="9">
+   data-local="add-prototype-plan-linking" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="make a plan and its prototype aware of each other" data-steps-done="9" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Make a plan and its prototype aware of each other</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-25</span>
 </a>
 <a class="gallery-card" href="add-merge-shorthand-skill.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="formalize the merge? shorthand as a git-agent skill + prompt hook" data-steps-done="5" data-steps-total="5">
+   data-local="add-merge-shorthand-skill" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="formalize the merge? shorthand as a git-agent skill + prompt hook" data-steps-done="5" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Formalize the merge? shorthand as a git-agent skill + prompt hook</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-20</span>
 </a>
 <a class="gallery-card" href="merge-plan-interview-into-plan-agent.html"
-   data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="merge plan-interview into plan-agent" data-steps-done="0" data-steps-total="12">
+   data-local="merge-plan-interview-into-plan-agent" data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="merge plan-interview into plan-agent" data-steps-done="0" data-steps-total="12">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Merge plan-interview into plan-agent</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-17</span>
 </a>
 <a class="gallery-card" href="add-verification-to-generator-skills.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-07" data-title="give the html-generating and publishing skills a check they can run" data-steps-done="0" data-steps-total="6">
+   data-local="add-verification-to-generator-skills" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-07" data-title="give the html-generating and publishing skills a check they can run" data-steps-done="0" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Give the HTML-generating and publishing skills a check they can run</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-07-16</span>
 </a>
 <a class="gallery-card" href="fix-plugin-component-defects.html"
-   data-status="todo" data-type="fix" data-effort="medium" data-month="2026-07" data-title="fix the agent, command, and hook defects the skill-focused review missed" data-steps-done="0" data-steps-total="8">
+   data-local="fix-plugin-component-defects" data-status="todo" data-type="fix" data-effort="medium" data-month="2026-07" data-title="fix the agent, command, and hook defects the skill-focused review missed" data-steps-done="0" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Fix the agent, command, and hook defects the skill-focused review missed</span>
   <span class="r-meta">fix &middot; medium</span>
   <span class="r-date">2026-07-16</span>
 </a>
 <a class="gallery-card" href="remove-dead-plugins-and-fix-frontmatter.html"
-   data-status="completed" data-type="chore" data-effort="low" data-month="2026-07" data-title="delete the six de-registered plugin directories and fix survivor frontmatter" data-steps-done="8" data-steps-total="8">
+   data-local="remove-dead-plugins-and-fix-frontmatter" data-status="completed" data-type="chore" data-effort="low" data-month="2026-07" data-title="delete the six de-registered plugin directories and fix survivor frontmatter" data-steps-done="8" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Delete the six de-registered plugin directories and fix survivor frontmatter</span>
   <span class="r-meta">chore &middot; low</span>
   <span class="r-date">2026-07-16</span>
 </a>
 <a class="gallery-card" href="fix-plan-completion-drift.html"
-   data-status="todo" data-type="fix" data-effort="high" data-month="2026-07" data-title="make a finished plan admit it is finished" data-steps-done="0" data-steps-total="10">
+   data-local="fix-plan-completion-drift" data-status="todo" data-type="fix" data-effort="high" data-month="2026-07" data-title="make a finished plan admit it is finished" data-steps-done="0" data-steps-total="10">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Make a finished plan admit it is finished</span>
   <span class="r-meta">fix &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-15</span>
 </a>
 <a class="gallery-card" href="wire-plugin-tests-into-ci.html"
-   data-status="todo" data-type="fix" data-effort="high" data-month="2026-07" data-title="wire tests/plugins/ into pr ci and fix the version guards blocking it" data-steps-done="0" data-steps-total="9">
+   data-local="wire-plugin-tests-into-ci" data-status="todo" data-type="fix" data-effort="high" data-month="2026-07" data-title="wire tests/plugins/ into pr ci and fix the version guards blocking it" data-steps-done="0" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Wire tests/plugins/ into PR CI and fix the version guards blocking it</span>
   <span class="r-meta">fix &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-15</span>
 </a>
 <a class="gallery-card" href="add-plan-source-to-create-issue.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="let create-issue ingest plans and offer issue creation at plan completion" data-steps-done="4" data-steps-total="4">
+   data-local="add-plan-source-to-create-issue" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="let create-issue ingest plans and offer issue creation at plan completion" data-steps-done="4" data-steps-total="4">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Let create-issue ingest plans and offer issue creation at plan completion</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-13</span>
 </a>
 <a class="gallery-card" href="create-artifact-tools-plugin.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="create the artifact-tools plugin — publish diffs, sessions, and plans as claude.ai artifacts" data-steps-done="0" data-steps-total="6">
+   data-local="create-artifact-tools-plugin" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="create the artifact-tools plugin — publish diffs, sessions, and plans as claude.ai artifacts" data-steps-done="0" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Create the artifact-tools plugin — publish diffs, sessions, and plans as claude.ai artifacts</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-13</span>
 </a>
 <a class="gallery-card" href="reference-md-spec-in-plan-prompts.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="reference the markdown spec in plan prompts and render next steps again" data-steps-done="6" data-steps-total="6">
+   data-local="reference-md-spec-in-plan-prompts" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="reference the markdown spec in plan prompts and render next steps again" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Reference the markdown spec in plan prompts and render Next Steps again</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-13</span>
 </a>
 <a class="gallery-card" href="add-plan-guidelines-library.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="ship the guidelines library and markdown-first authoring for implementation-plan" data-steps-done="0" data-steps-total="4">
+   data-local="add-plan-guidelines-library" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="ship the guidelines library and markdown-first authoring for implementation-plan" data-steps-done="0" data-steps-total="4">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Ship the guidelines library and markdown-first authoring for implementation-plan</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-12</span>
 </a>
 <a class="gallery-card" href="build-plan-html-renderer.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="build the markdown-spec-to-html plan renderer" data-steps-done="7" data-steps-total="7">
+   data-local="build-plan-html-renderer" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="build the markdown-spec-to-html plan renderer" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Build the Markdown-spec-to-HTML plan renderer</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-12</span>
 </a>
 <a class="gallery-card" href="make-plan-status-flows-md-first.html"
-   data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="make plan status and checkbox flows markdown-first" data-steps-done="6" data-steps-total="6">
+   data-local="make-plan-status-flows-md-first" data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="make plan status and checkbox flows markdown-first" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Make plan status and checkbox flows Markdown-first</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-12</span>
 </a>
 <a class="gallery-card" href="add-resources-section-to-plans.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="add a resources section to implementation plans" data-steps-done="6" data-steps-total="6">
+   data-local="add-resources-section-to-plans" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="add a resources section to implementation plans" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add a Resources section to implementation plans</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-09</span>
 </a>
 <a class="gallery-card" href="humanize-plan-output.html"
-   data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="humanize the implementation-plan output" data-steps-done="7" data-steps-total="7">
+   data-local="humanize-plan-output" data-status="completed" data-type="refactor" data-effort="high" data-month="2026-07" data-title="humanize the implementation-plan output" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Humanize the implementation-plan output</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-09</span>
 </a>
 <a class="gallery-card" href="split-artifacts-into-own-gallery.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="split artifacts into their own gallery" data-steps-done="7" data-steps-total="7">
+   data-local="split-artifacts-into-own-gallery" data-status="completed" data-type="feature" data-effort="high" data-month="2026-07" data-title="split artifacts into their own gallery" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Split artifacts into their own gallery</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-07-08</span>
 </a>
 <a class="gallery-card" href="add-save-artifact-skill.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-07" data-title="add a save-artifact skill to social-media-tools" data-steps-done="3" data-steps-total="3">
+   data-local="add-save-artifact-skill" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-07" data-title="add a save-artifact skill to social-media-tools" data-steps-done="3" data-steps-total="3">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add a save-artifact skill to social-media-tools</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-07-02</span>
 </a>
 <a class="gallery-card" href="add-dynamic-depth-and-mode-to-refine-prompt.html"
-   data-status="todo" data-type="feature" data-effort="medium" data-month="2026-07" data-title="dynamic depth and execution mode for write-prompt" data-steps-done="0" data-steps-total="6">
+   data-local="add-dynamic-depth-and-mode-to-refine-prompt" data-status="todo" data-type="feature" data-effort="medium" data-month="2026-07" data-title="dynamic depth and execution mode for write-prompt" data-steps-done="0" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Dynamic depth and execution mode for write-prompt</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-07-01</span>
 </a>
 <a class="gallery-card" href="add-effort-level-to-plan-html.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add an effort level to implementation-plan html output" data-steps-done="5" data-steps-total="5">
+   data-local="add-effort-level-to-plan-html" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add an effort level to implementation-plan html output" data-steps-done="5" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add an effort level to implementation-plan HTML output</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-06-30</span>
 </a>
 <a class="gallery-card" href="add-plan-tts-playback.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="vocalize plans with a native listen control" data-steps-done="0" data-steps-total="8">
+   data-local="add-plan-tts-playback" data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="vocalize plans with a native listen control" data-steps-done="0" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Vocalize plans with a native Listen control</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-29</span>
 </a>
 <a class="gallery-card" href="add-prototype-generator-skill.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add a static-html prototype generator to plan-agent" data-steps-done="6" data-steps-total="6">
+   data-local="add-prototype-generator-skill" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add a static-html prototype generator to plan-agent" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add a static-HTML prototype generator to plan-agent</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-29</span>
 </a>
 <a class="gallery-card" href="build-html-artifact-system.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="build artifact-forge — an independent html artifact system" data-steps-done="0" data-steps-total="9">
+   data-local="build-html-artifact-system" data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="build artifact-forge — an independent html artifact system" data-steps-done="0" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Build artifact-forge — an independent HTML artifact system</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-23</span>
 </a>
 <a class="gallery-card" href="extend-setup-sites-multi-host-publishing.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="extend setup-sites to publish to netlify, vercel, and cloudflare" data-steps-done="0" data-steps-total="7">
+   data-local="extend-setup-sites-multi-host-publishing" data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="extend setup-sites to publish to netlify, vercel, and cloudflare" data-steps-done="0" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Extend setup-sites to publish to Netlify, Vercel, and Cloudflare</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-22</span>
 </a>
 <a class="gallery-card" href="make-write-guide-output-dynamic.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="make write-guide output dynamic" data-steps-done="7" data-steps-total="7">
+   data-local="make-write-guide-output-dynamic" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="make write-guide output dynamic" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Make write-guide output dynamic</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-19</span>
 </a>
 <a class="gallery-card" href="replace-plan-digest-with-extractor.html"
-   data-status="completed" data-type="refactor" data-effort="high" data-month="2026-06" data-title="replace the stored plan digest with a compute-on-read extractor" data-steps-done="7" data-steps-total="7">
+   data-local="replace-plan-digest-with-extractor" data-status="completed" data-type="refactor" data-effort="high" data-month="2026-06" data-title="replace the stored plan digest with a compute-on-read extractor" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Replace the stored plan digest with a compute-on-read extractor</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-19</span>
 </a>
 <a class="gallery-card" href="add-ship-pages-skill.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="add a ship-pages skill — one-command publish for plans &amp; media galleries" data-steps-done="0" data-steps-total="8">
+   data-local="add-ship-pages-skill" data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="add a ship-pages skill — one-command publish for plans &amp; media galleries" data-steps-done="0" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Add a ship-pages skill — one-command publish for plans &amp; media galleries</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-18</span>
 </a>
 <a class="gallery-card" href="add-build-proposal-skill.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add the build-proposal skill to plan-agent" data-steps-done="7" data-steps-total="7">
+   data-local="add-build-proposal-skill" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add the build-proposal skill to plan-agent" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add the build-proposal skill to plan-agent</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-15</span>
 </a>
 <a class="gallery-card" href="add-md-plan-conversion-to-implementation-plan.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add markdown plan conversion to implementation-plan" data-steps-done="5" data-steps-total="5">
+   data-local="add-md-plan-conversion-to-implementation-plan" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add markdown plan conversion to implementation-plan" data-steps-done="5" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add markdown plan conversion to implementation-plan</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-12</span>
 </a>
 <a class="gallery-card" href="distribute-skills-via-skill-box-catalog.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="distribute skills via a skill-box catalog (option 3)" data-steps-done="0" data-steps-total="8">
+   data-local="distribute-skills-via-skill-box-catalog" data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="distribute skills via a skill-box catalog (option 3)" data-steps-done="0" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Distribute skills via a skill-box catalog (Option 3)</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-12</span>
 </a>
 <a class="gallery-card" href="port-pdf-export-button-to-plan-agent.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="port the pdf export button to plan-agent plans" data-steps-done="5" data-steps-total="5">
+   data-local="port-pdf-export-button-to-plan-agent" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="port the pdf export button to plan-agent plans" data-steps-done="5" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Port the PDF Export Button to plan-agent Plans</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-12</span>
 </a>
 <a class="gallery-card" href="retrofit-responsive-plan-css.html"
-   data-status="completed" data-type="fix" data-effort="high" data-month="2026-06" data-title="retrofit responsive css into every html plan" data-steps-done="6" data-steps-total="6">
+   data-local="retrofit-responsive-plan-css" data-status="completed" data-type="fix" data-effort="high" data-month="2026-06" data-title="retrofit responsive css into every html plan" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Retrofit responsive CSS into every HTML plan</span>
   <span class="r-meta">fix &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-12</span>
 </a>
 <a class="gallery-card" href="add-plans-index-merge-driver.html"
-   data-status="todo" data-type="fix" data-effort="high" data-month="2026-06" data-title="add merge driver for docs/plans/index.html" data-steps-done="0" data-steps-total="5">
+   data-local="add-plans-index-merge-driver" data-status="todo" data-type="fix" data-effort="high" data-month="2026-06" data-title="add merge driver for docs/plans/index.html" data-steps-done="0" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Add merge driver for docs/plans/index.html</span>
   <span class="r-meta">fix &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-10</span>
 </a>
 <a class="gallery-card" href="add-review-findings-walkthrough.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="walkthrough &amp; analysis of review-plan findings" data-steps-done="7" data-steps-total="7">
+   data-local="add-review-findings-walkthrough" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="walkthrough &amp; analysis of review-plan findings" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Walkthrough &amp; analysis of review-plan findings</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-10</span>
 </a>
 <a class="gallery-card" href="embed-markdown-digest-in-html-plans.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="embed a machine-readable markdown digest in every html plan" data-steps-done="8" data-steps-total="8">
+   data-local="embed-markdown-digest-in-html-plans" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="embed a machine-readable markdown digest in every html plan" data-steps-done="8" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Embed a machine-readable markdown digest in every HTML plan</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-10</span>
 </a>
 <a class="gallery-card" href="fix-ship-autonomous-skill-chaining.html"
-   data-status="todo" data-type="fix" data-effort="medium" data-month="2026-06" data-title="fix ship-autonomous skill chaining (claude-code#43809)" data-steps-done="0" data-steps-total="6">
+   data-local="fix-ship-autonomous-skill-chaining" data-status="todo" data-type="fix" data-effort="medium" data-month="2026-06" data-title="fix ship-autonomous skill chaining (claude-code#43809)" data-steps-done="0" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Fix ship-autonomous skill chaining (claude-code#43809)</span>
   <span class="r-meta">fix &middot; medium</span>
   <span class="r-date">2026-06-10</span>
 </a>
 <a class="gallery-card" href="replace-pipeline-with-uml-activity-diagram.html"
-   data-status="todo" data-type="refactor" data-effort="high" data-month="2026-06" data-title="replace the pipeline flow with a uml activity diagram" data-steps-done="0" data-steps-total="6">
+   data-local="replace-pipeline-with-uml-activity-diagram" data-status="todo" data-type="refactor" data-effort="high" data-month="2026-06" data-title="replace the pipeline flow with a uml activity diagram" data-steps-done="0" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Replace the Pipeline Flow with a UML Activity Diagram</span>
   <span class="r-meta">refactor &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-10</span>
 </a>
 <a class="gallery-card" href="add-share-react-skill.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add a share-react skill to social-media-tools" data-steps-done="8" data-steps-total="8">
+   data-local="add-share-react-skill" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add a share-react skill to social-media-tools" data-steps-done="8" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add a share-react skill to social-media-tools</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-09</span>
 </a>
 <a class="gallery-card" href="build-guides-html-in-ci.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="build browsable html for docs/guides in ci" data-steps-done="0" data-steps-total="5">
+   data-local="build-guides-html-in-ci" data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="build browsable html for docs/guides in ci" data-steps-done="0" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Build browsable HTML for docs/guides in CI</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-09</span>
 </a>
 <a class="gallery-card" href="add-multi-host-deploy-targets.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="add multi-host deploy targets to docs-publisher" data-steps-done="0" data-steps-total="6">
+   data-local="add-multi-host-deploy-targets" data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="add multi-host deploy targets to docs-publisher" data-steps-done="0" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Add Multi-Host Deploy Targets to docs-publisher</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-08</span>
 </a>
 <a class="gallery-card" href="add-research-agent-team-review.html"
-   data-status="todo" data-type="untyped" data-effort="" data-month="2026-06" data-title="review: add research agent team to implementation-plan skill" data-steps-done="0" data-steps-total="0">
+   data-local="add-research-agent-team-review" data-status="todo" data-type="untyped" data-effort="" data-month="2026-06" data-title="review: add research agent team to implementation-plan skill" data-steps-done="0" data-steps-total="0">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Review: Add Research Agent Team to implementation-plan skill</span>
   <span class="r-meta">untyped</span>
   <span class="r-date">2026-06-08</span>
 </a>
 <a class="gallery-card" href="add-research-agent-team.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="add research agent team to implementation-plan skill" data-steps-done="0" data-steps-total="12">
+   data-local="add-research-agent-team" data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="add research agent team to implementation-plan skill" data-steps-done="0" data-steps-total="12">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Add Research Agent Team to implementation-plan skill</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-08</span>
 </a>
 <a class="gallery-card" href="add-review-plan-option-to-exit-step.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add a &quot;review the plan&quot; option to the plan exit step" data-steps-done="5" data-steps-total="5">
+   data-local="add-review-plan-option-to-exit-step" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add a &quot;review the plan&quot; option to the plan exit step" data-steps-done="5" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add a &quot;Review the plan&quot; option to the plan exit step</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-06-08</span>
 </a>
 <a class="gallery-card" href="create-docs-publishing-skills.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="create docs publishing skills for plugin users" data-steps-done="0" data-steps-total="9">
+   data-local="create-docs-publishing-skills" data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="create docs publishing skills for plugin users" data-steps-done="0" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Create Docs Publishing Skills for Plugin Users</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-08</span>
 </a>
 <a class="gallery-card" href="publish-plugins-to-dist-repo-daily.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="publish plugin dist to agentics-kit daily" data-steps-done="7" data-steps-total="7">
+   data-local="publish-plugins-to-dist-repo-daily" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="publish plugin dist to agentics-kit daily" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Publish plugin dist to agentics-kit daily</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-08</span>
 </a>
 <a class="gallery-card" href="add-docs-landing-hub-review.html"
-   data-status="todo" data-type="untyped" data-effort="" data-month="2026-06" data-title="review: add a docs landing hub linking the plans and social galleries" data-steps-done="0" data-steps-total="0">
+   data-local="add-docs-landing-hub-review" data-status="todo" data-type="untyped" data-effort="" data-month="2026-06" data-title="review: add a docs landing hub linking the plans and social galleries" data-steps-done="0" data-steps-total="0">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Review: Add a docs landing hub linking the Plans and Social galleries</span>
   <span class="r-meta">untyped</span>
   <span class="r-date">2026-06-07</span>
 </a>
 <a class="gallery-card" href="add-docs-landing-hub.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add a docs landing hub linking the plans and social galleries" data-steps-done="6" data-steps-total="6">
+   data-local="add-docs-landing-hub" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add a docs landing hub linking the plans and social galleries" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add a docs landing hub linking the Plans and Social galleries</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-06-07</span>
 </a>
 <a class="gallery-card" href="add-plan-review-team-skill-review.html"
-   data-status="todo" data-type="untyped" data-effort="" data-month="2026-06" data-title="team review — add a plan-review agent team skill to plan-agent" data-steps-done="0" data-steps-total="0">
+   data-local="add-plan-review-team-skill-review" data-status="todo" data-type="untyped" data-effort="" data-month="2026-06" data-title="team review — add a plan-review agent team skill to plan-agent" data-steps-done="0" data-steps-total="0">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Team Review — Add a plan-review Agent Team skill to plan-agent</span>
   <span class="r-meta">untyped</span>
   <span class="r-date">2026-06-07</span>
 </a>
 <a class="gallery-card" href="fix-review-plan-agent-frontmatter.html"
-   data-status="todo" data-type="fix" data-effort="high" data-month="2026-06" data-title="fix review-plan agent frontmatter and descriptions to match product-plans pattern" data-steps-done="0" data-steps-total="5">
+   data-local="fix-review-plan-agent-frontmatter" data-status="todo" data-type="fix" data-effort="high" data-month="2026-06" data-title="fix review-plan agent frontmatter and descriptions to match product-plans pattern" data-steps-done="0" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Fix review-plan agent frontmatter and descriptions to match product-plans pattern</span>
   <span class="r-meta">fix &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-07</span>
 </a>
 <a class="gallery-card" href="fix-version-bump-ruleset-bypass.html"
-   data-status="todo" data-type="fix" data-effort="medium" data-month="2026-06" data-title="fix auto-version-bump via ruleset bypass" data-steps-done="0" data-steps-total="4">
+   data-local="fix-version-bump-ruleset-bypass" data-status="todo" data-type="fix" data-effort="medium" data-month="2026-06" data-title="fix auto-version-bump via ruleset bypass" data-steps-done="0" data-steps-total="4">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Fix auto-version-bump via ruleset bypass</span>
   <span class="r-meta">fix &middot; medium</span>
   <span class="r-date">2026-06-07</span>
 </a>
 <a class="gallery-card" href="persist-checkbox-state-in-html-attributes-review.html"
-   data-status="todo" data-type="untyped" data-effort="" data-month="2026-06" data-title="review: persist plan-html checkbox state in html attributes" data-steps-done="0" data-steps-total="0">
+   data-local="persist-checkbox-state-in-html-attributes-review" data-status="todo" data-type="untyped" data-effort="" data-month="2026-06" data-title="review: persist plan-html checkbox state in html attributes" data-steps-done="0" data-steps-total="0">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Review: Persist plan-HTML checkbox state in HTML attributes</span>
   <span class="r-meta">untyped</span>
   <span class="r-date">2026-06-07</span>
 </a>
 <a class="gallery-card" href="persist-checkbox-state-in-html-attributes.html"
-   data-status="completed" data-type="refactor" data-effort="medium" data-month="2026-06" data-title="persist plan-html checkbox state in html attributes" data-steps-done="5" data-steps-total="5">
+   data-local="persist-checkbox-state-in-html-attributes" data-status="completed" data-type="refactor" data-effort="medium" data-month="2026-06" data-title="persist plan-html checkbox state in html attributes" data-steps-done="5" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Persist plan-HTML checkbox state in HTML attributes</span>
   <span class="r-meta">refactor &middot; medium</span>
   <span class="r-date">2026-06-07</span>
 </a>
 <a class="gallery-card" href="publish-plans-to-github-pages-review.html"
-   data-status="todo" data-type="untyped" data-effort="" data-month="2026-06" data-title="review: publish html plans to github pages" data-steps-done="0" data-steps-total="0">
+   data-local="publish-plans-to-github-pages-review" data-status="todo" data-type="untyped" data-effort="" data-month="2026-06" data-title="review: publish html plans to github pages" data-steps-done="0" data-steps-total="0">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Review: Publish HTML plans to GitHub Pages</span>
   <span class="r-meta">untyped</span>
   <span class="r-date">2026-06-07</span>
 </a>
 <a class="gallery-card" href="publish-plans-to-github-pages.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="publish html plans to github pages" data-steps-done="7" data-steps-total="7">
+   data-local="publish-plans-to-github-pages" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="publish html plans to github pages" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Publish HTML plans to GitHub Pages</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-07</span>
 </a>
 <a class="gallery-card" href="add-markdown-plan-conversion.html"
-   data-status="todo" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add markdown-source conversion to the implementation-plan skill" data-steps-done="0" data-steps-total="6">
+   data-local="add-markdown-plan-conversion" data-status="todo" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add markdown-source conversion to the implementation-plan skill" data-steps-done="0" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Add markdown-source conversion to the implementation-plan skill</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-06-06</span>
 </a>
 <a class="gallery-card" href="add-pdf-export-to-html-plans.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add pdf export to html plans" data-steps-done="6" data-steps-total="6">
+   data-local="add-pdf-export-to-html-plans" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add pdf export to html plans" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add PDF Export to HTML Plans</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-06-06</span>
 </a>
 <a class="gallery-card" href="add-plan-review-team-skill.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add a plan-review agent team skill to plan-agent" data-steps-done="9" data-steps-total="9">
+   data-local="add-plan-review-team-skill" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add a plan-review agent team skill to plan-agent" data-steps-done="9" data-steps-total="9">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add a plan-review Agent Team skill to plan-agent</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-06</span>
 </a>
 <a class="gallery-card" href="add-tests-section-to-plans.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add tests section to implementation plans" data-steps-done="7" data-steps-total="7">
+   data-local="add-tests-section-to-plans" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="add tests section to implementation plans" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add Tests section to implementation plans</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-06</span>
 </a>
 <a class="gallery-card" href="publish-clean-main-from-develop-branch.html"
-   data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="publish a clean main branch from a develop workspace" data-steps-done="0" data-steps-total="8">
+   data-local="publish-clean-main-from-develop-branch" data-status="todo" data-type="feature" data-effort="high" data-month="2026-06" data-title="publish a clean main branch from a develop workspace" data-steps-done="0" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Publish a clean main branch from a develop workspace</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-06</span>
 </a>
 <a class="gallery-card" href="add-visual-components-to-plan-skill.html"
-   data-status="completed" data-type="feature" data-effort="" data-month="2026-06" data-title="add visual components (file-tree, diagrams, charts, tables) to the implementation-plan skill" data-steps-done="6" data-steps-total="6">
+   data-local="add-visual-components-to-plan-skill" data-status="completed" data-type="feature" data-effort="" data-month="2026-06" data-title="add visual components (file-tree, diagrams, charts, tables) to the implementation-plan skill" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add visual components (file-tree, diagrams, charts, tables) to the implementation-plan skill</span>
   <span class="r-meta">feature</span>
   <span class="r-date">2026-06-05</span>
 </a>
 <a class="gallery-card" href="build-clean-plugin-dist.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="publish a clean plugin distribution repo" data-steps-done="6" data-steps-total="6">
+   data-local="build-clean-plugin-dist" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="publish a clean plugin distribution repo" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Publish a clean plugin distribution repo</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-05</span>
 </a>
 <a class="gallery-card" href="refine-social-copy-instructional.html"
-   data-status="completed" data-type="refactor" data-effort="medium" data-month="2026-06" data-title="refine social-media-tools copy to teach, not just promote" data-steps-done="6" data-steps-total="6">
+   data-local="refine-social-copy-instructional" data-status="completed" data-type="refactor" data-effort="medium" data-month="2026-06" data-title="refine social-media-tools copy to teach, not just promote" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Refine social-media-tools copy to teach, not just promote</span>
   <span class="r-meta">refactor &middot; medium</span>
   <span class="r-date">2026-06-05</span>
 </a>
 <a class="gallery-card" href="convert-keeper-plans-to-html.html"
-   data-status="todo" data-type="chore" data-effort="medium" data-month="2026-06" data-title="convert 24 keeper markdown plans to html and set up retention routine" data-steps-done="0" data-steps-total="6">
+   data-local="convert-keeper-plans-to-html" data-status="todo" data-type="chore" data-effort="medium" data-month="2026-06" data-title="convert 24 keeper markdown plans to html and set up retention routine" data-steps-done="0" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Convert 24 keeper markdown plans to HTML and set up retention routine</span>
   <span class="r-meta">chore &middot; medium</span>
   <span class="r-date">2026-06-04</span>
 </a>
 <a class="gallery-card" href="create-prompt-refiner-skill.html"
-   data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="create refine-prompt skill" data-steps-done="8" data-steps-total="8">
+   data-local="create-prompt-refiner-skill" data-status="completed" data-type="feature" data-effort="high" data-month="2026-06" data-title="create refine-prompt skill" data-steps-done="8" data-steps-total="8">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Create refine-prompt skill</span>
   <span class="r-meta">feature &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-04</span>
 </a>
 <a class="gallery-card" href="add-codebase-explain-skill.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add explain-codebase skill to social-media-tools" data-steps-done="4" data-steps-total="4">
+   data-local="add-codebase-explain-skill" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="add explain-codebase skill to social-media-tools" data-steps-done="4" data-steps-total="4">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add explain-codebase skill to social-media-tools</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-06-03</span>
 </a>
 <a class="gallery-card" href="add-image-dialog-modal.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="open gallery images in a native dialog modal" data-steps-done="4" data-steps-total="4">
+   data-local="add-image-dialog-modal" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-06" data-title="open gallery images in a native dialog modal" data-steps-done="4" data-steps-total="4">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Open gallery images in a native dialog modal</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-06-03</span>
 </a>
 <a class="gallery-card" href="enable-model-invocation-for-implementation-plan.html"
-   data-status="completed" data-type="chore" data-effort="medium" data-month="2026-06" data-title="make implementation-plan model-invocable without colliding with plan mode" data-steps-done="5" data-steps-total="5">
+   data-local="enable-model-invocation-for-implementation-plan" data-status="completed" data-type="chore" data-effort="medium" data-month="2026-06" data-title="make implementation-plan model-invocable without colliding with plan mode" data-steps-done="5" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Make implementation-plan model-invocable without colliding with Plan Mode</span>
   <span class="r-meta">chore &middot; medium</span>
   <span class="r-date">2026-06-03</span>
 </a>
 <a class="gallery-card" href="add-image-link-media-library-gallery.html"
-   data-status="completed" data-type="feature" data-effort="low" data-month="2026-06" data-title="add &quot;view image&quot; link to media-library gallery cards" data-steps-done="2" data-steps-total="2">
+   data-local="add-image-link-media-library-gallery" data-status="completed" data-type="feature" data-effort="low" data-month="2026-06" data-title="add &quot;view image&quot; link to media-library gallery cards" data-steps-done="2" data-steps-total="2">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add &quot;View image&quot; link to media-library gallery cards</span>
   <span class="r-meta">feature &middot; low</span>
   <span class="r-date">2026-06-02</span>
 </a>
 <a class="gallery-card" href="widen-social-card-templates-to-1024px.html"
-   data-status="completed" data-type="chore" data-effort="high" data-month="2026-06" data-title="widen social card templates to 1024px" data-steps-done="7" data-steps-total="7">
+   data-local="widen-social-card-templates-to-1024px" data-status="completed" data-type="chore" data-effort="high" data-month="2026-06" data-title="widen social card templates to 1024px" data-steps-done="7" data-steps-total="7">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Widen Social Card Templates to 1024px</span>
   <span class="r-meta">chore &middot; <span class="hi">high</span></span>
   <span class="r-date">2026-06-01</span>
 </a>
 <a class="gallery-card" href="add-issue-ingestion-to-planning-skill.html"
-   data-status="completed" data-type="feature" data-effort="" data-month="2026-05" data-title="add issue ingestion to /plan-agent:planning" data-steps-done="5" data-steps-total="5">
+   data-local="add-issue-ingestion-to-planning-skill" data-status="completed" data-type="feature" data-effort="" data-month="2026-05" data-title="add issue ingestion to /plan-agent:planning" data-steps-done="5" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add Issue Ingestion to /plan-agent:planning</span>
   <span class="r-meta">feature</span>
   <span class="r-date">2026-05-31</span>
 </a>
 <a class="gallery-card" href="add-security-scrub-user-gate.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add user gate to security-scrub skill" data-steps-done="5" data-steps-total="5">
+   data-local="add-security-scrub-user-gate" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add user gate to security-scrub skill" data-steps-done="5" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add User Gate to security-scrub Skill</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-05-31</span>
 </a>
 <a class="gallery-card" href="add-hook-to-rebuild-plans-index.html"
-   data-status="todo" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add posttooluse hook to auto-rebuild the plans index" data-steps-done="0" data-steps-total="5">
+   data-local="add-hook-to-rebuild-plans-index" data-status="todo" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add posttooluse hook to auto-rebuild the plans index" data-steps-done="0" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Add PostToolUse Hook to Auto-Rebuild the Plans Index</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-05-30</span>
 </a>
 <a class="gallery-card" href="add-plans-library-to-plan-agent.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add plans-library skill to plan-agent" data-steps-done="6" data-steps-total="6">
+   data-local="add-plans-library-to-plan-agent" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add plans-library skill to plan-agent" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add plans-library Skill to plan-agent</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-05-30</span>
 </a>
 <a class="gallery-card" href="add-sample-widget.html"
-   data-status="todo" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add sample widget to dashboard" data-steps-done="0" data-steps-total="4">
+   data-local="add-sample-widget" data-status="todo" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add sample widget to dashboard" data-steps-done="0" data-steps-total="4">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Add Sample Widget to Dashboard</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-05-30</span>
 </a>
 <a class="gallery-card" href="create-plans-index-page.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-05" data-title="create plans index page" data-steps-done="4" data-steps-total="4">
+   data-local="create-plans-index-page" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-05" data-title="create plans index page" data-steps-done="4" data-steps-total="4">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Create Plans Index Page</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-05-30</span>
 </a>
 <a class="gallery-card" href="fix-planning-html-output.html"
-   data-status="completed" data-type="fix" data-effort="" data-month="2026-05" data-title="fix planning skill html output" data-steps-done="3" data-steps-total="3">
+   data-local="fix-planning-html-output" data-status="completed" data-type="fix" data-effort="" data-month="2026-05" data-title="fix planning skill html output" data-steps-done="3" data-steps-total="3">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Fix planning skill HTML output</span>
   <span class="r-meta">fix</span>
   <span class="r-date">2026-05-30</span>
 </a>
 <a class="gallery-card" href="sample-add-user-profile-page.html"
-   data-status="todo" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add user profile page with avatar upload" data-steps-done="0" data-steps-total="6">
+   data-local="sample-add-user-profile-page" data-status="todo" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add user profile page with avatar upload" data-steps-done="0" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Add user profile page with avatar upload</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-05-30</span>
 </a>
 <a class="gallery-card" href="add-background-mode-social-skills.html"
-   data-status="completed" data-type="feature" data-effort="" data-month="2026-05" data-title="close background-mode gaps for social-media-tools skills" data-steps-done="6" data-steps-total="6">
+   data-local="add-background-mode-social-skills" data-status="completed" data-type="feature" data-effort="" data-month="2026-05" data-title="close background-mode gaps for social-media-tools skills" data-steps-done="6" data-steps-total="6">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Close background-mode gaps for social-media-tools skills</span>
   <span class="r-meta">feature</span>
   <span class="r-date">2026-05-28</span>
 </a>
 <a class="gallery-card" href="add-reinvoke-prompt-to-plan-output.html"
-   data-status="completed" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add re-invoke prompt to plan output" data-steps-done="5" data-steps-total="5">
+   data-local="add-reinvoke-prompt-to-plan-output" data-status="completed" data-type="feature" data-effort="medium" data-month="2026-05" data-title="add re-invoke prompt to plan output" data-steps-done="5" data-steps-total="5">
   <span class="glyph" aria-hidden="true">&#10003;</span><span class="sr-only">completed</span>
   <span class="r-title">Add re-invoke prompt to plan output</span>
   <span class="r-meta">feature &middot; medium</span>
   <span class="r-date">2026-05-28</span>
 </a>
 <a class="gallery-card" href="add-rejection-remediation-prompt-review.html"
-   data-status="todo" data-type="untyped" data-effort="" data-month="2026-05" data-title="add rejection remediation prompt to plan-review-agents" data-steps-done="0" data-steps-total="0">
+   data-local="add-rejection-remediation-prompt-review" data-status="todo" data-type="untyped" data-effort="" data-month="2026-05" data-title="add rejection remediation prompt to plan-review-agents" data-steps-done="0" data-steps-total="0">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Add rejection remediation prompt to plan-review-agents</span>
   <span class="r-meta">untyped</span>
   <span class="r-date">2026-05-18</span>
 </a>
 <a class="gallery-card" href="rename-plan-to-html-to-markdown-to-html-review.html"
-   data-status="todo" data-type="untyped" data-effort="" data-month="2026-05" data-title="rename plan-to-html → markdown-to-html — panel review" data-steps-done="0" data-steps-total="0">
+   data-local="rename-plan-to-html-to-markdown-to-html-review" data-status="todo" data-type="untyped" data-effort="" data-month="2026-05" data-title="rename plan-to-html → markdown-to-html — panel review" data-steps-done="0" data-steps-total="0">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Rename plan-to-html → markdown-to-html — Panel Review</span>
   <span class="r-meta">untyped</span>
   <span class="r-date">2026-05-18</span>
 </a>
 <a class="gallery-card" href="add-html-output-to-plan-review-agents-review.html"
-   data-status="todo" data-type="untyped" data-effort="" data-month="2026-05" data-title="emit self-contained html artifact from plan-review-agents" data-steps-done="0" data-steps-total="0">
+   data-local="add-html-output-to-plan-review-agents-review" data-status="todo" data-type="untyped" data-effort="" data-month="2026-05" data-title="emit self-contained html artifact from plan-review-agents" data-steps-done="0" data-steps-total="0">
   <span class="glyph" aria-hidden="true">&#9675;</span><span class="sr-only">todo</span>
   <span class="r-title">Emit self-contained HTML artifact from plan-review-agents</span>
   <span class="r-meta">untyped</span>
@@ -1412,8 +1425,8 @@
     <div class="no-results" id="noResults">No items match your search.</div>
 
     <div class="gallery-footer">
-      <span>110 items</span>
-      <span>Generated 2026-08-22 15:04</span>
+      <span>111 items</span>
+      <span>Generated 2026-08-25 07:16</span>
     </div>
 
     <script>

@@ -1,0 +1,2510 @@
+<!DOCTYPE html>
+<html lang="en" data-status="in-progress" data-effort="high">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Runs in <head> before the first paint, on purpose: a plan opened from
+   file:// has no server to stamp the attribute, and a flash of the wrong
+   theme on every load is worse than having no dark mode at all. Storage
+   throws in some sandboxed file:// contexts — fall through to
+   prefers-color-scheme rather than blocking the render. */
+try {
+  var t = localStorage.getItem('plan-theme');
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+} catch (e) { /* no storage — prefers-color-scheme decides */ }
+</script>
+<meta name="plan-status" content="in-progress">
+<meta name="plan-effort" content="high">
+<meta name="plan-type" content="feature">
+<meta name="plan-created" content="2026-08-24">
+<meta name="plan-repo" content="agentics">
+<meta name="plan-file" content="add-artifact-default-plan-publishing.html">
+<meta name="plan-path" content="docs/plans/add-artifact-default-plan-publishing.html">
+<meta name="plan-md" content="docs/plans/add-artifact-default-plan-publishing.md">
+<meta name="plan-implement" content="Read and implement all steps in the plan at docs/plans/add-artifact-default-plan-publishing.md — Publish plans as artifacts by default. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-artifact-default-plan-publishing.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-goal" content="Achieve this goal: Publish plans as artifacts by default. The plan at docs/plans/add-artifact-default-plan-publishing.md describes one approach — use it as reference, but optimize for the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-artifact-default-plan-publishing.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.">
+<meta name="plan-issue" content="https://github.com/shawn-sandy/agentics/issues/600">
+<title>Plan: Publish plans as artifacts by default</title>
+<style>
+/* ── Design tokens ─────────────────────────────────────────────────
+     Indigo-violet lead on warm-neutral paper. Status is carried by form
+     (soft fill + rule) rather than a second colour scale, so every status
+     chip inherits the theme instead of pinning white text onto a hue that
+     only works on one background. Type has three roles: --mono for every
+     structural label, --ui for chrome, --prose for reading text.
+     Contrast is a hard constraint, not a preference — every text token
+     below clears 4.5:1 on the surfaces it is used against in BOTH
+     palettes, and tests/plugins/test-plan-redesign.mjs measures it. ── */
+  :root {
+    --paper:      #fbfbfd;
+    --panel:      #ffffff;
+    --sunk:       #f4f4f8;
+    --ink:        #14141c;
+    --ink-2:      #494959;
+    --ink-3:      #63637a;
+    --rule:       #e4e4ee;
+    --rule-soft:  #f0f0f6;
+    --accent:     #3730c4;
+    --accent-soft:#eeedfb;
+    --accent-line:#c6c2f0;
+    --on-accent:  #ffffff;
+    --moss:       #2c6a44;
+    --moss-soft:  #ecf4ef;
+    --moss-line:  #c0dccb;
+    --signal:     #8a5209;
+    --signal-soft:#fbf3e6;
+    --signal-line:#e8d3ac;
+    --red:        #b42318;
+    --red-bg:     #fdf1f0;
+    --red-border: #edc4bf;
+    --purple:     #3730c4;
+    --purple-bg:  #eeedfb;
+    --purple-border:#c6c2f0;
+    --wish-bg:    #f4f4f8;
+    --wish-border:#c6c2f0;
+    --radius:     4px;
+    --shadow:     0 1px 2px rgba(20,20,28,.05);
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --ui:   system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    /* Prose is the UI stack on purpose. It used to be Georgia, which collided
+       with the mono code spans that saturate plan prose — the corpus carries
+       3,000+ of them, so a serif/mono clash was the page's dominant texture.
+       No webfont: the Artifact CSP blocks font CDNs, and inlining a face as a
+       data URI would add six figures of bytes to each of ~100 committed plan
+       files. Character comes from scale, weight, and tracking instead. */
+    --prose: var(--ui);
+  }
+
+  /* Dark palette. Written twice on purpose: an explicit choice
+     ([data-theme]) has to beat the OS preference, and plain CSS has no way
+     to share one declaration block between an attribute selector and a
+     media query. Keep the two lists in sync — the redesign test asserts
+     both selectors define the same token names. */
+  :root[data-theme="dark"] {
+    --paper:      #0f0f16;
+    --panel:      #17171f;
+    --sunk:       #1d1d27;
+    --ink:        #ecebf2;
+    --ink-2:      #b2b0c2;
+    --ink-3:      #8a889c;
+    --rule:       #2a2a36;
+    --rule-soft:  #22222c;
+    --accent:     #a8a2f5;
+    --accent-soft:#1f1d33;
+    --accent-line:#454070;
+    --on-accent:  #14141c;
+    --moss:       #7cc099;
+    --moss-soft:  #17271e;
+    --moss-line:  #2e4838;
+    --signal:     #e0a86a;
+    --signal-soft:#271e12;
+    --signal-line:#4a3820;
+    --red:        #f4998f;
+    --red-bg:     #2a1918;
+    --red-border: #4c2a26;
+    --purple:     #a8a2f5;
+    --purple-bg:  #1f1d33;
+    --purple-border:#454070;
+    --wish-bg:    #1f1d33;
+    --wish-border:#454070;
+    --shadow:     0 1px 2px rgba(0,0,0,.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #0f0f16;
+      --panel:      #17171f;
+      --sunk:       #1d1d27;
+      --ink:        #ecebf2;
+      --ink-2:      #b2b0c2;
+      --ink-3:      #8a889c;
+      --rule:       #2a2a36;
+      --rule-soft:  #22222c;
+      --accent:     #a8a2f5;
+      --accent-soft:#1f1d33;
+      --accent-line:#454070;
+      --on-accent:  #14141c;
+      --moss:       #7cc099;
+      --moss-soft:  #17271e;
+      --moss-line:  #2e4838;
+      --signal:     #e0a86a;
+      --signal-soft:#271e12;
+      --signal-line:#4a3820;
+      --red:        #f4998f;
+      --red-bg:     #2a1918;
+      --red-border: #4c2a26;
+      --purple:     #a8a2f5;
+      --purple-bg:  #1f1d33;
+      --purple-border:#454070;
+      --wish-bg:    #1f1d33;
+      --wish-border:#454070;
+      --shadow:     0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  /* Native controls (checkboxes, scrollbars) follow the resolved theme. */
+  :root { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
+  }
+
+  /* ── Reset & base ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  a { color: var(--accent); }
+  code, pre {
+    font-family: var(--mono);
+    font-size: .875em;
+  }
+  /* Inline spans rendered from backtick markers in plan prose. Scoped to .md
+     so the bare <code> carrying file paths and copyable prompts keeps its own
+     layout — those live inside chips and rows that already style themselves.
+     No backticks in this comment: the whole stylesheet is a JS template. */
+  /* Deliberately quiet. A plan paragraph routinely carries five or six of
+     these; with a fill AND a border each they turned running prose into a
+     barcode, which was the loudest thing on the page. Tint only, no border,
+     and a hair smaller than the surrounding text. */
+  code.md {
+    background: var(--sunk);
+    border-radius: 3px;
+    padding: .1em .3em;
+    font-size: .85em;
+    color: var(--ink);
+    /* Long paths must wrap rather than force the card into a sideways scroll. */
+    overflow-wrap: anywhere;
+  }
+  strong.md { font-weight: 650; color: var(--ink); }
+  em.md { font-style: italic; }
+  pre {
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: .75rem 1rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── SVG icon helper ────────────────────────────────────────────── */
+  .icon {
+    width: 1rem;
+    height: 1rem;
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* ── Skip link ─────────────────────────────────────────────────── */
+  .skip-link {
+    position: absolute;
+    left: -9999px; top: auto;
+    width: 1px; height: 1px;
+    overflow: hidden;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem; top: 1rem;
+    width: auto; height: auto;
+    overflow: visible;
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: .5rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 700;
+    z-index: 9999;
+    text-decoration: none;
+  }
+
+  /* ── Header — document cover ────────────────────────────────────── */
+  .plan-header {
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+    padding: 0;
+  }
+  .plan-header::before {
+    content: "";
+    display: block;
+    height: 3px;
+    background: var(--accent);
+  }
+  .plan-header-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 1.75rem 1.5rem 1.5rem;
+  }
+  .plan-doc-type {
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .6rem;
+  }
+  .plan-header-top {
+    display: block;
+  }
+  /* Sans, not mono. A 2.2rem monospaced headline read as a terminal dump
+     rather than a document title; the weight and the tight tracking carry
+     the emphasis instead. */
+  .plan-title {
+    font-size: clamp(1.7rem, 4vw, 2.35rem);
+    font-weight: 700;
+    letter-spacing: -.028em;
+    line-height: 1.12;
+    color: var(--ink);
+    max-width: 24ch;
+    text-wrap: balance;
+  }
+  /* State reads before controls. The markup order is fixed by the renderer
+     (buttons, then badges), so the visual order is set here rather than by
+     moving nodes the extractor and the gallery both walk. */
+  .plan-header-actions {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+  .plan-header-actions .status-badge { order: 1; }
+  .plan-header-actions .effort-badge { order: 2; }
+  .plan-header-actions .save-pdf-btn { order: 3; margin-left: auto; }
+  .plan-header-actions .theme-toggle { order: 4; }
+  @media (max-width: 560px) {
+    .plan-header-actions .save-pdf-btn { margin-left: 0; }
+  }
+
+  /* Status badge */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+  }
+  .status-badge::before {
+    content: "";
+    display: inline-block;
+    width: .45em;
+    height: .45em;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  [data-status="in-progress"] .status-badge { color: var(--signal); background: var(--signal-soft); border-color: var(--signal-line); }
+  [data-status="completed"]   .status-badge { color: var(--moss);   background: var(--moss-soft);   border-color: var(--moss-line); }
+
+  /* Effort badge — color tracks the data-effort attribute, mirroring .status-badge */
+  .effort-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+  }
+  .effort-badge::before { content: "Effort "; opacity: .7; }
+  [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
+  [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
+  [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
+
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  [data-status="in-progress"] .status-badge::before {
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    [data-status="in-progress"] .status-badge::before { animation: none; }
+  }
+
+  /* Save as PDF button */
+  .save-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem 1rem;
+    font-size: .75rem;
+    font-weight: 600;
+    font-family: var(--mono);
+    color: var(--on-accent);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: filter .15s, box-shadow .15s;
+  }
+  .save-pdf-btn:hover { filter: brightness(1.12); }
+  .save-pdf-btn:active { filter: brightness(.92); }
+  .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
+
+  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: .4rem .9rem;
+    font-family: var(--mono);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Meta row */
+  .plan-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-2);
+  }
+  .plan-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+  }
+  .plan-meta .icon { opacity: .55; }
+
+  /* ── Layout ────────────────────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: 3.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+    align-items: start;
+  }
+  /* 900, not 720: the sidebar now carries a step rail and is 15rem wide, so
+     between those two widths the main column was narrow enough to break a
+     copyable path across four lines. Collapse to one column sooner. */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; padding: 1.5rem .75rem 4rem; gap: 0; }
+  }
+
+  /* ── Sidebar — table of contents ───────────────────────────────── */
+  .plan-nav {
+    position: sticky;
+    top: 1.5rem;
+    align-self: start;
+    overflow: hidden;
+  }
+  @media (max-width: 900px) {
+    .plan-nav {
+      position: static;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+  }
+  .nav-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .6rem;
+    margin-bottom: .25rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .scroll-rail {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--rule);
+    border-radius: 1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .scroll-rail::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: calc(var(--scroll-pct, 0) * 1%);
+    background: var(--accent);
+    transition: height .1s linear;
+  }
+  @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
+  .plan-nav ul { list-style: none; padding: 0; margin: 0; }
+  .plan-nav > ul > li > a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: .125rem 1rem .125rem 1.25rem;
+    font-size: .825rem;
+    color: var(--ink-2);
+    text-decoration: none;
+    gap: .5rem;
+    border-left: 2px solid transparent;
+    transition: color .12s, border-color .12s;
+  }
+  .plan-nav a:hover { color: var(--ink); border-left-color: var(--accent-line); }
+  .plan-nav a.active { color: var(--accent); font-weight: 600; border-left-color: var(--accent); }
+  .plan-nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .plan-nav .icon { opacity: .65; }
+  .plan-nav a.active .icon,
+  .plan-nav a:hover .icon { opacity: 1; }
+
+  /* ── Step rail — one link per step, the plan's real structure ───── */
+  .rail-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: .5rem;
+    margin-top: .75rem;
+  }
+  .rail-heading {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 0 1rem .45rem 1.25rem;
+  }
+  a.rail-step {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .3rem 1rem .3rem 1.25rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid var(--rule-soft);
+    transition: color .12s, border-color .12s;
+  }
+  @media (prefers-reduced-motion: reduce) { a.rail-step { transition: none; } }
+  a.rail-step .rail-no {
+    font-family: var(--mono);
+    font-size: .7rem;
+    color: var(--ink-3);
+  }
+  a.rail-step .rail-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rail-step.done .rail-no { color: var(--moss); }
+  a.rail-step.done .rail-text { color: var(--ink-3); }
+  a.rail-step.active {
+    color: var(--ink);
+    font-weight: 600;
+    border-left-color: var(--accent);
+    background: linear-gradient(90deg, var(--accent-soft), transparent 75%);
+  }
+  a.rail-step.active .rail-no { color: var(--accent); }
+  /* Visually-hidden step state — the tick glyph alone tells a screen reader
+     nothing, so every rail link carries "step N of M[, done]" in text. */
+  .rail-state {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* Once the sidebar stops being a sidebar the step list collapses into a
+     disclosure rather than disappearing — a phone reader keeps every jump
+     target. The element ships OPEN and the inline script closes it below the
+     breakpoint: a closed-by-default <details> would hide the whole rail on
+     desktop when scripting is off, and no-JS-on-mobile only costs some
+     scrolling. */
+  .rail-disclosure { margin-top: .75rem; }
+  .rail-disclosure > summary {
+    display: none;
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    padding: 0 1rem 0 1.25rem;
+  }
+  .rail-disclosure > summary::-webkit-details-marker { display: none; }
+  .rail-disclosure > summary::before { content: "▶"; font-size: .55em; }
+  .rail-disclosure[open] > summary::before { content: "▼"; }
+  @media (max-width: 900px) {
+    .rail-disclosure > summary { display: flex; }
+  }
+
+  /* ── Objective card — executive summary ────────────────────────── */
+  /* A lead statement, not a slab. The filled panel put a saturated block of
+     colour directly above the green Implement row, so the page opened on two
+     competing fills before a word of content. One accent rule carries the
+     same "this is the point" signal at a fraction of the noise. */
+  .objective-card {
+    background: transparent;
+    border: 0;
+    border-left: 2px solid var(--accent);
+    border-radius: 0;
+    padding: .1rem 0 .1rem 1.25rem;
+    margin-bottom: 2rem;
+    color: var(--ink);
+  }
+  .objective-card > p {
+    font-size: 1.15rem;
+    line-height: 1.5;
+    letter-spacing: -.011em;
+    color: var(--ink);
+    max-width: 62ch;
+    text-wrap: pretty;
+  }
+  .objective-card .section-label,
+  .plan-glance-label {
+    font-family: var(--mono);
+    font-size: .625rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .5rem;
+  }
+
+  /* ── At a glance — the plain-language register of the same goal, nested
+        inside #objective so the reader meets one summary, not two. ────── */
+  .plan-glance {
+    margin-top: 1rem;
+    padding-top: .85rem;
+    border-top: 1px solid var(--rule);
+    max-width: 66ch;
+  }
+  .plan-glance p { margin: 0; color: var(--ink-2); font-size: .92rem; line-height: 1.65; }
+
+  /* ── Progress bar ──────────────────────────────────────────────── */
+  .progress-wrap {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .6rem;
+    font-family: var(--mono);
+    font-size: .65rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    letter-spacing: .16em;
+  }
+  .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--accent);
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .progress-bar-fill { transition: none; }
+  }
+
+  /* ── Document sections ─────────────────────────────────────────── */
+  .section-card {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--rule);
+    border-radius: 0;
+    padding: 2rem 0 1.25rem;
+    margin-bottom: 0;
+    box-shadow: none;
+  }
+  .section-card:first-of-type { border-top: none; }
+  .section-card h2 {
+    font-size: 1.05rem;
+    font-weight: 650;
+    letter-spacing: -.015em;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+  .section-card h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .section-card h2 .icon { opacity: .75; }
+  .section-card .section-intro {
+    font-size: .85rem;
+    color: var(--ink-2);
+    margin: -1rem 0 1.25rem;
+  }
+  .section-card p {
+    margin-bottom: .75rem;
+    /* Reading text sits in the primary ink. It was --ink-2, which set every
+       paragraph of the document one step back from the labels around it. */
+    color: var(--ink);
+    font-size: .975rem;
+    line-height: 1.68;
+    max-width: 68ch;
+  }
+  .section-card p.section-intro { font-family: var(--ui); font-size: .85rem; }
+  .section-card p strong.md { color: var(--ink); }
+  .section-card p:last-child { margin-bottom: 0; }
+  .section-card ul, .section-card ol {
+    padding-left: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+
+  /* ── Steps ──────────────────────────────────────────────────────── */
+  .steps-list { display: flex; flex-direction: column; }
+
+  /* Records, not cards: a rule between steps, no box and no dotted
+     timeline. The sidebar rail is the page's one progress device now. */
+  .step-card {
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    padding: 1.05rem 0;
+    box-shadow: none;
+    position: relative;
+    scroll-margin-top: 1.5rem;
+  }
+  .step-card:first-child { border-top: 0; }
+
+  .step-card-header { display: flex; align-items: flex-start; gap: .75rem; }
+  .step-number {
+    flex-shrink: 0;
+    width: 2rem;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    font-size: .8rem;
+    font-weight: 600;
+    padding-top: .12rem;
+  }
+  .step-card.completed .step-number { color: var(--moss); }
+  .step-body { flex: 1; min-width: 0; }
+  /* Emphasised body, not a heading. At 600 across a full-width line the
+     action out-shouted the section headings above it, and a plan of twelve
+     steps read as twelve headlines. */
+  .step-action {
+    /* 500, not 550: the system stack has no variable axis here, so 550 snaps
+       to semibold and the step reads as a heading again. */
+    font-weight: 500;
+    font-size: .95rem;
+    line-height: 1.6;
+    margin-bottom: .35rem;
+    display: flex;
+    align-items: baseline;
+    gap: .45rem;
+    flex-wrap: wrap;
+    color: var(--ink);
+  }
+  .step-chip {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: .58rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    padding: .12em .5em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
+    vertical-align: middle;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .step-card.completed .step-chip {
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
+  }
+  .step-chip-text { flex: 1; }
+
+  /* Why and Verify are both always visible. Verify is the line a reader
+     needs WHILE executing the step — putting it behind a disclosure was the
+     single worst call in the previous shell. */
+  .step-note {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .1rem .75rem;
+    margin-top: .5rem;
+    font-size: .85rem;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .step-note > .step-note-label {
+    font-family: var(--mono);
+    font-size: .6rem;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: .25rem;
+  }
+  .step-verify > .step-note-label { color: var(--accent); }
+  @media (max-width: 560px) {
+    .step-note { grid-template-columns: 1fr; gap: .1rem; }
+  }
+
+  /* ── Acceptance criteria ───────────────────────────────────────── */
+  .criteria-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .criteria-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--panel);
+    transition: background .12s;
+  }
+  .criteria-list li:has(input:checked) { background: var(--sunk); }
+  .criteria-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--moss);
+    cursor: pointer;
+  }
+  .criteria-list label { cursor: pointer; font-size: .9rem; }
+  .criteria-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
+
+  /* ── Completion checklist ────────────────────────────────────── */
+  .completion-checklist {
+    background: var(--panel);
+    border: 2px solid var(--signal);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-top: 1rem;
+  }
+  .completion-checklist.all-complete { border-color: var(--moss); }
+  .completion-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+  .completion-badge {
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    background: var(--signal-soft);
+    color: var(--signal);
+    border: 1px solid var(--signal-line);
+  }
+  .completion-checklist.all-complete .completion-badge {
+    background: var(--moss-soft);
+    color: var(--moss);
+    border-color: var(--moss-line);
+  }
+  .completion-list {
+    list-style: none; padding: 0;
+    display: flex; flex-direction: column; gap: .6rem;
+  }
+  .completion-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--panel);
+    transition: background .12s;
+  }
+  .completion-list li:has(input:checked) { background: var(--sunk); }
+  .completion-list input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem; height: 1rem;
+    margin-top: .2rem;
+    accent-color: var(--moss);
+  }
+  .completion-list label { font-size: .9rem; }
+  .completion-list input:checked + label { text-decoration: line-through; color: var(--ink-2); }
+  @media (prefers-reduced-motion: reduce) {
+    .completion-list li { transition: none; }
+  }
+
+  /* ── Completion report ─────────────────────────────────────── */
+  .completion-report {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+  .report-heading {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin-bottom: .75rem;
+  }
+  .report-empty {
+    font-style: italic;
+    color: var(--ink-3);
+    font-size: .875rem;
+  }
+  .report-list { margin: 0; padding: 0; }
+  .report-list dt {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: .875rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .75rem;
+  }
+  .report-list dt:first-child { margin-top: 0; }
+  .report-list dt::before {
+    content: "";
+    display: inline-block;
+    width: .5rem; height: .5rem;
+    border-radius: 50%;
+    background: var(--red);
+    flex-shrink: 0;
+  }
+  .report-list dd {
+    color: var(--ink-2);
+    font-size: .85rem;
+    margin-left: .9rem;
+    margin-top: .2rem;
+    margin-bottom: 0;
+  }
+
+  /* ── Next steps ────────────────────────────────────────────────── */
+  .next-steps-list { padding: 0; display: flex; flex-direction: column; gap: .75rem; }
+  .next-step-item {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--panel);
+  }
+  .next-step-item summary {
+    font-weight: 600;
+    font-size: .9rem;
+    padding: .75rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--panel);
+    user-select: none;
+    min-height: 44px;
+  }
+  .next-step-item summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
+  .next-step-item[open] summary::before { transform: rotate(90deg); }
+  .next-step-prompt { padding: .75rem 1rem 1rem; background: var(--sunk); border-top: 1px solid var(--rule); }
+  .next-step-prompt p { font-size: .8rem; color: var(--ink-2); margin-bottom: .5rem; }
+  .next-step-prompt pre { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .next-step-item summary::before { transition: none; } }
+
+  /* ── Copy prompt button ─────────────────────────────────────── */
+  .copy-prompt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-top: .6rem;
+    padding: .3rem .75rem;
+    font-size: .775rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+  .copy-prompt-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+  .copy-prompt-btn:active { background: var(--accent-line); }
+  .copy-prompt-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-prompt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-prompt-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-prompt-btn { transition: none; } }
+  /* Shared clipboard-failure state for every copy button */
+  .copy-failed { color: var(--red) !important; background: var(--red-bg) !important; border-color: var(--red-border) !important; white-space: normal; }
+
+  /* Wish list variant */
+  .wish-list-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--purple);
+    margin: 1.5rem 0 .75rem;
+  }
+  .wish-list-header::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--wish-border);
+    opacity: .5;
+  }
+  .wish-item { border: 1px dashed var(--wish-border) !important; background: var(--wish-bg) !important; }
+  .wish-item summary { background: var(--wish-bg) !important; color: var(--purple); }
+  .wish-badge {
+    font-size: .6rem;
+    background: var(--purple-bg);
+    color: var(--purple);
+    padding: .1rem .5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-left: auto;
+    border: 1px solid var(--purple-border);
+  }
+
+  /* ── Collapsible optional sections ─────────────────────────────── */
+  .optional-section {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    margin-top: 1.5rem;
+    overflow: hidden;
+    background: var(--panel);
+  }
+  .optional-section > summary {
+    padding: .875rem 1.25rem;
+    font-weight: 600;
+    font-size: .9rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .optional-section > summary::before,
+  .plan-more-ways > summary::before { content: "▶"; font-size: .55em; color: var(--ink-3); transition: transform .2s; }
+  .optional-section[open] > summary::before,
+  .plan-more-ways[open] > summary::before { transform: rotate(90deg); }
+  .optional-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
+  .unresolved-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .unresolved-item summary { font-weight: 600; padding: .35rem 0; cursor: pointer; list-style: none; user-select: none; font-size: .9rem; }
+  .unresolved-prompt { margin-top: .5rem; }
+  @media (prefers-reduced-motion: reduce) { .optional-section > summary::before, .plan-more-ways > summary::before { transition: none; } }
+
+  /* ── More-ways drawer (goal / workflow / plan-source rows) ─────── */
+  .plan-more-ways {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--panel);
+    margin: -.5rem 0 1.5rem;
+    font-size: .8rem;
+    overflow: hidden;
+  }
+  .plan-more-ways > summary {
+    padding: .55rem 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    user-select: none;
+    min-height: 44px;
+  }
+  .plan-more-ways > summary:hover { color: var(--accent); }
+  .more-ways-hint { font-weight: 400; color: var(--ink-2); }
+  .plan-more-ways-body {
+    padding: .75rem 1rem 1rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  @media print { .plan-more-ways { display: none !important; } }
+
+  /* ── Implement prompt ─────────────────────────────────────────── */
+  .plan-implement {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-bottom: 1.5rem;
+    padding: .55rem .8rem;
+    /* Not moss: moss means "done" everywhere else on the page, so a green
+       call-to-action on an unstarted plan said the opposite of what it meant.
+       Not a tinted slab either — this prompt runs to eight wrapped lines of
+       monospace, and any fill that large outshouted the objective above it.
+       Neutral surface, accent only on the label. */
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    font-size: .8rem;
+  }
+  .plan-implement-label {
+    font-family: var(--mono);
+    font-size: .62rem;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: .2rem;
+  }
+  .plan-implement code {
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+  .copy-cmd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-cmd-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-cmd-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-cmd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .copy-cmd-btn { display: none; }
+  @media print { .plan-implement { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-cmd-btn { transition: none; } }
+
+  /* ── Plan source (file name + relative path — lives in the drawer) ── */
+  /* Borderless like its sibling drawer rows — the drawer body supplies the frame */
+  .plan-source {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    margin: 0;
+    padding: .55rem .75rem;
+    font-size: .8rem;
+  }
+  .plan-source-row { display: flex; align-items: center; gap: .6rem; }
+  .plan-source-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    flex-shrink: 0;
+    width: 2.4rem;
+  }
+  .plan-source code {
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+  .copy-src-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-src-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-src-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-src-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media print { .copy-src-btn { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-src-btn { transition: none; } }
+
+  /* ── Workflow prompt row (conditional — remove row when empty; lives in the drawer) ── */
+  .plan-workflow {
+    margin: 0;
+    font-size: .8rem;
+  }
+  .plan-workflow-label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding: .1rem 0;
+  }
+  .plan-workflow-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    border-radius: var(--radius);
+  }
+  .plan-workflow code {
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+  .copy-workflow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-workflow-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-workflow-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-workflow-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-workflow { display: none; }
+  /* Redundant under .plan-more-ways' print hide; kept to mirror the test-pinned .plan-goal print rule */
+  @media print { .plan-workflow { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-workflow-btn { transition: none; } }
+
+  /* ── Goal prompt row (outcome-driven — always present; lives in the drawer) ── */
+  .plan-goal {
+    margin: 0;
+    font-size: .8rem;
+  }
+  .plan-goal-label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--purple);
+    padding: .1rem 0;
+  }
+  .plan-goal-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .4rem;
+    padding: .45rem .75rem;
+    background: var(--purple-bg);
+    border: 1px solid var(--purple-border);
+    border-radius: var(--radius);
+  }
+  .plan-goal code {
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+  .copy-goal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    font-family: inherit;
+    line-height: 1.4;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .copy-goal-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+  .copy-goal-btn.copied { color: var(--moss); background: var(--moss-soft); border-color: var(--moss-line); }
+  .copy-goal-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [data-status="completed"] .plan-goal { display: none; }
+  /* Redundant under .plan-more-ways' print hide, but pinned byte-for-byte by test-goal-prompt.sh check 4 */
+  @media print { .plan-goal { display: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .copy-goal-btn { transition: none; } }
+
+  /* ── Tests section ──────────────────────────────────────────────── */
+  .test-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .test-card {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .test-card-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .5rem;
+    flex-wrap: wrap;
+  }
+  .test-badge {
+    display: inline-block;
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .15em .55em;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .test-badge-unit        { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .test-badge-integration { background: var(--signal-soft);  color: var(--signal);  border: 1px solid var(--signal-line); }
+  .test-badge-e2e         { background: var(--purple-bg);  color: var(--purple);  border: 1px solid var(--purple-border); }
+  .test-badge-objective   { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .test-card-title {
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--ink);
+    flex: 1;
+  }
+  .test-card-body { font-size: .875rem; color: var(--ink-2); }
+  .test-card-body p { margin-bottom: .4rem; }
+  .test-card-body p:last-child { margin-bottom: 0; }
+  .test-card-body code { font-size: .85em; }
+  .test-card-body strong { color: var(--ink); font-weight: 600; }
+  .test-tier-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin-bottom: .75rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .test-tier-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+  .objective-test-card {
+    background: var(--moss-soft);
+    border: 1px solid var(--moss-line);
+    border-left: 4px solid var(--moss);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .objective-test-card .test-card-header { margin-bottom: .6rem; }
+  .objective-test-card .test-card-title { color: var(--moss); }
+  .objective-test-card .test-card-body { color: var(--moss); }
+  .objective-test-card .test-card-body strong { color: var(--moss); }
+  /* ── Footer ────────────────────────────────────────────────────── */
+  .plan-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    font-size: .75rem;
+    color: var(--ink-3);
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+  }
+  .plan-footer .icon { opacity: .35; }
+
+  /* ── Focus styles ───────────────────────────────────────────────── */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Print styles ───────────────────────────────────────────────── */
+  @media print {
+    .plan-nav, .scroll-rail, .progress-wrap, .save-pdf-btn, .theme-toggle { display: none !important; }
+    .layout { display: block !important; }
+    .step-card, .section-card { box-shadow: none !important; break-inside: avoid; }
+    .step-chip { display: none !important; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: .8em; }
+  }
+
+  /* ═════════════════════════════════════════════════════════════════
+     OPT-IN VISUAL COMPONENTS
+     Pure-CSS / token-driven — no CDN, no external script. These rules
+     are always present (harmless when unused); the matching <body>
+     section blocks are kept only when a plan needs them and deleted
+     otherwise. See SKILL.md → "Visual Components".
+     ═════════════════════════════════════════════════════════════════ */
+
+  /* ── Files file-tree ────────────────────────────────────────────── */
+  .file-tree { font-family: var(--mono); font-size: .85rem; }
+  .file-tree-root { font-weight: 700; color: var(--ink); margin-bottom: .5rem; display: flex; align-items: center; gap: .35rem; }
+  .file-list, .file-list ul { list-style: none; padding-left: 1.25rem; margin: 0; border-left: 1px dashed var(--rule); }
+  .file-list li { padding: .2rem 0; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; color: var(--ink-2); }
+  .file-list li.file-dir { color: var(--ink); font-weight: 600; }
+  /* The nested list is a CHILD of the bold directory row, so without this it
+     inherits the 600 and every file under a subdirectory renders bold. */
+  .file-list li.file-dir > ul { flex-basis: 100%; font-weight: 400; color: var(--ink-2); }
+  .file-badge { font-size: .6rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: .1em .45em; border-radius: 999px; }
+  .file-badge-new       { background: var(--moss-soft); color: var(--moss); border: 1px solid var(--moss-line); }
+  .file-badge-modified  { background: var(--signal-soft); color: var(--signal); border: 1px solid var(--signal-line); }
+  .file-badge-deleted   { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+  .file-badge-generated { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .file-note { font-size: .75rem; font-weight: 400; color: var(--ink-3); font-style: italic; font-family: var(--ui); }
+
+  /* ── Flow / pipeline diagram ────────────────────────────────────── */
+  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 580px; }
+  .pipeline-node { width: 100%; border: 1px solid var(--rule); border-radius: var(--radius); padding: .7rem 1.25rem; background: var(--panel); text-align: center; box-shadow: var(--shadow); }
+  .pipeline-label { font-size: .62rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem; color: var(--accent); }
+  .pipeline-node code { font-size: .82rem; font-weight: 600; display: block; color: var(--ink); }
+  .pipeline-sub { font-size: .74rem; color: var(--ink-2); margin-top: .2rem; }
+  .pipeline-arrow { font-size: .85rem; color: var(--ink-3); padding: .25rem 0; }
+
+  /* ── Comparison grid (2–3 way) ──────────────────────────────────── */
+  .compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-header { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .75rem; border-radius: var(--radius) var(--radius) 0 0; text-align: center; }
+  .compare-col-add     .compare-header { background: var(--moss-soft);  color: var(--moss);  border: 1px solid var(--moss-line); }
+  .compare-col-neutral .compare-header { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); }
+  .compare-col-remove  .compare-header { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-border); }
+  .compare-list { list-style: none; padding: .5rem .75rem; margin: 0; border: 1px solid var(--rule); border-top: none; border-radius: 0 0 var(--radius) var(--radius); background: var(--panel); }
+  .compare-list li { font-family: var(--mono); font-size: .78rem; color: var(--ink-2); padding: .15rem 0; }
+
+  /* ── Bar chart (value via inline --val) ─────────────────────────── */
+  .bar-chart { display: flex; flex-direction: column; gap: .55rem; }
+  .bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: .75rem; }
+  @media (max-width: 520px) { .bar-row { grid-template-columns: 1fr; gap: .15rem; } }
+  .bar-label { font-size: .82rem; color: var(--ink); }
+  .bar-track { background: var(--rule); border-radius: 999px; height: .7rem; overflow: hidden; }
+  .bar-fill { height: 100%; width: var(--val, 0%); background: var(--accent); border-radius: 999px; }
+  .bar-fill.full { background: var(--moss); }
+  .bar-fill.zero { background: var(--ink-3); }
+  .bar-value { font-size: .78rem; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-align: right; }
+
+  /* ── Data table ─────────────────────────────────────────────────── */
+  .plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+  .plan-table caption { text-align: left; font-size: .78rem; color: var(--ink-3); font-style: italic; margin-bottom: .5rem; }
+  .plan-table th, .plan-table td { text-align: left; padding: .5rem .75rem; border: 1px solid var(--rule); vertical-align: top; }
+  .plan-table thead th { background: var(--sunk); font-weight: 700; color: var(--ink-2); text-transform: uppercase; font-size: .66rem; letter-spacing: .05em; }
+  .plan-table tbody tr:nth-child(even) { background: var(--sunk); }
+  .plan-table code { font-size: .8em; }
+
+  /* Shared sub-heading used inside visual sections */
+  .diagram-subheading { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin: 1.75rem 0 .75rem; }
+
+  /* ── Resources (images, screenshots & reference links) ──────────── */
+  .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+  .resource-figure { margin: 0; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+  .resource-figure > a { display: block; line-height: 0; }
+  .resource-figure img { display: block; width: 100%; height: auto; background: var(--sunk); }
+  .resource-figure figcaption { font-size: .74rem; line-height: 1.5; color: var(--ink-2); padding: .5rem .75rem; border-top: 1px solid var(--rule); }
+  .resource-links { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .1rem; }
+  .resource-links li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
+  .resource-links li:last-child { border-bottom: none; }
+  .resource-links a { font-weight: 600; word-break: break-word; }
+  .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
+
+  .plan-back-nav { margin-bottom: .5rem; }
+  .plan-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    font-size: .8125rem;
+    color: var(--ink-2);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  .plan-back-link:hover { color: var(--accent); }
+  .plan-back-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+</style>
+<style id="plan-responsive-fix" data-version="1">
+/* plan-responsive-fix v1 — injected by scripts/retrofit-responsive-plans.mjs */
+body { overflow-wrap: anywhere; }
+main, nav, aside { min-width: 0; }
+.layout > *, .wrap > *, .compare-grid > * { min-width: 0; }
+pre { white-space: pre-wrap; max-width: 100%; }
+table { max-width: 100%; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/>
+  </symbol>
+  <symbol id="ic-chart-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
+  </symbol>
+  <symbol id="ic-document-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+  </symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"/>
+  </symbol>
+  <symbol id="ic-list-bullet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
+  <symbol id="ic-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-magnifying-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+  </symbol>
+  <symbol id="ic-arrow-right-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+  </symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+  </symbol>
+  <symbol id="ic-code-bracket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>
+  </symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"/>
+    <path d="M6 6h.008v.008H6V6Z"/>
+  </symbol>
+  <symbol id="ic-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/>
+  </symbol>
+  <symbol id="ic-question-mark-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>
+  </symbol>
+  <symbol id="ic-clipboard-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"/>
+  </symbol>
+  <symbol id="ic-beaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
+  </symbol>
+  <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+  </symbol>
+</svg>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<header class="plan-header">
+  <div class="plan-header-inner">
+    <div class="plan-back-nav">
+      <a href="./index.html" class="plan-back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        Plans
+      </a>
+    </div>
+    <div class="plan-doc-type">Implementation Plan</div>
+    <div class="plan-header-top">
+      <h1 class="plan-title">Publish plans as artifacts by default</h1>
+      <div class="plan-header-actions">
+        <button class="save-pdf-btn" type="button" onclick="savePDF()"
+                aria-label="Save this plan as PDF">Save as PDF</button>
+        <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
+                aria-pressed="false" aria-label="Use dark theme">Dark</button>
+        <span class="effort-badge" aria-label="Effort level">High</span>
+        <a class="issue-link" href="https://github.com/shawn-sandy/agentics/issues/600"
+           aria-label="View the tracking issue for this plan">Issue #600</a>
+        <span class="status-badge">in-progress</span>
+      </div>
+    </div>
+    <div class="plan-meta">
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-calendar"/></svg> 2026-08-24</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-code-bracket"/></svg> agentics</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-tag"/></svg> feature</span>
+      <span><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> High effort</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <nav class="plan-nav" aria-label="Plan sections">
+    <div class="scroll-rail" aria-hidden="true"></div>
+    <div class="nav-heading">On this page</div>
+    <ul>
+      <li><a href="#objective"><svg class="icon" aria-hidden="true"><use href="#ic-bolt"/></svg> Objective</a></li>
+      <li><a href="#progress"><svg class="icon" aria-hidden="true"><use href="#ic-chart-bar"/></svg> Progress</a></li>
+      <li><a href="#context"><svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg> Context</a></li>
+      <li><a href="#decisions"><svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg> Decisions</a></li>
+      <li><a href="#files"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> Files that change</a></li>
+      <li><a href="#steps"><svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg> Steps</a></li>
+      <li><a href="#tests"><svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg> Tests</a></li>
+      <li><a href="#criteria"><svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg> Definition of done</a></li>
+      <li><a href="#verification"><svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg> Final check</a></li>
+      <li><a href="#completion"><svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg> Wrapping up</a></li>
+      <li><a href="#next-steps"><svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg> Next steps</a></li>
+    </ul>
+    <details class="rail-disclosure" open>
+      <summary>14 steps</summary>
+      <div class="rail-heading">Steps</div>
+      <ul class="rail-steps">
+        <li><a class="rail-step done" href="#step-1"><span class="rail-no">✓</span><span class="rail-text">Author tests/plugins/test-gallery-artifact-cards.mjs: build a temp plans directory holding a spec with <code class="md">artifact-url:</code> and no sibling <code class="md">.html</code>, a spec with a sibling <code class="md">.html</code>, a spec with neither, and a spec whose <code class="md">artifact-url:</code> is <code class="md">javascript:alert(1)</code>, run hooks/build-index.sh against it, and assert the first gets exactly one card whose href is the claude.ai URL with <code class="md">target=&quot;_blank&quot;</code>, <code class="md">rel=&quot;noopener&quot;</code>, an artifact chip in its meta row, and a visually-hidden &quot;opens on claude.ai&quot; span, the second gets exactly one same-tab card linking the relative <code class="md">.html</code> path, the third and fourth get no card, and the page&#39;s plan count equals the cards emitted.</span><span class="rail-state">step 1 of 14, done</span></a></li>
+        <li><a class="rail-step done" href="#step-2"><span class="rail-no">✓</span><span class="rail-text">Author tests/plugins/test-render-hook-artifact-skip.sh: feed hooks/render-plan-html.py a PostToolUse event for a spec write in a temp project, asserting that with no sibling <code class="md">.html</code> none is created while the gallery index is still rebuilt, and that with an existing sibling the sibling is re-rendered as today.</span><span class="rail-state">step 2 of 14, done</span></a></li>
+        <li><a class="rail-step done" href="#step-3"><span class="rail-no">✓</span><span class="rail-text">Author tests/plugins/test-artifact-url-gate.mjs: render one spec with <code class="md">artifact-url: https://claude.ai/public/artifacts/test-123</code>, one without the key, and one with <code class="md">artifact-url: javascript:alert(1)</code>, asserting the plan-implement, plan-goal, and plan-workflow prompts carry a republish instruction naming the URL only in the first case, the gate is unchanged when the key is absent, and the <code class="md">javascript:</code> value is dropped with a warning.</span><span class="rail-state">step 3 of 14, done</span></a></li>
+        <li><a class="rail-step done" href="#step-4"><span class="rail-no">✓</span><span class="rail-text">Extend tests/plugins/test-merge-gallery-index.sh with a divergent-identity case: merge two gallery index sides holding the same plan — carded by its artifact URL on one side and by its <code class="md">.html</code> path on the other — and assert exactly one card survives.</span><span class="rail-state">step 4 of 14, done</span></a></li>
+        <li><a class="rail-step done" href="#step-5"><span class="rail-no">✓</span><span class="rail-text">Extend the collection in kit/plugins/plan-agent/hooks/build-index.sh: after the <code class="md">.html</code> walk, walk the same tree for <code class="md">.md</code> specs whose frontmatter carries an http(s) <code class="md">artifact-url:</code> (any other scheme skipped with a stderr warning) and whose stem has no <code class="md">.html</code> in the collection, parse title from the <code class="md"># Plan:</code> heading, status, type, effort, and created from frontmatter, and step totals from numbered items and <code class="md">[x]</code> markers under <code class="md">## Steps</code>, emit a card whose href is the artifact URL with <code class="md">target=&quot;_blank&quot; rel=&quot;noopener&quot;</code>, an artifact chip in the meta row, and an sr-only &quot;opens on claude.ai&quot; span, stamp every card — file and artifact alike — with a <code class="md">data-local</code> attribute holding the plan&#39;s plans-dir-relative stem (path without extension, so both sides of a publish flip share one key), fold the rule into the script&#39;s own plans-collection count, then copy the file byte-identical over scripts/build-plans-index.sh and docs/plans/build-index.sh.</span><span class="rail-state">step 5 of 14, done</span></a></li>
+        <li><a class="rail-step done" href="#step-6"><span class="rail-no">✓</span><span class="rail-text">Re-key the card map in scripts/merge-plans-index.mjs on the <code class="md">data-local</code> stem, falling back to href for cards that predate the attribute.</span><span class="rail-state">step 6 of 14, done</span></a></li>
+        <li><a class="rail-step done" href="#step-7"><span class="rail-no">✓</span><span class="rail-text">Apply the same artifact-only-spec rule to <code class="md">plans_count()</code> in kit/plugins/plan-agent/hooks/build-artifacts-index.sh, build-designs-index.sh, and build-prototypes-index.sh.</span><span class="rail-state">step 7 of 14, done</span></a></li>
+        <li><a class="rail-step" href="#step-8"><span class="rail-no">8</span><span class="rail-text">Guard kit/plugins/plan-agent/hooks/render-plan-html.py: when no <code class="md">&lt;stem&gt;.html</code> exists beside the written spec, skip the sibling render but still trigger the gallery-index rebuild; when the sibling exists, re-render it exactly as today.</span><span class="rail-state">step 8 of 14</span></a></li>
+        <li><a class="rail-step" href="#step-9"><span class="rail-no">9</span><span class="rail-text">Teach kit/plugins/plan-agent/scripts/build-plan-html.mjs the <code class="md">artifact-url:</code> frontmatter key, http(s)-guarded exactly like <code class="md">design:</code>, and append to the shared verification-gate tail — only when the key is present — an instruction to republish the plan artifact to that URL via the Artifact tool&#39;s <code class="md">url</code> parameter after the re-render.</span><span class="rail-state">step 9 of 14</span></a></li>
+        <li><a class="rail-step" href="#step-10"><span class="rail-no">10</span><span class="rail-text">Rewrite the delivery path in kit/plugins/plan-agent/skills/implementation-plan/SKILL.md: add <code class="md">--file</code> to the Flags list and argument-hint, add Artifact to allowed-tools, update the description frontmatter, and replace Steps 5d and 7 so every plan renders <code class="md">&lt;stem&gt;.html</code> into the session scratchpad and publishes it with the Artifact tool — re-reading the spec frontmatter immediately beforehand and passing <code class="md">url:</code> whenever <code class="md">artifact-url:</code> is already present, otherwise writing the returned URL back as <code class="md">artifact-url:</code> — reports the URL, and sends the <code class="md">.md</code> spec via SendUserFile; <code class="md">--file</code> additionally writes the <code class="md">.html</code> beside the spec and runs today&#39;s browser-preview flow, and a failed or unavailable publish falls back to file delivery with a one-line notice.</span><span class="rail-state">step 10 of 14</span></a></li>
+        <li><a class="rail-step" href="#step-11"><span class="rail-no">11</span><span class="rail-text">Sweep the downstream skill texts for sibling-<code class="md">.html</code> assumptions: in kit/plugins/plan-agent/skills/build/SKILL.md add &quot;republish via the Artifact tool with <code class="md">url:</code> at each <code class="md">### Phase:</code> boundary stop and on completion, when frontmatter carries <code class="md">artifact-url:</code> and no sibling <code class="md">.html</code> exists&quot;; in skills/finalize-plan/SKILL.md add the same republish rule for the completion re-render; add Artifact to both allowed-tools lines; in skills/plans-library/SKILL.md update the collection description and the no-plans empty-state message to cover artifact-only specs; then audit skills/review-plan, plans-open, plan-status, documenting-plans, and markdown-to-html for paths that expect the <code class="md">.html</code> to exist — fixing each (a reviewer or opener renders the spec to the scratchpad when no sibling exists) or recording it as confirmed sibling-free.</span><span class="rail-state">step 11 of 14</span></a></li>
+        <li><a class="rail-step" href="#step-12"><span class="rail-no">12</span><span class="rail-text">Bump plan-agent to 9.7.0 in .claude-plugin/marketplace.json, add the kit/plugins/plan-agent/CHANGELOG.md entry, and update the plugin README&#39;s flag table and workflow sections for <code class="md">--file</code> and artifact-default delivery.</span><span class="rail-state">step 12 of 14</span></a></li>
+        <li><a class="rail-step" href="#step-13"><span class="rail-no">13</span><span class="rail-text">Run the full local gate: <code class="md">bash scripts/verify.sh</code>.</span><span class="rail-state">step 13 of 14</span></a></li>
+        <li><a class="rail-step" href="#step-14"><span class="rail-no">14</span><span class="rail-text">Walk the user-visible rule end-to-end without the model-side Artifact tool: in a temp project, write a spec carrying <code class="md">artifact-url:</code>, simulate the hook event and confirm no sibling appears while the index rebuilds, run plan-agent-plans-index and confirm the card&#39;s href is the claude.ai URL, then add a sibling <code class="md">.html</code>, re-run, and confirm the same plan&#39;s card now links the file.</span><span class="rail-state">step 14 of 14</span></a></li>
+      </ul>
+    </details>
+  </nav>
+
+  <main id="main">
+
+    <div class="objective-card" id="objective">
+      <div class="section-label">Objective</div>
+      <p>Make <code class="md">/plan-agent:implementation-plan</code> deliver every new plan as a published claude.ai artifact by default, demote the local <code class="md">.html</code> file to a <code class="md">--file</code> opt-in, and teach the plans gallery to card artifact-only plans by linking their artifact URL — a sibling <code class="md">.html</code>, when published, always wins the card.</p>
+      <section class="plan-glance" aria-labelledby="plan-glance-label">
+        <div class="plan-glance-label" id="plan-glance-label">At a glance</div>
+        <p>New plans become shareable claude.ai links the moment they are delivered, with no HTML file landing in the repo unless the author opts in with --file. It worked when the gallery cards an artifact-only plan by its URL, flips to the file when one exists, and bash scripts/verify.sh is green with the new gallery, hook, gate, and merge tests.</p>
+      </section>
+    </div>
+
+    <div class="plan-implement">
+      <span class="plan-implement-label">Implement</span>
+      <code id="implement-cmd" aria-label="Implement prompt">Read and implement all steps in the plan at docs/plans/add-artifact-default-plan-publishing.md — Publish plans as artifacts by default. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-artifact-default-plan-publishing.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+      <button class="copy-cmd-btn" type="button"
+              onclick="copyCmd(this)" aria-label="Copy implement prompt to clipboard">Copy</button>
+    </div>
+
+    <details class="plan-more-ways">
+      <summary>More ways to run this plan <span class="more-ways-hint">— goal &amp; workflow prompts, file path</span></summary>
+      <div class="plan-more-ways-body">
+
+        <div class="plan-goal">
+          <div class="plan-goal-label">Pursue as goal — optimize for the outcome</div>
+          <div class="plan-goal-inner">
+            <code id="goal-cmd" aria-label="Goal prompt">Achieve this goal: Publish plans as artifacts by default. The plan at docs/plans/add-artifact-default-plan-publishing.md describes one approach — use it as reference, but optimize for the outcome. Verify against the plan&#39;s Tests, Verification, and Acceptance Criteria before reporting done. If everything passed, mark completion in docs/plans/add-artifact-default-plan-publishing.md — tick each step&#39;s [x] marker and each criterion&#39;s - [x], set status: completed — and re-render the HTML from the spec. If any check failed, leave status: in-progress and say which.</code>
+            <button class="copy-goal-btn" type="button"
+                    onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
+          </div>
+        </div>
+
+        <div class="plan-source">
+          <div class="plan-source-row">
+            <span class="plan-source-label">File</span>
+            <code id="plan-file" aria-label="Plan file name">add-artifact-default-plan-publishing.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-file')" aria-label="Copy plan file name to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Path</span>
+            <code id="plan-path" aria-label="Plan relative path">docs/plans/add-artifact-default-plan-publishing.html</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-path')" aria-label="Copy plan relative path to clipboard">Copy</button>
+          </div>
+          <div class="plan-source-row">
+            <span class="plan-source-label">Spec</span>
+            <code id="plan-md" aria-label="Plan spec markdown path">docs/plans/add-artifact-default-plan-publishing.md</code>
+            <button class="copy-src-btn" type="button"
+                    onclick="copyPath(this, 'plan-md')" aria-label="Copy plan spec path to clipboard">Copy</button>
+          </div>
+        </div>
+
+      </div>
+    </details>
+
+    <div class="progress-wrap" id="progress">
+      <div class="progress-header">
+        <span>Definition of done</span>
+        <span id="progress-label">0 / 9 done</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar"
+             role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Plan progress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <section class="section-card card-context" id="context" aria-labelledby="h-context">
+      <h2 id="h-context">
+        <svg class="icon" aria-hidden="true"><use href="#ic-document-text"/></svg>
+        Context
+      </h2>
+      <p class="section-intro">The story behind this plan — what prompted the work and why it matters now.</p>
+      <p>Today the skill renders <code class="md">&lt;stem&gt;.html</code> beside the spec and delivers it over a throwaway local HTTP server — a preview only the author&#39;s machine can see, plus a 60–120 KB generated file in every plan commit. Publishing to a claude.ai artifact gives each plan a stable, shareable URL, and the plugin already owns every piece of the mechanism: the <code class="md">build-feature</code> skill&#39;s Step 9 publishes feature docs and records <code class="md">artifact-url:</code> in frontmatter so later rounds republish to the same page, the renderer already http(s)-guards URL-bearing keys (<code class="md">issue:</code>, <code class="md">design:</code>), and the separate <code class="md">artifact-tools:plan-artifact</code> skill reads and writes the same <code class="md">artifact-url:</code> key.</p>
+      <p>One risk shapes the design: the Artifact tool is model-side, so no test or hook can exercise a real publish. Everything around the publish — the gallery rule, the render-hook guard, the republish instruction inside the rendered prompts — is testable, and the skill text carries a fallback to <code class="md">--file</code> delivery when a publish fails, so a broken publish path degrades to exactly today&#39;s behaviour instead of losing the plan.</p>
+    </section>
+
+    <section class="section-card card-decisions" id="decisions" aria-labelledby="h-decisions">
+      <h2 id="h-decisions">
+        <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+        Decisions
+      </h2>
+      <p class="section-intro">Choices already settled — read these before re-opening any of them.</p>
+      <ul class="decisions-list" style="padding-left:1.15rem;">
+        <li style="margin-bottom:.5rem;">Publishing is inline in plan-agent via the Artifact tool, not delegated to <code class="md">artifact-tools:plan-artifact</code> — the default output path must not depend on another plugin being installed; the shared <code class="md">artifact-url:</code> frontmatter key keeps the two compatible (user-confirmed).</li>
+        <li style="margin-bottom:.5rem;">The opt-in flag is <code class="md">--file</code> and it is additive: the artifact always publishes, <code class="md">--file</code> also writes the <code class="md">.html</code> beside the spec, and the file wins the gallery card; a failed or unavailable Artifact tool falls back to file delivery with a one-line notice, and that fallback plan staying file-mode forever is accepted — anyone can still publish it later via <code class="md">artifact-tools:plan-artifact</code> (interview-confirmed).</li>
+        <li style="margin-bottom:.5rem;">Later spec changes republish on a bounded cadence: <code class="md">build</code> republishes at <code class="md">### Phase:</code> boundaries and on completion, <code class="md">finalize-plan</code> on completion, and the renderer&#39;s verification-gate tail carries the completion republish instruction for fresh-session agents (interview-confirmed).</li>
+        <li style="margin-bottom:.5rem;">The skill re-reads the spec frontmatter immediately before every publish and passes <code class="md">url:</code> whenever <code class="md">artifact-url:</code> is already present — the <code class="md">plan-artifact</code> pattern that closes the two-sessions-two-URLs race (interview-confirmed).</li>
+        <li style="margin-bottom:.5rem;">The gallery guards URL schemes itself, mirroring the renderer: a non-http(s) <code class="md">artifact-url:</code> gets no card and a stderr warning, because the generator writes raw hrefs into a page people open (interview-confirmed).</li>
+        <li style="margin-bottom:.5rem;">Artifact cards open in a new tab with <code class="md">rel=&quot;noopener&quot;</code> and carry a visually-hidden &quot;opens on claude.ai&quot; note beside the existing sr-only status text; file cards keep same-tab navigation (interview-confirmed).</li>
+        <li style="margin-bottom:.5rem;">&quot;A file is published&quot; means a sibling <code class="md">.html</code> exists — one signal shared by the gallery&#39;s link precedence and the render hook&#39;s re-render guard, with no new frontmatter mode key.</li>
+        <li style="margin-bottom:.5rem;">The gallery cards artifact-only plans from the <code class="md">.md</code> spec directly; no <code class="md">plan-artifact-url</code> meta tag is added because no consumer reads one — the spec is the source the gallery already trusts.</li>
+        <li style="margin-bottom:.5rem;">Gallery cards gain a <code class="md">data-local</code> stem attribute — identical whether the card came from the file or the spec — and the union merge driver keys on it with an href fallback, because href stops being a stable identity once publishing can flip it (interview follow-up, user-confirmed).</li>
+        <li style="margin-bottom:.5rem;">RED settled the test contracts: the chip is <code class="md">class=&quot;artifact-chip&quot;</code>, the gallery warning and the renderer warning both read <code class="md">ignoring non-http(s) artifact-url</code>, and gate fixtures must not carry &quot;republish&quot; in their titles — the prompts embed the title, which poisoned the first assertion run.</li>
+        <li style="margin-bottom:.5rem;">The renderer has byte-identical root copies (scripts/build-plan-html.mjs, scripts/lib/plan-shell.mjs) that the tests import — the GREEN renderer step syncs them alongside the kit originals.</li>
+        <li style="margin-bottom:.5rem;">Steps follow red-green-verify because the change is mostly runnable shell, Python, and Node code with <code class="md">scripts/verify.sh</code> behind it; <code class="md">workflow: never</code> because the byte-identical copy sync and the tests-fail-first ordering do not fan out safely.</li>
+        <li style="margin-bottom:.5rem;">GREEN step 5: an <code class="md">artifact-url:</code> alone does not make a document a plan. <code class="md">docs/plans/</code> also holds <code class="md">type: session-export</code> notes that carry the same key, and keying the card rule on the key alone promoted two of them into the gallery (111 → 113 cards on real data). The spec walk now additionally requires the four sections <code class="md">build-plan-html.mjs</code> refuses to render without — Objective, Steps, Acceptance Criteria, Verification — so the gallery and the renderer share one definition of &quot;is a plan&quot;.</li>
+        <li style="margin-bottom:.5rem;">GREEN step 5: the &quot;no plan files found — skipping&quot; guard moved from the raw file walk to the parsed entry list. A plans directory holding only specs the gallery cannot link now leaves an existing index.html alone instead of blanking it.</li>
+        <li style="margin-bottom:.5rem;">GREEN step 6: the href fallback strips a trailing <code class="md">.html</code> rather than keying on the raw href. A bare-href fallback is correct for cards that predate <code class="md">data-local</code> but wrong for the first merge after this change — a legacy side keys <code class="md">add-foo.html</code> while a regenerated side keys <code class="md">add-foo</code>, doubling every card in an already-committed index. Stripping the extension lands both on the same stem.</li>
+        <li style="margin-bottom:.5rem;">GREEN step 7: the Plans-tab parity check the step asks for lives in tests/plugins/test-gallery-artifact-cards.mjs rather than in a new file. That test already builds the fixture the comparison needs, so the three sibling generators run against the same plans directory the gallery just carded and their topbar totals are asserted equal to its card count — the drift is caught on every run instead of once by hand.</li>
+      </ul>
+    </section>
+
+    <section class="section-card card-files" id="files" aria-labelledby="h-files">
+      <h2 id="h-files">
+        <svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg>
+        Files that change
+      </h2>
+      <p class="section-intro">Every file this plan touches, and what happens to each one.</p>
+      <div class="file-tree">
+        <div class="file-tree-root"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> agentics/</div>
+        <ul class="file-list">
+          <li><code>kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">--file flag, Artifact allowed-tool, scratchpad render + publish delivery, fallback</span></li>
+          <li><code>kit/plugins/plan-agent/templates/plans-gallery.html</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">.artifact-chip colour rule</span></li>
+          <li><code>kit/plugins/plan-agent/hooks/build-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">card artifact-only specs, artifact chip, count rule</span></li>
+          <li><code>scripts/build-plans-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical copy of build-index.sh</span></li>
+          <li><code>docs/plans/build-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical copy of build-index.sh</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/hooks/
+            <ul class="file-list">
+            <li><code>build-artifacts-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">plans_count includes artifact-only specs</span></li>
+            <li><code>build-designs-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same plans_count rule</span></li>
+            <li><code>build-prototypes-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">same plans_count rule</span></li>
+            <li><code>render-plan-html.py</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">skip sibling render when none exists, still rebuild index</span></li>
+            </ul>
+          </li>
+          <li><code>kit/plugins/plan-agent/scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">artifact-url key, conditional republish clause in the gate tail</span></li>
+          <li><code>scripts/build-plan-html.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">byte-identical root copy of the renderer</span></li>
+          <li><code>kit/plugins/plan-agent/skills/build/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">republish after re-render, Artifact allowed-tool</span></li>
+          <li><code>kit/plugins/plan-agent/skills/finalize-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">republish after completion re-render, Artifact allowed-tool</span></li>
+          <li><code>kit/plugins/plan-agent/skills/plans-library/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">collection wording and empty-state cover artifact-only specs</span></li>
+          <li><code>kit/plugins/plan-agent/skills/review-plan/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">sibling-.html assumption audit, render-to-scratchpad where needed</span></li>
+          <li><code>kit/plugins/plan-agent/skills/plans-open/SKILL.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">sibling-.html assumption audit</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> kit/plugins/plan-agent/
+            <ul class="file-list">
+            <li><code>README.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">flag table and workflow notes</span></li>
+            <li><code>CHANGELOG.md</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">9.7.0 entry</span></li>
+            </ul>
+          </li>
+          <li><code>.claude-plugin/marketplace.json</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">version 9.6.1 → 9.7.0</span></li>
+          <li><code>scripts/merge-plans-index.mjs</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">key cards on the data-local stem, href fallback</span></li>
+          <li class="file-dir"><svg class="icon" aria-hidden="true"><use href="#ic-folder"/></svg> tests/plugins/
+            <ul class="file-list">
+            <li><code>test-merge-gallery-index.sh</code> <span class="file-badge file-badge-modified">modified</span> <span class="file-note">divergent-identity merge case</span></li>
+            <li><code>test-gallery-artifact-cards.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">objective test: gallery card rule</span></li>
+            <li><code>test-render-hook-artifact-skip.sh</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">hook guard test</span></li>
+            <li><code>test-artifact-url-gate.mjs</code> <span class="file-badge file-badge-new">new</span> <span class="file-note">renderer gate republish test</span></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section-card card-steps" id="steps" aria-labelledby="h-steps">
+      <h2 id="h-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-list-bullet"/></svg>
+        Steps
+      </h2>
+      <p class="section-intro">The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.</p>
+      <div class="steps-list">
+
+        <div class="phase-group" data-phase="RED" style="margin-top:1.5rem;">
+          <h3 class="phase-name" style="font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .75rem;">RED</h3>
+        <div class="step-card completed" id="step-1">
+          <div class="step-card-header">
+            <div class="step-number">1</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Author tests/plugins/test-gallery-artifact-cards.mjs: build a temp plans directory holding a spec with <code class="md">artifact-url:</code> and no sibling <code class="md">.html</code>, a spec with a sibling <code class="md">.html</code>, a spec with neither, and a spec whose <code class="md">artifact-url:</code> is <code class="md">javascript:alert(1)</code>, run hooks/build-index.sh against it, and assert the first gets exactly one card whose href is the claude.ai URL with <code class="md">target=&quot;_blank&quot;</code>, <code class="md">rel=&quot;noopener&quot;</code>, an artifact chip in its meta row, and a visually-hidden &quot;opens on claude.ai&quot; span, the second gets exactly one same-tab card linking the relative <code class="md">.html</code> path, the third and fourth get no card, and the page&#39;s plan count equals the cards emitted.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the gallery is the organizing surface the user keeps, so the card-from-spec rule is the objective itself and must fail before any generator change — and the scheme fixture keeps a hand-edited spec from writing a clickable <code class="md">javascript:</code> href into a generated page.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">node tests/plugins/test-gallery-artifact-cards.mjs</code> exits non-zero with the first fixture&#39;s missing-card assertion — paste the failure output.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed" id="step-2">
+          <div class="step-card-header">
+            <div class="step-number">2</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Author tests/plugins/test-render-hook-artifact-skip.sh: feed hooks/render-plan-html.py a PostToolUse event for a spec write in a temp project, asserting that with no sibling <code class="md">.html</code> none is created while the gallery index is still rebuilt, and that with an existing sibling the sibling is re-rendered as today.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the hook currently always creates the sibling, which would resurrect the very file an artifact-mode author chose not to publish.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-render-hook-artifact-skip.sh</code> exits non-zero with the sibling-was-created assertion — paste the failure output.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed" id="step-3">
+          <div class="step-card-header">
+            <div class="step-number">3</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Author tests/plugins/test-artifact-url-gate.mjs: render one spec with <code class="md">artifact-url: https://claude.ai/public/artifacts/test-123</code>, one without the key, and one with <code class="md">artifact-url: javascript:alert(1)</code>, asserting the plan-implement, plan-goal, and plan-workflow prompts carry a republish instruction naming the URL only in the first case, the gate is unchanged when the key is absent, and the <code class="md">javascript:</code> value is dropped with a warning.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the verification-gate tail is the only instruction a fresh-session implementing agent receives, so unless republish travels inside it every artifact link goes stale the moment steps start ticking.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">node tests/plugins/test-artifact-url-gate.mjs</code> exits non-zero because no republish clause exists yet — paste the failure output.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed" id="step-4">
+          <div class="step-card-header">
+            <div class="step-number">4</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Extend tests/plugins/test-merge-gallery-index.sh with a divergent-identity case: merge two gallery index sides holding the same plan — carded by its artifact URL on one side and by its <code class="md">.html</code> path on the other — and assert exactly one card survives.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the union merge driver keys cards on href, and a href that can flip between a file path and an artifact URL turns every such branch merge into a duplicate card.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-merge-gallery-index.sh</code> exits non-zero on the new case — paste the failure output.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="phase-group" data-phase="GREEN" style="margin-top:1.5rem;">
+          <h3 class="phase-name" style="font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .75rem;">GREEN</h3>
+        <div class="step-card completed" id="step-5">
+          <div class="step-card-header">
+            <div class="step-number">5</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Extend the collection in kit/plugins/plan-agent/hooks/build-index.sh: after the <code class="md">.html</code> walk, walk the same tree for <code class="md">.md</code> specs whose frontmatter carries an http(s) <code class="md">artifact-url:</code> (any other scheme skipped with a stderr warning) and whose stem has no <code class="md">.html</code> in the collection, parse title from the <code class="md"># Plan:</code> heading, status, type, effort, and created from frontmatter, and step totals from numbered items and <code class="md">[x]</code> markers under <code class="md">## Steps</code>, emit a card whose href is the artifact URL with <code class="md">target=&quot;_blank&quot; rel=&quot;noopener&quot;</code>, an artifact chip in the meta row, and an sr-only &quot;opens on claude.ai&quot; span, stamp every card — file and artifact alike — with a <code class="md">data-local</code> attribute holding the plan&#39;s plans-dir-relative stem (path without extension, so both sides of a publish flip share one key), fold the rule into the script&#39;s own plans-collection count, then copy the file byte-identical over scripts/build-plans-index.sh and docs/plans/build-index.sh.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">an artifact-only plan has no <code class="md">.html</code> for the existing walk to find, so without a spec walk it vanishes from the gallery, and the parity test holds the three copies together.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">node tests/plugins/test-gallery-artifact-cards.mjs</code> and <code class="md">node tests/plugins/test-build-index-parity.mjs</code> both exit 0.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed" id="step-6">
+          <div class="step-card-header">
+            <div class="step-number">6</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Re-key the card map in scripts/merge-plans-index.mjs on the <code class="md">data-local</code> stem, falling back to href for cards that predate the attribute.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">href stops being a stable card identity once publishing can change it, and the fallback keeps already-committed indexes mergeable.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-merge-gallery-index.sh</code> exits 0.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card completed" id="step-7">
+          <div class="step-card-header">
+            <div class="step-number">7</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">done</span>
+                <span class="step-chip-text">Apply the same artifact-only-spec rule to <code class="md">plans_count()</code> in kit/plugins/plan-agent/hooks/build-artifacts-index.sh, build-designs-index.sh, and build-prototypes-index.sh.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">every gallery topbar shows the PLANS tab count, and three stale counters would disagree with the plans gallery the moment the first artifact-only plan exists.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-build-designs-index.sh</code> and <code class="md">bash tests/plugins/test-build-prototypes-index.sh</code> exit 0, and on the step-1 temp fixture each updated <code class="md">plans_count()</code> returns the same number as the gallery&#39;s emitted cards.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card" id="step-8">
+          <div class="step-card-header">
+            <div class="step-number">8</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Guard kit/plugins/plan-agent/hooks/render-plan-html.py: when no <code class="md">&lt;stem&gt;.html</code> exists beside the written spec, skip the sibling render but still trigger the gallery-index rebuild; when the sibling exists, re-render it exactly as today.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">a sibling&#39;s existence is the file-published signal, so the hook must keep maintaining published files without resurrecting unpublished ones — and artifact-mode spec edits still change card data the gallery has to pick up.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">bash tests/plugins/test-render-hook-artifact-skip.sh</code> exits 0.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card" id="step-9">
+          <div class="step-card-header">
+            <div class="step-number">9</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Teach kit/plugins/plan-agent/scripts/build-plan-html.mjs the <code class="md">artifact-url:</code> frontmatter key, http(s)-guarded exactly like <code class="md">design:</code>, and append to the shared verification-gate tail — only when the key is present — an instruction to republish the plan artifact to that URL via the Artifact tool&#39;s <code class="md">url</code> parameter after the re-render.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">copyGoal and copyWorkflow copy the gate tail verbatim, so a republish clause placed anywhere else is silently dropped on two of the three prompt paths.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">node tests/plugins/test-artifact-url-gate.mjs</code> and <code class="md">node tests/plugins/test-build-plan-html.mjs</code> both exit 0.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card" id="step-10">
+          <div class="step-card-header">
+            <div class="step-number">10</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Rewrite the delivery path in kit/plugins/plan-agent/skills/implementation-plan/SKILL.md: add <code class="md">--file</code> to the Flags list and argument-hint, add Artifact to allowed-tools, update the description frontmatter, and replace Steps 5d and 7 so every plan renders <code class="md">&lt;stem&gt;.html</code> into the session scratchpad and publishes it with the Artifact tool — re-reading the spec frontmatter immediately beforehand and passing <code class="md">url:</code> whenever <code class="md">artifact-url:</code> is already present, otherwise writing the returned URL back as <code class="md">artifact-url:</code> — reports the URL, and sends the <code class="md">.md</code> spec via SendUserFile; <code class="md">--file</code> additionally writes the <code class="md">.html</code> beside the spec and runs today&#39;s browser-preview flow, and a failed or unavailable publish falls back to file delivery with a one-line notice.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">this is the requested behaviour change — the artifact becomes the deliverable, the local file becomes the opt-in extra, and the pre-publish re-read closes the two-sessions-two-URLs race.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">grep -q -- &#39;--file&#39; kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> passes, <code class="md">grep -q &#39;artifact-url&#39; kit/plugins/plan-agent/skills/implementation-plan/SKILL.md</code> passes, and the description frontmatter line stays within the 200-character budget by <code class="md">wc -c</code>.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card" id="step-11">
+          <div class="step-card-header">
+            <div class="step-number">11</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Sweep the downstream skill texts for sibling-<code class="md">.html</code> assumptions: in kit/plugins/plan-agent/skills/build/SKILL.md add &quot;republish via the Artifact tool with <code class="md">url:</code> at each <code class="md">### Phase:</code> boundary stop and on completion, when frontmatter carries <code class="md">artifact-url:</code> and no sibling <code class="md">.html</code> exists&quot;; in skills/finalize-plan/SKILL.md add the same republish rule for the completion re-render; add Artifact to both allowed-tools lines; in skills/plans-library/SKILL.md update the collection description and the no-plans empty-state message to cover artifact-only specs; then audit skills/review-plan, plans-open, plan-status, documenting-plans, and markdown-to-html for paths that expect the <code class="md">.html</code> to exist — fixing each (a reviewer or opener renders the spec to the scratchpad when no sibling exists) or recording it as confirmed sibling-free.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">a build session that ticks steps without republishing leaves every gallery link stale, and a consumer that dies on a missing <code class="md">.html</code> makes artifact-only plans second-class inside their own plugin.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">grep -l &#39;artifact-url&#39; kit/plugins/plan-agent/skills/build/SKILL.md kit/plugins/plan-agent/skills/finalize-plan/SKILL.md kit/plugins/plan-agent/skills/plans-library/SKILL.md</code> lists all three files, and the step&#39;s output names every audited skill as updated or confirmed sibling-free.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card" id="step-12">
+          <div class="step-card-header">
+            <div class="step-number">12</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Bump plan-agent to 9.7.0 in .claude-plugin/marketplace.json, add the kit/plugins/plan-agent/CHANGELOG.md entry, and update the plugin README&#39;s flag table and workflow sections for <code class="md">--file</code> and artifact-default delivery.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the marketplace file is the only place a version lives, and CI fails any plugin-touching PR whose version does not exceed the base branch.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body"><code class="md">git fetch origin &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs</code> exits 0 and <code class="md">grep -q &#39;9.7.0&#39; kit/plugins/plan-agent/CHANGELOG.md</code> passes.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="phase-group" data-phase="VERIFY" style="margin-top:1.5rem;">
+          <h3 class="phase-name" style="font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 .75rem;">VERIFY</h3>
+        <div class="step-card" id="step-13">
+          <div class="step-card-header">
+            <div class="step-number">13</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Run the full local gate: <code class="md">bash scripts/verify.sh</code>.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the merge gate honours only a green local run — CI on this repo is billing-blocked often enough that red or green there proves nothing.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">exit 0 with the three new tests reported as passing and no <code class="md">SKIP (not configured)</code> line counted as a pass.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card" id="step-14">
+          <div class="step-card-header">
+            <div class="step-number">14</div>
+            <div class="step-body">
+              <div class="step-action">
+                <span class="step-chip">todo</span>
+                <span class="step-chip-text">Walk the user-visible rule end-to-end without the model-side Artifact tool: in a temp project, write a spec carrying <code class="md">artifact-url:</code>, simulate the hook event and confirm no sibling appears while the index rebuilds, run plan-agent-plans-index and confirm the card&#39;s href is the claude.ai URL, then add a sibling <code class="md">.html</code>, re-run, and confirm the same plan&#39;s card now links the file.</span>
+              </div>
+              <div class="step-note step-why-note">
+                <span class="step-note-label">Why</span>
+                <div class="step-why">the per-step tests prove pieces in isolation; this walk proves the promise as a user sees it — artifact URL unless a file is published.</div>
+              </div>
+              <div class="step-note step-verify">
+                <span class="step-note-label">Verify</span>
+                <div class="verify-body">paste the two card hrefs extracted from the two generated index.html states, one absolute claude.ai URL and one relative <code class="md">.html</code> path for the same stem.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section-card card-tests" id="tests" aria-labelledby="h-tests">
+      <h2 id="h-tests">
+        <svg class="icon" aria-hidden="true"><use href="#ic-beaker"/></svg>
+        Tests
+      </h2>
+      <p class="section-intro">The tests that prove the change does what it promises.</p>
+      <div class="test-tier-label">Tier 1 — This plan changes runnable shell, Python, and Node source</div>
+      <div class="objective-test-card">Objective: an artifact-only plan is carded by its artifact URL and a sibling <code class="md">.html</code> wins the card. File: tests/plugins/test-gallery-artifact-cards.mjs; Type: integration; Asserts: spec with <code class="md">artifact-url:</code> and no sibling gets one new-tab noopener card with the claude.ai href, artifact chip, and sr-only destination note, sibling-<code class="md">.html</code> spec gets one same-tab card with the file href, keyless and <code class="md">javascript:</code>-scheme specs get none, count matches cards, and the artifacts/designs/prototypes topbars print the same Plans total as the gallery emits cards; Run: node tests/plugins/test-gallery-artifact-cards.mjs</div>
+      <div class="test-list">
+        <div class="test-card">Integration: render hook honours the file-published signal. File: tests/plugins/test-render-hook-artifact-skip.sh; Targets: hooks/render-plan-html.py; Key cases: no sibling → no render + index rebuilt, sibling present → re-rendered; Run: bash tests/plugins/test-render-hook-artifact-skip.sh</div>
+        <div class="test-card">Integration: a publish flip never duplicates a gallery card on merge. File: tests/plugins/test-merge-gallery-index.sh; Targets: scripts/merge-plans-index.mjs; Key cases: same plan carded by artifact URL on one side and file path on the other merges to one card, legacy cards without data-local still key on href; Run: bash tests/plugins/test-merge-gallery-index.sh</div>
+        <div class="test-card">Unit: gate tail republish clause. File: tests/plugins/test-artifact-url-gate.mjs; Targets: build-plan-html.mjs prompt/gate builders; Key cases: <code class="md">artifact-url:</code> present → all three prompts name the URL, absent → gate unchanged, <code class="md">javascript:</code> scheme dropped with warning; Run: node tests/plugins/test-artifact-url-gate.mjs</div>
+      </div>
+    </section>
+
+    <section class="section-card card-criteria" id="criteria" aria-labelledby="h-criteria">
+      <h2 id="h-criteria">
+        <svg class="icon" aria-hidden="true"><use href="#ic-check-circle"/></svg>
+        Definition of done
+      </h2>
+      <p class="section-intro">The plan counts as done when every statement below is true — check each one off as you verify it.</p>
+      <ul class="criteria-list" id="criteria-list">
+        <li>
+          <input type="checkbox" id="ac1">
+          <label for="ac1">A plan authored without <code class="md">--file</code> leaves no <code class="md">.html</code> in the plans directory — only the <code class="md">.md</code> spec, carrying an http(s) <code class="md">artifact-url:</code> key once published.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac2">
+          <label for="ac2"><code class="md">/plan-agent:implementation-plan &lt;objective&gt; --file</code> writes <code class="md">&lt;stem&gt;.html</code> beside the spec and the plan still publishes and records <code class="md">artifact-url:</code> — the gallery card links the file.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac3">
+          <label for="ac3"><code class="md">plan-agent-plans-index</code> cards an artifact-only spec with href equal to its artifact URL and an artifact chip, and the card links the <code class="md">.html</code> path instead whenever a sibling file exists.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac4">
+          <label for="ac4">Artifact cards carry <code class="md">target=&quot;_blank&quot; rel=&quot;noopener&quot;</code> and an sr-only &quot;opens on claude.ai&quot; note, and a spec whose <code class="md">artifact-url:</code> is not http(s) yields no card and a stderr warning.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac5">
+          <label for="ac5">A spec write event with no sibling <code class="md">.html</code> creates no sibling but still rebuilds the gallery index; with a sibling present the hook re-renders it unchanged from today.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac6">
+          <label for="ac6">The rendered implement, goal, and workflow prompts of a spec carrying <code class="md">artifact-url:</code> instruct republishing to that URL; a spec without the key renders with the gate tail unchanged.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac7">
+          <label for="ac7">Merging two gallery indexes where the same plan is published on only one side yields exactly one card, keyed by the <code class="md">data-local</code> stem.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac8">
+          <label for="ac8"><code class="md">bash scripts/verify.sh</code> exits 0 including the three new tests, the extended merge test, and the existing build-index parity test.</label>
+        </li>
+        <li>
+          <input type="checkbox" id="ac9">
+          <label for="ac9">plan-agent reads 9.7.0 in .claude-plugin/marketplace.json and <code class="md">BASE_REF=main node scripts/check-plugin-versions.mjs</code> passes after a fresh <code class="md">git fetch origin</code>.</label>
+        </li>
+      </ul>
+      <span id="criteria-status" aria-live="polite" aria-atomic="true"
+            style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></span>
+    </section>
+
+    <section class="section-card card-verification" id="verification" aria-labelledby="h-verification">
+      <h2 id="h-verification">
+        <svg class="icon" aria-hidden="true"><use href="#ic-magnifying-glass"/></svg>
+        Final check
+      </h2>
+      <p class="section-intro">One last pass to confirm the whole change works end to end.</p>
+      <p>Run <code class="md">bash scripts/verify.sh</code> from the repo root and require exit 0, with tests/plugins/test-gallery-artifact-cards.mjs, test-render-hook-artifact-skip.sh, test-artifact-url-gate.mjs, the extended test-merge-gallery-index.sh, and the pre-existing test-build-index-parity.mjs all reported green — a <code class="md">SKIP (not configured)</code> line is a skip, not a pass. Then run the step-14 walk: one temp spec, hook event, gallery build, sibling added, gallery rebuilt — the same plan&#39;s card href must read as the claude.ai artifact URL in the first index.html and as the relative <code class="md">.html</code> path in the second. Finally, <code class="md">git fetch origin &amp;&amp; BASE_REF=main node scripts/check-plugin-versions.mjs</code> must exit 0 with plan-agent at 9.7.0.</p>
+      <p>The one piece no test can exercise is a real Artifact publish, because the Artifact tool is model-side. That path is verified on the feature&#39;s first live use; until then the skill text&#39;s fallback guarantees a failed publish degrades to exactly today&#39;s <code class="md">--file</code> delivery rather than losing the plan.</p>
+    </section>
+
+    <section class="section-card card-completion" id="completion" aria-labelledby="h-completion">
+      <h2 id="h-completion">
+        <svg class="icon" aria-hidden="true"><use href="#ic-clipboard-check"/></svg>
+        Wrapping up
+      </h2>
+      <p class="section-intro">Three gates that must all pass before this plan is marked completed.</p>
+      <div class="completion-checklist" id="completion-checklist">
+        <div class="completion-header">
+          <span class="completion-badge" id="completion-badge">Required</span>
+        </div>
+        <ul class="completion-list" id="completion-list">
+          <li>
+            <input type="checkbox" id="cc1" disabled>
+            <label for="cc1">All step TODOs marked as done</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc2" disabled>
+            <label for="cc2">All acceptance criteria verified and checked off</label>
+          </li>
+          <li>
+            <input type="checkbox" id="cc3" disabled>
+            <label for="cc3">Plan status updated to completed</label>
+          </li>
+        </ul>
+        <div class="completion-report" id="completion-report">
+          <h3 class="report-heading">Completion Report</h3>
+          <p class="report-empty">No items to report — all requirements met.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card card-next-steps" id="next-steps" aria-labelledby="h-next-steps">
+      <h2 id="h-next-steps">
+        <svg class="icon" aria-hidden="true"><use href="#ic-arrow-right-circle"/></svg>
+        Next steps
+      </h2>
+      <p class="section-intro">Follow-up ideas that came up along the way — none of them are required to finish this plan.</p>
+      <div class="next-steps-list">
+        <details class="next-step-item">
+          <summary>Extend artifact-default delivery to the other HTML-producing skills</summary>
+          <div class="next-step-prompt">
+            <p>markdown-to-html, prototype, and design gallery pages still deliver as local files only.</p>
+            <p>Paste this prompt into Claude to execute this follow-up:</p>
+            <pre>In ~/devbox/agentics, extend the artifact-default delivery pattern from
+kit/plugins/plan-agent/skills/implementation-plan/SKILL.md (introduced in 9.7.0:
+scratchpad render, Artifact publish, artifact-url: frontmatter, --file opt-in)
+to the markdown-to-html and prototype skills in the same plugin. Bump the
+plan-agent minor version in .claude-plugin/marketplace.json, add a CHANGELOG
+entry, and verify with bash scripts/verify.sh exiting 0 before reporting done.</pre>
+            <button class="copy-prompt-btn" type="button"
+                    onclick="copyPrompt(this)" aria-label="Copy prompt to clipboard">Copy prompt</button>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <footer class="plan-footer">
+      <svg class="icon" aria-hidden="true"><use href="#ic-sparkles"/></svg>
+      Generated by plan-agent · 2026-08-24 · agentics
+    </footer>
+
+  </main>
+</div><!-- /.layout -->
+
+<script>
+/* ── Theme toggle ───────────────────────────────────────────── */
+/* The <head> script has already applied any stored choice. This only has to
+   resolve what is currently on screen, flip it, and remember the answer. */
+function resolvedTheme() {
+  var set = document.documentElement.getAttribute('data-theme');
+  if (set === 'dark' || set === 'light') return set;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark' : 'light';
+}
+
+function syncThemeButton(btn) {
+  if (!btn) return;
+  var dark = resolvedTheme() === 'dark';
+  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  btn.textContent = dark ? 'Light' : 'Dark';
+}
+
+function toggleTheme(btn) {
+  var next = resolvedTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plan-theme', next); } catch (e) { /* not persisted */ }
+  syncThemeButton(btn || document.getElementById('theme-toggle'));
+}
+
+/* ── Save as PDF (native browser print dialog) ──────────────── */
+function savePDF() {
+  window.print();
+}
+
+/* ── Build rich implementation prompt from DOM ──────────────── */
+function buildImplementPrompt() {
+  var cmdEl = document.getElementById('implement-cmd');
+  var status = document.documentElement.getAttribute('data-status') || 'todo';
+  var stepCards = Array.prototype.slice.call(document.querySelectorAll('.step-card'));
+  var criteriaItems = Array.prototype.slice.call(document.querySelectorAll('#criteria-list li'));
+
+  var totalSteps = stepCards.length;
+  var doneSteps = stepCards.filter(function(c) { return c.classList.contains('completed'); }).length;
+  var totalCriteria = criteriaItems.length;
+  var checkedCriteria = criteriaItems.filter(function(li) {
+    var cb = li.querySelector('input[type="checkbox"]');
+    return cb && cb.checked;
+  }).length;
+
+  var planPathMeta = document.querySelector('meta[name="plan-path"]');
+  var planPath = (planPathMeta && planPathMeta.getAttribute('content')) || '<plan-file>';
+  var mdMeta = document.querySelector('meta[name="plan-md"]');
+  var specPath = (mdMeta && mdMeta.getAttribute('content')) || planPath.replace(/\.html$/, '.md');
+
+  var lines = [];
+  lines.push(cmdEl ? cmdEl.textContent.trim() : 'Implement the plan');
+  lines.push('');
+  lines.push('Status: ' + status + ' (' + doneSteps + '/' + totalSteps + ' steps done, ' + checkedCriteria + '/' + totalCriteria + ' criteria met)');
+  lines.push('');
+  lines.push('Instructions:');
+  lines.push('1. Read the plan spec at ' + specPath + ' (Markdown — the source of truth; the sibling HTML at ' + planPath + ' is a rendered view of it).');
+  lines.push('2. Implement every step still marked todo; after completing each step, mark it done by adding its [x] marker in the spec (e.g. "3. [x] ...").');
+  lines.push('3. When all steps are done, verify each acceptance criterion and flip its bullet to "- [x]" in the spec.');
+  lines.push('4. Run the objective test\'s Run command from the plan\'s Tests section, then walk the Verification section end-to-end and confirm the stated objective actually works — on failure, fix and re-verify before continuing; never mark the plan done on a failing check.');
+  lines.push('5. Set "status: completed" in the spec frontmatter only once every step is marked, every criterion is checked, and verification passes.');
+  lines.push('6. Re-render the sibling HTML from the spec so it shows every step and criterion complete (the plan-agent render hook does this on save; otherwise run the bundled build-plan-html.mjs renderer) — never edit the HTML by hand.');
+
+  return lines.join('\n');
+}
+
+/* ── Shared clipboard helper ────────────────────────────────── */
+/* All copy buttons delegate here. `restoreLabel` is the button's   */
+/* idle text. On failure (Clipboard API rejects AND execCommand     */
+/* fails) the button shows a visible error so the user knows to      */
+/* select manually — never a silent no-op.                          */
+function clipboardCopy(text, btn, restoreLabel) {
+  function show(labelText, cls, delay) {
+    if (btn._copyTimer) clearTimeout(btn._copyTimer);
+    btn.textContent = labelText;
+    btn.classList.remove('copied', 'copy-failed');
+    if (cls) btn.classList.add(cls);
+    btn._copyTimer = setTimeout(function () {
+      btn.textContent = restoreLabel;
+      btn.classList.remove('copied', 'copy-failed');
+      btn._copyTimer = null;
+    }, delay);
+  }
+  function flash() { show('Copied ✓', 'copied', 2000); }
+  function fail()  { show('Copy failed — select manually', 'copy-failed', 4000); }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (ok) flash(); else fail();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+/* ── Copy implement prompt ──────────────────────────────────── */
+function copyCmd(btn) {
+  clipboardCopy(buildImplementPrompt(), btn, 'Copy');
+}
+
+/* ── Copy workflow prompt (element absent when plan has no workflow) ── */
+function copyWorkflow(btn) {
+  var code = document.getElementById('workflow-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy goal prompt ──────────────────────────────────────── */
+function copyGoal(btn) {
+  var code = document.getElementById('goal-cmd');
+  if (!code) return;
+  clipboardCopy(code.textContent, btn, 'Copy');
+}
+
+/* ── Copy plan file name / relative path ────────────────────── */
+function copyPath(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  clipboardCopy(el.textContent.trim(), btn, 'Copy');
+}
+
+/* ── Copy prompt button (global — required by inline onclick) ── */
+function copyPrompt(btn) {
+  var pre = btn.previousElementSibling;
+  if (!pre || pre.tagName !== 'PRE') {
+    pre = btn.parentElement && btn.parentElement.querySelector('pre');
+  }
+  if (!pre) return;
+  clipboardCopy(pre.textContent, btn, 'Copy prompt');
+}
+
+(function () {
+  'use strict';
+
+  /* ── Progress bar — state from HTML attributes ──────────────── */
+  /* State lives in the HTML itself: a criterion is done iff its       */
+  /* <input> carries the `checked` attribute, which the browser        */
+  /* renders natively on load. Toggling a box syncs the attribute so   */
+  /* the live DOM (and any saved copy of this file) stays the single   */
+  /* portable source of truth — no browser-only storage layer.         */
+  var bar        = document.getElementById('progress-bar');
+  var label      = document.getElementById('progress-label');
+  var liveRegion = document.getElementById('criteria-status');
+  var checkboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#criteria-list input[type="checkbox"]')
+  );
+  var total = checkboxes.length;
+
+  function updateProgress() {
+    var done = checkboxes.filter(function (cb) { return cb.checked; }).length;
+    var pct  = total ? Math.round(done / total * 100) : 0;
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', pct);
+      if (pct > 0) bar.classList.add('has-progress');
+      else         bar.classList.remove('has-progress');
+    }
+    if (label) label.textContent = done + ' / ' + total + ' done';
+  }
+
+  checkboxes.forEach(function (cb, i) {
+    cb.addEventListener('change', function () {
+      cb.toggleAttribute('checked', cb.checked);
+      updateProgress();
+      if (liveRegion) {
+        liveRegion.textContent = 'Criterion ' + (i + 1) +
+          ' marked as ' + (cb.checked ? 'complete' : 'incomplete');
+      }
+    });
+  });
+
+  updateProgress();
+
+  /* ── Completion checklist auto-update ──────────────────────── */
+  var ccCheckboxes = Array.prototype.slice.call(
+    document.querySelectorAll('#completion-list input[type="checkbox"]')
+  );
+  var completionCard = document.getElementById('completion-checklist');
+
+  function updateCompletion() {
+    var stepCards = document.querySelectorAll('.step-card');
+    var allStepsDone = stepCards.length > 0 &&
+      Array.prototype.slice.call(stepCards).every(function(c) {
+        return c.classList.contains('completed');
+      });
+    if (ccCheckboxes[0]) ccCheckboxes[0].checked = allStepsDone;
+
+    var allCriteriaChecked = total > 0 &&
+      checkboxes.every(function(cb) { return cb.checked; });
+    if (ccCheckboxes[1]) ccCheckboxes[1].checked = allCriteriaChecked;
+
+    var metaStatus = document.querySelector('meta[name="plan-status"]');
+    var statusIsCompleted =
+      document.documentElement.getAttribute('data-status') === 'completed' &&
+      (!metaStatus || metaStatus.getAttribute('content') === 'completed');
+    if (ccCheckboxes[2]) ccCheckboxes[2].checked = statusIsCompleted;
+
+    var allComplete = allStepsDone && allCriteriaChecked && statusIsCompleted;
+    if (completionCard) {
+      if (allComplete) completionCard.classList.add('all-complete');
+      else completionCard.classList.remove('all-complete');
+    }
+  }
+
+  updateCompletion();
+
+  checkboxes.forEach(function(cb) {
+    cb.addEventListener('change', updateCompletion);
+  });
+
+  if ('MutationObserver' in window) {
+    new MutationObserver(updateCompletion).observe(
+      document.documentElement, { attributes: true, attributeFilter: ['data-status'] }
+    );
+  }
+
+  /* ── Scroll rail ─────────────────────────────────────────────── */
+  var rail = document.querySelector('.scroll-rail');
+  if (rail) {
+    function updateRail() {
+      var maxY = document.documentElement.scrollHeight - window.innerHeight;
+      var pct  = maxY > 0 ? (window.scrollY / maxY * 100).toFixed(1) : 0;
+      rail.style.setProperty('--scroll-pct', pct);
+    }
+    window.addEventListener('scroll', updateRail, { passive: true });
+    updateRail();
+  }
+
+  /* ── Step rail disclosure ────────────────────────────────────── */
+  /* Ships open so the rail is present with scripting off; below the layout
+     breakpoint it collapses, where an always-open list would push the plan
+     itself off the first screen. */
+  var railBox = document.querySelector('.rail-disclosure');
+  if (railBox && window.matchMedia) {
+    var narrow = window.matchMedia('(max-width: 900px)');
+    var syncRail = function (mq) { railBox.open = !mq.matches; };
+    syncRail(narrow);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncRail);
+    else if (narrow.addListener) narrow.addListener(syncRail);
+  }
+
+  /* ── Theme button ────────────────────────────────────────────── */
+  syncThemeButton(document.getElementById('theme-toggle'));
+
+  /* ── Scroll spy ──────────────────────────────────────────────── */
+  /* Track which targets are on screen rather than reacting only to
+     entries that ARE intersecting: with one link per step, a stale
+     "you are here" marker left behind after scrolling past the last
+     target is worse than no marker at all. */
+  var navLinks = Array.prototype.slice.call(
+    document.querySelectorAll('.plan-nav a[href^="#"]')
+  );
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var targets = navLinks
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+    var visible = [];
+    var setActive = function (id) {
+      navLinks.forEach(function (a) {
+        var isActive = id !== null && a.getAttribute('href') === '#' + id;
+        a.classList.toggle('active', isActive);
+        if (isActive) a.setAttribute('aria-current', 'true');
+        else          a.removeAttribute('aria-current');
+      });
+    };
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        var at = visible.indexOf(entry.target);
+        if (entry.isIntersecting) { if (at === -1) visible.push(entry.target); }
+        else if (at !== -1) { visible.splice(at, 1); }
+      });
+      if (visible.length === 0) { setActive(null); return; }
+      /* Document order, not intersection order — the observer fires in
+         whatever order the entries arrive. */
+      var first = null;
+      targets.forEach(function (el) {
+        if (first === null && visible.indexOf(el) !== -1) first = el;
+      });
+      setActive(first ? first.id : null);
+    }, { threshold: 0, rootMargin: '-20% 0px -70% 0px' });
+    targets.forEach(function (el) { observer.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>

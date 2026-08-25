@@ -116,6 +116,53 @@ else
   pass "falls back to a normal conflict when markup shape changes"
 fi
 
+# ---------------------------------------------------------------------------
+# 8. Publish flip: the same plan carded by its artifact URL on one side and by
+#    its .html path on the other must merge to ONE card. href stops being a
+#    stable card identity once publishing can change it — the driver keys on
+#    the data-local stem, falling back to href for cards that predate it.
+# ---------------------------------------------------------------------------
+cardl() { printf '<a class="gallery-card" href="%s" data-local="%s">%s</a>' "$1" "$2" "$3"; }
+ARTIFACT_HREF="https://claude.ai/public/artifacts/abc"
+
+page plans 1 "$(cardl old.html old Old)"                                                     > "$WORK/b5.html"
+page plans 2 "$(cardl old.html old Old)" "$(cardl "$ARTIFACT_HREF" add-foo Foo)"             > "$WORK/o5.html"
+page plans 2 "$(cardl old.html old Old)" "$(cardl add-foo.html add-foo Foo)"                 > "$WORK/t5.html"
+
+if run_driver "$WORK/b5.html" "$WORK/o5.html" "$WORK/t5.html"; then
+  FOO_CARDS="$(grep -o 'data-local="add-foo"' "$WORK/o5.html" | wc -l | tr -d ' ')"
+  if [ "$FOO_CARDS" = "1" ] && grep -q "href=\"$ARTIFACT_HREF\"" "$WORK/o5.html"; then
+    pass "publish flip merges to one card, keyed on the data-local stem"
+  else
+    fail "publish flip produced $FOO_CARDS cards for one plan (want 1, ours' href winning)"
+  fi
+else
+  fail "driver exited non-zero on the publish-flip merge"
+fi
+
+# ---------------------------------------------------------------------------
+# 9. Transition merge: an index generated before data-local existed carries
+#    only href="<stem>.html". It must still merge as the same plan as a
+#    regenerated side that carries data-local="<stem>" — otherwise the first
+#    merge after this change doubles every card in the gallery.
+# ---------------------------------------------------------------------------
+card_nolocal() { printf '<a class="gallery-card" href="%s">%s</a>' "$1" "$2"; }
+
+page plans 1 "$(card_nolocal old.html Old)"                                       > "$WORK/b6.html"
+page plans 2 "$(card_nolocal old.html Old)" "$(card_nolocal add-foo.html Foo)"    > "$WORK/o6.html"
+page plans 2 "$(cardl old.html old Old)"    "$(cardl "$ARTIFACT_HREF" add-foo Foo)" > "$WORK/t6.html"
+
+if run_driver "$WORK/b6.html" "$WORK/o6.html" "$WORK/t6.html"; then
+  FOO_CARDS="$(grep -o 'add-foo' "$WORK/o6.html" | wc -l | tr -d ' ')"
+  if [ "$FOO_CARDS" = "1" ]; then
+    pass "legacy href-only card merges as the same plan as a data-local card"
+  else
+    fail "transition merge produced $FOO_CARDS references to add-foo (want 1)"
+  fi
+else
+  fail "driver exited non-zero on the transition merge"
+fi
+
 echo
 if [ "$FAILURES" -eq 0 ]; then
   echo "test-merge-gallery-index: all checks passed"

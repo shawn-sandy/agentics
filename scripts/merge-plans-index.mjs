@@ -34,12 +34,25 @@ const [,, basePath, oursPath, theirsPath] = process.argv;
 
 const CARD_RE = /<a class="gallery-card"[\s\S]*?<\/a>/g;
 
-// Parse gallery-card blocks into an ordered href → block map.
+// Parse gallery-card blocks into an ordered identity → block map.
+//
+// The identity is data-local: the plan's plans-dir-relative stem, stamped on
+// every card by build-index.sh. href cannot serve, because publishing changes
+// it — the same plan is href="add-foo.html" before it is published to an
+// artifact and href="https://claude.ai/…" after, so an href-keyed union sees
+// two plans and the gallery grows a duplicate on every such branch merge.
+//
+// Cards generated before data-local existed fall back to their href with any
+// .html suffix stripped, which lands on exactly the same stem. That is what
+// makes the FIRST merge after this change correct rather than doubling every
+// card in an already-committed index.
 function parseCards(text) {
   const cards = new Map();
   for (const block of text.match(CARD_RE) ?? []) {
+    const local = block.match(/data-local="([^"]*)"/)?.[1];
     const href = block.match(/href="([^"]*)"/)?.[1];
-    if (href && !cards.has(href)) cards.set(href, block);
+    const key = local || href?.replace(/\.html$/, '');
+    if (key && !cards.has(key)) cards.set(key, block);
   }
   return cards;
 }
@@ -69,18 +82,18 @@ try {
     ours.size > 0 ? [oursText, ours, theirs] : [theirsText, theirs, ours];
 
   const merged = [];
-  for (const [href, block] of primary) {
-    if (base.has(href) && !secondary.has(href)) continue; // deleted on the other side
-    const other = secondary.get(href);
+  for (const [key, block] of primary) {
+    if (base.has(key) && !secondary.has(key)) continue;    // deleted on the other side
+    const other = secondary.get(key);
     if (other === undefined || other === block) {
       merged.push(block);                                  // unique to primary, or identical
     } else {
-      const b = base.get(href);
+      const b = base.get(key);
       merged.push(block === b && other !== b ? other : block); // changed side wins; primary wins ties
     }
   }
-  for (const [href, block] of secondary) {
-    if (!primary.has(href) && !base.has(href)) merged.push(block); // new on the other side
+  for (const [key, block] of secondary) {
+    if (!primary.has(key) && !base.has(key)) merged.push(block); // new on the other side
   }
 
   // Splice the merged card list over the chrome's card region.
