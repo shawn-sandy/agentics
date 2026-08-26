@@ -1275,6 +1275,38 @@ ok('a spec with no prototype: key renders the same markup as the pre-change rend
   }
 });
 
+ok('plan-path stays repo-relative when the output lands outside the repo', () => {
+  // Default mode renders to a scratchpad before publishing the plan as an
+  // artifact, so the output sits outside the project entirely. Relativizing
+  // that against cwd yields ../../../private/tmp/..., which would ship a
+  // machine-local path inside a page whose whole point is being shared —
+  // plan-path must keep naming where the HTML belongs beside the spec.
+  const proj = makeProject();
+  const outside = mkdtempSync(join(tmpdir(), 'plan-scratchpad-'));
+  mkdirSync(join(proj, 'docs', 'plans'), { recursive: true });
+  writeFileSync(join(proj, 'docs', 'plans', 'ship-it.md'), SAMPLE_SPEC);
+
+  const planPathIn = (file) =>
+    readFileSync(file, 'utf8').match(/<meta name="plan-path" content="([^"]*)">/)[1];
+
+  const scratch = join(outside, 'ship-it.html');
+  execFileSync('node', [RENDERER, 'docs/plans/ship-it.md', '-o', scratch], { cwd: proj });
+  assert.equal(planPathIn(scratch), 'docs/plans/ship-it.html');
+
+  // Control: rendering beside the spec already produced this, and must keep to it.
+  const sibling = join(proj, 'docs', 'plans', 'ship-it.html');
+  execFileSync('node', [RENDERER, 'docs/plans/ship-it.md', '-o', 'docs/plans/ship-it.html'], { cwd: proj });
+  assert.equal(planPathIn(sibling), 'docs/plans/ship-it.html');
+
+  // `..odd.html` at the project root is a legal in-repo name whose relative
+  // path opens with `..` without escaping — it must keep its own path.
+  execFileSync('node', [RENDERER, 'docs/plans/ship-it.md', '-o', '..odd.html'], { cwd: proj });
+  assert.equal(planPathIn(join(proj, '..odd.html')), '..odd.html');
+
+  rmSync(proj, { recursive: true, force: true });
+  rmSync(outside, { recursive: true, force: true });
+});
+
 ok('plugin-bundled renderer copies are byte-identical to the repo-root sources', () => {
   for (const rel of ['build-plan-html.mjs', 'extract-plan-spec.mjs', 'lib/plan-spec.mjs', 'lib/plan-shell.mjs']) {
     const source = readFileSync(join(ROOT, 'scripts', rel), 'utf8');

@@ -475,8 +475,12 @@ EOF
    bullets name the same files the RED phase steps author — the section is
    the catalogue, the phase is the schedule. Do not let the two drift.
 
-5d. **Render** — Run the render command from the top of this file, writing
-   `<stem>.html` beside the spec. On exit 1, fix the reported spec problem
+5d. **Render** — Run the render command from the top of this file, writing to
+   **Step 7a's output path** — the scratchpad in default mode, `<stem>.html`
+   beside the spec under `--file`. Step 7a owns that choice; do not write a
+   sibling `.html` here on your own, because default mode deliberately leaves
+   the repo without one and an unwanted sibling then wins the gallery card
+   over the artifact. On exit 1, fix the reported spec problem
    and re-run — never hand-edit the HTML to compensate. Re-run the render
    after *any* later edit to the spec.
 
