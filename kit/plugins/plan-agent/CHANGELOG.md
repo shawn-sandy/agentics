@@ -1,5 +1,23 @@
 # Changelog
 
+## 9.8.0 — publish-hub bundles a plan and its related HTML into one artifact (2026-08-26)
+
+### Added
+
+- **`publish-hub` skill + `scripts/build-plan-hub.mjs` + `bin/plan-agent-hub`.**
+  A plan's related HTML stayed local: the prototype and companion pages were
+  unreachable from the shared plan URL. `/plan-agent:publish-hub` bundles the
+  rendered plan, the `prototype:` file, and any `--extra` pages into one
+  self-contained tab shell — each document isolated whole in an
+  `<iframe srcdoc>` panel, `design:` as an external-link tab — and publishes
+  it to a stable URL recorded as `hub-artifact-url:` in the spec frontmatter,
+  never touching the plan's own `artifact-url:`. The bundler escapes `&`/`"`
+  exactly once per srcdoc, caps output at 15 MB (under the 16 MB artifact
+  limit), and on overflow exits 1 naming the largest embedded document — the
+  related file to `--skip`, or the plan itself when nothing skippable would
+  close the gap. Flag-shaped values (`-o --skip`) are misuse, never
+  filenames. Pinned by `tests/plugins/test-build-plan-hub.mjs`.
+
 ## 9.7.1 — artifact-mode renders stop leaking local paths (2026-08-25)
 
 ### Fixed
