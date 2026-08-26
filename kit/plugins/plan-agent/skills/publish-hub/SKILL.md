@@ -33,10 +33,13 @@ plan-agent-hub <spec>.md -o "$SCRATCHPAD/<stem>-hub.html" [--extra <path>]...
 The bundler renders the plan, embeds each document in its own tab panel, and
 enforces a size cap (default 15 MB, under the 16 MB artifact limit).
 
-On a size-cap failure it exits 1 naming the offending file. Rerun adding
-`--skip <named-file>`, and tell the user exactly which file was dropped and
-why. On any other exit 1 (unreadable spec or related file), report the named
-path and stop — do not publish a partial hub the user did not ask for.
+On a size-cap failure it exits 1 naming the largest embedded document. When
+that is a related file, rerun adding `--skip <named-file>` and tell the user
+exactly which file was dropped and why. When the message says the rendered
+plan itself is the largest, there is nothing to skip — report that the plan
+is too large to bundle under the cap and stop. On any other exit 1
+(unreadable spec or related file), report the named path and stop — do not
+publish a partial hub the user did not ask for.
 
 ## Step 3 — Re-read `hub-artifact-url:` immediately before publishing
 

@@ -224,10 +224,25 @@ function main() {
     else if (a === '--extra') extras.push(argv[(i += 1)]);
     else if (a === '--skip') skips.push(argv[(i += 1)]);
     else if (a === '--max-bytes') maxBytes = Number(argv[(i += 1)]);
+    else if (a.startsWith('-')) specPath = undefined; // unknown flag → misuse
     else if (specPath === null) specPath = a;
     else specPath = undefined; // second positional → misuse
   }
-  if (!specPath || extras.includes(undefined) || skips.includes(undefined) || outPath === '' || !Number.isFinite(maxBytes) || maxBytes <= 0) {
+  // A dash-leading value is a flag the user forgot to give a value to, never
+  // a filename — without this, `-o --skip` silently wrote the hub to a file
+  // literally named `--skip` and dropped the flag.
+  const flagLike = (v) => typeof v === 'string' && v.startsWith('-');
+  if (
+    !specPath ||
+    flagLike(outPath) ||
+    extras.includes(undefined) ||
+    extras.some(flagLike) ||
+    skips.includes(undefined) ||
+    skips.some(flagLike) ||
+    outPath === '' ||
+    !Number.isFinite(maxBytes) ||
+    maxBytes <= 0
+  ) {
     usage();
     process.exit(2);
   }
@@ -316,13 +331,19 @@ function main() {
 
   const total = Buffer.byteLength(hub);
   if (total > maxBytes) {
-    if (related.length > 0) {
-      const biggest = related.reduce((a, b) => (b.escapedBytes > a.escapedBytes ? b : a));
+    // Compare the plan's own escaped size too — naming a small related file
+    // when the plan is the real bulk would send the skill's --skip retry
+    // chasing bytes that cannot close the gap.
+    const planEscaped = Buffer.byteLength(escSrcdoc(planHtml));
+    const biggest = related.length > 0 ? related.reduce((a, b) => (b.escapedBytes > a.escapedBytes ? b : a)) : null;
+    if (biggest && biggest.escapedBytes > planEscaped) {
       console.error(
         `build-plan-hub: output is ${total} bytes, over the ${maxBytes}-byte cap — largest embedded file: ${biggest.path} (${biggest.escapedBytes} bytes escaped); rerun with --skip ${biggest.path}`,
       );
     } else {
-      console.error(`build-plan-hub: output is ${total} bytes, over the ${maxBytes}-byte cap — the plan alone (${specPath}) exceeds it`);
+      console.error(
+        `build-plan-hub: output is ${total} bytes, over the ${maxBytes}-byte cap — the rendered plan itself is the largest embedded document (${planEscaped} bytes escaped; ${specPath}); shrink the plan or raise --max-bytes`,
+      );
     }
     process.exit(1);
   }

@@ -13,8 +13,10 @@
   it to a stable URL recorded as `hub-artifact-url:` in the spec frontmatter,
   never touching the plan's own `artifact-url:`. The bundler escapes `&`/`"`
   exactly once per srcdoc, caps output at 15 MB (under the 16 MB artifact
-  limit), and on overflow exits 1 naming the file to `--skip`. Pinned by
-  `tests/plugins/test-build-plan-hub.mjs`.
+  limit), and on overflow exits 1 naming the largest embedded document — the
+  related file to `--skip`, or the plan itself when nothing skippable would
+  close the gap. Flag-shaped values (`-o --skip`) are misuse, never
+  filenames. Pinned by `tests/plugins/test-build-plan-hub.mjs`.
 
 ## 9.7.1 — artifact-mode renders stop leaking local paths (2026-08-25)
 

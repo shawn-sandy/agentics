@@ -7,7 +7,7 @@
 // exits 1 naming the offending file so the skill can retry with --skip, and
 // unreadable inputs that exit 1 naming the path.
 
-import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -117,11 +117,29 @@ check('missing spec exits 1 naming the path', missingSpec.status === 1 && missin
 const missingExtra = run(['spec.md', '-o', 'x.html', '--extra', 'gone.html']);
 check('missing related file exits 1 naming the path', missingExtra.status === 1 && missingExtra.stderr.includes('gone.html'));
 
+// The rendered plan (~95 KB) dwarfs the 300-byte prototype here, so the
+// overflow message must blame the plan — a `--skip proto.html` hint would
+// tell the user to drop a file whose removal cannot close the gap.
 const overflow = run(['spec.md', '-o', 'x.html', '--max-bytes', '50000']);
-check('--max-bytes overflow exits 1 naming the offending file', overflow.status === 1 && overflow.stderr.includes('proto.html') && overflow.stderr.includes('--skip'));
+check('overflow names the plan when the plan is the largest document', overflow.status === 1 && overflow.stderr.includes('spec.md') && !overflow.stderr.includes('--skip proto.html'));
+
+writeFileSync(join(TMP, 'big.html'), `<!DOCTYPE html><html><body>${'x'.repeat(300000)}</body></html>\n`);
+const overflowBig = run(['spec.md', '-o', 'x.html', '--extra', 'big.html', '--max-bytes', '150000']);
+check('overflow names the largest related file with a --skip hint', overflowBig.status === 1 && overflowBig.stderr.includes('--skip big.html'));
 
 const misuse = run([]);
 check('no spec path is misuse (exit 2)', misuse.status === 2);
+
+// A flag token must never be consumed as a value: `-o --skip` used to write
+// a hub to a file literally named `--skip` and silently drop the flag.
+const flagAsOutput = run(['spec.md', '-o', '--skip']);
+check('flag-shaped -o value is misuse, not an output file', flagAsOutput.status === 2 && !existsSync(join(TMP, '--skip')));
+
+const flagAsSkip = run(['spec.md', '-o', 'x2.html', '--skip', '--max-bytes']);
+check('flag-shaped --skip value is misuse (exit 2)', flagAsSkip.status === 2);
+
+const unknownFlag = run(['--bogus', 'spec.md', '-o', 'x3.html']);
+check('unknown flag is misuse (exit 2), not a spec path', unknownFlag.status === 2);
 
 // --- the bin wrapper --------------------------------------------------------
 
