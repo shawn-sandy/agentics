@@ -1,9 +1,11 @@
 ---
-status: todo
+status: completed
+modified: 2026-08-26
 type: feature
 created: 2026-08-26
 repo: agentics
 artifact-url: https://claude.ai/code/artifact/5945dfdd-315d-4365-994a-bad8c07c0dea
+hub-artifact-url: https://claude.ai/code/artifact/962de29f-bd92-431e-9707-1717be620827
 glance: Plans already publish as artifacts, but their prototypes and companion HTML stay local files nobody can open from the shared link. A hub artifact bundles plan and related pages into one tabbed, republishable URL; done means one link shows the plan and its prototype together, and republishing keeps that link stable.
 ---
 
@@ -67,7 +69,7 @@ stable URL a hub gives.
 
 ## Steps
 
-1. Create `kit/plugins/plan-agent/scripts/build-plan-hub.mjs` accepting
+1. [x] Create `kit/plugins/plan-agent/scripts/build-plan-hub.mjs` accepting
    `<spec>.md -o <out>.html [--extra <path>]... [--max-bytes <n>]`: parse
    frontmatter with `scripts/lib/plan-spec.mjs`, render the plan through
    `build-plan-html.mjs`, collect related HTML from the `prototype:` key plus
@@ -82,14 +84,14 @@ stable URL a hub gives.
    fixture spec plus prototype; the output opens in a browser with working
    tabs and an interactive prototype, and a tiny `--max-bytes` run exits 1
    naming the file.
-2. Add `kit/plugins/plan-agent/bin/plan-agent-hub`, copying the
+2. [x] Add `kit/plugins/plan-agent/bin/plan-agent-hub`, copying the
    `exec node "$(dirname "$0")/../scripts/..."` wrapper pattern from
    `bin/plan-agent-render` verbatim. Why: skills must invoke bin scripts by
    bare name — a documented `node "${CLAUDE_PLUGIN_ROOT}/..."` command never
    runs because the Bash tool rejects `${VAR}` expansion. Verify: invoking
    the wrapper by absolute path with the fixture arguments produces
    byte-identical output to calling the `.mjs` directly.
-3. Write `tests/plugins/test-build-plan-hub.mjs`: build a fixture spec and a
+3. [x] Write `tests/plugins/test-build-plan-hub.mjs`: build a fixture spec and a
    quote-heavy prototype in a temp directory removed on exit, then assert the
    hub contains the plan title and the escaped prototype markup in separate
    tab panels, that `&`/`"` survive the srcdoc round trip, and that a missing
@@ -98,7 +100,7 @@ stable URL a hub gives.
    every future publish depends on, and each assertion must fail if the
    behaviour regresses. Verify: `node tests/plugins/test-build-plan-hub.mjs`
    exits 0, and temporarily breaking the escaper makes it exit non-zero.
-4. Write `kit/plugins/plan-agent/skills/publish-hub/SKILL.md` — plan-mode
+4. [x] Write `kit/plugins/plan-agent/skills/publish-hub/SKILL.md` — plan-mode
    guard line first, three-part description within the 200-char budget,
    `allowed-tools: Read, Edit, Glob, Bash, AskUserQuestion, SendUserFile,
    ToolSearch, ExitPlanMode, Artifact, WebFetch` — with this workflow:
@@ -117,13 +119,13 @@ stable URL a hub gives.
    publish a real plan twice through the skill — the second publish reuses
    the first URL and the spec diff shows exactly one `hub-artifact-url:`
    line added.
-5. Bump `plan-agent` from 9.7.1 to 9.8.0 in
+5. [x] Bump `plan-agent` from 9.7.1 to 9.8.0 in
    `.claude-plugin/marketplace.json` (MINOR — new skill) and add a matching
    `kit/plugins/plan-agent/CHANGELOG.md` entry. Why: the version lives only
    in marketplace.json and CI fails any plugin-touching PR whose version
    does not exceed the base branch. Verify: `git fetch origin && BASE_REF=main
    node scripts/check-plugin-versions.mjs` exits 0.
-6. Add the skill to `kit/plugins/plan-agent/README.md`'s components section
+6. [x] Add the skill to `kit/plugins/plan-agent/README.md`'s components section
    and regenerate the root README's Plugin Reference Table with
    `node scripts/build-readme-table.mjs`. Why: the table is generated output
    — hand-editing it is a repo violation, and a shipped skill missing from
@@ -150,12 +152,12 @@ Tier 1 — This plan creates plugin runtime scripts
 
 ## Acceptance Criteria
 
-- [ ] Running `plan-agent-hub` on a spec with a `prototype:` key emits one self-contained HTML file with a Plan tab and a Prototype tab, and the prototype's JavaScript still runs inside its panel
-- [ ] Publishing through the skill writes `hub-artifact-url:` into the spec, and a second publish updates the same URL instead of minting a new one
-- [ ] No existing skill changes: `implementation-plan`, `plan-artifact`, and the `artifact-url:` convention are untouched by the diff
-- [ ] A bundle exceeding the size cap fails with the offending file named, and the skill's retry-without-it path reports what was dropped
-- [ ] `node tests/plugins/test-build-plan-hub.mjs` exits 0
-- [ ] plan-agent is 9.8.0 in marketplace.json with a CHANGELOG entry, and both READMEs list the skill
+- [x] Running `plan-agent-hub` on a spec with a `prototype:` key emits one self-contained HTML file with a Plan tab and a Prototype tab, and the prototype's JavaScript still runs inside its panel
+- [x] Publishing through the skill writes `hub-artifact-url:` into the spec, and a second publish updates the same URL instead of minting a new one
+- [x] No existing skill changes: `implementation-plan`, `plan-artifact`, and the `artifact-url:` convention are untouched by the diff
+- [x] A bundle exceeding the size cap fails with the offending file named, and the skill's retry-without-it path reports what was dropped
+- [x] `node tests/plugins/test-build-plan-hub.mjs` exits 0
+- [x] plan-agent is 9.8.0 in marketplace.json with a CHANGELOG entry, and both READMEs list the skill
 
 ## Verification
 

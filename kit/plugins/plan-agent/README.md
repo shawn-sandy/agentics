@@ -36,6 +36,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `setup-sites` | Skill | Command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent — scaffolds the deploy pipeline into any repo |
 | `prototype` | Skill | Command (`/plan-agent:prototype <plan.html \| idea \| image \| figma-url>`) or auto-activates on "prototype this plan / idea / screenshot" intent — generates a runnable static-HTML prototype under `docs/prototypes/` |
 | `design` | Skill | Command (`/plan-agent:design <plan.html \| idea \| image \| figma-url>`) or auto-activates on "design this plan" intent — derives one artboard per user-facing plan step under `docs/designs/<plan-slug>/` and publishes the canvas through Claude Code's built-in `design` skill |
+| `publish-hub` | Skill | Command (`/plan-agent:publish-hub <plan.md> [--extra <path>]...`) or auto-activates on "publish / share a plan hub" intent — bundles the plan and its related HTML (prototype, extras) into one tabbed hub artifact at a stable `hub-artifact-url:` |
 | `dispatch` | Hook (`PostToolUse`) | The plugin's only registered hook. Fires on `Write`/`Edit`/`MultiEdit`, path-gates once, and fans out to the six below only for plan/prototype/design writes |
 | `validate-plan-filename` | Child of `dispatch` | Validates plan filenames; exits 2 to block a badly-named plan |
 | `rebuild-plans-index` | Child of `dispatch` | Regenerates the plans gallery for non-index `.html` plans |
@@ -568,6 +569,7 @@ plan-agent/
     plan-agent-prototypes-index  — Rebuilds the prototypes gallery (wraps hooks/build-prototypes-index.sh)
     plan-agent-designs-index     — Rebuilds the designs gallery (wraps hooks/build-designs-index.sh)
     plan-agent-plans-index       — Rebuilds the plans gallery (wraps hooks/build-index.sh)
+    plan-agent-hub               — Bundles a plan + related HTML into one hub page (wraps scripts/build-plan-hub.mjs)
   skills/
     implementation-plan/
       SKILL.md              — Workflow, arguments, spec authoring, render pipeline
@@ -602,6 +604,8 @@ plan-agent/
       SKILL.md              — Open existing gallery without rebuild
     setup-sites/
       SKILL.md              — Scaffold the GitHub Pages deploy pipeline into any repo
+    publish-hub/
+      SKILL.md              — Bundle a plan + related HTML into one tabbed hub artifact
     prompt/
       SKILL.md              — 7-phase prompt authoring (classify, interview, structure, draft, save)
       references/
@@ -802,6 +806,15 @@ With `--all`, the skill runs in sweep mode: it discovers every non-completed pla
 ### `plans-open` Skill
 
 Auto-activates on "open the gallery", "show the plans page" intent. Opens the existing `index.html` gallery directly without scanning, parsing, or writing any files. Resolves `plansDirectory` from settings (same as `plans-library`). If `index.html` does not exist, tells the user to run `/plan-agent:plans-library` first.
+
+### `publish-hub` Skill
+
+Command-invocable via `/plan-agent:publish-hub <plan.md> [--extra <path>]...` and model-invocable on "publish / share a plan hub" intent. Bundles a plan and its related HTML into one self-contained tabbed hub page and publishes it as a single claude.ai artifact at a stable URL.
+
+- **Bundle** — `plan-agent-hub <spec>.md -o <hub>.html` renders the plan through `build-plan-html.mjs` and embeds it plus the spec's `prototype:` file and each `--extra` page in its own `<iframe srcdoc>` tab panel; a `design:` URL becomes an external-link tab. Everything is inline, so the page satisfies the artifact CSP.
+- **Size guard** — output is capped (default 15 MB, under the 16 MB artifact limit); on overflow the bundler exits 1 naming the offending file, and the skill retries with `--skip <file>` and reports what was dropped.
+- **Stable URL** — the returned artifact URL is written to the spec as `hub-artifact-url:`; every later publish re-reads it fresh and republishes to the same page. The plan's own `artifact-url:` is never touched.
+- **Verification** — after publishing, the skill fetches the URL and confirms the page contains the plan title; on a failed publish it delivers the hub HTML as a file instead and never reports an unreturned URL.
 
 ### `validate-plan-filename` Hook
 

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Bare-name entry point for the hub bundler (scripts/build-plan-hub.mjs).
+#
+# Same wrapper pattern as plan-agent-render, for the same reason: Claude Code
+# adds every enabled plugin's bin/ to the Bash tool's PATH, so a skill invokes
+# `plan-agent-hub <spec>.md -o <hub>.html` by bare name — a documented
+# `node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-hub.mjs"` command never runs
+# because the Bash tool rejects any command containing `${VAR}` expansion.
+# See plan-agent-render for the full rationale, including why `$0` is always
+# the absolute resolved path here.
+#
+# Arguments pass through unchanged. Exit status is the bundler's.
+exec node "$(dirname "$0")/../scripts/build-plan-hub.mjs" "$@"
