@@ -1,5 +1,24 @@
 # Changelog
 
+## 9.7.1 — artifact-mode renders stop leaking local paths (2026-08-25)
+
+### Fixed
+
+- **`plan-path` stays repo-relative when the output lands outside the repo.**
+  Default mode renders to the scratchpad before publishing, and
+  `build-plan-html.mjs` relativized that against the cwd — stamping
+  `../../../../../../../private/tmp/.../scratchpad/<stem>.html` into the
+  `plan-path` meta tag and the "More ways to run this plan" drawer of a page
+  whose whole point is being shared. An out-of-repo output now falls back to
+  where the HTML belongs beside the spec. Pinned by
+  `tests/plugins/test-build-plan-html.mjs`.
+- **Step 5d no longer contradicts Step 7a.** 5d said to render `<stem>.html`
+  beside the spec; 7a says default mode leaves the repo without one. Following
+  the steps in order dropped an unwanted ~90 KB sibling into the plans
+  directory — and by the skill's own rule that sibling then wins the gallery
+  card over the artifact, silently bypassing the feature 9.7.0 added. 5d now
+  defers the output path to Step 7a.
+
 ## 9.7.0 — the plans gallery cards artifact-only plans (2026-08-25)
 
 ### Added
