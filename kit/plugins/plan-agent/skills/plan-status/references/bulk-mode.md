@@ -45,3 +45,13 @@ Create TodoWrite progress todos, then run:
    write: prepend YAML via a `Bash` loop for files without frontmatter; use
    `Edit` for files that already have it. Emit progress every 10 files and a
    final `updated / skipped / errors` summary.
+8. **Republish artifact-published plans** — for every written file with no
+   sibling `<stem>.html` but an `artifact-url:` that parses as an `http(s)`
+   URL **with a host**, run
+   [Step 8](single-file-flow.md#step-8--republish-an-artifact-published-plan)
+   once per plan: render to the scratchpad and
+   republish to that URL. The bash prepend loop in step 7 is a subprocess
+   write, so it fires no hook at all — and the hook skips artifact plans
+   anyway. Without this pass a bulk run leaves every shared page stale.
+   Count them in the final summary as `republished: N`; a plan whose
+   republish fails is reported by name and does not stop the rest.

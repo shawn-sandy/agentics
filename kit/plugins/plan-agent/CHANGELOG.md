@@ -1,5 +1,68 @@
 # Changelog
 
+## 9.9.0 — completion state reaches artifact-published plans (2026-08-26)
+
+### Fixed
+
+- **`plan-status` now republishes an artifact-published plan.** A plan published
+  to claude.ai is a spec carrying `artifact-url:` with **no** sibling
+  `<stem>.html`, and that missing sibling is precisely the file-published signal
+  `render-plan-html.py` uses to skip re-rendering. `plan-status` wrote `status:`
+  into the frontmatter and stopped, so nothing ever updated the page — the spec
+  read `completed` while the page everyone else opened still read `todo`. The
+  new Step 8 renders to the scratchpad and calls `Artifact` with the recorded
+  URL, updating the existing page in place; the whole spec goes with it, so the
+  `[x]` step markers, `- [x]` criteria, and `## Completion Report` bullets land
+  on the shared page together with the status. `Artifact` joins the skill's
+  `allowed-tools` (without it the republish would prompt mid-run, which in a
+  bulk pass means silently not happening). Bulk mode runs the same pass after
+  its write stage and reports `republished: N` — its YAML prepend is a Bash
+  subprocess write, which fires no PostToolUse hook at all.
+- **`finalize-plan --all` can now see artifact plans.** Sweep discovery grepped
+  `"$PLANS_DIR"/*.html` for a `todo`/`in-progress` `plan-status` meta tag, so a
+  plan with no HTML on disk was never a candidate — the sweep skipped exactly
+  the plans whose staleness was publicly visible. S1 adds a spec-side scan
+  (`artifact-url:` present, no sibling `.html`, `status:` todo or in-progress)
+  and unions the two lists; the sibling test keeps a plan from appearing twice.
+- **Delivery stopped promising a file that does not exist.** Both `finalize-plan`
+  delivery steps handed back `<stem>.html`; for an artifact plan that path is
+  either absent or a scratchpad temp that dies with the session. They now send
+  the `.md` and report the artifact URL.
+
+The artifact scan carries three guards, each closing a distinct failure found
+by reviewing the first cut of it:
+
+- **Frontmatter-bounded matching.** Grepping the whole spec made a *completed*
+  plan whose body documents plan-agent's own keys — a bare `status: todo` line
+  inside `## Steps` — a sweep candidate. Reproduced against a fixture, and not
+  hypothetical in a repo whose plans are about plan-agent. An `awk` extract
+  reads only the frontmatter block, which is also less work than two
+  whole-file greps.
+- **`# Plan:` gate.** A non-spec `.md` carrying both keys entered the candidate
+  list, and S4 resolves edit mode through Step 1 — which is instructed to STOP
+  on a `.md` with no `# Plan:` heading, halting the sweep partway and leaving
+  earlier plans written and later ones untouched.
+- **`done || true`.** The loop's exit status is its last command, so a
+  directory whose final spec did not match aborted the sweep under `set -e`,
+  precisely when there was nothing to sweep.
+- **A host is required.** `https?://` alone matched a truncated `https://`
+  with nothing after it. Passing that to `Artifact` claims a *new* URL rather
+  than updating the shared one, stranding the link people already have. Every
+  eligibility rule now reads "an `http(s)` URL **with a host**", matching the
+  gate `implementation-plan` Step 7b and `publish-hub` already applied.
+
+S1 also now concatenates both lists into `candidates`, the name S2–S4 iterate;
+without it the artifact list was discovered and then silently dropped. S4
+records each republish outcome, which S5 was already told to report but nothing
+captured.
+
+Pinned by `tests/plugins/test-artifact-plan-completion.sh`, whose five guard
+checks were each mutation-tested by deleting the guard and confirming the check
+goes red — two of them initially matched the prose explaining a guard rather
+than the guard itself, and stayed green when it was removed. `build` was
+already correct — it routes through its own re-render subroutine — and is
+unchanged.
+
 ## 9.8.0 — publish-hub bundles a plan and its related HTML into one artifact (2026-08-26)
 
 ### Added

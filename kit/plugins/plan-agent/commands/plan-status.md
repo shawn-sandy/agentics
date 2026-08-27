@@ -1,7 +1,7 @@
 ---
 description: Check and update the lifecycle status of a plan file (todo, in-progress, completed) with type classification (feature, fix, refactor, docs, chore)
 allowed-tools:
-  Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite, ToolSearch, ExitPlanMode
+  Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite, ToolSearch, ExitPlanMode, Artifact
 argument-hint: "[plan-file-path | directory] [--all] [--force] - omit to auto-detect; pass a directory or --all for bulk mode"
 ---
 
