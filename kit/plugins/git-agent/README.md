@@ -182,7 +182,7 @@ Auto-activates when you say any of:
 - "ship and autofix CI failures"
 
 The skill will:
-1. Context guard (Step 0): the pipeline derives all of its state from `git`/`gh`, never from the conversation, so a long session is pure token cost — Step 5 ends the turn and every PR event re-sends the transcript. On a long session it offers `/clear` + re-invoke, dispatching `/git-agent:ship-bg` + `/git-agent:ship-ci-bg` (each subagent gets a fresh context window), or continuing here. Skipped on a short session
+1. Context guard (Step 0): the pipeline derives all of its state from `git`/`gh`, never from the conversation, so a long session is pure token cost — Step 5 ends the turn and every PR event re-sends the transcript. On a long session it offers `/clear` + re-invoke, dispatching `/git-agent:ship-bg` and then, once it reports the PR URL, `/git-agent:ship-ci-bg` (each subagent gets a fresh context window), or continuing here. Skipped on a short session
 2. Exit plan mode (Step 0.5) — no-op when already off
 3. Pre-flight: run **every** guard — clean tree, uncommitted plan files, detached HEAD, `gh` auth, worktree env parity, browser availability — and report them in one table (see [The pre-flight table](#the-pre-flight-table)). Headless, each gate takes its named default; the uncommitted-plan-files gate defaults to `abort`
 4. Branch: if on the default branch, auto-generate and create a feature branch via `branch-agent`; otherwise continue on current branch

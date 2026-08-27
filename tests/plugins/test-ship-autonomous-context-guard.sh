@@ -21,16 +21,24 @@ echo "2. Step 0 is the context guard..."
 grep -q "^## Step 0: Context Guard" "$SKILL" && pass || fail "'## Step 0: Context Guard' heading missing"
 
 echo "3. Guard runs before plan-mode exit and before the first mutation..."
-S0=$(grep -n "^## Step 0: Context Guard"  "$SKILL" | cut -d: -f1)
-S05=$(grep -n "^## Step 0.5: Exit Plan Mode" "$SKILL" | cut -d: -f1)
-S1=$(grep -n "^## Step 1: Pre-flight Guards" "$SKILL" | cut -d: -f1)
+# `|| true` matters: `pipefail` is on, so a heading grep that matches nothing
+# would abort the whole run here and hide every later check plus the summary.
+S0=$(grep -n "^## Step 0: Context Guard"  "$SKILL" | cut -d: -f1 || true)
+S05=$(grep -n "^## Step 0.5: Exit Plan Mode" "$SKILL" | cut -d: -f1 || true)
+S1=$(grep -n "^## Step 1: Pre-flight Guards" "$SKILL" | cut -d: -f1 || true)
 if [ -n "$S0" ] && [ -n "$S05" ] && [ -n "$S1" ] && [ "$S0" -lt "$S05" ] && [ "$S05" -lt "$S1" ]; then
   pass
 else
   fail "expected Step 0 < Step 0.5 < Step 1, got $S0 / $S05 / $S1"
 fi
 
-GUARD="$(sed -n "${S0},$((S05 - 1))p" "$SKILL")"
+# Only sliceable once both bounds are known; otherwise leave it empty so the
+# checks below report their own failures instead of erroring on bad arithmetic.
+if [ -n "$S0" ] && [ -n "$S05" ]; then
+  GUARD="$(sed -n "${S0},$((S05 - 1))p" "$SKILL")"
+else
+  GUARD=""
+fi
 # Prose in these files is hard-wrapped, so any assertion spanning more than a
 # few words must run against the unwrapped text or it fails on a line break.
 GUARD1="$(tr '\n' ' ' <<<"$GUARD")"

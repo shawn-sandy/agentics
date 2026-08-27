@@ -26,12 +26,14 @@ Offer them with **AskUserQuestion**.
 | Route | What happens |
 |---|---|
 | `clear` | The user runs `/clear`, then re-invokes. Nothing is lost — the pipeline re-derives its state from git. |
-| `background` | Dispatch `/git-agent:ship-bg`, then `/git-agent:ship-ci-bg`. Each subagent gets its own context window and this session stays free. |
+| `background` | Dispatch `/git-agent:ship-bg`. Each subagent gets its own context window and this session stays free. |
 | `continue` | Run the pipeline in this session anyway. |
 
 **`clear` is a hard STOP.** You cannot clear your own context; trying and
 silently failing would run the whole pipeline inside the very session the user
 asked to escape. End the turn and let the user re-invoke.
+
+**`background` is two dispatches, not one.** `/git-agent:ship-bg` returns as soon as it dispatches, so the PR does not exist yet — and `/git-agent:ship-ci-bg` stops immediately when the branch has no PR. Wait for ship-bg to report the PR URL, then dispatch `/git-agent:ship-ci-bg` to watch its checks.
 
 **`background` still returns here for the merge.** A subagent has no user to ask
 for merge approval, so Step 8 runs in the foreground — here, or via
