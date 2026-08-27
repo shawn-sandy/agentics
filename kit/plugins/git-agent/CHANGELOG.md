@@ -1,5 +1,39 @@
 # Changelog — git-agent
 
+## v4.19.5 — 2026-08-27 — an empty log is not an empty CI run
+
+### Fixed
+
+- **A zero-byte `--log-failed` no longer reports as "CI never dispatched".**
+  The 4.19.4 rule in `merge` treated three states as a non-dispatch: an empty
+  run list, an empty `jobs` array, or every job failed *and* `--log-failed`
+  returning zero bytes. The third clause was an extrapolation the cited
+  measurement never covered — all four blocked runs in the 2026-08-14 window
+  had an **empty `jobs` array**, so the zero-byte log was never observed
+  independently of it. A dispatched run *can* return no log bytes: expired log
+  retention, a fetch landing on a different attempt than the failing one, or a
+  transient API error. Reporting that as "CI never dispatched — billing block"
+  tells the user to ignore a real failure — the one wrong direction that
+  matters.
+- **The jobs array, not the log size, now makes the call.** Verified against
+  live runs on this repo: blocked run `31703518612` returns `jobs: []` with no
+  `startedAt` anywhere, while genuine failures `32881670224` and `32641116349`
+  return jobs carrying `startedAt`, `completedAt`, and populated `steps` with
+  named failed steps. A non-empty `jobs` array is therefore proof of dispatch
+  on its own. `merge` and `ship-autonomous/references/ci-autofix.md` now treat
+  an empty run list or empty `jobs` array as the whole non-dispatch test, and
+  report a started-jobs run with an unreadable log as **"CI failed — logs
+  unavailable"** — a red check of unknown cause, named down to the failing job
+  and step from the jobs JSON, never an external blocker.
+- **`ci-autofix.md`'s measurement paragraph states its own limit.** It now says
+  the window contained no started-jobs run with empty logs, so a later reader
+  cannot mistake the zero-byte reading for an independently verified signal.
+
+`tests/review-gates.test.mjs` gains three assertions covering the split, and
+`tests/plugins/test-ship-preflight.sh` no longer pins the removed clause.
+`docs/guides/how-to/git-agent.md` needs no change — its `merge` section
+documents the readiness gate and never described the dispatch heuristic.
+
 ## v4.19.4 — 2026-08-21 — the adversarial review hunts the defects that escape it
 
 ### Changed

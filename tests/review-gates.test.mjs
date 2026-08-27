@@ -164,6 +164,28 @@ check(
       MERGE.indexOf('## Step 3: Re-check, ask, then merge'),
 );
 
+// A zero-byte `--log-failed` is not evidence that no job started. The
+// 2026-08-14 measurement behind this rule only ever observed blocked runs with
+// an EMPTY jobs array — it never measured a run whose jobs started and whose
+// logs came back empty (retention expiry, an attempt mismatch, a transient API
+// error). Reporting that case as "never dispatched — billing block" tells the
+// user to ignore a real failure, so the jobs array, not the log size, has to
+// carry the non-dispatch call.
+check(
+  'merge treats a started job as proof CI dispatched',
+  MERGE.includes('startedAt'),
+);
+check(
+  'merge has a logs-unavailable branch distinct from never-dispatched',
+  MERGE.includes('logs unavailable'),
+);
+check(
+  'ci-autofix does not classify a started-jobs empty log as a non-dispatch',
+  readPlugin(
+    'git-agent', 'skills', 'ship-autonomous', 'references', 'ci-autofix.md',
+  ).includes('startedAt'),
+);
+
 // ── 4. build checks checkout freshness before implementing ─────────────────
 
 // The check lives in resolve-plan.md, not the core: build/SKILL.md sits at
