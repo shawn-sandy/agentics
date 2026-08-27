@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Context guard for the ship-autonomous pipeline</title>
+</head>
+<body>
+<style>
+  :root {
+    --ground: #F6F7F9;
+    --card: #FFFFFF;
+    --ink: #161C24;
+    --ink-soft: #47525F;
+    --ink-faint: #77828F;
+    --rule: #DEE3E9;
+    --rule-soft: #EBEEF2;
+    --accent: #8A5A1E;
+    --accent-wash: #F4EADC;
+    --good: #2C6A58;
+    --good-wash: #E3EFEA;
+    --warn: #8A5A1E;
+    --shadow: 0 1px 2px rgba(22, 28, 36, .05), 0 8px 24px -16px rgba(22, 28, 36, .22);
+
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --serif: "Iowan Old Style", Charter, "Bitstream Charter", Georgia, serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #10151B;
+      --card: #171E26;
+      --ink: #E6EBF1;
+      --ink-soft: #A7B3C0;
+      --ink-faint: #7A8794;
+      --rule: #2A343F;
+      --rule-soft: #212A34;
+      --accent: #D9A44C;
+      --accent-wash: #2A2115;
+      --good: #6BBFA4;
+      --good-wash: #16261F;
+      --warn: #D9A44C;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -16px rgba(0, 0, 0, .7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #10151B;
+    --card: #171E26;
+    --ink: #E6EBF1;
+    --ink-soft: #A7B3C0;
+    --ink-faint: #7A8794;
+    --rule: #2A343F;
+    --rule-soft: #212A34;
+    --accent: #D9A44C;
+    --accent-wash: #2A2115;
+    --good: #6BBFA4;
+    --good-wash: #16261F;
+    --warn: #D9A44C;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -16px rgba(0, 0, 0, .7);
+  }
+
+  :root[data-theme="light"] {
+    --ground: #F6F7F9;
+    --card: #FFFFFF;
+    --ink: #161C24;
+    --ink-soft: #47525F;
+    --ink-faint: #77828F;
+    --rule: #DEE3E9;
+    --rule-soft: #EBEEF2;
+    --accent: #8A5A1E;
+    --accent-wash: #F4EADC;
+    --good: #2C6A58;
+    --good-wash: #E3EFEA;
+    --warn: #8A5A1E;
+    --shadow: 0 1px 2px rgba(22, 28, 36, .05), 0 8px 24px -16px rgba(22, 28, 36, .22);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 62rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3.25rem;
+  }
+
+  .prose { max-width: 40rem; }
+
+  h1, h2, h3, h4 { font-family: var(--sans); text-wrap: balance; margin: 0; }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.85rem);
+    line-height: 1.1;
+    letter-spacing: -.022em;
+    font-weight: 660;
+  }
+
+  h2 {
+    font-size: 1.35rem;
+    letter-spacing: -.012em;
+    font-weight: 640;
+    line-height: 1.25;
+  }
+
+  h3 {
+    font-size: 1.02rem;
+    letter-spacing: -.006em;
+    font-weight: 620;
+    line-height: 1.35;
+  }
+
+  p { margin: 0; }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  code, kbd {
+    font-family: var(--mono);
+    font-size: .855em;
+    background: var(--rule-soft);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: .08em .34em;
+    word-break: break-word;
+  }
+
+  pre.block {
+    font-family: var(--mono);
+    font-size: .82rem;
+    line-height: 1.6;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-left: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: .85rem 1rem;
+    margin: 0;
+    overflow-x: auto;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .705rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  /* --- masthead --- */
+  .masthead { display: flex; flex-direction: column; gap: .85rem; }
+  .masthead .lede {
+    font-size: 1.11rem;
+    color: var(--ink-soft);
+    max-width: 42rem;
+  }
+  .meta-line {
+    font-family: var(--mono);
+    font-size: .735rem;
+    color: var(--ink-faint);
+    letter-spacing: .02em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem 1.1rem;
+    border-top: 1px solid var(--rule);
+    padding-top: .8rem;
+  }
+
+  /* --- section scaffolding --- */
+  section { display: flex; flex-direction: column; gap: 1.15rem; }
+  .sec-head { display: flex; flex-direction: column; gap: .3rem; }
+
+  /* --- stat strip --- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .stat { background: var(--card); padding: 1rem 1.15rem; display: flex; flex-direction: column; gap: .18rem; }
+  .stat .n {
+    font-family: var(--sans);
+    font-size: 1.9rem;
+    font-weight: 640;
+    letter-spacing: -.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .stat .k {
+    font-family: var(--mono);
+    font-size: .69rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .stat.is-open .n { color: var(--warn); }
+
+  /* --- cards --- */
+  .cards { display: flex; flex-direction: column; gap: .9rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    padding: 1.15rem 1.3rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+  }
+  .card > p, .card > pre { max-width: 46rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .chip {
+    font-family: var(--mono);
+    font-size: .685rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: var(--rule-soft);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: .15rem .58rem;
+  }
+  .chip.affects { color: var(--accent); background: var(--accent-wash); border-color: transparent; }
+  .chip.ok { color: var(--good); background: var(--good-wash); border-color: transparent; }
+
+  /* --- tables --- */
+  .scroller { overflow-x: auto; border: 1px solid var(--rule); border-radius: 5px; background: var(--card); }
+  table { border-collapse: collapse; width: 100%; font-size: .93rem; }
+  th, td { text-align: left; padding: .68rem .95rem; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th {
+    font-family: var(--mono);
+    font-size: .69rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 400;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.was { color: var(--ink-faint); }
+
+  /* --- diagrams --- */
+  figure { margin: 0; display: flex; flex-direction: column; gap: .55rem; }
+  .mermaid-diagram {
+    /* Mermaid bakes its palette in at render time and cannot follow the
+       viewer's theme, so this card stays light on both grounds. */
+    background: #FFFFFF;
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    padding: 1.15rem .9rem;
+    overflow-x: auto;
+  }
+  .mermaid-diagram pre.mermaid { margin: 0; background: none; border: 0; padding: 0; }
+  .mermaid-diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  figcaption { font-size: .875rem; color: var(--ink-faint); max-width: 42rem; }
+
+  /* --- decisions --- */
+  .decision {
+    border-left: 2px solid var(--accent);
+    padding-left: 1.05rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    max-width: 44rem;
+  }
+  .decision .rejected {
+    font-size: .9rem;
+    color: var(--ink-faint);
+    background: var(--rule-soft);
+    border-radius: 4px;
+    padding: .55rem .75rem;
+  }
+  .decision .rejected b { color: var(--ink-soft); font-weight: 600; font-family: var(--sans); font-size: .82rem; letter-spacing: .01em; }
+
+  /* --- plain lists --- */
+  .items { display: flex; flex-direction: column; gap: 1rem; max-width: 44rem; }
+  .item { display: flex; flex-direction: column; gap: .3rem; }
+  .item .t { font-family: var(--sans); font-weight: 620; font-size: .97rem; }
+
+  dl.glossary { display: grid; grid-template-columns: minmax(8rem, 13rem) 1fr; gap: .55rem 1.4rem; margin: 0; font-size: .93rem; }
+  dl.glossary dt { font-family: var(--mono); font-size: .8rem; color: var(--ink); padding-top: .12rem; word-break: break-word; }
+  dl.glossary dd { margin: 0; color: var(--ink-soft); }
+
+  .files { display: flex; flex-direction: column; gap: 1.15rem; }
+  .filegroup { display: flex; flex-direction: column; gap: .5rem; }
+  .filegroup ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+  .filegroup li { display: flex; flex-direction: column; gap: .1rem; font-size: .93rem; }
+  .filegroup .path { font-family: var(--mono); font-size: .795rem; color: var(--ink); word-break: break-all; }
+  .filegroup .note { color: var(--ink-soft); }
+
+  @media (max-width: 34rem) {
+    body { font-size: 16px; }
+    dl.glossary { grid-template-columns: 1fr; gap: .15rem; }
+    dl.glossary dd { margin-bottom: .5rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">Team recap &middot; git-agent</p>
+    <h1>Context guard for the ship-autonomous pipeline</h1>
+    <p class="lede">
+      The skill that ships your work now checks how long the conversation has
+      gotten before it starts, and offers two cheaper ways to run.
+    </p>
+    <p class="meta-line">
+      <span>2026-07-28</span>
+      <span>git-agent 4.7.0 &rarr; 4.8.0</span>
+      <span>working tree, not yet committed</span>
+    </p>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">At a glance</p>
+      <h2>Where this landed</h2>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span class="n">5</span><span class="k">Changes shipped</span></div>
+      <div class="stat"><span class="n">5</span><span class="k">Files touched</span></div>
+      <div class="stat"><span class="n">6</span><span class="k">Decisions made</span></div>
+      <div class="stat is-open"><span class="n">4</span><span class="k">Open items</span></div>
+    </div>
+
+    <div class="prose" style="display:flex;flex-direction:column;gap:.8rem">
+      <p>
+        <b>ship-autonomous</b> is the git-agent skill that runs the whole delivery
+        pipeline for you: branch, test, commit, open a pull request, watch the
+        build, fix the common failures, and merge once you approve. It now opens
+        by asking whether it should be running in this conversation at all.
+      </p>
+      <p>
+        The reason is that the pipeline reads every input it needs from
+        <code>git</code> and GitHub &mdash; never from the conversation. All that
+        accumulated history is cost with no benefit, and the cost repeats every
+        time the build wakes the session back up.
+      </p>
+      <p>
+        Nothing is committed yet. Five files sit in the working tree, all
+        verified: a new 12-check test passes, one deliberate sabotage of the skill
+        text made the right check fail, and the existing git-agent suite and the
+        version guard both still pass.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">What changed</p>
+      <h2>Five things are different</h2>
+    </div>
+
+    <div class="cards">
+
+      <article class="card">
+        <h3>The pipeline asks before spending your conversation</h3>
+        <div class="chips">
+          <span class="chip affects">Affects: anyone who ships</span>
+          <span class="chip">Reach it: next invocation from a long session</span>
+        </div>
+        <p>
+          It used to start working the moment it was invoked. Now its first step
+          states plainly that it reads nothing from the conversation, then &mdash;
+          only when the session is already long &mdash; offers three routes:
+          <b>clear</b> (you run <code>/clear</code> and re-invoke, losing nothing),
+          <b>background</b> (hand the work to subagents, each with its own fresh
+          conversation, and keep this session for other work), or
+          <b>continue</b> (run here anyway).
+        </p>
+      </article>
+
+      <article class="card">
+        <h3>The <span style="font-family:var(--mono);font-size:.9em">clear</span> route stops rather than pretending</h3>
+        <div class="chips">
+          <span class="chip affects">Affects: nobody directly &mdash; a correctness guarantee</span>
+        </div>
+        <p>
+          A skill cannot clear its own context. If it tried and silently failed,
+          it would run the entire pipeline inside exactly the bloated session you
+          asked to escape. So choosing <b>clear</b> ends the run and hands back
+          to you.
+        </p>
+      </article>
+
+      <article class="card">
+        <h3>A skip condition, so it is not a prompt on every run</h3>
+        <div class="chips">
+          <span class="chip affects">Affects: anyone shipping from a fresh session</span>
+        </div>
+        <p>
+          The guard exists to catch an expensive default, not to add friction. On
+          a short session, or one started for this ship, the step is skipped
+          silently and you never see it.
+        </p>
+      </article>
+
+      <article class="card">
+        <h3>A test that pins the guard's own justification</h3>
+        <div class="chips">
+          <span class="chip affects">Affects: the next person to edit this skill</span>
+          <span class="chip ok">12 checks passing</span>
+        </div>
+        <p>
+          The important check asserts that the skill text literally still says
+          <i>&ldquo;No step reads the conversation.&rdquo;</i> If somebody later
+          adds a step that <i>does</i> read the transcript and edits that
+          sentence, the test fires &mdash; because clearing context would no
+          longer be safe.
+        </p>
+        <pre class="block">bash tests/plugins/test-ship-autonomous-context-guard.sh</pre>
+      </article>
+
+      <article class="card">
+        <h3>Version and changelog</h3>
+        <div class="chips">
+          <span class="chip affects">Affects: anyone installing git-agent</span>
+          <span class="chip">4.7.0 &rarr; 4.8.0</span>
+        </div>
+        <p>
+          Bumped in <code>marketplace.json</code> with a matching changelog entry.
+          Minor rather than patch: no new command or skill was added, but the
+          skill behaves differently now.
+        </p>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">How it works now</p>
+      <h2>The new opening, and the cost it avoids</h2>
+    </div>
+
+    <figure>
+      <div class="mermaid-diagram">
+<svg id="claude-mermaid-0" width="719.5234375" xmlns="http://www.w3.org/2000/svg" class="flowchart" height="1255.234375" viewBox="0 0 719.5234375 1255.234375" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#claude-mermaid-0{font-family:"Iowan Old Style",Charter,"Bitstream Charter",Georgia,serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-0 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-0 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-0 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-0 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-0 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-0 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-0 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-0 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-0 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-0 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-0 .marker.cross{stroke:#a8adb8;}#claude-mermaid-0 svg{font-family:"Iowan Old Style",Charter,"Bitstream Charter",Georgia,serif;font-size:16px;}#claude-mermaid-0 p{margin:0;}#claude-mermaid-0 .label{font-family:"Iowan Old Style",Charter,"Bitstream Charter",Georgia,serif;color:#f2f3f5;}#claude-mermaid-0 .cluster-label text{fill:#f2f3f5;}#claude-mermaid-0 .cluster-label span{color:#f2f3f5;}#claude-mermaid-0 .cluster-label span p{background-color:transparent;}#claude-mermaid-0 .label text,#claude-mermaid-0 span{fill:#f2f3f5;color:#f2f3f5;}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node ellipse,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path{fill:#262b34;stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .rough-node .label text,#claude-mermaid-0 .node .label text,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-anchor:middle;}#claude-mermaid-0 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#claude-mermaid-0 .rough-node .label,#claude-mermaid-0 .node .label,#claude-mermaid-0 .image-shape .label,#claude-mermaid-0 .icon-shape .label{text-align:center;}#claude-mermaid-0 .node.clickable{cursor:pointer;}#claude-mermaid-0 .root .anchor path{fill:#a8adb8!important;stroke-width:0;stroke:#a8adb8;}#claude-mermaid-0 .arrowheadPath{fill:#efeae4;}#claude-mermaid-0 .edgePath .path{stroke:#a8adb8;stroke-width:1px;}#claude-mermaid-0 .flowchart-link{stroke:#a8adb8;fill:none;}#claude-mermaid-0 .edgeLabel{background-color:rgb(16, 21, 27);text-align:center;}#claude-mermaid-0 .edgeLabel p{background-color:rgb(16, 21, 27);}#claude-mermaid-0 .edgeLabel rect{opacity:0.5;background-color:rgb(16, 21, 27);fill:rgb(16, 21, 27);}#claude-mermaid-0 .labelBkg{background-color:rgba(16, 21, 27, 0.5);}#claude-mermaid-0 .cluster rect{fill:rgba(127,127,127,0.07);stroke:#9aa4b8;stroke-width:1px;}#claude-mermaid-0 .cluster text{fill:#f2f3f5;}#claude-mermaid-0 .cluster span{color:#f2f3f5;}#claude-mermaid-0 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"Iowan Old Style",Charter,"Bitstream Charter",Georgia,serif;font-size:12px;background:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);border:1px solid hsl(38.5714285714, 0%, 32.6470588235%);border-radius:2px;pointer-events:none;z-index:100;}#claude-mermaid-0 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#f2f3f5;}#claude-mermaid-0 rect.text{fill:none;stroke-width:0;}#claude-mermaid-0 .icon-shape,#claude-mermaid-0 .image-shape{background-color:rgb(16, 21, 27);text-align:center;}#claude-mermaid-0 .icon-shape p,#claude-mermaid-0 .image-shape p{background-color:rgb(16, 21, 27);padding:2px;}#claude-mermaid-0 .icon-shape .label rect,#claude-mermaid-0 .image-shape .label rect{opacity:0.5;background-color:rgb(16, 21, 27);fill:rgb(16, 21, 27);}#claude-mermaid-0 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#claude-mermaid-0 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#claude-mermaid-0 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-0 [data-look="neo"].node rect,#claude-mermaid-0 [data-look="neo"].cluster rect,#claude-mermaid-0 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node path{stroke:url(#claude-mermaid-0-gradient);stroke-width:1px;}#claude-mermaid-0 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-0 [data-look="neo"].node circle{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-0 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-0-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-0 .node rect,#claude-mermaid-0 .node circle,#claude-mermaid-0 .node polygon,#claude-mermaid-0 .node path,#claude-mermaid-0 .cluster rect{stroke-width:2px;}#claude-mermaid-0 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="claude-mermaid-0_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="claude-mermaid-0_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M286.129,62L286.129,66.167C286.129,70.333,286.129,78.667,286.129,86.333C286.129,94,286.129,101,286.129,104.5L286.129,108" id="claude-mermaid-0-L_A_B_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A_B_0" data-points="W3sieCI6Mjg2LjEyODkwNjI1LCJ5Ijo2Mn0seyJ4IjoyODYuMTI4OTA2MjUsInkiOjg3fSx7IngiOjI4Ni4xMjg5MDYyNSwieSI6MTEyfV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M217.081,320.953L199.636,338.627C182.19,356.302,147.298,391.651,129.852,428.095C112.406,464.539,112.406,502.078,112.406,539.617C112.406,577.156,112.406,614.695,114.944,641C117.481,667.304,122.556,682.374,125.093,689.909L127.631,697.444" id="claude-mermaid-0-L_B_E_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_E_0" data-points="W3sieCI6MjE3LjA4MTQ4MDI3NjI5MzE1LCJ5IjozMjAuOTUyNTc0MDI2MjkzMn0seyJ4IjoxMTIuNDA2MjUsInkiOjQyN30seyJ4IjoxMTIuNDA2MjUsInkiOjUzOS42MTcxODc1fSx7IngiOjExMi40MDYyNSwieSI6NjUyLjIzNDM3NX0seyJ4IjoxMjguOTA3NDgzNTUyNjMxNiwieSI6NzAxLjIzNDM3NX1d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M349.653,326.476L363.754,343.23C377.854,359.984,406.056,393.492,420.157,415.746C434.258,438,434.258,449,434.258,454.5L434.258,460" id="claude-mermaid-0-L_B_C_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_C_0" data-points="W3sieCI6MzQ5LjY1Mjc2MjI1ODI5MTQzLCJ5IjozMjYuNDc2MTQzOTkxNzA4NTd9LHsieCI6NDM0LjI1NzgxMjUsInkiOjQyN30seyJ4Ijo0MzQuMjU3ODEyNSwieSI6NDY0fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M434.258,615.234L434.258,621.401C434.258,627.568,434.258,639.901,434.258,651.568C434.258,663.234,434.258,674.234,434.258,679.734L434.258,685.234" id="claude-mermaid-0-L_C_D_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_D_0" data-points="W3sieCI6NDM0LjI1NzgxMjUsInkiOjYxNS4yMzQzNzV9LHsieCI6NDM0LjI1NzgxMjUsInkiOjY1Mi4yMzQzNzV9LHsieCI6NDM0LjI1NzgxMjUsInkiOjY4OS4yMzQzNzV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M479.2,570.292L499.21,583.949C519.22,597.606,559.239,624.92,579.248,651.244C599.258,677.568,599.258,702.901,599.258,728.234C599.258,753.568,599.258,778.901,599.258,806.234C599.258,833.568,599.258,862.901,599.258,890.234C599.258,917.568,599.258,942.901,599.258,961.068C599.258,979.234,599.258,990.234,599.258,995.734L599.258,1001.234" id="claude-mermaid-0-L_C_F_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_F_0" data-points="W3sieCI6NDc5LjIwMDQwNDMxMDg5MDcsInkiOjU3MC4yOTE3ODMxODkxMDkzfSx7IngiOjU5OS4yNTc4MTI1LCJ5Ijo2NTIuMjM0Mzc1fSx7IngiOjU5OS4yNTc4MTI1LCJ5Ijo3MjguMjM0Mzc1fSx7IngiOjU5OS4yNTc4MTI1LCJ5Ijo4MDQuMjM0Mzc1fSx7IngiOjU5OS4yNTc4MTI1LCJ5Ijo4OTIuMjM0Mzc1fSx7IngiOjU5OS4yNTc4MTI1LCJ5Ijo5NjguMjM0Mzc1fSx7IngiOjU5OS4yNTc4MTI1LCJ5IjoxMDA1LjIzNDM3NX1d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M387.534,568.511L364.969,582.465C342.404,596.419,297.274,624.326,262.999,646.078C228.723,667.829,205.302,683.423,193.591,691.22L181.881,699.018" id="claude-mermaid-0-L_C_E_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_E_0" data-points="W3sieCI6Mzg3LjUzNDEyNTYyNDU3NzU0LCJ5Ijo1NjguNTEwNjg4MTI0NTc3NX0seyJ4IjoyNTIuMTQ0NTMxMjUsInkiOjY1Mi4yMzQzNzV9LHsieCI6MTc4LjU1MTM0NjYyODI4OTQ4LCJ5Ijo3MDEuMjM0Mzc1fV0=" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M138,755.234L138,763.401C138,771.568,138,787.901,138,801.568C138,815.234,138,826.234,138,831.734L138,837.234" id="claude-mermaid-0-L_E_G_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_G_0" data-points="W3sieCI6MTM4LCJ5Ijo3NTUuMjM0Mzc1fSx7IngiOjEzOCwieSI6ODA0LjIzNDM3NX0seyJ4IjoxMzgsInkiOjg0MS4yMzQzNzV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M138,943.234L138,947.401C138,951.568,138,959.901,138,967.568C138,975.234,138,982.234,138,985.734L138,989.234" id="claude-mermaid-0-L_G_H_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_G_H_0" data-points="W3sieCI6MTM4LCJ5Ijo5NDMuMjM0Mzc1fSx7IngiOjEzOCwieSI6OTY4LjIzNDM3NX0seyJ4IjoxMzgsInkiOjk5My4yMzQzNzV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M138,1071.234L138,1079.401C138,1087.568,138,1103.901,158.78,1119.997C179.56,1136.092,221.121,1151.95,241.901,1159.879L262.681,1167.808" id="claude-mermaid-0-L_H_I_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_H_I_0" data-points="W3sieCI6MTM4LCJ5IjoxMDcxLjIzNDM3NX0seyJ4IjoxMzgsInkiOjExMjAuMjM0Mzc1fSx7IngiOjI2Ni40MTgzNjgyNTI4NDA5LCJ5IjoxMTY5LjIzNDM3NX1d" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path><path d="M599.258,1059.234L599.258,1069.401C599.258,1079.568,599.258,1099.901,578.478,1117.997C557.697,1136.092,516.137,1151.95,495.357,1159.879L474.577,1167.808" id="claude-mermaid-0-L_F_I_0" class="edge-thickness-normal edge-pattern-dotted edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_F_I_0" data-points="W3sieCI6NTk5LjI1NzgxMjUsInkiOjEwNTkuMjM0Mzc1fSx7IngiOjU5OS4yNTc4MTI1LCJ5IjoxMTIwLjIzNDM3NX0seyJ4Ijo0NzAuODM5NDQ0MjQ3MTU5MSwieSI6MTE2OS4yMzQzNzV9XQ==" data-look="classic" marker-end="url(#claude-mermaid-0_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A_B_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(112.40625, 539.6171875)"><g class="label" data-id="L_B_E_0" transform="translate(-10.875, -12)"><foreignObject width="21.75" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>No</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(434.2578125, 427)"><g class="label" data-id="L_B_C_0" transform="translate(-38.1796875, -12)"><foreignObject width="76.359375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>Yes, so ask</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(434.2578125, 652.234375)"><g class="label" data-id="L_C_D_0" transform="translate(-16.78125, -12)"><foreignObject width="33.5625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>clear</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(599.2578125, 804.234375)"><g class="label" data-id="L_C_F_0" transform="translate(-41.765625, -12)"><foreignObject width="83.53125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>background</p></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(282.2408, 633.62312)"><g class="label" data-id="L_C_E_0" transform="translate(-31.1875, -12)"><foreignObject width="62.375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"><p>continue</p></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_E_G_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_G_H_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_H_I_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel" transform="translate(599.2578125, 1120.234375)"><g class="label" data-id="L_F_I_0" transform="translate(-100, -24)"><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="edgeLabel"><p>merge still needsa human answer</p></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default" id="claude-mermaid-0-flowchart-A-0" data-look="classic" transform="translate(286.12890625, 35)"><rect class="basic label-container" style="" x="-118.46875" y="-27" width="236.9375" height="54"></rect><g class="label" style="" transform="translate(-88.46875, -12)"><rect></rect><foreignObject width="176.9375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Invoke ship-autonomous</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-B-1" data-look="classic" transform="translate(286.12890625, 251)"><polygon points="139,0 278,-139 139,-278 0,-139" class="label-container" transform="translate(-138.5, 139)"></polygon><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Step 0: is this sessionalready long?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-E-3" data-look="classic" transform="translate(138, 728.234375)"><rect class="basic label-container" style="" x="-116.2578125" y="-27" width="232.515625" height="54"></rect><g class="label" style="" transform="translate(-86.2578125, -12)"><rect></rect><foreignObject width="172.515625" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Step 0.5: exit plan mode</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-C-5" data-look="classic" transform="translate(434.2578125, 539.6171875)"><polygon points="75.6171875,0 151.234375,-75.6171875 75.6171875,-151.234375 0,-75.6171875" class="label-container" transform="translate(-75.1171875, 75.6171875)"></polygon><g class="label" style="" transform="translate(-48.6171875, -12)"><rect></rect><foreignObject width="97.234375" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>Which route?</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-D-7" data-look="classic" transform="translate(434.2578125, 728.234375)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>STOPyou run /clear, re-invoke</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-F-9" data-look="classic" transform="translate(599.2578125, 1032.234375)"><rect class="basic label-container" style="" x="-112.265625" y="-27" width="224.53125" height="54"></rect><g class="label" style="" transform="translate(-82.265625, -12)"><rect></rect><foreignObject width="164.53125" height="24"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="nodeLabel"><p>ship-bg,then ship-ci-bg</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-G-13" data-look="classic" transform="translate(138, 892.234375)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Steps 1-4: guards, branch,test, commit, open PR</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-H-15" data-look="classic" transform="translate(138, 1032.234375)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Step 5: watch the pull request</p></span></div></foreignObject></g></g><g class="node default" id="claude-mermaid-0-flowchart-I-17" data-look="classic" transform="translate(368.62890625, 1208.234375)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel"><p>Step 8: merge, on your approval</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="claude-mermaid-0-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="claude-mermaid-0-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><linearGradient id="claude-mermaid-0-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#9aa4b8" stop-opacity="1"></stop><stop offset="100%" stop-color="hsl(98.5714285714, 0%, 27.6470588235%)" stop-opacity="1"></stop></linearGradient></svg>
+      </div>
+      <figcaption>
+        What to look at: the three arrows out of &ldquo;Which route?&rdquo;. Only
+        <i>continue</i> goes straight on, and the background route still comes
+        back for the merge approval.
+      </figcaption>
+    </figure>
+
+    <figure>
+      <div class="mermaid-diagram">
+<svg id="claude-mermaid-1" width="657" xmlns="http://www.w3.org/2000/svg" height="599" viewBox="-131 -10 657 599" role="graphics-document document" aria-roledescription="sequence"><g><rect x="326" y="513" fill="#eaeaea" stroke="#666" width="150" height="65" name="P" rx="3" ry="3" class="actor actor-bottom"></rect><text x="401" y="545.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="401" dy="0">Pull request</tspan></text></g><g><rect x="0" y="513" fill="#eaeaea" stroke="#666" width="150" height="65" name="U" rx="3" ry="3" class="actor actor-bottom"></rect><text x="75" y="545.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">Your session</tspan></text></g><g><line id="actor1" x1="401" y1="65" x2="401" y2="513" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="P" data-et="life-line" data-id="P"></line><g id="root-1" data-et="participant" data-type="participant" data-id="P"><rect x="326" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="P" rx="3" ry="3" class="actor actor-top"></rect><text x="401" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="401" dy="0">Pull request</tspan></text></g></g><g><line id="actor0" x1="75" y1="65" x2="75" y2="513" class="actor-line 200" stroke-width="0.5px" stroke="#999" name="U" data-et="life-line" data-id="U"></line><g id="root-0" data-et="participant" data-type="participant" data-id="U"><rect x="0" y="0" fill="#eaeaea" stroke="#666" width="150" height="65" name="U" rx="3" ry="3" class="actor actor-top"></rect><text x="75" y="32.5" dominant-baseline="central" alignment-baseline="central" class="actor actor-box" style="text-anchor: middle; font-size: 16px; font-weight: 400;"><tspan x="75" dy="0">Your session</tspan></text></g></g><style>#claude-mermaid-1{font-family:"Iowan Old Style",Charter,"Bitstream Charter",Georgia,serif;font-size:16px;fill:#f2f3f5;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#claude-mermaid-1 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#claude-mermaid-1 .error-icon{fill:hsl(38.5714285714, 15.5555555556%, 22.6470588235%);}#claude-mermaid-1 .error-text{fill:rgb(188.2666666667, 194.6833333334, 206.2333333334);stroke:rgb(188.2666666667, 194.6833333334, 206.2333333334);}#claude-mermaid-1 .edge-thickness-normal{stroke-width:1px;}#claude-mermaid-1 .edge-thickness-thick{stroke-width:3.5px;}#claude-mermaid-1 .edge-pattern-solid{stroke-dasharray:0;}#claude-mermaid-1 .edge-thickness-invisible{stroke-width:0;fill:none;}#claude-mermaid-1 .edge-pattern-dashed{stroke-dasharray:3;}#claude-mermaid-1 .edge-pattern-dotted{stroke-dasharray:2;}#claude-mermaid-1 .marker{fill:#a8adb8;stroke:#a8adb8;}#claude-mermaid-1 .marker.cross{stroke:#a8adb8;}#claude-mermaid-1 svg{font-family:"Iowan Old Style",Charter,"Bitstream Charter",Georgia,serif;font-size:16px;}#claude-mermaid-1 p{margin:0;}#claude-mermaid-1 .actor{stroke:#9aa4b8;fill:#262b34;stroke-width:1;}#claude-mermaid-1 rect.actor.outer-path[data-look="neo"]{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 rect.note[data-look="neo"]{stroke:hsl(52.6829268293, 60%, 93.9215686275%);fill:#fff5ad;filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 text.actor&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-1 .actor-line{stroke:#9aa4b8;}#claude-mermaid-1 .innerArc{stroke-width:1.5;stroke-dasharray:none;}#claude-mermaid-1 .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#f2f3f5;}#claude-mermaid-1 .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#f2f3f5;}#claude-mermaid-1 [id$="-arrowhead"] path{fill:#f2f3f5;stroke:#f2f3f5;}#claude-mermaid-1 .sequenceNumber{fill:#575247;}#claude-mermaid-1 [id$="-sequencenumber"]{fill:#f2f3f5;}#claude-mermaid-1 [id$="-crosshead"] path{fill:#f2f3f5;stroke:#f2f3f5;}#claude-mermaid-1 .messageText{fill:#f2f3f5;stroke:none;}#claude-mermaid-1 .labelBox{stroke:#9aa4b8;fill:#262b34;filter:none;}#claude-mermaid-1 .labelText,#claude-mermaid-1 .labelText&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-1 .loopText,#claude-mermaid-1 .loopText&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-1 .sectionTitle,#claude-mermaid-1 .sectionTitle&gt;tspan{fill:#f2f3f5;stroke:none;}#claude-mermaid-1 .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:#9aa4b8;fill:#9aa4b8;}#claude-mermaid-1 .note{stroke:hsl(52.6829268293, 60%, 93.9215686275%);fill:#fff5ad;}#claude-mermaid-1 .noteText,#claude-mermaid-1 .noteText&gt;tspan{fill:#333;stroke:none;font-weight:normal;}#claude-mermaid-1 .activation0{fill:hsl(98.5714285714, 15.5555555556%, 17.6470588235%);stroke:hsl(98.5714285714, 15.5555555556%, 7.6470588235%);}#claude-mermaid-1 .activation1{fill:hsl(98.5714285714, 15.5555555556%, 17.6470588235%);stroke:hsl(98.5714285714, 15.5555555556%, 7.6470588235%);}#claude-mermaid-1 .activation2{fill:hsl(98.5714285714, 15.5555555556%, 17.6470588235%);stroke:hsl(98.5714285714, 15.5555555556%, 7.6470588235%);}#claude-mermaid-1 .actorPopupMenu{position:absolute;}#claude-mermaid-1 .actorPopupMenuPanel{position:absolute;fill:#262b34;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#claude-mermaid-1 .actor-man circle,#claude-mermaid-1 line{fill:#262b34;stroke-width:2px;}#claude-mermaid-1 g rect.rect{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));stroke:#9aa4b8;}#claude-mermaid-1 .node .neo-node{stroke:#9aa4b8;}#claude-mermaid-1 [data-look="neo"].node rect,#claude-mermaid-1 [data-look="neo"].cluster rect,#claude-mermaid-1 [data-look="neo"].node polygon{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node path{stroke:url(#claude-mermaid-1-gradient);stroke-width:1px;}#claude-mermaid-1 [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node .neo-line path{stroke:#9aa4b8;filter:none;}#claude-mermaid-1 [data-look="neo"].node circle{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].node circle .state-start{fill:#000000;}#claude-mermaid-1 [data-look="neo"].icon-shape .icon{fill:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 [data-look="neo"].icon-shape .icon-neo path{stroke:url(#claude-mermaid-1-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#claude-mermaid-1 .node rect,#claude-mermaid-1 .node circle,#claude-mermaid-1 .node polygon,#claude-mermaid-1 .node path,#claude-mermaid-1 .cluster rect{stroke-width:2px;}#claude-mermaid-1 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g></g><defs><symbol id="claude-mermaid-1-computer" width="24" height="24"><path transform="scale(.5)" d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z"></path></symbol></defs><defs><symbol id="claude-mermaid-1-database" fill-rule="evenodd" clip-rule="evenodd"><path transform="scale(.5)" d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z"></path></symbol></defs><defs><symbol id="claude-mermaid-1-clock" width="24" height="24"><path transform="scale(.5)" d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z"></path></symbol></defs><defs><marker id="claude-mermaid-1-arrowhead" refX="7.9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M -1 0 L 10 5 L 0 10 z"></path></marker></defs><defs><marker id="claude-mermaid-1-crosshead" markerWidth="15" markerHeight="8" orient="auto" refX="4" refY="4.5"><path fill="none" stroke="#000000" stroke-width="1pt" d="M 1,2 L 6,7 M 6,2 L 1,7" style="stroke-dasharray: 0, 0;"></path></marker></defs><defs><marker id="claude-mermaid-1-filled-head" refX="15.5" refY="7" markerWidth="20" markerHeight="28" orient="auto"><path d="M 18,7 L9,13 L14,7 L9,1 Z"></path></marker></defs><defs><marker id="claude-mermaid-1-sequencenumber" refX="15" refY="15" markerWidth="60" markerHeight="40" orient="auto"><circle cx="15" cy="15" r="6"></circle></marker></defs><defs><marker id="claude-mermaid-1-solidTopArrowHead" refX="7.9" refY="7.25" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 8 L 0 8 z"></path></marker></defs><defs><marker id="claude-mermaid-1-solidBottomArrowHead" refX="7.9" refY="0.75" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 10 0 L 0 8 z"></path></marker></defs><defs><marker id="claude-mermaid-1-stickTopArrowHead" refX="7.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 0 L 7 7" stroke="black" stroke-width="1.5" fill="none"></path></marker></defs><defs><marker id="claude-mermaid-1-stickBottomArrowHead" refX="7.5" refY="0" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M 0 7 L 7 0" stroke="black" stroke-width="1.5" fill="none"></path></marker></defs><g data-et="note" data-id="i0"><rect x="-81" y="75" fill="#EDF2AE" stroke="#666" width="312" height="42" class="note"></rect><text x="75" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="noteText" dy="1em" style="font-size: 16px; font-weight: 400;"><tspan x="75">whole conversationcarried on every wake</tspan></text></g><g data-et="note" data-id="i7"><rect x="50" y="451" fill="#EDF2AE" stroke="#666" width="376" height="42" class="note"></rect><text x="238" y="456" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="noteText" dy="1em" style="font-size: 16px; font-weight: 400;"><tspan x="238">a subagent restarts thiswith an empty conversation</tspan></text></g><text x="237" y="132" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">open PR, then end turn</text><line x1="76" y1="171" x2="397" y2="171" class="messageLine0" data-et="message" data-id="i1" data-from="U" data-to="P" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="240" y="186" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">build event 1 (conversation re-sent)</text><line x1="400" y1="225" x2="79" y2="225" class="messageLine1" data-et="message" data-id="i2" data-from="P" data-to="U" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line><text x="237" y="240" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">push a fix</text><line x1="76" y1="279" x2="397" y2="279" class="messageLine0" data-et="message" data-id="i3" data-from="U" data-to="P" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="240" y="294" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">build event 2 (conversation re-sent)</text><line x1="400" y1="333" x2="79" y2="333" class="messageLine1" data-et="message" data-id="i4" data-from="P" data-to="U" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line><text x="237" y="348" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">push a fix</text><line x1="76" y1="387" x2="397" y2="387" class="messageLine0" data-et="message" data-id="i5" data-from="U" data-to="P" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="fill: none;"></line><text x="240" y="402" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" class="messageText" dy="1em" style="font-size: 16px; font-weight: 400;">build event 3 (conversation re-sent)</text><line x1="400" y1="441" x2="79" y2="441" class="messageLine1" data-et="message" data-id="i6" data-from="P" data-to="U" stroke-width="2" stroke="none" marker-end="url(#claude-mermaid-1-arrowhead)" style="stroke-dasharray: 3, 3; fill: none;"></line></svg>
+      </div>
+      <figcaption>
+        What to look at: the cost is per event, not per run &mdash; so it
+        multiplies by how many times the build fails.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Before and after</p>
+      <h2>Rule by rule</h2>
+    </div>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th scope="col">Before</th><th scope="col">After</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="was">The skill started working the moment it was invoked.</td><td>It checks the session length first and offers cheaper routes.</td></tr>
+          <tr><td class="was">Nothing pointed at the background commands, so people did not use them.</td><td>The background route names both commands, in order.</td></tr>
+          <tr><td class="was">Exiting plan mode was Step 0.</td><td>It is Step 0.5. Every other step number is unchanged.</td></tr>
+          <tr><td class="was">The README walkthrough listed 10 steps.</td><td>It lists 11, with the guard first.</td></tr>
+          <tr><td class="was">git-agent was at 4.7.0.</td><td>4.8.0.</td></tr>
+          <tr><td class="was">No test covered the skill's opening.</td><td>12 checks, including step ordering and the safety claim.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Decisions</p>
+      <h2>What was chosen, and what was turned down</h2>
+    </div>
+
+    <div class="cards">
+
+      <div class="decision">
+        <h3>Add the guard as text in the skill, not as new machinery</h3>
+        <p>One edit to one file, and its content points at the two background commands that already exist.</p>
+        <p class="rejected">
+          <b>Rejected &mdash;</b> a new <code>agent-ship-autonomous</code> subagent
+          plus a <code>/ship-autonomous-bg</code> command: two new files, and it
+          loses the merge approval gate, because a subagent has no user to ask.
+          A <code>UserPromptSubmit</code> hook: a new Python file that still
+          cannot clear context &mdash; the same redirect with more parts. Relying
+          on habit alone: nothing in the product enforces it.
+        </p>
+      </div>
+
+      <div class="decision">
+        <h3>The <span style="font-family:var(--mono);font-size:.9em">clear</span> route hard-stops</h3>
+        <p>
+          A skill has no way to clear its own context. Continuing after a no-op
+          would defeat the entire purpose of the step.
+        </p>
+      </div>
+
+      <div class="decision">
+        <h3>Skip the guard on a short session</h3>
+        <p>
+          A prompt on every run is friction paid by everybody to protect against
+          a case that only some runs hit.
+        </p>
+      </div>
+
+      <div class="decision">
+        <h3>Insert as Step 0 and demote the old Step 0 to Step 0.5</h3>
+        <p>
+          The skill's later steps cross-reference each other by number about a
+          dozen times &mdash; <i>&ldquo;return to Step 6&rdquo;</i>,
+          <i>&ldquo;Step 8 blocks on this&rdquo;</i>. The file already used a
+          half-step (Step 2.5), so this matches its own convention.
+        </p>
+        <p class="rejected">
+          <b>Rejected &mdash;</b> renumbering every step, for the blast radius
+          across all those cross-references.
+        </p>
+      </div>
+
+      <div class="decision">
+        <h3>Merging still comes back to the foreground</h3>
+        <p>
+          The background route ends at the merge gate on purpose.
+        </p>
+        <p class="rejected">
+          <b>Rejected &mdash;</b> letting a subagent merge. The existing
+          <code>agent-merge</code> already does exactly that when you want it,
+          and folding it in here would remove a human decision from an
+          irreversible action.
+        </p>
+      </div>
+
+      <div class="decision">
+        <h3>Minor version bump, not patch</h3>
+        <p>
+          No new command or skill was added, but the skill behaves differently.
+        </p>
+        <p class="rejected"><b>Rejected &mdash;</b> patch, as understating the change.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Learnings</p>
+      <h2>Three things worth carrying forward</h2>
+    </div>
+    <div class="items">
+      <div class="item">
+        <span class="t">A grep-based test can be tautological, so one was deliberately broken.</span>
+        <p>
+          The stop-on-<i>clear</i> assertion was the subtle one, so the clause was
+          deleted from the skill, the suite re-run (check 8 failed, as intended),
+          and the file restored (all 12 passed again). A passing grep only proves
+          the text is present; the mutation proves the grep is load-bearing.
+        </p>
+      </div>
+      <div class="item">
+        <span class="t">The shell tool's working directory persists between calls.</span>
+        <p>
+          A <code>chmod</code> failed with <i>&ldquo;No such file or
+          directory&rdquo;</i> because an earlier compound command had left the
+          shell inside <code>kit/plugins/git-agent</code>. Absolute paths avoid
+          the whole class of problem.
+        </p>
+      </div>
+      <div class="item">
+        <span class="t">Markdown renumbers ordered lists by position, but the source still matters.</span>
+        <p>
+          Inserting a step into the README left two literal <code>3.</code>
+          entries. It renders correctly and reads wrong, so the remaining items
+          were re-sequenced with a small script rather than by hand.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Open items</p>
+      <h2>What is not done</h2>
+    </div>
+    <div class="items">
+      <div class="item">
+        <span class="t">Nothing is committed.</span>
+        <p>Five files are in the working tree. They need a commit, a branch, and a pull request.</p>
+      </div>
+      <div class="item">
+        <span class="t">The new test is not wired into continuous integration.</span>
+        <p>
+          The workflows under <code>.github/workflows/</code> name individual test
+          scripts one by one &mdash; <code>check-plugin-versions.yml</code> and
+          <code>publish-dist.yml</code> each list a handful &mdash; and the new
+          script is in neither. It runs only when someone runs it. Adding it to
+          <code>check-plugin-versions.yml</code> beside the other git-agent tests
+          is the obvious follow-up.
+        </p>
+      </div>
+      <div class="item">
+        <span class="t">&ldquo;Is this session long?&rdquo; is a judgment call, not a measurement.</span>
+        <p>
+          No tool reports the current context size, so the guard relies on the
+          model assessing its own conversation. How reliably it does that across
+          models is untested.
+        </p>
+      </div>
+      <div class="item">
+        <span class="t">No background version of the full pipeline was built, deliberately.</span>
+        <p>
+          If one-command unattended shipping is wanted later &mdash; and a
+          report-instead-of-merge ending is acceptable &mdash; that is the change
+          to make.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Files touched</p>
+      <h2>Five files, four areas</h2>
+    </div>
+    <div class="files">
+
+      <div class="filegroup">
+        <p class="eyebrow">The skill</p>
+        <ul>
+          <li>
+            <span class="path">kit/plugins/git-agent/skills/ship-autonomous/SKILL.md</span>
+            <span class="note">New Step 0 context guard; the former Step 0 (exit plan mode) is now Step 0.5.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="filegroup">
+        <p class="eyebrow">Documentation</p>
+        <ul>
+          <li>
+            <span class="path">kit/plugins/git-agent/README.md</span>
+            <span class="note">The ship-autonomous walkthrough now opens with the guard; the numbered list was re-sequenced 1&ndash;11.</span>
+          </li>
+          <li>
+            <span class="path">kit/plugins/git-agent/CHANGELOG.md</span>
+            <span class="note">v4.8.0 entry covering the guard, the three routes, why no new agent was added, and the test.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="filegroup">
+        <p class="eyebrow">Tests</p>
+        <ul>
+          <li>
+            <span class="path">tests/plugins/test-ship-autonomous-context-guard.sh</span>
+            <span class="note">New, 12 checks: step ordering, the no-session-context claim, all three routes, the stop guarantee, the skip condition, tool permissions, and README sync.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="filegroup">
+        <p class="eyebrow">Marketplace</p>
+        <ul>
+          <li>
+            <span class="path">.claude-plugin/marketplace.json</span>
+            <span class="note">git-agent 4.7.0 &rarr; 4.8.0.</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <p class="eyebrow">Glossary</p>
+      <h2>Terms used on this page</h2>
+    </div>
+    <dl class="glossary">
+      <dt>ship-autonomous</dt>
+      <dd>The git-agent skill that runs the whole delivery pipeline: branch, test, commit, open a pull request, watch the build, fix common failures, and merge once you approve.</dd>
+
+      <dt>context</dt>
+      <dd>Everything said so far in a session. It is re-sent to the model on every turn, so a long session costs more per turn than a short one.</dd>
+
+      <dt>subagent</dt>
+      <dd>A separate assistant dispatched to do one job. It starts with an empty conversation and reports back, so its work does not add to yours.</dd>
+
+      <dt>Step 0.5</dt>
+      <dd>A half-numbered step. This skill already used Step 2.5; half-steps let a step be inserted without renumbering the ones other steps refer to by number.</dd>
+
+      <dt>gh</dt>
+      <dd>GitHub's official command-line tool. The pipeline uses it to open pull requests and read build status.</dd>
+
+      <dt>CI</dt>
+      <dd>Continuous integration &mdash; the automated build and test run that fires on every push to a pull request.</dd>
+
+      <dt>marketplace.json</dt>
+      <dd>The registry at the repository root listing every plugin and its version. Editing a plugin requires bumping its version here.</dd>
+
+      <dt>mutation test</dt>
+      <dd>Deliberately breaking the thing under test to confirm the test actually fails. Guards against tests that pass no matter what.</dd>
+
+      <dt>allowed-tools</dt>
+      <dd>The line in a skill file listing which tools it may use. Omitting one causes a permission prompt in the middle of a run.</dd>
+    </dl>
+  </section>
+
+</div>
+</body>
+</html>

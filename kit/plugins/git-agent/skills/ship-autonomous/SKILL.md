@@ -18,6 +18,7 @@ Hard stops.
 - **Any console or server error blocks the pipeline.**
 - Pre-commit hook failure: propagate it verbatim, **STOP**. Do not retry. Do not
   use `--no-verify`.
+- Step 0 `clear` is a **hard STOP**: you cannot clear your own context.
 - After subscribing, **end your turn — no polling, sleeping, or `--watch`**;
   never re-poll.
 - Cap autofix at **3 attempts per failing check**; the 4th escalates via
@@ -37,7 +38,13 @@ Hard stops.
 - **Branch deletion requires its own explicit approval** — never pass
   `--delete-branch` on the strength of a merge approval.
 
-## Step 0: Exit Plan Mode
+## Step 0: Context Guard
+
+No step below reads the conversation, yet Step 5 re-spends it on every PR event.
+On an **already-long** session, offer `references/context-guard.md`'s routes via
+**AskUserQuestion**. Skip this step on a short session.
+
+## Step 0.5: Exit Plan Mode
 
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
