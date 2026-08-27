@@ -147,23 +147,47 @@ identically to a repo that simply has no CI configured. Separate the two before
 summarizing:
 
 ```
-gh run list --branch <branch> --limit 5
-gh run view <run-id> --json jobs --jq '.jobs | length'
-gh run view <run-id> --log-failed | wc -c
+gh run list --commit <headRefOid> --limit 10 \
+  --json databaseId,workflowName,status,conclusion
+gh run view <run-id> --json jobs --jq \
+  '[.jobs[] | {name, conclusion, startedAt,
+               failed: [.steps[] | select(.conclusion == "failure") | .name]}]'
 ```
 
-Treat CI as **never dispatched** when the run list is empty, when a run has an
-empty `jobs` array, or when every job failed *and* `--log-failed` returns zero
-bytes. Duration alone does not discriminate — genuine failures also finish in
-seconds. The empty log is the load-bearing signal;
-`ship-autonomous/references/ci-autofix.md` carries the measurements behind it.
+**Bind the run to the commit you verified.** List by `--commit <headRefOid>`
+from Step 1, never by `--branch`: a branch listing returns every recent run
+across *every* commit and *every* workflow on it, so `<run-id>` picked off the
+top can belong to a different push or an unrelated workflow, and classifying
+that one answers a question nobody asked. Pick the row whose `workflowName`
+matches the failing check from `gh pr checks`; if several checks fail, classify
+each one's run separately.
+
+Treat CI as **never dispatched** only when the run list is empty or the `jobs`
+array is empty. Those two states are the whole test: they are the only ones
+that prove no job ran. A non-empty `jobs` array *dispatched* — every entry in it
+carries a `startedAt` and a populated `steps` list, so work began no matter what
+the logs say afterwards.
+
+**Log size never makes this call.** `--log-failed` returns zero bytes for
+reasons unrelated to dispatch: expired log retention, a fetch that lands on a
+different attempt than the failing one, or a transient API error. When jobs
+started and the log is empty, report **"CI failed — logs unavailable"**, name
+the failing jobs and their failed step names from the `--jq` output above, and
+carry it as a red check of unknown cause. Calling that a non-dispatch tells the
+user to ignore a real failure — the one wrong direction that matters here.
+
+Duration alone does not discriminate either — genuine failures also finish in
+seconds. `ship-autonomous/references/ci-autofix.md` carries the measurements,
+which cover blocked runs with an empty `jobs` array only; nothing there measured
+a started-jobs run with empty logs.
 
 This is **not** a gate — it does not block a merge, and red checks from an
 external blocker are not evidence of a code defect. It is a reporting rule:
 name the block and its likely cause in the Step 3 summary, say which local
 gates were run in its place, and let the user decide with the real picture.
 **Never call a PR "CI green", "checks passed", or "all green" when no job
-produced output** — say "CI never dispatched — <cause>" instead.
+ran** — say "CI never dispatched — <cause>" instead, and "CI failed — logs
+unavailable" when jobs ran but produced no readable log.
 
 If any of these fails — a **required** check pending or failing, conflicts,
 changes requested, a merge state outside the three above, or anything ambiguous

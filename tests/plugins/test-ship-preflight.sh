@@ -182,7 +182,13 @@ has "$CI_AUTOFIX" "does not advance the three-attempt cap" "the attempt cap does
 has "$CI_AUTOFIX" "billing" "billing blocks are classified"
 has "$CI_AUTOFIX" "Bad credentials" "expired credentials are classified"
 has "$CI_AUTOFIX" "quota" "quota blocks are classified"
-has "$CI_AUTOFIX" "returns no output" "all-failed-with-empty-logs is the condition"
+# The empty JOBS ARRAY is the condition, not the empty log. A zero-byte
+# --log-failed on a run whose jobs started means logs unavailable, and
+# classifying that as external-blocker suppresses a real failure.
+has "$CI_AUTOFIX" "only when the **jobs array is empty**" \
+  "the empty jobs array is the condition"
+has "$CI_AUTOFIX" "logs unavailable" \
+  "a started-jobs empty log is logs-unavailable, not an external blocker"
 
 echo
 if [ "$FAILURES" -eq 0 ]; then echo "All checks passed."; exit 0
