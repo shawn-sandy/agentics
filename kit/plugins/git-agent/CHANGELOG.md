@@ -1,6 +1,6 @@
 # Changelog — git-agent
 
-## v4.19.5 — 2026-08-27 — an empty log is not an empty CI run
+## v4.20.1 — 2026-08-27 — an empty log is not an empty CI run
 
 ### Fixed
 
@@ -49,6 +49,20 @@ paragraph does not fail the run. Every one was mutation-checked.
 `tests/plugins/test-ship-preflight.sh` no longer pins the removed clause.
 `docs/guides/how-to/git-agent.md` needs no change — its `merge` section
 documents the readiness gate and never described the dispatch heuristic.
+
+## v4.20.0 — 2026-08-27 — a context guard before ship-autonomous spends the session
+
+### Added
+
+- **`ship-autonomous` Step 0: Context Guard.** The pipeline derives every input from `git` and `gh` — no step reads the conversation. But Step 5 ends the turn and waits, so each PR event that wakes the session re-sends the whole transcript as input. A pipeline that needs none of that context pays for all of it, once per CI event. Step 0 now checks whether the session is already long and offers three routes: `clear` (**STOP** — the user runs `/clear` and re-invokes, because a skill cannot clear its own context and a silent no-op would run the pipeline in the very session the user asked to escape), `background` (dispatch `ship-bg` then `ship-ci-bg`, each subagent getting its own context window; merge still returns to the foreground because a subagent has no user to ask for approval), or `continue`. Skipped on a short session, so it catches an expensive default rather than adding a prompt to every run. The former Step 0 (`ExitPlanMode`) is now Step 0.5 — the file already used Step 2.5, and renumbering would have touched every later cross-reference.
+
+### Why no `ship-autonomous-bg`
+
+Chaining the two existing background commands already gives fresh contexts, and a dedicated agent would duplicate them while losing the Step 8 merge gate — background agents have no user to prompt.
+
+### Tests
+
+`tests/plugins/test-ship-autonomous-context-guard.sh` — step ordering, the no-session-context claim the guard rests on, all three routes, the STOP guarantee, the skip condition, and README sync. Verified by mutation: deleting the STOP clause fails the check that covers it.
 
 ## v4.19.4 — 2026-08-21 — the adversarial review hunts the defects that escape it
 
