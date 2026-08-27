@@ -146,7 +146,7 @@ Bundles a plan and its related HTML into one tabbed hub artifact at a stable URL
 - **Command** — `/plan-agent:publish-hub <plan.md> [--extra <path>]...` — omit the plan to pick from the plans directory
 - **Say it instead** — "publish this plan and its prototype as one page"
 - **What happens** — Runs `plan-agent-hub` to render the plan and embed each related document — the `prototype:` file, any `--extra` pages, `design:` as an external-link tab — in its own tab panel, publishes the bundle with `Artifact`, writes the returned URL back as `hub-artifact-url:`, then fetches the page to confirm the plan title actually rendered before reporting the link and its tabs.
-- **Watch out** — Related files come only from the spec's `prototype:`/`design:` keys and explicit `--extra` paths, never from scanning the directory. The hub is a second artifact: the plan's own `artifact-url:` is never touched. Output is capped at 15 MB — on overflow the bundler names the largest embedded document so you can rerun with `--skip`, and when that is the plan itself there is nothing to drop.
+- **Watch out** — Related files come only from the spec's `prototype:`/`design:` keys and explicit `--extra` paths, never from scanning the directory. The hub is a second artifact: the plan's own `artifact-url:` is never touched. Output is capped at 15 MB — on overflow the bundler names the largest embedded document and the skill reruns it with `--skip <that file>`, telling you which file was dropped; `--skip` is the bundler's flag, not a slash-command argument. When the plan itself is the largest there is nothing to drop, and the skill stops.
 
 ## review-plan
 
