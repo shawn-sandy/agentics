@@ -190,8 +190,9 @@ Rules:
 ### Step 8 — Republish an artifact-published plan
 
 A **plan spec** — first heading `# Plan:` — with **no sibling `<stem>.html`**
-whose frontmatter carries an `http(s)` `artifact-url:` was published to a
-claude.ai artifact rather than delivered as a file. (Unrelated to the legacy
+whose frontmatter carries an `artifact-url:` that parses as an `http(s)` URL
+**with a host** was published to a claude.ai artifact rather than delivered as
+a file. (Unrelated to the legacy
 `status: artifact` value normalized in Step 3: that names a status, this names
 where the plan is published. A plan can be either, both, or neither, and only
 the two conditions above decide this step.) The status just written reaches
@@ -220,7 +221,11 @@ publish and flips the plan's gallery card off the artifact onto a local path.
 
 Skip this step entirely when a sibling `<stem>.html` exists (the hook re-renders
 it), when the file is not a `# Plan:` spec (`plan-agent-render` reads only
-specs, so an old-style markdown plan has nothing to render), or when the spec
-has no `http(s)` `artifact-url:` — a malformed or absent value is not a page to
-update. Say so in one line and stop; a failed republish never rolls back the
-frontmatter write, which is already correct on disk.
+specs, so an old-style markdown plan has nothing to render), or when the
+`artifact-url:` does not parse as an `http(s)` URL with a host. A `javascript:`
+value, or a truncated `https://` with nothing after it, is not a page to update
+— and passing one to `Artifact` claims a **new** URL rather than updating the
+shared one, stranding the link people already have. This is the same gate
+`implementation-plan` Step 7b applies before republishing. Say so in one line
+and stop; a failed republish never rolls back the frontmatter write, which is
+already correct on disk.

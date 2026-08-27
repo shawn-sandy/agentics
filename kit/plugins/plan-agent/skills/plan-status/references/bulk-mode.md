@@ -46,7 +46,8 @@ Create TodoWrite progress todos, then run:
    `Edit` for files that already have it. Emit progress every 10 files and a
    final `updated / skipped / errors` summary.
 8. **Republish artifact-published plans** — for every written file with no
-   sibling `<stem>.html` but an `http(s)` `artifact-url:`, run
+   sibling `<stem>.html` but an `artifact-url:` that parses as an `http(s)`
+   URL **with a host**, run
    [Step 8](single-file-flow.md#step-8--republish-an-artifact-published-plan)
    once per plan: render to the scratchpad and
    republish to that URL. The bash prepend loop in step 7 is a subprocess

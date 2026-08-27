@@ -45,6 +45,11 @@ by reviewing the first cut of it:
 - **`done || true`.** The loop's exit status is its last command, so a
   directory whose final spec did not match aborted the sweep under `set -e`,
   precisely when there was nothing to sweep.
+- **A host is required.** `https?://` alone matched a truncated `https://`
+  with nothing after it. Passing that to `Artifact` claims a *new* URL rather
+  than updating the shared one, stranding the link people already have. Every
+  eligibility rule now reads "an `http(s)` URL **with a host**", matching the
+  gate `implementation-plan` Step 7b and `publish-hub` already applied.
 
 S1 also now concatenates both lists into `candidates`, the name S2–S4 iterate;
 without it the artifact list was discovered and then silently dropped. S4

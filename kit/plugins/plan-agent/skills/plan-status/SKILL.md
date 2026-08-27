@@ -63,7 +63,7 @@ exactly as written there.
   update only `status`, `type`, `created`, `modified` and preserve every other
   field. Exact write rules in `references/single-file-flow.md`.
 - **Step 8 — Republish an artifact-published plan** — a spec with no sibling
-  `<stem>.html` but an `http(s)` `artifact-url:` lives on claude.ai, and the
-  render hook skips it by design. Re-render and republish to that URL so the
-  shared page carries the new status. Rules in
+  `<stem>.html` but an `artifact-url:` that parses as an `http(s)` URL **with a
+  host** lives on claude.ai, and the render hook skips it by design. Re-render
+  and republish to that URL so the shared page carries the new status. Rules in
   `references/single-file-flow.md`.

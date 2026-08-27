@@ -110,6 +110,17 @@ else
   fail "sweep-mode.md S1 has no spec-side artifact discovery — --all cannot reach an artifact plan"
 fi
 
+# A bare `https://` with nothing after it matched the first version of this
+# regex. Passing that to Artifact claims a NEW url instead of updating the
+# shared one, stranding the link people already have — so the scan must
+# require a host, the same gate implementation-plan 7b and publish-hub apply.
+echo "5a. ...and requires a host, so a truncated 'https://' is not republished..."
+if grep -qF '^artifact-url: *https?://[^/ ]' "$SWEEP"; then
+  pass
+else
+  fail "sweep-mode.md accepts a hostless artifact-url — a bare 'https://' reaches the republish"
+fi
+
 # The three guards below are each a bug the scan had, so each is pinned
 # separately — a single "does the scan exist" check passed while two of them
 # were absent.

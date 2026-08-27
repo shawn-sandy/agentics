@@ -28,7 +28,7 @@ artifact_candidates=$(
     [ -e "${spec%.md}.html" ] && continue
     grep -q '^# Plan:' "$spec" || continue
     fm=$(awk 'NR==1 && $0!="---" {exit} NR>1 && $0=="---" {exit} NR>1' "$spec")
-    printf '%s\n' "$fm" | grep -qE '^artifact-url: *https?://' || continue
+    printf '%s\n' "$fm" | grep -qE '^artifact-url: *https?://[^/ ]' || continue
     printf '%s\n' "$fm" | grep -qE '^status: *(todo|in-progress) *$' \
       && printf '%s\n' "$spec"
   done || true
@@ -40,6 +40,8 @@ Three guards, each closing a different way this scan goes wrong:
 - **`done || true`** — the loop's exit status is the last command it ran, so a directory whose final spec does not match would abort the whole sweep under `set -e`, silently and precisely in the common case where there is nothing to sweep. The HTML scan carries its own `|| true` for the same reason.
 - **`grep -q '^# Plan:'`** — without it a non-spec `.md` carrying those two frontmatter keys becomes a candidate, and S4 resolves its edit mode through Step 1, which is instructed to **STOP** on a `.md` with no `# Plan:` heading. That halts the sweep partway, leaving earlier plans written and later ones untouched.
 - **The `awk` frontmatter extract** — match `status:` and `artifact-url:` **only inside the frontmatter block**, never over the whole file. A plan that documents plan-agent's own keys in its body (a bare `status: todo` line in `## Steps`) would otherwise be swept as unfinished while its frontmatter says `completed` — not hypothetical in a repo whose plans are about plan-agent. The `awk` prints lines after the opening `---` and stops at the closing one, so it also reads far less than a whole-file grep.
+
+The `[^/ ]` after `//` requires a **host**, matching the rule `implementation-plan` Step 7b and `publish-hub` already state: a bare `https://` is a truncated value, not a page to republish to, and passing it to `Artifact` claims a new URL instead of updating the shared one.
 
 The sibling-`.html` test is what separates the two lists, so no plan appears in both. A spec with no `status:` key at all is not a candidate here — an unstatused spec is `plan-status` territory, not a plan whose completion went unrecorded. The `status:` match is the canonical unquoted form the renderer and every plan-agent skill write.
 

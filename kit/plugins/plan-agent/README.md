@@ -803,7 +803,12 @@ Reviews a plan for codebase implementation evidence with per-criterion verificat
 6. On confirmation — **spec mode** (sibling `<stem>.md` spec exists): sets `status:` frontmatter, flips `- [x]` criteria bullets and `[x]` step markers, writes a `## Completion Report` section for any gaps, and re-renders the HTML via `build-plan-html.mjs`; **legacy mode** (no spec): checks acceptance-criteria boxes, adds `completed` class to step cards, and updates `<html data-status>`, `<meta name="plan-status">`, and the visible badge directly
 7. If only verified criteria are checked, status is set to `in-progress` rather than `completed`
 
-With `--all`, the skill runs in sweep mode: it discovers every non-completed plan in the plans directory (`grep -l` for a `plan-status` meta tag valued `todo` or `in-progress`, excluding `index.html` and `archive/`; HTML without the tag is never a candidate), scores each with the cheap token-evidence pass (non-interactive — token-less plans score 0% instead of prompting), batch-confirms via one multi-select prompt, then runs the full per-criterion verification, objective test, and status writes on the selected plans only.
+With `--all`, the skill runs in sweep mode: it discovers every non-completed plan in the plans directory, scores each with the cheap token-evidence pass (non-interactive — token-less plans score 0% instead of prompting), batch-confirms via one multi-select prompt, then runs the full per-criterion verification, objective test, and status writes on the selected plans only.
+
+Discovery is two scans whose results are concatenated into one candidate list:
+
+- **File-published plans** — `grep -l` for a `plan-status` meta tag valued `todo` or `in-progress`, excluding `index.html` and `archive/`. HTML without the tag is never a candidate.
+- **Artifact-published plans** — these have no HTML to grep, so they are found by their spec. A spec qualifies only when all four hold: its first heading is `# Plan:`, no sibling `<stem>.html` exists, its frontmatter `artifact-url:` parses as an `http(s)` URL with a host, and its frontmatter `status:` is `todo` or `in-progress`. The `status:`/`artifact-url:` match is bounded to the frontmatter block, so a plan whose body documents those keys is not mistaken for an unfinished one; the `# Plan:` gate keeps a non-spec `.md` out of the list, which would otherwise halt the sweep when its edit mode is resolved.
 
 ### `plans-open` Skill
 
