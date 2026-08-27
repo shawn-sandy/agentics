@@ -73,17 +73,17 @@ Marks a plan completed after verifying the code actually shipped.
 
 - **Command** — `/plan-agent:finalize-plan [plan-file.md|.html] [--all] [--dir <path>]`
 - **Say it instead** — Not available; this skill is command-only (`disable-model-invocation: true`).
-- **What happens** — Scores codebase evidence per acceptance criterion, runs the objective-verification test, shows a findings table for confirmation, then writes `status`, `- [x]` criteria, step markers, and a `## Completion Report` into the spec and re-renders the HTML; `--all` sweeps every unmarked plan.
-- **Watch out** — A phased spec with any unmarked step stays `in-progress` rather than completing, and the skill never commits, pushes, or implements.
+- **What happens** — Scores codebase evidence per acceptance criterion, runs the objective-verification test, shows a findings table for confirmation, then writes `status`, `- [x]` criteria, step markers, and a `## Completion Report` into the spec and re-renders the HTML. For a plan published to claude.ai it republishes to the recorded URL instead, and `--all` finds those specs too — the sweep unions the on-disk HTML scan with a frontmatter-bounded spec scan, so a plan with no local HTML is no longer skipped.
+- **Watch out** — A phased spec with any unmarked step stays `in-progress` rather than completing, and the skill never commits, pushes, or implements. An artifact plan is delivered as the `.md` plus its artifact URL: there is no `<stem>.html` to hand back.
 
 ## implementation-plan
 
 Generates a self-contained HTML implementation plan from an objective, issue, or markdown source.
 
-- **Command** — `/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--tdd|--no-tdd] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]`
+- **Command** — `/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--file] [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--tdd|--no-tdd] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]`
 - **Say it instead** — "create an HTML plan for adding a dark mode toggle"
-- **What happens** — Clarifies, aligns, and interviews (unless flagged off), authors a small markdown spec in the plans directory, renders it with `plan-agent-render`, and sends both the `.md` and `.html` back via `SendUserFile`.
-- **Watch out** — Never hand-edit the rendered HTML — every change is a spec edit plus a re-render — and the plan is the deliverable: even a request that bundles planning with building ("plan X and build it") ends at the delivered plan; implementation waits for your explicit approval (Step 8's `Implement now`).
+- **What happens** — Clarifies, aligns, and interviews (unless flagged off), authors a small markdown spec in the plans directory, renders it into the scratchpad, and publishes it as a claude.ai artifact — writing the returned URL back into the spec as `artifact-url:` and rebuilding the gallery so the card appears. The repo keeps the `.md` spec and no generated HTML; pass `--file` to also write and commit `<stem>.html` beside the spec and get both files back via `SendUserFile`.
+- **Watch out** — Re-delivering a plan republishes to the same URL (Step 7 re-reads `artifact-url:` first), so never hand-edit either the rendered HTML or that key — every change is a spec edit plus a re-render. If `Artifact` is unavailable the skill says so and falls back to file delivery. The plan is the deliverable: even a request that bundles planning with building ("plan X and build it") ends at the delivered plan; implementation waits for your explicit approval (Step 8's `Implement now`).
 
 ## markdown-to-html
 
@@ -100,7 +100,7 @@ Writes lifecycle status and type into a plan's YAML frontmatter.
 
 - **Command** — `/plan-agent:plan-status [plan-file-path | directory] [--all] [--force]`
 - **Say it instead** — "check whether this plan has been implemented and update its status"
-- **What happens** — Pulls created/modified dates from `git log`, scores inline backtick tokens against the codebase into `todo` / `in-progress` / `completed`, classifies the type when completed, then asks before writing `status`, `type`, `created`, and `modified` — leaving all other frontmatter untouched.
+- **What happens** — Pulls created/modified dates from `git log`, scores inline backtick tokens against the codebase into `todo` / `in-progress` / `completed`, classifies the type when completed, then asks before writing `status`, `type`, `created`, and `modified` — leaving all other frontmatter untouched. A plan published to claude.ai (an `artifact-url:` with a host and no sibling `.html`) is then republished to that same URL, carrying the whole spec — step markers, criteria, and Completion Report — so the shared page stops disagreeing with the spec; bulk mode reports `republished: N`.
 - **Watch out** — It judges whether a plan shipped, not whether it is any good — use `review-plan` for that — and it writes nothing without your confirmation.
 
 ## plans-library
@@ -109,8 +109,8 @@ Builds and opens a filterable HTML gallery of every plan in the plans directory.
 
 - **Command** — `/plan-agent:plans-library`
 - **Say it instead** — "show me my plans gallery"
-- **What happens** — Runs `plan-agent-plans-index` to write `index.html` in the resolved plans directory (in-progress first, then newest by `plan-created`), verifies the card count matches, and opens it in the browser.
-- **Watch out** — `archive/` and `artifacts/` are excluded by design, and with no HTML plans it stops and points you at `/plan-agent:implementation-plan`.
+- **What happens** — Runs `plan-agent-plans-index` to write `index.html` in the resolved plans directory (in-progress first, then newest by `plan-created`), verifies the card count matches, and opens it in the browser. A `.md` spec with an `http(s)` `artifact-url:` and no sibling `.html` is carded by its artifact URL in a new tab, so plans published straight to claude.ai still appear.
+- **Watch out** — `archive/` and `artifacts/` are excluded by design; a sibling `.html` always wins its stem over the artifact card. With nothing the gallery can link it leaves any existing `index.html` alone and points you at `/plan-agent:implementation-plan`.
 
 ## plans-open
 
@@ -138,6 +138,15 @@ Generates a runnable static-HTML prototype from a plan, idea, image, or Figma de
 - **Say it instead** — "make a clickable prototype of this plan"
 - **What happens** — Derives a deterministic data model (entity, typed fields, action, success signal), echoes it back for correction, then fills the bundled skeleton into one self-contained file under `docs/prototypes/` — inline CSS, vanilla JS, seed JSON, localStorage store, no build step.
 - **Watch out** — An image input is read directly, but a Figma URL needs the Figma MCP server connected; without it the skill asks for a screenshot rather than guessing.
+
+## publish-hub
+
+Bundles a plan and its related HTML into one tabbed hub artifact at a stable URL.
+
+- **Command** — `/plan-agent:publish-hub <plan.md> [--extra <path>]...` — omit the plan to pick from the plans directory
+- **Say it instead** — "publish this plan and its prototype as one page"
+- **What happens** — Runs `plan-agent-hub` to render the plan and embed each related document — the `prototype:` file, any `--extra` pages, `design:` as an external-link tab — in its own tab panel, publishes the bundle with `Artifact`, writes the returned URL back as `hub-artifact-url:`, then fetches the page to confirm the plan title actually rendered before reporting the link and its tabs.
+- **Watch out** — Related files come only from the spec's `prototype:`/`design:` keys and explicit `--extra` paths, never from scanning the directory. The hub is a second artifact: the plan's own `artifact-url:` is never touched. Output is capped at 15 MB — on overflow the bundler names the largest embedded document and the skill reruns it with `--skip <that file>`, telling you which file was dropped; `--skip` is the bundler's flag, not a slash-command argument. When the plan itself is the largest there is nothing to drop, and the skill stops.
 
 ## review-plan
 

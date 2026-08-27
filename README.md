@@ -407,7 +407,7 @@ claude --plugin-dir ./kit/plugins/code-testing-agent
 
 #### `plan-agent`
 
-Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with a built-in structured interview; it authors the plan and stops, never writing source files. Implement a plan that already exists with `/plan-agent:build [<plan>]`, which walks the steps, ticks the spec, re-renders, and owns all three completion gates — acceptance criteria, end-to-end verification, and completion checklist. Turn a vague idea into a decision-complete proposal — saved as a copy-pasteable prompt under `docs/prompts/` — with `/plan-agent:build-proposal`, spawn a ten-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, or turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans. PostToolUse hooks auto-regenerate the plans and prototypes gallery indexes; a filename hook enforces verb-target kebab-case.
+Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with a built-in structured interview; it authors the plan and stops, never writing source files. Implement a plan that already exists with `/plan-agent:build [<plan>]`, which walks the steps, ticks the spec, re-renders, and owns all three completion gates — acceptance criteria, end-to-end verification, and completion checklist. Turn a vague idea into a decision-complete proposal — saved as a copy-pasteable prompt under `docs/prompts/` — with `/plan-agent:build-proposal`, spawn a ten-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`, publish a multi-artboard design canvas for a plan with `/plan-agent:design`, or bundle a plan and its related HTML into one tabbed hub artifact with `/plan-agent:publish-hub`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans, and publishes them to a claude.ai artifact by default — the repo keeps the `.md` spec, and `--file` also commits the rendered HTML beside it. PostToolUse hooks auto-regenerate the plans, prototypes, and designs gallery indexes and flag prototype/design drift; a filename hook enforces verb-target kebab-case.
 
 **Commands:**
 
@@ -437,6 +437,8 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | `prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) across five types (`system`, `task`, `creative`, `analytical`, `proposal`) — command only, with a `commands/prompt.md` wrapper so other skills can reach it |
 | `setup-sites` | Scaffold the GitHub Pages deploy pipeline (workflow, `.nojekyll`, landing hub, preview script) into any repo so `docs/` HTML publishes to a public URL — command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent |
 | `prototype` | Turn a completed HTML plan or a one-line idea into a runnable, framework-free static-HTML prototype under `docs/prototypes/` (inline JSON seed + per-prototype `localStorage`, escaped output, a11y baked in) — command (`/plan-agent:prototype <plan.html \| idea>`) or auto-activates on "prototype this plan / idea" intent |
+| `design` | Turn a plan, one-line idea, image, or Figma URL into a multi-artboard design canvas published as an Artifact — artboards land under `docs/designs/<plan-slug>/` and the canvas URL is written back as `design:` so the plan header gains a **View design** link and `build` reads the artboards as the visual spec — command (`/plan-agent:design`) or auto-activates on "design this plan" intent |
+| `publish-hub` | Bundle a plan and its related HTML — the `prototype:` file, `--extra` pages, `design:` as an external-link tab — into one tabbed hub artifact at a stable `hub-artifact-url:`, leaving the plan's own `artifact-url:` untouched — command (`/plan-agent:publish-hub <plan.md> [--extra <path>]...`) or auto-activates on "publish / share a plan hub" intent |
 | `plans-library` | Browse plans, view plan history, or open the plans index |
 | `plans-open` | Reopen the plans gallery without rebuilding |
 | `deep-grill` | Deep-grill or stress-test a plan decision by decision — manual invoke only |
@@ -464,9 +466,11 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | `build-prototypes-index` | `PostToolUse` (Write/Edit/MultiEdit) | Auto-regenerates the prototypes gallery index when `docs/prototypes/` changes |
 | `render-plan-html` | `PostToolUse` (Write/Edit/MultiEdit) | Re-renders a plan's HTML after its source changes |
 | `check-prototype-drift` | `PostToolUse` (Write/Edit/MultiEdit) | Warns when a prototype has drifted from the plan it was generated from |
+| `build-designs-index` | `PostToolUse` (Write/Edit/MultiEdit) | Auto-regenerates the designs gallery index when `docs/designs/` changes |
+| `check-design-drift` | `PostToolUse` (Write/Edit/MultiEdit) | Reports a user-facing plan step that no artboard covers |
 | Stress-test nudge | `PostToolUse` (ExitPlanMode) | Suggests running the Step 5b interview or the `review-plan` team before implementing |
 
-> All five Write/Edit hooks are registered through a single `hooks/dispatch.py` entry rather than five matchers, which is why the reference table counts two registrations.
+> All seven Write/Edit hooks are registered through a single `hooks/dispatch.py` entry rather than seven matchers, which is why the reference table counts two registrations. `dispatch.py` path-gates once and fans out only for writes under the plans, prototypes, or designs trees.
 
 ```bash
 claude --plugin-dir ./kit/plugins/plan-agent
@@ -475,6 +479,8 @@ claude --plugin-dir ./kit/plugins/plan-agent
 # /plan-agent:review-plan docs/plans/add-dark-mode-toggle.html
 # /plan-agent:review-plan-bg docs/plans/add-dark-mode-toggle.html
 # /plan-agent:finalize-plan add-dark-mode-toggle.html
+# /plan-agent:design docs/plans/add-dark-mode-toggle.html
+# /plan-agent:publish-hub docs/plans/add-dark-mode-toggle.md
 # /plan-agent:prompt
 # "Browse my plans"
 ```
@@ -766,7 +772,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | content-tools | [How do I... content-tools](./docs/guides/how-to/content-tools.md) | 1 |
 | git-agent | [How do I... git-agent](./docs/guides/how-to/git-agent.md) | 8 |
 | memory-tools | [How do I... memory-tools](./docs/guides/how-to/memory-tools.md) | 3 |
-| plan-agent | [How do I... plan-agent](./docs/guides/how-to/plan-agent.md) | 17 |
+| plan-agent | [How do I... plan-agent](./docs/guides/how-to/plan-agent.md) | 18 |
 | settings-sync | [How do I... settings-sync](./docs/guides/how-to/settings-sync.md) | 2 |
 | skill-reviewer | [How do I... skill-reviewer](./docs/guides/how-to/skill-reviewer.md) | 4 |
 | social-media-tools | [How do I... social-media-tools](./docs/guides/how-to/social-media-tools.md) | 17 |

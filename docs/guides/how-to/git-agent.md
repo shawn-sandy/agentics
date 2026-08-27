@@ -38,7 +38,7 @@ Runs the PR readiness gate on the current branch and squash-merges only when gre
 - **Command** — `/git-agent:merge` — background variant `/git-agent:merge-bg [optional PR url or number]`
 - **Say it instead** — "is this PR ready to merge?"
 - **What happens** — Resolves the branch's PR, gates on `mergeable`, `mergeStateStatus`, every required check via `gh pr checks --required`, and `reviewDecision`, re-fetches all of it, asks for approval, then runs `gh pr merge --squash --match-head-commit <headRefOid>`.
-- **Watch out** — Green checks alone never authorize a merge, and `--delete-branch` is never passed; a dirty working tree triggers an ask (files listed) rather than a stop, and nothing is stashed, committed, or cleaned.
+- **Watch out** — Green checks alone never authorize a merge, and `--delete-branch` is never passed; a dirty working tree triggers an ask (files listed) rather than a stop, and nothing is stashed, committed, or cleaned. An *absent* check is not a passing one: when the run list is empty, a run has no jobs, or every job failed with a zero-byte `--log-failed`, CI never dispatched (a billing block, an expired token, a workflow awaiting approval) and the summary says so by name — never "CI green".
 
 ## post-merge-cleanup
 
