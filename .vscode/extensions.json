@@ -1,0 +1,23 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+    "astro-build.astro-vscode",
+    "christian-kohler.path-intellisense",
+    "coderabbit.coderabbit-vscode",
+    "dbaeumer.vscode-eslint",
+    "deque-systems.vscode-axe-linter",
+    "eamodio.gitlens",
+    "esbenp.prettier-vscode",
+    "github.remotehub",
+    "ms-playwright.playwright",
+    "ms-vscode.azure-repos",
+    "ms-vscode.remote-repositories",
+    "sleistner.vscode-fileutils",
+    "streetsidesoftware.code-spell-checker",
+    "streetsidesoftware.code-spell-checker-cspell-bundled-dictionaries",
+    "unifiedjs.vscode-mdx",
+    "usernamehw.errorlens",
+    "vitest.explorer",
+    "yoavbls.pretty-ts-errors"
+  ]
+}
