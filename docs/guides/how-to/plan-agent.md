@@ -73,8 +73,8 @@ Marks a plan completed after verifying the code actually shipped.
 
 - **Command** — `/plan-agent:finalize-plan [plan-file.md|.html] [--all] [--dir <path>]`
 - **Say it instead** — Not available; this skill is command-only (`disable-model-invocation: true`).
-- **What happens** — Scores codebase evidence per acceptance criterion, runs the objective-verification test, shows a findings table for confirmation, then writes `status`, `- [x]` criteria, step markers, and a `## Completion Report` into the spec and re-renders the HTML; `--all` sweeps every unmarked plan.
-- **Watch out** — A phased spec with any unmarked step stays `in-progress` rather than completing, and the skill never commits, pushes, or implements.
+- **What happens** — Scores codebase evidence per acceptance criterion, runs the objective-verification test, shows a findings table for confirmation, then writes `status`, `- [x]` criteria, step markers, and a `## Completion Report` into the spec and re-renders the HTML. For a plan published to claude.ai it republishes to the recorded URL instead, and `--all` finds those specs too — the sweep unions the on-disk HTML scan with a frontmatter-bounded spec scan, so a plan with no local HTML is no longer skipped.
+- **Watch out** — A phased spec with any unmarked step stays `in-progress` rather than completing, and the skill never commits, pushes, or implements. An artifact plan is delivered as the `.md` plus its artifact URL: there is no `<stem>.html` to hand back.
 
 ## implementation-plan
 
@@ -100,7 +100,7 @@ Writes lifecycle status and type into a plan's YAML frontmatter.
 
 - **Command** — `/plan-agent:plan-status [plan-file-path | directory] [--all] [--force]`
 - **Say it instead** — "check whether this plan has been implemented and update its status"
-- **What happens** — Pulls created/modified dates from `git log`, scores inline backtick tokens against the codebase into `todo` / `in-progress` / `completed`, classifies the type when completed, then asks before writing `status`, `type`, `created`, and `modified` — leaving all other frontmatter untouched.
+- **What happens** — Pulls created/modified dates from `git log`, scores inline backtick tokens against the codebase into `todo` / `in-progress` / `completed`, classifies the type when completed, then asks before writing `status`, `type`, `created`, and `modified` — leaving all other frontmatter untouched. A plan published to claude.ai (an `artifact-url:` with a host and no sibling `.html`) is then republished to that same URL, carrying the whole spec — step markers, criteria, and Completion Report — so the shared page stops disagreeing with the spec; bulk mode reports `republished: N`.
 - **Watch out** — It judges whether a plan shipped, not whether it is any good — use `review-plan` for that — and it writes nothing without your confirmation.
 
 ## plans-library
