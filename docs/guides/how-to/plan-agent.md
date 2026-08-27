@@ -80,10 +80,10 @@ Marks a plan completed after verifying the code actually shipped.
 
 Generates a self-contained HTML implementation plan from an objective, issue, or markdown source.
 
-- **Command** — `/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--tdd|--no-tdd] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]`
+- **Command** — `/plan-agent:implementation-plan <issue-url|#n> | <plan.md> | <objective> [--file] [--quick] [--no-clarify] [--no-align] [--no-interview] [--workflow] [--tdd|--no-tdd] [--from-prompt <path>] [--type feature|fix|refactor|docs|chore] [--template default] [--dir <path>] [--priority low|medium|high|critical]`
 - **Say it instead** — "create an HTML plan for adding a dark mode toggle"
-- **What happens** — Clarifies, aligns, and interviews (unless flagged off), authors a small markdown spec in the plans directory, renders it with `plan-agent-render`, and sends both the `.md` and `.html` back via `SendUserFile`.
-- **Watch out** — Never hand-edit the rendered HTML — every change is a spec edit plus a re-render — and the plan is the deliverable: even a request that bundles planning with building ("plan X and build it") ends at the delivered plan; implementation waits for your explicit approval (Step 8's `Implement now`).
+- **What happens** — Clarifies, aligns, and interviews (unless flagged off), authors a small markdown spec in the plans directory, renders it into the scratchpad, and publishes it as a claude.ai artifact — writing the returned URL back into the spec as `artifact-url:` and rebuilding the gallery so the card appears. The repo keeps the `.md` spec and no generated HTML; pass `--file` to also write and commit `<stem>.html` beside the spec and get both files back via `SendUserFile`.
+- **Watch out** — Re-delivering a plan republishes to the same URL (Step 7 re-reads `artifact-url:` first), so never hand-edit either the rendered HTML or that key — every change is a spec edit plus a re-render. If `Artifact` is unavailable the skill says so and falls back to file delivery. The plan is the deliverable: even a request that bundles planning with building ("plan X and build it") ends at the delivered plan; implementation waits for your explicit approval (Step 8's `Implement now`).
 
 ## markdown-to-html
 
@@ -109,8 +109,8 @@ Builds and opens a filterable HTML gallery of every plan in the plans directory.
 
 - **Command** — `/plan-agent:plans-library`
 - **Say it instead** — "show me my plans gallery"
-- **What happens** — Runs `plan-agent-plans-index` to write `index.html` in the resolved plans directory (in-progress first, then newest by `plan-created`), verifies the card count matches, and opens it in the browser.
-- **Watch out** — `archive/` and `artifacts/` are excluded by design, and with no HTML plans it stops and points you at `/plan-agent:implementation-plan`.
+- **What happens** — Runs `plan-agent-plans-index` to write `index.html` in the resolved plans directory (in-progress first, then newest by `plan-created`), verifies the card count matches, and opens it in the browser. A `.md` spec with an `http(s)` `artifact-url:` and no sibling `.html` is carded by its artifact URL in a new tab, so plans published straight to claude.ai still appear.
+- **Watch out** — `archive/` and `artifacts/` are excluded by design; a sibling `.html` always wins its stem over the artifact card. With nothing the gallery can link it leaves any existing `index.html` alone and points you at `/plan-agent:implementation-plan`.
 
 ## plans-open
 
@@ -138,6 +138,15 @@ Generates a runnable static-HTML prototype from a plan, idea, image, or Figma de
 - **Say it instead** — "make a clickable prototype of this plan"
 - **What happens** — Derives a deterministic data model (entity, typed fields, action, success signal), echoes it back for correction, then fills the bundled skeleton into one self-contained file under `docs/prototypes/` — inline CSS, vanilla JS, seed JSON, localStorage store, no build step.
 - **Watch out** — An image input is read directly, but a Figma URL needs the Figma MCP server connected; without it the skill asks for a screenshot rather than guessing.
+
+## publish-hub
+
+Bundles a plan and its related HTML into one tabbed hub artifact at a stable URL.
+
+- **Command** — `/plan-agent:publish-hub <plan.md> [--extra <path>]...` — omit the plan to pick from the plans directory
+- **Say it instead** — "publish this plan and its prototype as one page"
+- **What happens** — Runs `plan-agent-hub` to render the plan and embed each related document — the `prototype:` file, any `--extra` pages, `design:` as an external-link tab — in its own tab panel, publishes the bundle with `Artifact`, writes the returned URL back as `hub-artifact-url:`, then fetches the page to confirm the plan title actually rendered before reporting the link and its tabs.
+- **Watch out** — Related files come only from the spec's `prototype:`/`design:` keys and explicit `--extra` paths, never from scanning the directory. The hub is a second artifact: the plan's own `artifact-url:` is never touched. Output is capped at 15 MB — on overflow the bundler names the largest embedded document so you can rerun with `--skip`, and when that is the plan itself there is nothing to drop.
 
 ## review-plan
 
