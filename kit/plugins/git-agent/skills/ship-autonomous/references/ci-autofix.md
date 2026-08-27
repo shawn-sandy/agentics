@@ -10,9 +10,17 @@ the one exception** — it is never autofixed, so it never advances the cap.
 ## Fetch the failing log
 
 ```
-gh run list --json databaseId,conclusion,workflowName --jq '.[] | select(.conclusion=="failure") | .databaseId' | head -1
+gh run list --commit "$(gh pr view --json headRefOid --jq .headRefOid)" \
+  --json databaseId,conclusion,workflowName \
+  --jq '.[] | select(.conclusion=="failure") | "\(.databaseId) \(.workflowName)"'
 gh run view <run-id> --log-failed
 ```
+
+**`--commit` is not optional.** An unfiltered `gh run list` returns failing runs
+from the whole repository, so `head -1` can hand back a concurrent PR's red run
+— and every classification and autofix below would then be applied to someone
+else's failure. Bind to this PR's head SHA, then pick the row whose
+`workflowName` matches the check you are fixing.
 
 ## Classify on log content
 

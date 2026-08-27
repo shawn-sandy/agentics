@@ -171,19 +171,76 @@ check(
 // error). Reporting that case as "never dispatched — billing block" tells the
 // user to ignore a real failure, so the jobs array, not the log size, has to
 // carry the non-dispatch call.
-check(
-  'merge treats a started job as proof CI dispatched',
-  MERGE.includes('startedAt'),
-);
-check(
-  'merge has a logs-unavailable branch distinct from never-dispatched',
-  MERGE.includes('logs unavailable'),
-);
-check(
-  'ci-autofix does not classify a started-jobs empty log as a non-dispatch',
+//
+// These assert the classification sentences themselves, not bare tokens: a
+// token like `startedAt` would still be found if it survived only in a code
+// comment while the rule reverted. Whitespace is collapsed first so rewrapping
+// a paragraph does not fail the run.
+const flat = (t) => t.replace(/\s+/g, ' ');
+const MERGE_FLAT = flat(MERGE);
+const CI_AUTOFIX_FLAT = flat(
   readPlugin(
     'git-agent', 'skills', 'ship-autonomous', 'references', 'ci-autofix.md',
-  ).includes('startedAt'),
+  ),
+);
+
+check(
+  'merge classifies ONLY an empty run list or empty jobs as non-dispatch',
+  MERGE_FLAT.includes(
+    '**never dispatched** only when the run list is empty or the `jobs` array is empty',
+  ),
+);
+check(
+  'merge classifies started-jobs-with-empty-log as logs unavailable',
+  MERGE_FLAT.includes(
+    'When jobs started and the log is empty, report **"CI failed — logs unavailable"**',
+  ),
+);
+// The negative is the actual regression guard: the removed clause must not
+// come back, in this file or the reference that drives ship-autonomous.
+check(
+  'merge no longer treats zero log bytes as a non-dispatch signal',
+  !MERGE_FLAT.includes('every job failed') &&
+    MERGE_FLAT.includes('**Log size never makes this call.**'),
+);
+check(
+  'ci-autofix classifies ONLY an empty jobs array as external-blocker',
+  CI_AUTOFIX_FLAT.includes(
+    'Classify as `external-blocker` only when the **jobs array is empty**',
+  ),
+);
+check(
+  'ci-autofix refuses external-blocker for a started-jobs empty log',
+  CI_AUTOFIX_FLAT.includes('Do not classify it as `external-blocker`') &&
+    CI_AUTOFIX_FLAT.includes('logs unavailable'),
+);
+check(
+  'ci-autofix no longer classifies all-failed-with-empty-logs as a blocker',
+  !CI_AUTOFIX_FLAT.includes('when **every** job failed'),
+);
+
+// The run being classified must be the one belonging to this PR's head commit.
+// `gh run list --branch` returns every recent run on the branch across commits
+// AND workflows — on PR #607's own branch that was four runs from two
+// workflows on a single SHA — so an unbound <run-id> can classify a different
+// run than the failing check and reach the wrong verdict by a second route.
+check(
+  'merge binds the run list to the verified head commit',
+  MERGE_FLAT.includes('--commit <headRefOid>'),
+);
+check(
+  'merge tells the reader to pick the run by workflow, not arbitrarily',
+  MERGE_FLAT.includes(
+    'Pick the row whose `workflowName` matches the failing check',
+  ),
+);
+// ci-autofix's fetch was unfiltered — `gh run list` with no --commit and no
+// --branch returns failing runs from the WHOLE repo, so a concurrent PR's red
+// run could be fetched and autofixed against. The classification above is only
+// correct if it is classifying this PR's run.
+check(
+  'ci-autofix binds its log fetch to the PR head commit',
+  CI_AUTOFIX_FLAT.includes('gh run list --commit "$(gh pr view'),
 );
 
 // ── 4. build checks checkout freshness before implementing ─────────────────

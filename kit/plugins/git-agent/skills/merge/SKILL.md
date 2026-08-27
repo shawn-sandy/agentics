@@ -147,11 +147,20 @@ identically to a repo that simply has no CI configured. Separate the two before
 summarizing:
 
 ```
-gh run list --branch <branch> --limit 5
+gh run list --commit <headRefOid> --limit 10 \
+  --json databaseId,workflowName,status,conclusion
 gh run view <run-id> --json jobs --jq \
   '[.jobs[] | {name, conclusion, startedAt,
                failed: [.steps[] | select(.conclusion == "failure") | .name]}]'
 ```
+
+**Bind the run to the commit you verified.** List by `--commit <headRefOid>`
+from Step 1, never by `--branch`: a branch listing returns every recent run
+across *every* commit and *every* workflow on it, so `<run-id>` picked off the
+top can belong to a different push or an unrelated workflow, and classifying
+that one answers a question nobody asked. Pick the row whose `workflowName`
+matches the failing check from `gh pr checks`; if several checks fail, classify
+each one's run separately.
 
 Treat CI as **never dispatched** only when the run list is empty or the `jobs`
 array is empty. Those two states are the whole test: they are the only ones

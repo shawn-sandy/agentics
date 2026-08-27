@@ -28,8 +28,24 @@
 - **`ci-autofix.md`'s measurement paragraph states its own limit.** It now says
   the window contained no started-jobs run with empty logs, so a later reader
   cannot mistake the zero-byte reading for an independently verified signal.
+- **The run being classified is now bound to the PR's head commit.** Both files
+  listed runs without pinning them: `merge` used `gh run list --branch`, which
+  returns every recent run across *every* commit and *every* workflow on the
+  branch — PR #607's own branch carried four runs from two workflows on a single
+  SHA — and `ci-autofix.md` used a bare `gh run list ... | head -1`, unfiltered
+  across the **whole repository**, so a concurrent PR's red run could be fetched
+  and autofixed against. Both now list by `--commit <headRefOid>` (the SHA
+  already verified in `merge` Step 1) and say to pick the row whose
+  `workflowName` matches the failing check. An unbound `<run-id>` reached the
+  same wrong verdict by a second route, so the classification fix above is only
+  sound with this in place. Raised by CodeRabbit on #607.
 
-`tests/review-gates.test.mjs` gains three assertions covering the split, and
+`tests/review-gates.test.mjs` gains nine assertions: the two classification
+sentences, three negatives that fail if the removed clause returns, and the
+run-binding checks. They assert the rule sentences rather than bare tokens — a
+token like `startedAt` would still be found if it survived only in a code
+comment while the rule reverted — over whitespace-collapsed text so rewrapping a
+paragraph does not fail the run. Every one was mutation-checked.
 `tests/plugins/test-ship-preflight.sh` no longer pins the removed clause.
 `docs/guides/how-to/git-agent.md` needs no change — its `merge` section
 documents the readiness gate and never described the dispatch heuristic.
