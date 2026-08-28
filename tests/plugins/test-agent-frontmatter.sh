@@ -53,6 +53,8 @@ VALID_TOOLS = {
     # Orchestration and session
     "Agent", "Skill", "SlashCommand", "TodoWrite",
     "AskUserQuestion", "ExitPlanMode", "ToolSearch",
+    # Publishing
+    "Artifact", "SendUserFile",
 }
 
 # Agents whose entire job is to read and report. The plan's objective was not
