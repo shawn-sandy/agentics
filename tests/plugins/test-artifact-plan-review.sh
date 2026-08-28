@@ -66,9 +66,15 @@ fi
 # is the one that matters — a user who runs the skill bare gets whichever plan
 # it found, and before this it could only ever find a file-published one.
 # ---------------------------------------------------------------------------
-echo "2. review-plan Step 1 discovers artifact plans by spec, not by HTML alone..."
-if grep -qF 'artifact-url:' "$REVIEW" \
-   && grep -qF 'no sibling' "$REVIEW"; then
+#
+# Every assertion below pins a CODE line, never the prose around it. That
+# distinction is load-bearing and was found the hard way: an earlier cut
+# matched `artifact-url:` and the words "http(s)"/"host" anywhere in the file,
+# and deleting the entire runnable discovery snippet left the suite fully
+# green — the surrounding explanation still carried every token.
+echo "2. review-plan Step 1 unions the HTML glob with a spec-side scan..."
+if grep -qF 'find "$PLANS_DIR" -maxdepth 1 -name' "$REVIEW" \
+   && grep -qF '${spec%.md}.html' "$REVIEW"; then
   pass
 else
   fail "review-plan Step 1 has no spec-side artifact discovery — an artifact plan is invisible to it"
@@ -76,12 +82,37 @@ fi
 
 # A hostless `https://` reaches Artifact as a NEW url rather than an update,
 # stranding the link people already have. Same gate implementation-plan 7b,
-# publish-hub, and the finalize-plan sweep apply.
-echo "2a. ...and requires an http(s) URL with a host before republishing..."
-if grep -qF 'http(s)' "$REVIEW" && grep -qF 'host' "$REVIEW"; then
+# publish-hub, and the finalize-plan sweep apply. Matched as the regex the
+# script actually runs, not as the prose that explains it.
+echo "2a. ...whose artifact-url match requires an http(s) URL with a host..."
+if grep -qF '^artifact-url: *https?://[^/ ]' "$REVIEW"; then
   pass
 else
-  fail "review-plan does not gate artifact-url on an http(s) URL with a host"
+  fail "review-plan accepts a hostless artifact-url — a bare 'https://' reaches the republish"
+fi
+
+# The remaining three guards, each pinned separately because a single
+# "does the scan exist" check passed while individual guards were missing.
+# Matching the body of the loop, not the paragraph that describes it.
+echo "2b. ...bounds the frontmatter match so a body line cannot false-match..."
+if grep -qF "awk 'NR==1" "$REVIEW"; then
+  pass
+else
+  fail "review-plan scans the whole spec — a body line quoting artifact-url: false-matches"
+fi
+
+echo "2c. ...admits only '# Plan:' specs, keeping session notes out..."
+if grep -qF "grep -q '^# Plan:' \"\$spec\" || continue" "$REVIEW"; then
+  pass
+else
+  fail "review-plan artifact scan has no '# Plan:' gate — a session-export .md becomes a review candidate"
+fi
+
+echo "2d. ...guards the loop's exit status so an empty result is non-fatal..."
+if grep -qxF '  done || true' "$REVIEW"; then
+  pass
+else
+  fail "review-plan artifact scan has no 'done || true' — a no-match run aborts under set -e"
 fi
 
 # ---------------------------------------------------------------------------
