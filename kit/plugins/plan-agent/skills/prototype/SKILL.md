@@ -3,7 +3,7 @@ name: prototype
 model: opus
 description: "Generates a runnable static-HTML prototype from a plan, idea, or design. Produces one self-contained, framework-free clickable file under docs/prototypes/. Use when asked to prototype a mockup."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_console_messages, mcp__claude-in-chrome__read_page
-argument-hint: "<plan.html | image | figma-url | one-line idea> [--from-prompt <path>]"
+argument-hint: "<plan.html|plan.md | image | figma-url | one-line idea> [--from-prompt <path>]"
 ---
 
 ## Plan Agent — Prototype
@@ -61,9 +61,11 @@ criteria silently drops the constraints the handoff existed to carry.
 
 Then classify the remaining text:
 
-- If the **first token ends in `.html`**, treat it as a **plan path**. Reduce
-  it to its basename for safety, then resolve it under the plans directory
-  (configured `plansDirectory`, else `docs/plans/`). Read the file.
+- If the **first token ends in `.html` or `.md`**, treat it as a **plan path**.
+  Reduce it to its basename for safety, then resolve it under the plans
+  directory (configured `plansDirectory`, else `docs/plans/`). Read the file. A plan
+  published as a claude.ai artifact has no `.html` at all — its spec is the
+  only path it has — so a `.md` here is a plan, never a raw idea.
 - If the **first token ends in an image extension** (`.png`, `.jpg`, `.jpeg`,
   `.gif`, `.webp`, `.svg`), treat it as an **image path** — a screenshot or
   mockup of the UI to prototype.
@@ -78,7 +80,7 @@ resolves the owning plan from it, and the gallery card renders it as its
 "from `<plan>`" text:
 
 - **Plan path:** the repo-relative path of the plan's **Markdown spec** —
-  `docs/plans/<slug>.md` (swap the resolved `.html` for `.md`), even when the
+  `docs/plans/<slug>.md` (the resolved plan's stem plus `.md`), even when the
   sibling `.md` does not exist.
 - **Idea, image, and Figma paths:** empty string.
 
@@ -162,8 +164,9 @@ HTML is written — write the back-link into the source plan's Markdown spec.
 **Plan path only:** skip this entire step for idea, image, and Figma inputs,
 which have no owning plan.
 
-- Resolve the spec by swapping the resolved plan `.html` for `.md`
-  (`docs/plans/<slug>.md`) — the same value `{{SOURCE_PLAN}}` carries.
+- Resolve the spec as the resolved plan's stem plus `.md`
+  (`docs/plans/<slug>.md`) — the same value `{{SOURCE_PLAN}}` carries, and
+  already the resolved path itself for an artifact plan.
 - **If that `.md` does not exist:** skip the write-back, still generate the
   prototype, and print exactly one line telling the user to run
   `node <path-to-plan-agent-plugin>/scripts/extract-plan-spec.mjs PLAN.html > PLAN.md` (substituting the real

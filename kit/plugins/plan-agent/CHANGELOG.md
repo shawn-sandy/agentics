@@ -1,5 +1,50 @@
 # Changelog
 
+## 9.10.0 — artifact-published plans reach review, design, and prototype (2026-08-28)
+
+### Fixed
+
+Since 9.7.0 the local `<stem>.html` has been a `--file` opt-in and the claude.ai
+artifact the default deliverable, so the ordinary shape of a plan on disk is a
+`.md` spec carrying `artifact-url:` and nothing else. 9.9.0 taught the
+completion path that shape. Three consumers still assumed a file:
+
+- **`review-plan` could not see an artifact plan.** Step 1 discovered plans with
+  `glob docs/plans/*.html`, and an artifact plan has no HTML — so running the
+  reviewer bare did not fail, it silently reviewed the most recent
+  *file*-published plan instead, which is the worse outcome. Discovery now
+  unions the HTML glob with a spec-side scan carrying the same four guards the
+  `finalize-plan` sweep uses: frontmatter-bounded matching (these plans are
+  often *about* plan-agent, so a body line quoting `artifact-url:`
+  false-matches a whole-file grep), a `# Plan:` gate that keeps session-export
+  notes out, an `https?://[^/ ]` host requirement, and `done || true` so an
+  empty result is not a `set -e` abort. An explicit `.md` path is accepted too —
+  the same `.html` or `.md` token shape `finalize-plan` Step 1 already took,
+  and the only path an artifact plan has to paste.
+- **`review-plan` Step 7 resurrected the file the author chose not to publish.**
+  The re-render wrote `<stem>.html` unconditionally, which flips the plan's
+  gallery card off the artifact onto a local path and leaves the shared page
+  stale — at exactly the moment it most needs updating, since a review is the
+  state every other reader sees. Step 1 now records *where* the plan is
+  published as a finding separate from the edit mode, and Step 7 branches on
+  it: overwrite the sibling when one exists, otherwise render to the scratchpad
+  and republish to the recorded `artifact-url:`. `Artifact` joins the skill's
+  `allowed-tools` and the `agent-review-plan` subagent's `tools` — without it in
+  both the republish would prompt mid-run, which in background mode (the only
+  mode that subagent uses) means silently never happening.
+- **`design` and `prototype` treated a spec as a raw idea.** Their first-token
+  test recognized `.html` only, so a `.md` fell through to the final "otherwise
+  the whole argument string is a raw idea" branch and the skill ran to
+  completion having designed against a filename — no error, just a canvas about
+  a path. Both now classify `.html` or `.md` as a plan path, and their
+  spec-resolution steps read "the resolved plan's stem plus `.md`", which is
+  already the resolved path itself when a spec was what came in.
+
+`tests/plugins/test-artifact-plan-review.sh` pins all of it; the discovery
+snippet was additionally run against fixtures covering a `javascript:` URL, a
+hostless `https://`, a session-export `.md`, a body-only key mention, a spec
+with a sibling, and an empty directory.
+
 ## 9.9.0 — completion state reaches artifact-published plans (2026-08-26)
 
 ### Fixed

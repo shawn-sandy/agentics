@@ -25,7 +25,7 @@ write-back into the spec. Authoring and publishing belong to the built-in
 
 Two activation paths, both driven by this one `SKILL.md`:
 
-- **Command:** `/plan-agent:design <plan.html | one-line idea | image path | figma-url>`
+- **Command:** `/plan-agent:design <plan.html|plan.md | one-line idea | image path | figma-url>`
   — `$ARGUMENTS` carries the input.
 - **Model invocation (ambient):** auto-activates on intent like "design this
   plan" or "mock up the screens for …". `$ARGUMENTS` is empty; derive the input
@@ -41,10 +41,12 @@ Produce no plan document — execute the workflow directly.
 
 Read `$ARGUMENTS` (or the conversation-derived text on the model path):
 
-- If the **first token ends in `.html`**, treat it as a **plan path**. Reduce it
-  to its basename for safety, then resolve it under the plans directory
-  (configured `plansDirectory`, else `docs/plans/`). Read the file. The
-  `<plan-slug>` used throughout is that basename without its extension.
+- If the **first token ends in `.html` or `.md`**, treat it as a **plan path**.
+  Reduce it to its basename for safety, then resolve it under the plans
+  directory (configured `plansDirectory`, else `docs/plans/`). Read the file.
+  The `<plan-slug>` used throughout is that basename without its extension. A plan
+  published as a claude.ai artifact has no `.html` at all — its spec is the
+  only path it has — so a `.md` here is a plan, never a raw idea.
 - If the **first token ends in an image extension** (`.png`, `.jpg`, `.jpeg`,
   `.gif`, `.webp`, `.svg`), treat it as an **image path** — a screenshot or
   mockup of the UI to design against.
@@ -123,8 +125,9 @@ that URL, into the spec.
 **Plan path only:** skip this entire step for idea, image, and Figma inputs,
 which have no owning plan.
 
-Resolve the spec by swapping the resolved plan `.html` for `.md` under the plans
-directory (`docs/plans/<plan-slug>.md`).
+Resolve the spec as the resolved plan's stem plus `.md` under the plans
+directory (`docs/plans/<plan-slug>.md`) — already the resolved path itself when
+an artifact plan's spec was what was passed in.
 
 - **If that `.md` does not exist:** skip the write-back, still deliver the
   canvas, and print exactly one line telling the user to run
