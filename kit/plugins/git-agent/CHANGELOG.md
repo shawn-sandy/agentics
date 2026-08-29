@@ -1,5 +1,69 @@
 # Changelog — git-agent
 
+## v4.20.1 — 2026-08-27 — an empty log is not an empty CI run
+
+### Fixed
+
+- **A zero-byte `--log-failed` no longer reports as "CI never dispatched".**
+  The 4.19.4 rule in `merge` treated three states as a non-dispatch: an empty
+  run list, an empty `jobs` array, or every job failed *and* `--log-failed`
+  returning zero bytes. The third clause was an extrapolation the cited
+  measurement never covered — all four blocked runs in the 2026-08-14 window
+  had an **empty `jobs` array**, so the zero-byte log was never observed
+  independently of it. A dispatched run *can* return no log bytes: expired log
+  retention, a fetch landing on a different attempt than the failing one, or a
+  transient API error. Reporting that as "CI never dispatched — billing block"
+  tells the user to ignore a real failure — the one wrong direction that
+  matters.
+- **The jobs array, not the log size, now makes the call.** Verified against
+  live runs on this repo: blocked run `31703518612` returns `jobs: []` with no
+  `startedAt` anywhere, while genuine failures `32881670224` and `32641116349`
+  return jobs carrying `startedAt`, `completedAt`, and populated `steps` with
+  named failed steps. A non-empty `jobs` array is therefore proof of dispatch
+  on its own. `merge` and `ship-autonomous/references/ci-autofix.md` now treat
+  an empty run list or empty `jobs` array as the whole non-dispatch test, and
+  report a started-jobs run with an unreadable log as **"CI failed — logs
+  unavailable"** — a red check of unknown cause, named down to the failing job
+  and step from the jobs JSON, never an external blocker.
+- **`ci-autofix.md`'s measurement paragraph states its own limit.** It now says
+  the window contained no started-jobs run with empty logs, so a later reader
+  cannot mistake the zero-byte reading for an independently verified signal.
+- **The run being classified is now bound to the PR's head commit.** Both files
+  listed runs without pinning them: `merge` used `gh run list --branch`, which
+  returns every recent run across *every* commit and *every* workflow on the
+  branch — PR #607's own branch carried four runs from two workflows on a single
+  SHA — and `ci-autofix.md` used a bare `gh run list ... | head -1`, unfiltered
+  across the **whole repository**, so a concurrent PR's red run could be fetched
+  and autofixed against. Both now list by `--commit <headRefOid>` (the SHA
+  already verified in `merge` Step 1) and say to pick the row whose
+  `workflowName` matches the failing check. An unbound `<run-id>` reached the
+  same wrong verdict by a second route, so the classification fix above is only
+  sound with this in place. Raised by CodeRabbit on #607.
+
+`tests/review-gates.test.mjs` gains nine assertions: the two classification
+sentences, three negatives that fail if the removed clause returns, and the
+run-binding checks. They assert the rule sentences rather than bare tokens — a
+token like `startedAt` would still be found if it survived only in a code
+comment while the rule reverted — over whitespace-collapsed text so rewrapping a
+paragraph does not fail the run. Every one was mutation-checked.
+`tests/plugins/test-ship-preflight.sh` no longer pins the removed clause.
+`docs/guides/how-to/git-agent.md` needs no change — its `merge` section
+documents the readiness gate and never described the dispatch heuristic.
+
+## v4.20.0 — 2026-08-27 — a context guard before ship-autonomous spends the session
+
+### Added
+
+- **`ship-autonomous` Step 0: Context Guard.** The pipeline derives every input from `git` and `gh` — no step reads the conversation. But Step 5 ends the turn and waits, so each PR event that wakes the session re-sends the whole transcript as input. A pipeline that needs none of that context pays for all of it, once per CI event. Step 0 now checks whether the session is already long and offers three routes: `clear` (**STOP** — the user runs `/clear` and re-invokes, because a skill cannot clear its own context and a silent no-op would run the pipeline in the very session the user asked to escape), `background` (dispatch `ship-bg` then `ship-ci-bg`, each subagent getting its own context window; merge still returns to the foreground because a subagent has no user to ask for approval), or `continue`. Skipped on a short session, so it catches an expensive default rather than adding a prompt to every run. The former Step 0 (`ExitPlanMode`) is now Step 0.5 — the file already used Step 2.5, and renumbering would have touched every later cross-reference.
+
+### Why no `ship-autonomous-bg`
+
+Chaining the two existing background commands already gives fresh contexts, and a dedicated agent would duplicate them while losing the Step 8 merge gate — background agents have no user to prompt.
+
+### Tests
+
+`tests/plugins/test-ship-autonomous-context-guard.sh` — step ordering, the no-session-context claim the guard rests on, all three routes, the STOP guarantee, the skip condition, and README sync. Verified by mutation: deleting the STOP clause fails the check that covers it.
+
 ## v4.19.4 — 2026-08-21 — the adversarial review hunts the defects that escape it
 
 ### Changed

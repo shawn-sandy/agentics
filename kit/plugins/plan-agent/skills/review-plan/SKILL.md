@@ -1,8 +1,8 @@
 ---
 name: review-plan
 model: opus
-description: Plan review Agent Team. Reviews HTML implementation plans in parallel, synthesizes findings, and applies improvements in place. Use when the user asks to review or improve an implementation plan.
-allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode
+description: Plan review Agent Team. Reviews implementation plans in parallel, synthesizes findings, and applies improvements in place. Use when the user asks to review or improve an implementation plan.
+allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode, Artifact
 ---
 
 # Plan Review Team Skill
@@ -37,18 +37,54 @@ Use `TodoWrite` to create todos for Steps 1–8. Mark each `completed` as done.
 
 ### Step 1 — Resolve the plan file
 
-Default: glob `docs/plans/*.html` excluding `index.html`, use most recently modified. Accept an explicit `--dir <path>` argument to override.
+Accept an explicit path token ending in `.html` or `.md` — the same shape
+finalize-plan Step 1 takes. Since 9.7.0 the local `.html` is a `--file` opt-in,
+so an artifact-delivered plan has **only** a `.md` spec and that is the path a
+user has to paste.
 
-**Background mode:** an explicit file path is mandatory — `--dir` (directory) arguments are rejected. If `$ARGUMENTS` contains `--dir` or if no non-flag token resolving to a file (not a directory) is present, output: "`Background mode requires an explicit plan file path, not a directory. Usage: /plan-agent:review-plan <file.html> --background`" and stop.
+Default (no path token): take the most recently modified of the two lists
+below, under the plans directory (`--dir <path>` overrides; else configured
+`plansDirectory`; else `docs/plans/`). A `.html` glob alone cannot see an
+artifact plan — it has no HTML — so it would silently review a stale
+file-published plan instead:
 
-If no file is found, output: "`Plan file not found. Provide an explicit path or place a plan HTML file in docs/plans/.`" and stop.
+```bash
+{ find "$PLANS_DIR" -maxdepth 1 -name '*.html' ! -name 'index.html' -print
+  for spec in "$PLANS_DIR"/*.md; do
+    [ -e "$spec" ] || continue
+    [ -e "${spec%.md}.html" ] && continue          # file-published; already listed
+    grep -q '^# Plan:' "$spec" || continue         # a spec, not a session note
+    awk 'NR==1 && !/^---/{exit} NR>1 && /^---/{exit} {print}' "$spec" \
+      | grep -qE '^artifact-url: *https?://[^/ ]' || continue
+    printf '%s\n' "$spec"
+  done || true
+} | xargs ls -t 2>/dev/null | head -1
+```
+
+The frontmatter-bounded `awk` matters: these plans are often *about*
+plan-agent, so a body line quoting `artifact-url:` false-matches a whole-file
+grep. The `[^/ ]` requires a host — a truncated `https://` passed to `Artifact`
+claims a **new** URL instead of updating the shared one.
+
+**Background mode:** an explicit file path is mandatory — `--dir` (directory) arguments are rejected. If `$ARGUMENTS` contains `--dir` or if no non-flag token resolving to a file (not a directory) is present, output: "`Background mode requires an explicit plan file path, not a directory. Usage: /plan-agent:review-plan <file.html|file.md> --background`" and stop.
+
+If no file is found, output: "`Plan file not found. Provide an explicit path, or place a plan in docs/plans/ (a rendered .html, or a .md spec carrying artifact-url:).`" and stop.
 
 **Determine the edit mode** from the resolved stem (`<stem>` = the resolved plan's path without its extension), mirroring finalize-plan's `references/resolve-and-modes.md`:
 
 - **Spec mode** — `<stem>.md` exists and its first markdown heading (after any YAML frontmatter block) is `# Plan:`. The spec is the source of truth: the render pipeline regenerates `<stem>.html` from it on every spec write, discarding hand-edits to the HTML — so Step 7 edits the spec and re-renders.
 - **Legacy mode** — no such spec (or the `.md` beside the plan is not a spec). Step 7 edits `<stem>.html` directly, as before the markdown-first pipeline.
 
-Announce: `"Reviewing plan: <resolved-path> (<spec|legacy> mode)"`
+**Then determine where the plan is published**, which is a separate question
+from the edit mode and decides where Step 7's re-render goes. The signal is a
+sibling's existence, shared with the render hook and the gallery:
+
+- **File-published** — `<stem>.html` exists. Step 7 overwrites it.
+- **Artifact-published** — no sibling, and the spec's frontmatter carries an
+  `artifact-url:` that parses as an `http(s)` URL with a host. Step 7 renders
+  to the scratchpad and republishes to that URL.
+
+Announce: `"Reviewing plan: <resolved-path> (<spec|legacy> mode, <file|artifact>-published)"`
 
 ### Step 2 — Choose output mode
 
@@ -157,13 +193,25 @@ Pass 1 is skipped when `output_mode = "review only"`; Pass 2 always runs. (When 
 | `.step-card:nth-child(N)` (insert after) | a new numbered step after step N under `## Steps` (renumber the steps that follow) |
 | `.verification-section` | the `## Verification` prose |
 
-After the last edit, re-render — the same invocation build and finalize-plan use:
+After the last edit, re-render — the same invocation build and finalize-plan use. Where it goes follows Step 1's published-where finding.
+
+**File-published** — overwrite the sibling:
 
 ```bash
 plan-agent-render "<stem>.md" -o "<stem>.html"
 ```
 
-Bare name, never a path — this plugin's `bin/` is on `PATH`. A non-zero exit means an edit broke the spec format: fix the markdown and re-run, never hand-edit the HTML to compensate.
+**Artifact-published** — render to the scratchpad, then call `Artifact` with that path and `url: <the artifact-url>`, re-read from the frontmatter immediately beforehand so a URL another session recorded is the one you update:
+
+```bash
+plan-agent-render "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+```
+
+**Never write `<stem>.html`** in that case: it resurrects the file the author chose not to publish and flips the plan's gallery card off the artifact onto a local path. A review is also when the shared page most needs to be current — it is the state every other reader sees.
+
+`-o` is **mandatory** here, not stylistic. Dropping it does not error — the renderer defaults its output to the sibling `<stem>.html`, exits 0, and says nothing, which is precisely the file this rule forbids. Verified against the CLI.
+
+Bare name, never a path — this plugin's `bin/` is on `PATH`. A non-zero exit means an edit broke the spec format: fix the markdown and re-run, never hand-edit the HTML to compensate. A failed republish is reported in one line and never rolls back the spec edits, which are already correct on disk.
 
 **Legacy mode:** for each edit, apply one `Edit` call against the resolved plan HTML:
 - `edit` — replace targeted element's content.

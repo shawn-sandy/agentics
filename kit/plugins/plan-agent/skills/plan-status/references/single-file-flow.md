@@ -6,9 +6,10 @@ Before doing anything else, use `TodoWrite` to create todos for each step:
 - Step 2: Get file dates from git
 - Step 3: Read existing frontmatter
 - Step 4: Analyze codebase for implementation evidence
-- Step 5: Artifact check (if applicable)
+- Step 5: Type classification (completed plans only)
 - Step 6: Present findings and confirm
 - Step 7: Update plan file frontmatter
+- Step 8: Republish an artifact-published plan
 
 Mark each todo `status: "completed"` as you finish that step.
 
@@ -185,3 +186,46 @@ Rules:
 - Omit `modified` if it equals `created`
 - Use `Edit` tool for all file writes
 - After writing, confirm to the user: `"Frontmatter updated in path/to/plan.md"`
+
+### Step 8 — Republish an artifact-published plan
+
+A **plan spec** — first heading `# Plan:` — with **no sibling `<stem>.html`**
+whose frontmatter carries an `artifact-url:` that parses as an `http(s)` URL
+**with a host** was published to a claude.ai artifact rather than delivered as
+a file. (Unrelated to the legacy
+`status: artifact` value normalized in Step 3: that names a status, this names
+where the plan is published. A plan can be either, both, or neither, and only
+the two conditions above decide this step.) The status just written reaches
+only the spec: the
+`render-plan-html.py` hook deliberately skips these (a sibling's existence is
+its file-published signal), so without this step the page everyone else reads
+keeps showing the old status — and a plan whose shared copy still says `todo`
+is worse than one never marked at all.
+
+Render to the scratchpad, then call `Artifact` with that path and
+`url: <the artifact-url>` so the existing page updates in place instead of
+becoming a second copy:
+
+```bash
+plan-agent-render "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+```
+
+`plan-agent-render` ships in the plugin's `bin/`, which is on the Bash tool's
+`PATH` — invoke it by bare name, never by path. The render carries the whole
+spec, so the republished page picks up the new `status:` along with every
+`[x]` step marker, `- [x]` criterion, and `## Completion Report` bullet the
+spec already holds.
+
+**Never write `<stem>.html`.** It resurrects the file the author chose not to
+publish and flips the plan's gallery card off the artifact onto a local path.
+
+Skip this step entirely when a sibling `<stem>.html` exists (the hook re-renders
+it), when the file is not a `# Plan:` spec (`plan-agent-render` reads only
+specs, so an old-style markdown plan has nothing to render), or when the
+`artifact-url:` does not parse as an `http(s)` URL with a host. A `javascript:`
+value, or a truncated `https://` with nothing after it, is not a page to update
+— and passing one to `Artifact` claims a **new** URL rather than updating the
+shared one, stranding the link people already have. This is the same gate
+`implementation-plan` Step 7b applies before republishing. Say so in one line
+and stop; a failed republish never rolls back the frontmatter write, which is
+already correct on disk.

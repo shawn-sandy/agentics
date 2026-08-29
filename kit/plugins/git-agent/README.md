@@ -182,19 +182,20 @@ Auto-activates when you say any of:
 - "ship and autofix CI failures"
 
 The skill will:
-1. Exit plan mode (Step 0) — no-op when already off
-2. Pre-flight: run **every** guard — clean tree, uncommitted plan files, detached HEAD, `gh` auth, worktree env parity, browser availability — and report them in one table (see [The pre-flight table](#the-pre-flight-table)). Headless, each gate takes its named default; the uncommitted-plan-files gate defaults to `abort`
-3. Branch: if on the default branch, auto-generate and create a feature branch via `branch-agent`; otherwise continue on current branch
-4. Verify (Step 2.5): run the project's `test*` script and **stop on failure** rather than committing a red tree; when the change is observable in a browser, preview it via `.claude/launch.json`, check console/server logs, and screenshot both light and dark themes. Skipped entirely when there's nothing a dev server could prove. When the browser MCP is unavailable the step is **not** silently skipped — it reports `UNVERIFIED — no browser`, which `pr-agent` reproduces verbatim in the PR body's Test Plan so a reviewer sees that the check did not happen
-5. Commit via `commit-agent` (stages, conventional message, commits)
-6. Open PR via `pr-agent` (pushes, checks for existing PR, creates one)
-7. Subscribe to the PR's activity events via `subscribe_pr_activity`, post an initial status update, and **end the turn** — CI failures and review comments then arrive as events that wake the session
-8. On each event: refresh a live TodoWrite status checklist and post a concise update, then
+1. Context guard (Step 0): the pipeline derives all of its state from `git`/`gh`, never from the conversation, so a long session is pure token cost — Step 5 ends the turn and every PR event re-sends the transcript. On a long session it offers `/clear` + re-invoke, dispatching `/git-agent:ship-bg` and then, once it reports the PR URL, `/git-agent:ship-ci-bg` (each subagent gets a fresh context window), or continuing here. Skipped on a short session
+2. Exit plan mode (Step 0.5) — no-op when already off
+3. Pre-flight: run **every** guard — clean tree, uncommitted plan files, detached HEAD, `gh` auth, worktree env parity, browser availability — and report them in one table (see [The pre-flight table](#the-pre-flight-table)). Headless, each gate takes its named default; the uncommitted-plan-files gate defaults to `abort`
+4. Branch: if on the default branch, auto-generate and create a feature branch via `branch-agent`; otherwise continue on current branch
+5. Verify (Step 2.5): run the project's `test*` script and **stop on failure** rather than committing a red tree; when the change is observable in a browser, preview it via `.claude/launch.json`, check console/server logs, and screenshot both light and dark themes. Skipped entirely when there's nothing a dev server could prove. When the browser MCP is unavailable the step is **not** silently skipped — it reports `UNVERIFIED — no browser`, which `pr-agent` reproduces verbatim in the PR body's Test Plan so a reviewer sees that the check did not happen
+6. Commit via `commit-agent` (stages, conventional message, commits)
+7. Open PR via `pr-agent` (pushes, checks for existing PR, creates one)
+8. Subscribe to the PR's activity events via `subscribe_pr_activity`, post an initial status update, and **end the turn** — CI failures and review comments then arrive as events that wake the session
+9. On each event: refresh a live TodoWrite status checklist and post a concise update, then
    - **CI failure** → classify first. An **`external-blocker`** (billing or quota block, expired credentials, revoked permission, workflow awaiting approval, or a run whose jobs all failed producing no log output at all) is reported verbatim and **never autofixed** — a failing check is not a code defect until proven one, and fixing infrastructure as code changes correct code. It does not advance the attempt cap. Otherwise autofix the allow-listed classes (`lint`, `typecheck`, `peer-deps`), ≤3 attempts per check; commit + push the fix (which triggers the next CI run)
    - **Review comment** → apply clear, in-scope changes (commit, push, reply); ask first if ambiguous or architectural
    - **Anything outside the safe allowlist, or ambiguous** → ask via `AskUserQuestion` instead of guessing
-9. When all checks are green: marks the PR ready, posts "CI is green — ready for review.", and sends a final status update with the PR URL. Keeps watching for later review comments until the PR merges/closes or you say stop (then unsubscribes)
-10. Merge (Step 8): re-confirms every check is green immediately before merging, then **asks before merging**. Deleting the branch needs its own separate approval — a merge approval never authorizes `--delete-branch`
+10. When all checks are green: marks the PR ready, posts "CI is green — ready for review.", and sends a final status update with the PR URL. Keeps watching for later review comments until the PR merges/closes or you say stop (then unsubscribes)
+11. Merge (Step 8): re-confirms every check is green immediately before merging, then **asks before merging**. Deleting the branch needs its own separate approval — a merge approval never authorizes `--delete-branch`
 
 A re-fired bot review on an already-approved PR isn't treated as new information: after one substantive fix pass, only merge-blocking findings are actioned.
 

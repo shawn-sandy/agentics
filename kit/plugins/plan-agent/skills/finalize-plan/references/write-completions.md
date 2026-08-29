@@ -150,7 +150,7 @@ never blocks a plan from being marked completed.
 
 ## Step 6 — Deliver
 
-Send the updated plan file(s) to the user via `SendUserFile` — in spec mode both the `.md` spec and the re-rendered `.html`.
+Send the updated plan file(s) to the user via `SendUserFile` — in spec mode both the `.md` spec and the re-rendered `.html`. An artifact-published plan has no sibling `.html`: send the `.md` and give the artifact URL instead of the scratchpad path, which means nothing to the user and disappears with the session.
 
 Report one of:
 - If all criteria were verified and checked: `"Plan marked completed: <filename> — all N acceptance criteria verified and checked, status updated to completed."`

@@ -1,7 +1,7 @@
 ---
 name: plan-status
 description: "Writes lifecycle status into a plan's frontmatter, one file or a directory. Inspects codebase and git history for accurate dates. Use when asked to check or update plan status."
-allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite, ToolSearch, ExitPlanMode
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, Edit, TodoWrite, ToolSearch, ExitPlanMode, Artifact
 argument-hint: "[plan-file-path | directory] [--all] [--force] - omit to auto-detect; pass a directory or --all for bulk mode"
 ---
 
@@ -62,3 +62,8 @@ exactly as written there.
 - **Step 7 — Update plan file frontmatter** — only on confirmation; insert or
   update only `status`, `type`, `created`, `modified` and preserve every other
   field. Exact write rules in `references/single-file-flow.md`.
+- **Step 8 — Republish an artifact-published plan** — a spec with no sibling
+  `<stem>.html` but an `artifact-url:` that parses as an `http(s)` URL **with a
+  host** lives on claude.ai, and the render hook skips it by design. Re-render
+  and republish to that URL so the shared page carries the new status. Rules in
+  `references/single-file-flow.md`.

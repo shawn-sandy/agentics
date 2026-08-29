@@ -21,6 +21,150 @@
   the shared artifact onto a local path. `finalize-plan`'s
   `references/write-completions.md` already carried this carve-out; the two are
   meant to stay consistent and had drifted.
+## 9.10.0 — artifact-published plans reach review, design, and prototype (2026-08-28)
+
+### Fixed
+
+Since 9.7.0 the local `<stem>.html` has been a `--file` opt-in and the claude.ai
+artifact the default deliverable, so the ordinary shape of a plan on disk is a
+`.md` spec carrying `artifact-url:` and nothing else. 9.9.0 taught the
+completion path that shape. Three consumers still assumed a file:
+
+- **`review-plan` could not see an artifact plan.** Step 1 discovered plans with
+  `glob docs/plans/*.html`, and an artifact plan has no HTML — so running the
+  reviewer bare did not fail, it silently reviewed the most recent
+  *file*-published plan instead, which is the worse outcome. Discovery now
+  unions the HTML glob with a spec-side scan carrying the same four guards the
+  `finalize-plan` sweep uses: frontmatter-bounded matching (these plans are
+  often *about* plan-agent, so a body line quoting `artifact-url:`
+  false-matches a whole-file grep), a `# Plan:` gate that keeps session-export
+  notes out, an `https?://[^/ ]` host requirement, and `done || true` so an
+  empty result is not a `set -e` abort. An explicit `.md` path is accepted too —
+  the same `.html` or `.md` token shape `finalize-plan` Step 1 already took,
+  and the only path an artifact plan has to paste.
+- **`review-plan` Step 7 resurrected the file the author chose not to publish.**
+  The re-render wrote `<stem>.html` unconditionally, which flips the plan's
+  gallery card off the artifact onto a local path and leaves the shared page
+  stale — at exactly the moment it most needs updating, since a review is the
+  state every other reader sees. Step 1 now records *where* the plan is
+  published as a finding separate from the edit mode, and Step 7 branches on
+  it: overwrite the sibling when one exists, otherwise render to the scratchpad
+  and republish to the recorded `artifact-url:`. `Artifact` joins the skill's
+  `allowed-tools` and the `agent-review-plan` subagent's `tools` — without it in
+  both the republish would prompt mid-run, which in background mode (the only
+  mode that subagent uses) means silently never happening.
+- **`design` and `prototype` treated a spec as a raw idea.** Their first-token
+  test recognized `.html` only, so a `.md` fell through to the final "otherwise
+  the whole argument string is a raw idea" branch and the skill ran to
+  completion having designed against a filename — no error, just a canvas about
+  a path. Both now classify `.html` or `.md` as a plan path, and their
+  spec-resolution steps read "the resolved plan's stem plus `.md`", which is
+  already the resolved path itself when a spec was what came in.
+
+`tests/plugins/test-artifact-plan-review.sh` pins all of it; the discovery
+snippet was additionally run against fixtures covering a `javascript:` URL, a
+hostless `https://`, a session-export `.md`, a body-only key mention, a spec
+with a sibling, and an empty directory.
+
+## 9.9.0 — completion state reaches artifact-published plans (2026-08-26)
+
+### Fixed
+
+- **`plan-status` now republishes an artifact-published plan.** A plan published
+  to claude.ai is a spec carrying `artifact-url:` with **no** sibling
+  `<stem>.html`, and that missing sibling is precisely the file-published signal
+  `render-plan-html.py` uses to skip re-rendering. `plan-status` wrote `status:`
+  into the frontmatter and stopped, so nothing ever updated the page — the spec
+  read `completed` while the page everyone else opened still read `todo`. The
+  new Step 8 renders to the scratchpad and calls `Artifact` with the recorded
+  URL, updating the existing page in place; the whole spec goes with it, so the
+  `[x]` step markers, `- [x]` criteria, and `## Completion Report` bullets land
+  on the shared page together with the status. `Artifact` joins the skill's
+  `allowed-tools` (without it the republish would prompt mid-run, which in a
+  bulk pass means silently not happening). Bulk mode runs the same pass after
+  its write stage and reports `republished: N` — its YAML prepend is a Bash
+  subprocess write, which fires no PostToolUse hook at all.
+- **`finalize-plan --all` can now see artifact plans.** Sweep discovery grepped
+  `"$PLANS_DIR"/*.html` for a `todo`/`in-progress` `plan-status` meta tag, so a
+  plan with no HTML on disk was never a candidate — the sweep skipped exactly
+  the plans whose staleness was publicly visible. S1 adds a spec-side scan
+  (`artifact-url:` present, no sibling `.html`, `status:` todo or in-progress)
+  and unions the two lists; the sibling test keeps a plan from appearing twice.
+- **Delivery stopped promising a file that does not exist.** Both `finalize-plan`
+  delivery steps handed back `<stem>.html`; for an artifact plan that path is
+  either absent or a scratchpad temp that dies with the session. They now send
+  the `.md` and report the artifact URL.
+
+The artifact scan carries three guards, each closing a distinct failure found
+by reviewing the first cut of it:
+
+- **Frontmatter-bounded matching.** Grepping the whole spec made a *completed*
+  plan whose body documents plan-agent's own keys — a bare `status: todo` line
+  inside `## Steps` — a sweep candidate. Reproduced against a fixture, and not
+  hypothetical in a repo whose plans are about plan-agent. An `awk` extract
+  reads only the frontmatter block, which is also less work than two
+  whole-file greps.
+- **`# Plan:` gate.** A non-spec `.md` carrying both keys entered the candidate
+  list, and S4 resolves edit mode through Step 1 — which is instructed to STOP
+  on a `.md` with no `# Plan:` heading, halting the sweep partway and leaving
+  earlier plans written and later ones untouched.
+- **`done || true`.** The loop's exit status is its last command, so a
+  directory whose final spec did not match aborted the sweep under `set -e`,
+  precisely when there was nothing to sweep.
+- **A host is required.** `https?://` alone matched a truncated `https://`
+  with nothing after it. Passing that to `Artifact` claims a *new* URL rather
+  than updating the shared one, stranding the link people already have. Every
+  eligibility rule now reads "an `http(s)` URL **with a host**", matching the
+  gate `implementation-plan` Step 7b and `publish-hub` already applied.
+
+S1 also now concatenates both lists into `candidates`, the name S2–S4 iterate;
+without it the artifact list was discovered and then silently dropped. S4
+records each republish outcome, which S5 was already told to report but nothing
+captured.
+
+Pinned by `tests/plugins/test-artifact-plan-completion.sh`, whose five guard
+checks were each mutation-tested by deleting the guard and confirming the check
+goes red — two of them initially matched the prose explaining a guard rather
+than the guard itself, and stayed green when it was removed. `build` was
+already correct — it routes through its own re-render subroutine — and is
+unchanged.
+
+## 9.8.0 — publish-hub bundles a plan and its related HTML into one artifact (2026-08-26)
+
+### Added
+
+- **`publish-hub` skill + `scripts/build-plan-hub.mjs` + `bin/plan-agent-hub`.**
+  A plan's related HTML stayed local: the prototype and companion pages were
+  unreachable from the shared plan URL. `/plan-agent:publish-hub` bundles the
+  rendered plan, the `prototype:` file, and any `--extra` pages into one
+  self-contained tab shell — each document isolated whole in an
+  `<iframe srcdoc>` panel, `design:` as an external-link tab — and publishes
+  it to a stable URL recorded as `hub-artifact-url:` in the spec frontmatter,
+  never touching the plan's own `artifact-url:`. The bundler escapes `&`/`"`
+  exactly once per srcdoc, caps output at 15 MB (under the 16 MB artifact
+  limit), and on overflow exits 1 naming the largest embedded document — the
+  related file to `--skip`, or the plan itself when nothing skippable would
+  close the gap. Flag-shaped values (`-o --skip`) are misuse, never
+  filenames. Pinned by `tests/plugins/test-build-plan-hub.mjs`.
+
+## 9.7.1 — artifact-mode renders stop leaking local paths (2026-08-25)
+
+### Fixed
+
+- **`plan-path` stays repo-relative when the output lands outside the repo.**
+  Default mode renders to the scratchpad before publishing, and
+  `build-plan-html.mjs` relativized that against the cwd — stamping
+  `../../../../../../../private/tmp/.../scratchpad/<stem>.html` into the
+  `plan-path` meta tag and the "More ways to run this plan" drawer of a page
+  whose whole point is being shared. An out-of-repo output now falls back to
+  where the HTML belongs beside the spec. Pinned by
+  `tests/plugins/test-build-plan-html.mjs`.
+- **Step 5d no longer contradicts Step 7a.** 5d said to render `<stem>.html`
+  beside the spec; 7a says default mode leaves the repo without one. Following
+  the steps in order dropped an unwanted ~90 KB sibling into the plans
+  directory — and by the skill's own rule that sibling then wins the gallery
+  card over the artifact, silently bypassing the feature 9.7.0 added. 5d now
+  defers the output path to Step 7a.
 
 ## 9.7.0 — the plans gallery cards artifact-only plans (2026-08-25)
 

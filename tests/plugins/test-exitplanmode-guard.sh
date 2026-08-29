@@ -62,6 +62,7 @@ WRITE_HEAVY=(
   plan-agent/skills/plan-status/SKILL.md
   plan-agent/skills/plans-library/SKILL.md
   plan-agent/skills/prototype/SKILL.md
+  plan-agent/skills/publish-hub/SKILL.md
   plan-agent/skills/review-plan/SKILL.md
   plan-agent/skills/setup-sites/SKILL.md
   settings-sync/skills/settings-backup/SKILL.md

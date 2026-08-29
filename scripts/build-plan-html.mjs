@@ -708,12 +708,25 @@ function main() {
     }
   }
 
+  // Default mode renders to a scratchpad and publishes the result as an
+  // artifact, so the output can sit outside the repo entirely. Relativizing
+  // that against cwd gives a ../../../var/folders/... path, which would ship a
+  // machine-local location inside a page whose whole point is being shared —
+  // fall back to where the HTML belongs beside the spec.
+  // `..foo.html` in the repo root is a legal relative path that does not
+  // escape, so test the separator rather than the bare `..` prefix.
+  const mdRel = relative(process.cwd(), resolve(specPath));
+  const outRel = relative(process.cwd(), resolve(outPath));
+  const escapesRepo = outRel === '..' || /^\.\.[/\\]/.test(outRel);
+  const planPath = parsed.metadata.path
+    || (escapesRepo ? mdRel.replace(/\.md$/i, '.html') : outRel);
+
   let html;
   try {
     html = renderPlanHtml(parsed, {
       fileName: basename(outPath),
-      planPath: parsed.metadata.path || relative(process.cwd(), resolve(outPath)),
-      mdPath: relative(process.cwd(), resolve(specPath)),
+      planPath,
+      mdPath: mdRel,
       repo: defaultRepo(),
       today: created || undefined,
     });

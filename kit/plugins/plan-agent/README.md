@@ -36,6 +36,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `setup-sites` | Skill | Command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent — scaffolds the deploy pipeline into any repo |
 | `prototype` | Skill | Command (`/plan-agent:prototype <plan.html \| idea \| image \| figma-url>`) or auto-activates on "prototype this plan / idea / screenshot" intent — generates a runnable static-HTML prototype under `docs/prototypes/` |
 | `design` | Skill | Command (`/plan-agent:design <plan.html \| idea \| image \| figma-url>`) or auto-activates on "design this plan" intent — derives one artboard per user-facing plan step under `docs/designs/<plan-slug>/` and publishes the canvas through Claude Code's built-in `design` skill |
+| `publish-hub` | Skill | Command (`/plan-agent:publish-hub <plan.md> [--extra <path>]...`) or auto-activates on "publish / share a plan hub" intent — bundles the plan and its related HTML (prototype, extras) into one tabbed hub artifact at a stable `hub-artifact-url:` |
 | `dispatch` | Hook (`PostToolUse`) | The plugin's only registered hook. Fires on `Write`/`Edit`/`MultiEdit`, path-gates once, and fans out to the six below only for plan/prototype/design writes |
 | `validate-plan-filename` | Child of `dispatch` | Validates plan filenames; exits 2 to block a badly-named plan |
 | `rebuild-plans-index` | Child of `dispatch` | Regenerates the plans gallery for non-index `.html` plans |
@@ -299,7 +300,11 @@ When invoked without arguments, prompts for the plan file. The skill:
 4. Presents a summary showing which criteria are verified vs unverified, plus the objective-test result
 5. On confirmation: writes the completion state to the plan's **Markdown spec** (`status:` frontmatter, `- [x]` criteria flips, `[x]` step markers, a `## Completion Report` section when gaps remain) and re-renders the HTML with `build-plan-html.mjs` — the renderer derives the checked boxes, completed step cards, status representations, and completion checklist. Legacy plans without a sibling spec fall back to direct HTML attribute edits.
 
-**Sweep mode (`--all`)** finds plans that are implemented but never marked completed. It scans the plans directory for every plan carrying a `<meta name="plan-status">` tag whose value is `todo` or `in-progress` (non-plan HTML without the tag is ignored), runs the cheap token-evidence scan on each, and presents a candidate table — plans with 80%+ evidence are flagged as "done but not marked". One multi-select prompt picks which plans to finalize (plus a single criteria mode for the whole batch); full per-criterion verification and the objective test then run only on the selected plans before the status writes.
+**Sweep mode (`--all`)** finds plans that are implemented but never marked completed. It scans the plans directory for every plan carrying a `<meta name="plan-status">` tag whose value is `todo` or `in-progress` (non-plan HTML without the tag is ignored), runs the cheap token-evidence scan on each, and presents a candidate table — plans with 80%+ evidence are flagged as "done but not marked". One multi-select prompt picks which plans to finalize (plus a single criteria mode for the whole batch); full per-criterion verification and the objective test then run only on the selected plans before the status writes. The scan is joined by a spec-side pass for **artifact-published plans**, which have no HTML on disk to grep and would otherwise never be candidates.
+
+**Artifact-published plans are first-class.** Since the local `.html` became a `--file` opt-in, a spec with an `artifact-url:` and no sibling *is* the ordinary shape of a plan — so the skills that consume one after it is authored take it too. `review-plan` finds artifact plans in its default discovery (a `.html` glob alone cannot see them, and would silently review a stale file-published plan instead), accepts an explicit `.md` spec path, and routes its Step 7 re-render to the scratchpad plus a republish rather than writing the sibling. `design` and `prototype` classify a `.md` first token as a plan path; before this it fell through to their "raw idea" branch, so the skill ran to completion having designed against a filename.
+
+**Artifact-published plans stay current.** A plan published to claude.ai is a spec with an `artifact-url:` and no sibling `<stem>.html`; that missing sibling is the signal the render hook uses to skip it. So every skill that writes completion state — `finalize-plan`, `build`, and `plan-status` (single file and bulk) — re-renders to the scratchpad and **republishes to the recorded `artifact-url:`**, updating the existing page rather than claiming a second one. Without it the spec reads `completed` while the page everyone else opens still reads `todo`. The sibling `<stem>.html` is never written for these plans: it resurrects the file the author chose not to publish and flips the plan's gallery card off the artifact onto a local path.
 
 ####  `prompt` — Manual invoke only
 
@@ -568,6 +573,7 @@ plan-agent/
     plan-agent-prototypes-index  — Rebuilds the prototypes gallery (wraps hooks/build-prototypes-index.sh)
     plan-agent-designs-index     — Rebuilds the designs gallery (wraps hooks/build-designs-index.sh)
     plan-agent-plans-index       — Rebuilds the plans gallery (wraps hooks/build-index.sh)
+    plan-agent-hub               — Bundles a plan + related HTML into one hub page (wraps scripts/build-plan-hub.mjs)
   skills/
     implementation-plan/
       SKILL.md              — Workflow, arguments, spec authoring, render pipeline
@@ -602,6 +608,8 @@ plan-agent/
       SKILL.md              — Open existing gallery without rebuild
     setup-sites/
       SKILL.md              — Scaffold the GitHub Pages deploy pipeline into any repo
+    publish-hub/
+      SKILL.md              — Bundle a plan + related HTML into one tabbed hub artifact
     prompt/
       SKILL.md              — 7-phase prompt authoring (classify, interview, structure, draft, save)
       references/
@@ -797,11 +805,25 @@ Reviews a plan for codebase implementation evidence with per-criterion verificat
 6. On confirmation — **spec mode** (sibling `<stem>.md` spec exists): sets `status:` frontmatter, flips `- [x]` criteria bullets and `[x]` step markers, writes a `## Completion Report` section for any gaps, and re-renders the HTML via `build-plan-html.mjs`; **legacy mode** (no spec): checks acceptance-criteria boxes, adds `completed` class to step cards, and updates `<html data-status>`, `<meta name="plan-status">`, and the visible badge directly
 7. If only verified criteria are checked, status is set to `in-progress` rather than `completed`
 
-With `--all`, the skill runs in sweep mode: it discovers every non-completed plan in the plans directory (`grep -l` for a `plan-status` meta tag valued `todo` or `in-progress`, excluding `index.html` and `archive/`; HTML without the tag is never a candidate), scores each with the cheap token-evidence pass (non-interactive — token-less plans score 0% instead of prompting), batch-confirms via one multi-select prompt, then runs the full per-criterion verification, objective test, and status writes on the selected plans only.
+With `--all`, the skill runs in sweep mode: it discovers every non-completed plan in the plans directory, scores each with the cheap token-evidence pass (non-interactive — token-less plans score 0% instead of prompting), batch-confirms via one multi-select prompt, then runs the full per-criterion verification, objective test, and status writes on the selected plans only.
+
+Discovery is two scans whose results are concatenated into one candidate list:
+
+- **File-published plans** — `grep -l` for a `plan-status` meta tag valued `todo` or `in-progress`, excluding `index.html` and `archive/`. HTML without the tag is never a candidate.
+- **Artifact-published plans** — these have no HTML to grep, so they are found by their spec. A spec qualifies only when all four hold: its first heading is `# Plan:`, no sibling `<stem>.html` exists, its frontmatter `artifact-url:` parses as an `http(s)` URL with a host, and its frontmatter `status:` is `todo` or `in-progress`. The `status:`/`artifact-url:` match is bounded to the frontmatter block, so a plan whose body documents those keys is not mistaken for an unfinished one; the `# Plan:` gate keeps a non-spec `.md` out of the list, which would otherwise halt the sweep when its edit mode is resolved.
 
 ### `plans-open` Skill
 
 Auto-activates on "open the gallery", "show the plans page" intent. Opens the existing `index.html` gallery directly without scanning, parsing, or writing any files. Resolves `plansDirectory` from settings (same as `plans-library`). If `index.html` does not exist, tells the user to run `/plan-agent:plans-library` first.
+
+### `publish-hub` Skill
+
+Command-invocable via `/plan-agent:publish-hub <plan.md> [--extra <path>]...` and model-invocable on "publish / share a plan hub" intent. Bundles a plan and its related HTML into one self-contained tabbed hub page and publishes it as a single claude.ai artifact at a stable URL.
+
+- **Bundle** — `plan-agent-hub <spec>.md -o <hub>.html` renders the plan through `build-plan-html.mjs` and embeds it plus the spec's `prototype:` file and each `--extra` page in its own `<iframe srcdoc>` tab panel; a `design:` URL becomes an external-link tab. Everything is inline, so the page satisfies the artifact CSP.
+- **Size guard** — output is capped (default 15 MB, under the 16 MB artifact limit); on overflow the bundler exits 1 naming the offending file, and the skill retries with `--skip <file>` and reports what was dropped.
+- **Stable URL** — the returned artifact URL is written to the spec as `hub-artifact-url:`; every later publish re-reads it fresh and republishes to the same page. The plan's own `artifact-url:` is never touched.
+- **Verification** — after publishing, the skill fetches the URL and confirms the page contains the plan title; on a failed publish it delivers the hub HTML as a file instead and never reports an unreturned URL.
 
 ### `validate-plan-filename` Hook
 

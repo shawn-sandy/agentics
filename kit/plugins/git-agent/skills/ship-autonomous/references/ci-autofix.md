@@ -10,9 +10,17 @@ the one exception** — it is never autofixed, so it never advances the cap.
 ## Fetch the failing log
 
 ```
-gh run list --json databaseId,conclusion,workflowName --jq '.[] | select(.conclusion=="failure") | .databaseId' | head -1
+gh run list --commit "$(gh pr view --json headRefOid --jq .headRefOid)" \
+  --json databaseId,conclusion,workflowName \
+  --jq '.[] | select(.conclusion=="failure") | "\(.databaseId) \(.workflowName)"'
 gh run view <run-id> --log-failed
 ```
+
+**`--commit` is not optional.** An unfiltered `gh run list` returns failing runs
+from the whole repository, so `head -1` can hand back a concurrent PR's red run
+— and every classification and autofix below would then be applied to someone
+else's failure. Bind to this PR's head SHA, then pick the row whose
+`workflowName` matches the check you are fixing.
 
 ## Classify on log content
 
@@ -21,7 +29,7 @@ defect until proven one, and the other three classes all assume it is.
 
 | Class | Signature in log | Allowed action |
 |---|---|---|
-| `external-blocker` | `billing`, `quota`, `spending limit`, `Bad credentials`, `refusing to allow`, token-expiry text, `action_required` — or **no log output at all** (see below) | **Report verbatim. No autofix, and the attempt cap does not advance** |
+| `external-blocker` | `billing`, `quota`, `spending limit`, `Bad credentials`, `refusing to allow`, token-expiry text, `action_required` — or an **empty `jobs` array** (see below) | **Report verbatim. No autofix, and the attempt cap does not advance** |
 | `lint` | `eslint`, `lint error`, rule violation names | Run the project's lint-fix command |
 | `typecheck` | `TS`, `TypeScript`, `error TS`, `tsc` | Apply minimal TS fixes |
 | `peer-deps` | `peer dep`, `ERESOLVE`, `incompatible peer` | Reinstall lockfile |
@@ -44,9 +52,18 @@ directly:
 gh run view <run-id> --json jobs
 ```
 
-Classify as `external-blocker` when the jobs array is empty, or when **every**
-job failed, **and** `gh run view <run-id> --log-failed` returns no output, all
-within sub-minute durations.
+Classify as `external-blocker` only when the **jobs array is empty**. That is
+the only state that proves no job ran. Every entry in a non-empty jobs array
+carries a `startedAt` and populated `steps`, so the run dispatched — whatever
+its logs return.
+
+A zero-byte `--log-failed` on a run whose jobs *started* is a different
+condition: logs unavailable (expired retention, a fetch landing on a different
+attempt, a transient API error). Do not classify it as `external-blocker` —
+that would suppress a real failure. Report it as a failing check of unknown
+cause, naming the failed jobs and steps from the jobs JSON
+(`.steps[] | select(.conclusion == "failure") | .name`), and let the signature
+table classify it from the check name if it can.
 
 **Measured on this repo, 2026-08-14** (`shawn-sandy/agentics`, last 300 runs):
 the four blocked runs — `31703518612`, `31638004638`, `31624323167`,
@@ -56,9 +73,11 @@ the four blocked runs — `31703518612`, `31638004638`, `31624323167`,
 **6–22 s** and returned **2,218–40,948 bytes**.
 
 So **duration alone does not discriminate** — real code failures here also
-finish well under a minute. The load-bearing clause is the **empty log**: no
-job produced any output. Treat a sub-minute duration as corroboration, never as
-the test on its own.
+finish well under a minute. Nor does log size: every blocked run measured here
+had an empty jobs array, so nothing in this window measured a started-jobs run
+with empty logs, and the zero-byte reading was never independent of the empty
+jobs array. The load-bearing clause is the **empty jobs array**. Treat a
+sub-minute duration and a zero-byte log as corroboration, never as the test.
 
 **Action:** report the failure verbatim as an external blocker, name the likely
 cause and its remediation (re-auth, billing, workflow approval), and stop
