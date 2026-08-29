@@ -1,5 +1,27 @@
 # Changelog
 
+## 9.10.1 — the build completion gate stops failing artifact-only plans (2026-08-25)
+
+### Fixed
+
+- **`scripts/build-plan-html.mjs` creates missing `-o` parent directories.**
+  Both the `build` and `finalize-plan` references render an artifact-delivered
+  plan to `"$SCRATCHPAD/<stem>.html"`, and `<stem>` always carries directories
+  (`docs/plans/foo`), so the documented command died on an unhandled `ENOENT`
+  stack trace before writing a byte — the artifact re-render recipe could not
+  be run as written. `--check` still writes nothing, directories included.
+- **`skills/build/references/completion-gates.md` Step 5.3 now points `--check`
+  at the scratchpad render for an artifact-delivered plan.** The command was
+  hardcoded to `-o "<stem>.html"`, which an artifact-only plan does not have —
+  so every such plan failed its own completion gate on a spec whose `steps` and
+  `criteria` rows both passed. Worse, the `html` row's remediation line names
+  the one command `references/re-render.md` forbids: writing the sibling
+  resurrects a file the author chose not to publish, and `build-index.sh` gives
+  a sibling priority over the URL, so the plan's gallery card silently flips off
+  the shared artifact onto a local path. `finalize-plan`'s
+  `references/write-completions.md` already carried this carve-out; the two are
+  meant to stay consistent and had drifted.
+
 ## 9.7.0 — the plans gallery cards artifact-only plans (2026-08-25)
 
 ### Added

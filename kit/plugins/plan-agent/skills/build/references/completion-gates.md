@@ -72,6 +72,20 @@ Confirms the *objective* works, not just that criteria are met.
    plan-agent-render "<stem>.md" -o "<stem>.html" --check
    ```
 
+   For an **artifact-delivered plan** — no `<stem>.html` sibling, an
+   `artifact-url:` in the frontmatter — the re-render above went to the
+   scratchpad, so point `--check` at that render instead:
+
+   ```bash
+   plan-agent-render "<stem>.md" -o "$SCRATCHPAD/<stem>.html" --check
+   ```
+
+   Aiming it at `<stem>.html` there fails the `html` row on a spec that is
+   correct, and the remediation it prints names the one command
+   `references/re-render.md` forbids: writing the sibling resurrects a file the
+   author chose not to publish and flips the plan's gallery card off the
+   artifact onto a local path.
+
    It prints one row per property — `html`, `steps`, `criteria` — and exits
    non-zero if any fails. `html` compares the file on disk against a fresh
    in-memory render and names the first differing line; `steps` and `criteria`
