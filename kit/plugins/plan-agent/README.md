@@ -37,9 +37,10 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `prototype` | Skill | Command (`/plan-agent:prototype <plan.html \| idea \| image \| figma-url>`) or auto-activates on "prototype this plan / idea / screenshot" intent — generates a runnable static-HTML prototype under `docs/prototypes/` |
 | `design` | Skill | Command (`/plan-agent:design <plan.html \| idea \| image \| figma-url>`) or auto-activates on "design this plan" intent — derives one artboard per user-facing plan step under `docs/designs/<plan-slug>/` and publishes the canvas through Claude Code's built-in `design` skill |
 | `publish-hub` | Skill | Command (`/plan-agent:publish-hub <plan.md> [--extra <path>]...`) or auto-activates on "publish / share a plan hub" intent — bundles the plan and its related HTML (prototype, extras) into one tabbed hub artifact at a stable `hub-artifact-url:` |
-| `dispatch` | Hook (`PostToolUse`) | The plugin's only registered hook. Fires on `Write`/`Edit`/`MultiEdit`, path-gates once, and fans out to the six below only for plan/prototype/design writes |
+| `dispatch` | Hook (`PostToolUse`) | The plugin's only registered Write/Edit hook. Fires on `Write`/`Edit`/`MultiEdit`, path-gates once, and fans out to the seven below only for plan/prototype/design writes |
 | `validate-plan-filename` | Child of `dispatch` | Validates plan filenames; exits 2 to block a badly-named plan |
 | `rebuild-plans-index` | Child of `dispatch` | Regenerates the plans gallery for non-index `.html` plans |
+| `render-plan-html` | Child of `dispatch` | Re-renders `<stem>.html` beside a Markdown plan spec when that sibling already exists |
 | `build-prototypes-index` | Child of `dispatch` | Regenerates the prototypes gallery for `docs/prototypes/` writes |
 | `check-prototype-drift` | Child of `dispatch` | Reports when a prototype has drifted from its own data model or its plan's copy |
 | `build-designs-index` | Child of `dispatch` | Regenerates the designs gallery for `docs/designs/` writes |

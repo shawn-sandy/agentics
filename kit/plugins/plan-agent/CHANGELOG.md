@@ -1,5 +1,26 @@
 # Changelog
 
+## 9.10.2 — hook count in the README matches dispatch.py (2026-08-30)
+
+### Fixed
+
+The plugin README's component table said `dispatch` "fans out to the six below"
+and listed six children. `dispatch.py` fans out to seven: `render-plan-html` was
+missing from the list, so the plugin README contradicted the root README, which
+has said "all seven Write/Edit hooks" since the renderer hook landed. Added the
+missing row and corrected the count.
+
+The same table called `dispatch` "the plugin's only registered hook", which
+contradicts this README's own hook inventory further down — `hooks.json`
+registers two PostToolUse entries, the `Write|Edit|MultiEdit` dispatcher and the
+`ExitPlanMode` stress-test nudge. It is the only registered *Write/Edit* hook;
+the row now says so.
+
+`dispatch.py`'s own module docstring had drifted the same way: it said "six
+PostToolUse hooks" while the parenthetical immediately after it enumerated
+seven. Docs only — no behaviour change.
+
+
 ## 9.10.1 — the build completion gate stops failing artifact-only plans (2026-08-25)
 
 ### Fixed
