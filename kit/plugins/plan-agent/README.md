@@ -517,7 +517,7 @@ Like every other child it **always exits 0**: a coverage report about one plan n
 
 #### Hook dispatch
 
-`hooks.json` registers exactly one PostToolUse hook: `hooks/dispatch.py`. Registering the four hooks separately spawned four interpreters on *every* file edit in *every* session, purely so each could discover the file was not a plan and exit. The `matcher` field is a tool-name regex and cannot express a path condition, so the gate lives in `dispatch.py`: it reads the payload once, does one cheap path check, and for the common case exits without spawning anything.
+`hooks.json` registers two PostToolUse hooks: the `Write`/`Edit`/`MultiEdit` dispatcher at `hooks/dispatch.py`, and an `ExitPlanMode` stress-test nudge. Registering the dispatcher's seven children separately spawned seven interpreters on *every* file edit in *every* session, purely so each could discover the file was not a plan and exit. The `matcher` field is a tool-name regex and cannot express a path condition, so the gate lives in `dispatch.py`: it reads the payload once, does one cheap path check, and for the common case exits without spawning anything.
 
 The children remain independently runnable and testable — each re-applies its own filter — so `python3 hooks/validate-plan-filename.py < payload.json` still works standalone. The children share the dispatcher's single 60s budget (they run sequentially), rather than each holding an independent one as before.
 
@@ -633,11 +633,11 @@ plan-agent/
       hub.html              — Parameterized landing-hub template (setup-sites)
       serve-docs.sh         — Local docs/ preview server (setup-sites)
   hooks/
-    dispatch.py                — The one registered PostToolUse hook; path-gates, then fans out
+    dispatch.py                — The registered Write/Edit hook; path-gates, then fans out to seven children
     validate-plan-filename.py  — Filename enforcement script (child of dispatch)
     rebuild-plans-index.py     — Gallery index auto-rebuild (child of dispatch)
     build-index.sh             — Shell entry point for gallery rebuild
-  hooks.json                — Hook registration (one PostToolUse entry: dispatch.py)
+  hooks.json                — Hook registration (two PostToolUse entries: dispatch.py, ExitPlanMode nudge)
   README.md
   CHANGELOG.md
 ```

@@ -27,6 +27,12 @@ two. Those are children of `dispatch`; the two registrations in `hooks.json` are
 the `Write|Edit|MultiEdit` dispatcher and the `ExitPlanMode` nudge. It now
 describes the real shape.
 
+Three more spots carried the same wrong count: the "Hook dispatch" section said
+`hooks.json` registers "exactly one PostToolUse hook" and that registering "the
+four hooks" separately spawned four interpreters (it is seven children under two
+registrations), and the repository-layout tree repeated the one-registration
+claim twice. All now match `hooks.json`.
+
 
 ## 9.10.1 — the build completion gate stops failing artifact-only plans (2026-08-25)
 
