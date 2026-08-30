@@ -20,7 +20,19 @@ The failure mode this closes: `build` stops at its first phase boundary by desig
 
 **5c — Steps.** Mark every step done by inserting the marker after the number: `1. <action>…` → `1. [x] <action>…` (skip steps that already carry `[x]`). **Skipped entirely when 5a0's phase gate fired** — the unmarked steps are the record of where the work stopped.
 
-**5d — Completion report.** If every criterion was verified and checked and the objective test did not fail, remove any existing `## Completion Report` section and add nothing. Otherwise write (or replace) the section — one `- <item> — <reason>` bullet per finding, the em dash separating item from reason:
+**5c2 — Unplanned shipped work (from 3d).** For each item 3d bucketed as *shipped but unplanned*, append a step that is already marked done, continuing the section's existing numbering, prefixed so its provenance survives:
+
+```markdown
+12. [x] Unplanned: <what shipped> — <why it was needed>
+```
+
+The step list is what a reader treats as the record of what was built, so work recorded only in prose leaves the rendered plan under-reporting the change. The `Unplanned:` prefix is what keeps the plan honest about the difference between what was designed up front and what was discovered while building.
+
+**Phased specs:** never append to the end of the list. The last phase is routinely one that was never started, so a `[x]` step dropped into it makes an unstarted phase look partly done and muddies 5a0's completable-versus-checkpointed gate. Append a trailing `### Phase: Unplanned` heading and put them under it — every step in it is `[x]`, so 5a0 never counts it as unfinished.
+
+Runs even when 5c was skipped by the phase gate: this work really did ship, and the gate is about planned phases that did not.
+
+**5d — Completion report.** If every criterion was verified and checked and the objective test did not fail, remove any existing `## Completion Report` section and add nothing. That removal is scoped to this section and **never removes the 5c2 or 5d2 writes** — a fully verified plan is precisely the case where reconcile output is the only thing distinguishing what was planned from what shipped. Otherwise write (or replace) the section — one `- <item> — <reason>` bullet per finding, the em dash separating item from reason:
 
 ```markdown
 ## Completion Report
@@ -32,6 +44,16 @@ The failure mode this closes: `build` stops at its first phase boundary by desig
 ```
 
 Each item names the specific criterion, token gap, or test — never a generic summary. Place the section after `## Acceptance Criteria`.
+
+**5d2 — Changed approach (from 3d).** For each item 3d bucketed as *built differently*, add a bullet to `## Decisions`, creating the section after `## Context` if it is absent:
+
+```markdown
+- Shipped as <what was actually built> instead of <what was planned> — <reason>
+```
+
+`## Decisions` is already the settled-choices ledger a resumed session reads so it does not re-litigate a question an earlier context window closed. "We built it this other way, for this reason" is exactly that.
+
+**Not the Completion Report.** Every entry there renders with a red dot marker (`.report-list dt::before` in `plan-shell.mjs`), which reads as a defect. Work that shipped fine is not a defect, and filing it there would make a successful plan look broken to everyone reading the shared page.
 
 **5e — Re-render, then check.** Regenerate the HTML from the spec and confirm it succeeded.
 

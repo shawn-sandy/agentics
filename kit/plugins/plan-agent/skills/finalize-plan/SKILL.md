@@ -15,7 +15,7 @@ Mark a plan as done: inspect the codebase for implementation evidence, confirm w
 
 - `references/resolve-and-modes.md` — Step 1's argument parsing, plans-directory precedence, and spec-versus-legacy edit mode
 - `references/sweep-mode.md` — the whole `--all` sweep, S1 through S5
-- `references/evidence-analysis.md` — Step 2's signals, Step 3's 3a–3c evidence, Step 4's findings table
+- `references/evidence-analysis.md` — Step 2's signals, Step 3's 3a–3d evidence, Step 4's findings table
 - `references/write-completions.md` — Step 5's spec and legacy writes, Step 5f's ticket update, Step 6's delivery
 
 ---
@@ -36,7 +36,7 @@ Per `references/evidence-analysis.md` Step 2: acceptance criteria, implementatio
 
 ## Step 3 — Analyze codebase for implementation evidence
 
-Per `references/evidence-analysis.md` Step 3: token-level `Glob`/`Grep` scoring (3a), per-criterion verification (3b), and the objective-verification test run (3c).
+Per `references/evidence-analysis.md` Step 3: token-level `Glob`/`Grep` scoring (3a), per-criterion verification (3b), the objective-verification test run (3c), and **Step 3d**'s reconcile of the shipped commits against the plan — what was built that the plan never mentions, and what was built differently.
 
 ## Step 4 — Present findings and confirm
 
@@ -44,7 +44,7 @@ Per `references/evidence-analysis.md` Step 4: print the findings table, the obje
 
 ## Step 5 — Write the completions
 
-Read `references/write-completions.md` and follow its Step 5 — `### Spec mode` edits `<stem>.md` (5a0–5d) and re-renders (5e); `### Legacy mode` does the HTML attribute surgery.
+Read `references/write-completions.md` and follow its Step 5 — `### Spec mode` edits `<stem>.md` (5a0–5d, plus 5c2 and 5d2 for 3d's reconcile findings) and re-renders (5e); `### Legacy mode` does the HTML attribute surgery.
 
 **Phase gate (5a0):** a spec whose `## Steps` carries `### Phase: <name>` headings never reaches `status: completed` while any phase still holds an unmarked step. Leave it `in-progress` and name each unfinished phase in the `## Completion Report` instead. `build` stops at its first phase boundary by design, so this is the difference between a plan that finished and one that checkpointed. Unphased specs are unaffected.
 

@@ -1,5 +1,51 @@
 # Changelog
 
+## 9.11.0 — finalize-plan reconciles the plan against what shipped (2026-08-30)
+
+### Added
+
+- **`finalize-plan` Step 3d reconciles the plan against the shipped commits.**
+  Steps 3a–3c only ever asked one direction of the question — *was each planned
+  thing built?* — so a plan whose implementation grew a file, a flag, or a
+  different approach was marked completed while its published artifact still
+  described only the scope imagined before the work started. 3d asks the other
+  direction. It takes the commits that touched the spec (`git log --follow`,
+  precise because plans are committed alongside the change they describe),
+  falls back to the default-branch range when the spec commit has not landed yet,
+  and sorts the changed paths against `## Files` and the 3a tokens into two new
+  buckets: **shipped but unplanned** and **built differently**. Housekeeping
+  paths — the spec itself, generated indexes, lockfiles, version bumps — are
+  excluded, since they ship with every plan and say nothing about scope. 3d
+  only observes; the buckets are reported in Step 4 before the user confirms.
+- **`5c2` writes unplanned shipped work into `## Steps`** as an already-done
+  `Unplanned: <what> — <why>` step. The step list is what a reader treats as
+  the record of what was built, so work kept only in prose leaves the rendered
+  plan under-reporting the change. In a phased spec these land under a trailing
+  `### Phase: Unplanned` rather than at the end of the list, where they would
+  drop into a phase that was never started and muddy 5a0's
+  completable-versus-checkpointed gate; every step in that phase is `[x]`, so
+  the gate ignores it. Runs even when the phase gate skipped 5c.
+- **`5d2` writes a changed approach into `## Decisions`** — the settled-choices
+  ledger a resumed session already reads so it does not re-litigate a closed
+  question. Deliberately not the `## Completion Report`: every entry there
+  renders with a red dot (`.report-list dt::before`), and work that shipped
+  fine is not a defect.
+
+### Fixed
+
+- **5d's removal rule is now scoped to its own section.** "If every criterion
+  was verified, remove the Completion Report and add nothing" described exactly
+  the state a clean run with extra scope lands in, so the happy path was
+  precisely where reconcile output would have been discarded.
+
+### Notes
+
+- No renderer change. All four reconcile buckets route to sections
+  `build-plan-html.mjs` already parses, renders, and round-trips — a new
+  `## What Shipped` section would have cost parse, render, digest,
+  `extractSections`, and CSS, and the parser silently drops sections it does
+  not know.
+
 ## 9.10.1 — the build completion gate stops failing artifact-only plans (2026-08-25)
 
 ### Fixed

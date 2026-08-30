@@ -61,6 +61,60 @@ Locate the objective-verification test and extract its **Run** field — the tes
 
 Do not auto-fix here — `finalize-plan` only inspects and confirms. Carry the result into Step 4 so the user sees it before deciding whether to mark the plan completed.
 
+### 3d — Reconcile against what shipped
+
+3a–3c only ask one direction of the question: *was each planned thing built?*
+This asks the other: *what got built that the plan never mentions?* Without it a
+plan is marked completed while its published artifact still describes only the
+scope someone imagined before the work started.
+
+**Establish the commit range.** Prefer the spec's own history — plans are
+committed alongside the change they describe, which makes that history the
+precise commit set for this plan:
+
+```bash
+git log --oneline --follow -- "<spec path>"
+```
+
+Empty means the plan is being finalized on its own branch and the spec commit
+has not landed yet. Fall back to the branch range, or 3d reports "nothing
+shipped" on exactly the branch where everything just shipped:
+
+```bash
+base="$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD || echo origin/main)"
+git log --oneline "$base..HEAD"
+git diff --name-status "$base...HEAD"
+```
+
+**The dot counts differ on purpose — do not unify them.** `git log` with two
+dots is "commits on HEAD only"; three dots there is the *symmetric* difference,
+which drags in commits that landed on the base branch and never touched this
+plan, and every one of those files would bucket as *shipped but unplanned*.
+`git diff` with three dots is "changes since the merge base", which is the one
+that ignores base-branch movement.
+
+For the spec-history path, get the files with `git show --stat --format= <sha>`
+over those commits.
+
+**Sort the changed paths into buckets** against `## Files` and the 3a tokens:
+
+| Bucket | Signal | Carried by |
+|--------|--------|------------|
+| planned + shipped | path matches a `## Files` entry or step token | 3a/3b, already |
+| planned, not shipped | a planned path or token with no matching change | Step 4 findings, already |
+| **shipped but unplanned** | a changed path no step and no `## Files` entry mentions | 5c2 |
+| **built differently** | a planned path absent while a sibling in the same area shipped instead | 5d2 |
+
+Ignore housekeeping when bucketing *shipped but unplanned* — the spec itself,
+generated indexes (`docs/plans/index.html`), lockfiles, and version/CHANGELOG
+bumps ship with every plan and say nothing about scope. For *built differently*,
+read the commit subjects for the reason: a commit message is the cheapest
+statement of intent already on disk.
+
+3d only observes. Report both new buckets in Step 4 alongside the criteria
+table so the user sees the added scope before confirming; 5c2 and 5d2 do the
+writing.
+
 ---
 
 ## Step 4 — Present findings and confirm
