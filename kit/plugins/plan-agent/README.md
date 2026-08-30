@@ -12,7 +12,7 @@ The `review-plan` skill uses an **Agent Team** (seven core reviewers plus three 
 
 The `finalize-plan` skill reviews a plan for codebase implementation evidence, verifies each acceptance criterion individually, and marks the plan completed.
 
-It also ships two `PostToolUse` hooks: one enforces `verb-target` kebab-case filenames on plan files, and another auto-regenerates the plans gallery index when plans change.
+It also ships two `PostToolUse` registrations: a `Write`/`Edit`/`MultiEdit` dispatcher that path-gates once and fans out to seven child hooks — `verb-target` kebab-case filename enforcement, plan HTML re-render, the plans, prototypes, and designs gallery rebuilds, and the prototype and design drift checks — plus an `ExitPlanMode` nudge to stress-test a plan before implementing.
 
 Installers get on-demand planning with argument support, issue ingestion, built-in interviews, acceptance criteria verification, agent-team–powered review, and filename guardrails without maintaining a global `~/.claude/rules/plan-mode.md` file by hand.
 
@@ -37,9 +37,10 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `prototype` | Skill | Command (`/plan-agent:prototype <plan.html \| idea \| image \| figma-url>`) or auto-activates on "prototype this plan / idea / screenshot" intent — generates a runnable static-HTML prototype under `docs/prototypes/` |
 | `design` | Skill | Command (`/plan-agent:design <plan.html \| idea \| image \| figma-url>`) or auto-activates on "design this plan" intent — derives one artboard per user-facing plan step under `docs/designs/<plan-slug>/` and publishes the canvas through Claude Code's built-in `design` skill |
 | `publish-hub` | Skill | Command (`/plan-agent:publish-hub <plan.md> [--extra <path>]...`) or auto-activates on "publish / share a plan hub" intent — bundles the plan and its related HTML (prototype, extras) into one tabbed hub artifact at a stable `hub-artifact-url:` |
-| `dispatch` | Hook (`PostToolUse`) | The plugin's only registered hook. Fires on `Write`/`Edit`/`MultiEdit`, path-gates once, and fans out to the six below only for plan/prototype/design writes |
+| `dispatch` | Hook (`PostToolUse`) | The plugin's only registered Write/Edit hook. Fires on `Write`/`Edit`/`MultiEdit`, path-gates once, and fans out to the seven below only for plan/prototype/design writes |
 | `validate-plan-filename` | Child of `dispatch` | Validates plan filenames; exits 2 to block a badly-named plan |
 | `rebuild-plans-index` | Child of `dispatch` | Regenerates the plans gallery for non-index `.html` plans |
+| `render-plan-html` | Child of `dispatch` | Re-renders `<stem>.html` beside a Markdown plan spec when that sibling already exists |
 | `build-prototypes-index` | Child of `dispatch` | Regenerates the prototypes gallery for `docs/prototypes/` writes |
 | `check-prototype-drift` | Child of `dispatch` | Reports when a prototype has drifted from its own data model or its plan's copy |
 | `build-designs-index` | Child of `dispatch` | Regenerates the designs gallery for `docs/designs/` writes |
@@ -518,7 +519,7 @@ Like every other child it **always exits 0**: a coverage report about one plan n
 
 #### Hook dispatch
 
-`hooks.json` registers exactly one PostToolUse hook: `hooks/dispatch.py`. Registering the four hooks separately spawned four interpreters on *every* file edit in *every* session, purely so each could discover the file was not a plan and exit. The `matcher` field is a tool-name regex and cannot express a path condition, so the gate lives in `dispatch.py`: it reads the payload once, does one cheap path check, and for the common case exits without spawning anything.
+`hooks.json` registers two PostToolUse hooks: the `Write`/`Edit`/`MultiEdit` dispatcher at `hooks/dispatch.py`, and an `ExitPlanMode` stress-test nudge. Registering the dispatcher's seven children separately spawned seven interpreters on *every* file edit in *every* session, purely so each could discover the file was not a plan and exit. The `matcher` field is a tool-name regex and cannot express a path condition, so the gate lives in `dispatch.py`: it reads the payload once, does one cheap path check, and for the common case exits without spawning anything.
 
 The children remain independently runnable and testable — each re-applies its own filter — so `python3 hooks/validate-plan-filename.py < payload.json` still works standalone. The children share the dispatcher's single 60s budget (they run sequentially), rather than each holding an independent one as before.
 
@@ -634,11 +635,11 @@ plan-agent/
       hub.html              — Parameterized landing-hub template (setup-sites)
       serve-docs.sh         — Local docs/ preview server (setup-sites)
   hooks/
-    dispatch.py                — The one registered PostToolUse hook; path-gates, then fans out
+    dispatch.py                — The registered Write/Edit hook; path-gates, then fans out to seven children
     validate-plan-filename.py  — Filename enforcement script (child of dispatch)
     rebuild-plans-index.py     — Gallery index auto-rebuild (child of dispatch)
     build-index.sh             — Shell entry point for gallery rebuild
-  hooks.json                — Hook registration (one PostToolUse entry: dispatch.py)
+  hooks.json                — Hook registration (two PostToolUse entries: dispatch.py, ExitPlanMode nudge)
   README.md
   CHANGELOG.md
 ```
