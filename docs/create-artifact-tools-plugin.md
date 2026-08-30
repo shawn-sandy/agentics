@@ -40,7 +40,7 @@ Claude Code artifacts are self-contained pages published to a private claude.ai 
 
 `plan-artifact` is a thin publish wrapper: it reads `artifact-url:` from the sibling `.md` spec's frontmatter and passes it to the `Artifact` tool's `url` parameter when present, republishing to the same page. When absent it publishes fresh and writes the new URL back into the spec frontmatter (the renderer preserves unknown keys). The live-update loop — republish after progress edits so viewers see steps check off at the same link — is documented in the skill body.
 
-`test-artifact-tools.sh` validates plugin structure following the existing `test-save-artifact.sh` pattern: `plugin.json` is valid JSON without a `version` key, all three SKILL.md files exist with `name`, `description`, and `allowed-tools` frontmatter, the bundled `export_session.py` exists, and the marketplace entry is present at 1.0.0.
+`test-artifact-tools.sh` validates plugin structure following the existing `test-save-artifact.sh` pattern: `plugin.json` is valid JSON without a `version` key, all five SKILL.md files exist with `name`, `description`, and `allowed-tools` frontmatter (including `prompt-artifact` and `teach-artifact` added after the 1.0.0 scope), the bundled `export_session.py` exists, and the marketplace entry is present at 1.0.0.
 
 ## How to use it
 
@@ -65,7 +65,7 @@ bash tests/plugins/test-artifact-tools.sh
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `61ebc7e` | 2026-07-14 | feat(artifact-tools): add artifact-tools plugin (1.0.0) (#399) |
 
 <!-- generated:end -->
 

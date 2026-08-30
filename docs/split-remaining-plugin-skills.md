@@ -80,7 +80,7 @@
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `745584e` | 2026-07-29 | refactor(skills): split six monolithic skills into cores plus per-topic references (#487) |
 
 <!-- generated:end -->
 

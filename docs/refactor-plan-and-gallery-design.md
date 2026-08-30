@@ -32,6 +32,8 @@
 | `scripts/build-plans-index.sh` | Root build script | Modified |
 | `docs/plans/build-index.sh` | Docs build script | Modified |
 | `docs/plans/index.html` | Plans gallery | Modified (regenerated) |
+| `docs/artifacts/index.html` | Artifacts gallery | Modified (regenerated) |
+| `docs/prototypes/index.html` | Prototypes gallery | Modified (regenerated) |
 | `tests/plugins/test-build-plan-html.mjs` | Test suite | Modified |
 | `tests/plugins/test-plan-redesign.mjs` | New objective test | Created |
 | `.claude-plugin/marketplace.json` | Version manifest | Modified |
@@ -63,7 +65,7 @@
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `dd5c425` | 2026-07-31 | refactor: rebuild plan document and gallery design with 7.5.0 shell bump (#503) |
 
 <!-- generated:end -->
 

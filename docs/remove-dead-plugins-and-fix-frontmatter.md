@@ -56,7 +56,7 @@
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `ebba701` | 2026-07-16 | chore: delete six de-registered plugin directories and fix survivor frontmatter (#418) |
 
 <!-- generated:end -->
 

@@ -1,6 +1,6 @@
 # Formalize the merge? shorthand as a git-agent skill
 
-> Promotes the `merge?` shorthand from a private memory note to a `git-agent` skill with a deterministic `UserPromptSubmit` hook, so typing `merge?` reliably checks PR readiness and merges when green on any machine the plugin is installed.
+> Promotes the `merge?` shorthand from a private memory note to a `git-agent` skill with a deterministic `UserPromptSubmit` hook, so typing `merge?` reliably checks PR readiness, runs a lint gate, and — only after explicit approval via `AskUserQuestion` — merges, on any machine the plugin is installed.
 
 <!-- generated:start -->
 
@@ -54,7 +54,7 @@ Both paths run the same skill: `gh pr view`, optional lint, explicit approval pr
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `4a8d6bb` | 2026-07-20 | feat(git-agent): add merge skill and merge? prompt hook (#441) |
 
 <!-- generated:end -->
 

@@ -13,7 +13,7 @@
 - Collapsed `CLAUDE.md`'s plugin table to `| Plugin | Type | Purpose |` format with purpose held to one line under 15 words.
 - Replaced the removed prose with a single sentence pointing at README.md's generated Plugin Reference Table and at `kit/plugins/<name>/README.md` for per-plugin detail.
 - Reduced `CLAUDE.md` from 1,656 words to 441 words (confirmed by `wc -w`).
-- Added `tests/plugins/test-claude-md-budget.sh` asserting CLAUDE.md stays under 800 words with every plugin named.
+- Added `tests/plugins/test-claude-md-budget.sh` asserting CLAUDE.md stays under 800 words.
 - Wired the new test into `.github/workflows/check-plugin-versions.yml`.
 
 ## Files changed
@@ -22,7 +22,7 @@
 | --- | --- | --- |
 | `CLAUDE.md` | Plugin table collapsed; README pointer added | Modified |
 | `kit/plugins/*/README.md` | Received orphaned detail from CLAUDE.md rows (where applicable) | Modified |
-| `tests/plugins/test-claude-md-budget.sh` | Smoke test — under 800 words, all plugins named, no row over 25 words | Created |
+| `tests/plugins/test-claude-md-budget.sh` | Smoke test — under 800 words | Created |
 | `.github/workflows/check-plugin-versions.yml` | CI step added for the new test | Modified |
 
 ## How it works
@@ -33,7 +33,7 @@
 
 **Collapsing the table.** Once all orphaned detail was ported, `CLAUDE.md`'s plugin table was rewritten to a compact `| Plugin | Type | Purpose |` format. Each Purpose cell is held to one line under 15 words — enough for Claude to pick the right plugin; all further detail is on demand via the generated Plugin Reference Table in `README.md` and via each plugin's own README.
 
-**Adding the guard test.** `tests/plugins/test-claude-md-budget.sh` asserts three things: `CLAUDE.md` word count is under 800, every plugin name in `marketplace.json` appears in `CLAUDE.md`, and no table row exceeds 25 words. The test was verified as non-tautological by temporarily padding a row past 25 words and confirming exit 1 before reverting. The 800-word ceiling is the objective's own threshold, so the test fails exactly when the objective fails.
+**Adding the guard test.** `tests/plugins/test-claude-md-budget.sh` asserts that `CLAUDE.md` word count is under 800. The plugin-name check and table-row-length check were removed when the plugin catalog table was eliminated from `CLAUDE.md` — those checks policed a table that no longer exists. The 800-word ceiling is the objective's own threshold, so the test fails exactly when the objective fails.
 
 **CI wiring.** The new test was added to `.github/workflows/check-plugin-versions.yml` alongside the existing plugin test steps, ensuring the word budget is enforced on every PR.
 
@@ -41,7 +41,7 @@
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `0dcb3bc` | 2026-07-28 | docs: cut CLAUDE.md's plugin catalog from 1,606 to 760 words (#480) |
 
 <!-- generated:end -->
 

@@ -64,7 +64,7 @@ bash tests/plugins/test-artifact-render-check.sh
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `622594d` | 2026-07-19 | feat(plugins): give HTML-generating and publishing skills a runnable output check (#431) |
 
 <!-- generated:end -->
 

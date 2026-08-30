@@ -76,7 +76,7 @@ Ambient (model-invocation) activation still requires an existing plan and routes
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `8622210` | 2026-07-27 | feat(plan-agent): let build author a plan when none is specified (#470) |
 
 <!-- generated:end -->
 

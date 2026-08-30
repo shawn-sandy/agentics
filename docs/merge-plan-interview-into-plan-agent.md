@@ -71,7 +71,7 @@ The `plan-interview`, `plan-to-html`, `plan-hygiene`, and `review-rename-plans` 
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `864c144` | 2026-07-17 | refactor(plugins): merge plan-interview into plan-agent 4.0.0 (#426) |
 
 <!-- generated:end -->
 

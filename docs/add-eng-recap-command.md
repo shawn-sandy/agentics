@@ -54,12 +54,12 @@ The first form uses the current session artifact. The second and third forms swi
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `04d2b41` | 2026-07-27 | feat(artifact-tools): add /eng-recap command for the engineering team (#473) |
 
 <!-- generated:end -->
 
 ## References
 
 - Plan: [add-eng-recap-command](plans/add-eng-recap-command.md)
-- Proposal: `docs/proposals/add-eng-recap-command.md`
+- Proposal: [add-eng-recap-command](proposals/add-eng-recap-command.md)
 - Changelog: `kit/plugins/artifact-tools/CHANGELOG.md` — `[1.7.0]`

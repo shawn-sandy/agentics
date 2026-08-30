@@ -42,7 +42,7 @@ Branch names are generated automatically when `branch-agent` reads the working-t
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `7459add` | 2026-07-11 | fix(git-agent): make generated branch names more descriptive and human-readable (3.11.1) (#383) |
 
 <!-- generated:end -->
 

@@ -58,7 +58,7 @@ node kit/plugins/plan-agent/scripts/build-plan-html.mjs docs/plans/<slug>.md
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `5de9c6a` | 2026-07-12 | feat(plan-agent): guidelines library + markdown-first SKILL.md rewrite (2.19.0) (#388) |
 
 <!-- generated:end -->
 

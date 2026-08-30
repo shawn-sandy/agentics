@@ -54,7 +54,7 @@
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `a5197d0` | 2026-07-12 | feat(plan-agent): markdown-first status and checkbox flows (Phase 3, 2.20.0) (#389) |
 
 <!-- generated:end -->
 

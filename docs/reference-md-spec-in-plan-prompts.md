@@ -65,7 +65,7 @@ The copy-button implement prompt in every plan now instructs the five-step markd
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `41a50f3` | 2026-07-13 | feat(plan-agent): reference md spec in plan prompts; render Next Steps (2.21.0) (#390) |
 
 <!-- generated:end -->
 

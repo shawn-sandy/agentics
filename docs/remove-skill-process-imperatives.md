@@ -72,7 +72,7 @@ The `tests/fixtures/imperative-baselines/keep-phrases.txt` file is the machine-r
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `de3b5a3` | 2026-07-30 | refactor(skills): prune process-reminder imperatives behind recorded behavior baselines (#495) |
 
 <!-- generated:end -->
 

@@ -37,7 +37,7 @@ Confirmation collapses to one `AskUserQuestion` call with a `multiSelect` questi
 
 Delivery uses a single `SendUserFile` call rather than one per plan. The `argument-hint` frontmatter and README documentation were updated in the same PR to reflect the new invocation form.
 
-The smoke test at `tests/plugins/test-finalize-all-flag.sh` asserts seven checks: the routing clause exists in SKILL.md, the sweep section is present, `grep -lE` is used for discovery with the todo/in-progress match, `index.html` and `archive/` are excluded, multi-select batch confirmation is documented, the README documents the `--all` flag, and the marketplace and CHANGELOG both carry `2.13.0`.
+The smoke test at `tests/plugins/test-finalize-all-flag.sh` asserts eight checks: the routing clause exists in SKILL.md, the spec-mode markdown edit path (status flip, checkbox ticks, Completion Report, re-render) and legacy fallback are present, `grep -lE` is used for discovery with the todo/in-progress match, `index.html` and `archive/` are excluded, multi-select batch confirmation is documented, expensive verification is deferred and sweep scoring is non-interactive, the README documents the `--all` flag, and the top CHANGELOG.md version matches the marketplace.json plan-agent version.
 
 ## How to use it
 
@@ -56,7 +56,7 @@ Scans the plans directory, scores non-completed plans by token evidence, present
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `408b79f` | 2026-07-02 | feat(plan-agent): add --all sweep flag to finalize-plan (2.13.0) (#366) |
 
 <!-- generated:end -->
 

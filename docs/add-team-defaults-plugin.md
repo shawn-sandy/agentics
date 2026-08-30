@@ -48,7 +48,7 @@ git show <sha>:kit/plugins/team-defaults/.claude-plugin/plugin.json
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `7f08e4c` | 2026-07-13 | feat(team-defaults): add shared team defaults plugin (0.1.0) (#394) |
 
 <!-- generated:end -->
 

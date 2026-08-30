@@ -59,7 +59,7 @@ bash tests/plugins/test-create-issue-plan-source.sh
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `9cacc21` | 2026-07-13 | feat(git-agent,plan-agent): plan source for create-issue + end-of-plan issue option (#391) |
 
 <!-- generated:end -->
 

@@ -48,7 +48,7 @@ Authors writing new Markdown-publishing skills should consult `kit/plugins/artif
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `ded28e0` | 2026-07-15 | feat: add plugin version guard and fix artifact title mechanism (#410) |
 
 <!-- generated:end -->
 

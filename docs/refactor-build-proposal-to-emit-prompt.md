@@ -41,7 +41,7 @@
 
 ## How it works
 
-**The invocation blocker and its fix.** `write-prompt/SKILL.md` carries `disable-model-invocation: true`, which blocks programmatic `Skill()` invocation, not just ambient triggering. `commands/write-prompt.md` is a thin wrapper that loads the skill file by its absolute path (with a `Glob` fallback) rather than delegating via `Skill(skill: "plan-agent:write-prompt")` — the latter would resolve to the wrapper itself and `SKILL.md` would never load. The wrapper loads the skill directly and carries an inline comment explaining the shadowing, which is the pattern both new test files assert.
+**Implementation note.** The plan originally called for a `commands/write-prompt.md` wrapper and a `write-prompt/references/proposal-prompt-template.md` file; both are absent from the shipped state. `build-proposal` instead saves the prompt inline — Step 6 writes the proposal content directly to `docs/prompts/proposal-{slug}.md` without delegating to a separate `write-prompt` command. The remaining descriptions below reflect the shipped behavior.
 
 **Fifth prompt type wired through all seven phases.** `write-prompt/SKILL.md` was updated to add `proposal` to: the Phase 1 type table and technique matrix; the Phase 3 XML layer mapping; the Phase 4 template-selection entry; and the Phase 7 directory-and-slug logic. Phase 7 gained three new features for this type: a `--out <path>` contract that overrides Phase 7's own directory resolution and intent-slug derivation when present; `status:` (`gathering` or `converged`), `modified:`, and `generated-sha:` frontmatter keys; and an in-place rewrite rule that compares the current body's hash against `generated-sha:` before overwriting, triggering a confirmation prompt when the file was hand-edited since the last run.
 
@@ -71,7 +71,7 @@ Run the same idea a second time and the prompt file is overwritten in place rath
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `786c5c2` | 2026-07-29 | feat(plan-agent): converge build-proposal on a saved prompt authored by write-prompt (#483) |
 
 <!-- generated:end -->
 

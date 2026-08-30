@@ -57,7 +57,7 @@ python3 kit/plugins/social-media-tools/skills/export-session/scripts/export_sess
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `11765e1` | 2026-07-02 | feat(social-media-tools): add export-session skill (2.14.0) (#368) |
 
 <!-- generated:end -->
 

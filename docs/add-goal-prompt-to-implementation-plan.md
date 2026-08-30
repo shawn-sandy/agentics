@@ -51,7 +51,7 @@ The goal prompt instructs the implementer to achieve the plan's stated outcome a
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `950b214` | 2026-06-18 | feat(plan-agent): add outcome-driven goal prompt to HTML plans (2.6.0) (#332) |
 
 <!-- generated:end -->
 

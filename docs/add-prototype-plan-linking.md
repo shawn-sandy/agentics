@@ -74,7 +74,7 @@ node tests/plugins/test-build-plan-html.mjs
 
 | SHA | Date | Subject |
 | --- | --- | --- |
-| `df49b6d` | 2026-08-12 | feat(settings-sync): restore onto a new machine via clone URL (1.1.0) (#548) |
+| `26736c6` | 2026-07-27 | feat(plan-agent): make a plan and its prototype aware of each other (#465) |
 
 <!-- generated:end -->
 
