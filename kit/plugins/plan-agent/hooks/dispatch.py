@@ -4,10 +4,10 @@ PostToolUse dispatcher: the plugin's single entry point for Write/Edit/MultiEdit
 
 Why this exists
 ---------------
-plan-agent ships six PostToolUse hooks (filename validation, plans-index
+plan-agent ships seven PostToolUse hooks (filename validation, plans-index
 rebuild, plan HTML render, prototypes-index rebuild, prototype drift, and the
 designs-index rebuild and design drift pair). Registering each one
-directly in hooks.json spawned six interpreters on *every* file edit in
+directly in hooks.json spawned seven interpreters on *every* file edit in
 *every* session, purely so each could discover the file was not a plan and
 exit. The hooks `matcher` field is a tool-NAME regex only — it cannot express
 a path condition — so the gate cannot live in hooks.json. It lives here.
