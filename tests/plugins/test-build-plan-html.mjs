@@ -879,6 +879,20 @@ ok('CLI renders a spec to the -o output file', () => {
   assert.match(html, /Read and implement all steps in the plan at [^"]*cli-sample\.md/);
 });
 
+ok('CLI creates missing -o parent directories', () => {
+  // The skills document the artifact-plan re-render as
+  // `-o "$SCRATCHPAD/<stem>.html"`, and <stem> always carries directories
+  // (docs/plans/foo). Without mkdir the renderer died with an unhandled
+  // ENOENT stack trace, so the documented command could not be run as written.
+  const spec = join(tmp, 'nested-src.md');
+  const out = join(tmp, 'nested', 'docs', 'plans', 'nested-src.html');
+  writeFileSync(spec, SAMPLE_SPEC);
+  const res = spawnSync('node', [RENDERER, spec, '-o', out], { encoding: 'utf8' });
+  assert.equal(res.status, 0, res.stderr);
+  assert.ok(existsSync(out), `${out} was not written`);
+  assert.ok(readFileSync(out, 'utf8').startsWith('<!DOCTYPE html>'));
+});
+
 ok('CLI exits 1 with a helpful message on an unparseable spec', () => {
   const bad = join(tmp, 'bad.md');
   writeFileSync(bad, '# Plan: Broken\n\nNo sections at all.\n');

@@ -45,8 +45,8 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { basename, posix, relative, resolve } from 'node:path';
+import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { basename, dirname, posix, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { parseSpecMarkdown, ParseError } from './lib/plan-spec.mjs';
@@ -747,6 +747,10 @@ function main() {
     process.exit(runCheck({ specPath, outPath, parsed, rendered: html }));
   }
 
+  // The skills render an artifact-delivered plan to "$SCRATCHPAD/<stem>.html",
+  // and <stem> always carries directories (docs/plans/foo). Without this the
+  // documented command dies on an unhandled ENOENT before writing a byte.
+  mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, html);
   console.log(`build-plan-html: wrote ${outPath} (${html.length} bytes)`);
 }
