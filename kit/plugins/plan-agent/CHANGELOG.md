@@ -20,6 +20,13 @@ the row now says so.
 PostToolUse hooks" while the parenthetical immediately after it enumerated
 seven. Docs only — no behaviour change.
 
+The README's overview paragraph had drifted the same way in the other direction:
+it said the plugin "ships two `PostToolUse` hooks" and then named filename
+validation and the plans-index rebuild — the right count attached to the wrong
+two. Those are children of `dispatch`; the two registrations in `hooks.json` are
+the `Write|Edit|MultiEdit` dispatcher and the `ExitPlanMode` nudge. It now
+describes the real shape.
+
 
 ## 9.10.1 — the build completion gate stops failing artifact-only plans (2026-08-25)
 
