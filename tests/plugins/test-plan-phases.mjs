@@ -163,10 +163,14 @@ Run everything and confirm it passes.
 `;
 
 /** sha256 of renderUnphased() under the current renderer. Regenerate only for
- * a deliberate shell change. Re-derived 2026-08-17 for the 9.1.0 design
- * retune (#537), which changed the shared CSS deliberately but left the
- * 8.5.1-era baseline in place — the check had been failing on main since. */
-const BASELINE_SHA256 = '4c35c28b72c1ad8822c46bb31bd84aa1520ce6c6fd9303c8a068ddb1ad90accb';
+ * a deliberate shell change. Re-derived 2026-09-02 for the plan-document
+ * polish: the doc-type eyebrow was removed from the masthead, and the shell
+ * gained browser-surface theming (selection, scrollbars, underline offset),
+ * tabular figures, a compositor-driven scroll rail, and lost the 4px
+ * side-tab on the objective-test card, and coarse-pointer hit areas were
+ * brought up to 44px. The theme toggle became a square sun/moon icon
+ * button matching the Save as PDF box. */
+const BASELINE_SHA256 = '4d5968b056a2e39a921baf96247f7d773d899c601cdcf0d180a64b78fcb9e33d';
 
 const render = (parsed, stem) =>
   renderPlanHtml(parsed, {

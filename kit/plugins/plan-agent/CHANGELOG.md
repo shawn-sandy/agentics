@@ -1,5 +1,83 @@
 # Changelog
 
+## 9.13.0 — plan-document polish pass (2026-09-02)
+
+### Changed
+
+- **The masthead opens on the title.** `scripts/lib/plan-shell.mjs` dropped the
+  `IMPLEMENTATION PLAN` eyebrow above `<h1>`. It was a hard-coded literal that
+  never varied, sitting under a back-link already labelled "Plans" and above a
+  meta row already carrying the type — three labels for one fact. Nothing read
+  it programmatically; the gallery and `extract-plan-spec` never touched it.
+  `.plan-back-nav` takes the freed `.6rem` back so the masthead rhythm holds.
+- **The objective-test card lost its 4px side-tab.** It now carries an even
+  1px `--moss-line` rule on all four edges. The moss fill, the Objective badge
+  and the moss title already said "this is the test that decides".
+- **The scroll rail is compositor-driven.** `.scroll-rail::after` scales
+  (`transform: scaleY()`) instead of animating `height`, and its scroll handler
+  is throttled to one write per animation frame. It previously wrote on every
+  scroll event — several per frame on a trackpad — and each write read
+  `scrollHeight`, forcing a layout on the scroll hot path of a document that
+  routinely passes 9,000px. The `.1s` transition is gone with it; it only
+  lagged the rail behind the scrollbar.
+- **Touch targets finish a decision the sidebar already made.** The nav links
+  and theme toggle committed to 44px; `Save as PDF` (32px), the copy buttons
+  (29px), the back link (20px) and the step-rail rows (30px) never got the
+  pass. A `@media (pointer: coarse)` block lifts all of them to 44px — via an
+  invisible centred `::after` for the buttons, so their drawn size on desktop
+  is untouched, and via `min-height` for the rail rows, where taller rows are
+  the better touch design. Acceptance-criteria checkboxes were already fine:
+  each 16px box is paired with a `<label for>` measuring 329x111.
+
+- **The theme toggle is a square icon button.** It was a 44px-tall
+  uppercase mono word (`DARK` / `LIGHT`) sitting beside a 32px sentence-case
+  `Save as PDF`, so the pair read as two unrelated controls and the quieter
+  one won an argument it should never have entered — its own comment claimed
+  "same shape as Save as PDF" while matching it on nothing. It now shows a
+  sun/moon icon from the existing Heroicons sprite (two new symbols,
+  `ic-sun` and `ic-moon`) in a box derived from the PDF button rather than
+  guessed: same padding, and an icon of 1.4em at the same .75rem font, which
+  is exactly that button's line box. Both measure 32px tall and the toggle is
+  a true square. The icon names the destination — a sun while dark means "go
+  light" — which is what its `aria-label` always said, and that label is now
+  the button's only name. `syncThemeButton` swaps the `<use href>` rather
+  than writing `innerHTML`.
+
+### Added
+
+- **Browser surfaces are themed.** A plan is a long read, so the selection
+  highlight and the scrollbar are two of the most persistent things on screen,
+  and both shipped as OS defaults — system-blue selection over a violet
+  document, and a scrollbar belonging to no palette here. `::selection` now
+  uses `--accent-line`/`--ink`, and the scrollbar uses `--ink-3` on a
+  transparent track (`scrollbar-color` plus the `::-webkit-scrollbar` family,
+  with a transparent border and `background-clip: content-box` so the thumb
+  reads the same over paper, `--sunk` code blocks, and any panel it crosses).
+  Links get `text-underline-offset: .18em` so underlines clear the descenders
+  in the file paths that saturate plan prose. All drawn from existing tokens,
+  so both palettes and the toggle follow with no new names for the parity test
+  to police. Measured: selected text reads 10.8:1 (light) and 8.0:1 (dark);
+  the thumb sits at 5.7:1 and 5.5:1 against paper.
+- **Tabular figures** on the progress counter, the step numbers and the meta
+  row. `11 / 13 done` is rewritten on every checkbox tick, and proportional
+  figures reflowed the label under the reader's cursor as it counted.
+
+### Notes
+
+- `.progress-bar-fill` deliberately keeps its `width` transition. `scaleX` on
+  a 4px bar with a 999px radius squashes the end caps into ellipses at low
+  percentages, the server-rendered state is an inline `width:N%` so the bar is
+  correct with scripting off, and it animates once per tick rather than once
+  per scroll frame. The reasoning is recorded in the stylesheet.
+- All 100 re-renderable plans under `docs/plans/` were regenerated through
+  `scripts/rerender-plans.mjs`. Twelve files were left untouched by that script
+  for pre-existing structural reasons (review documents with no `#objective` or
+  `#steps`), unrelated to this change.
+- `implementation-plan/reference/SKELETON.html` was **not** re-synced. It has
+  been legacy since the shell was extracted and still carries the pre-token
+  hard-coded palette; `plan-shell.mjs` is the template, and its header comment
+  now says so instead of pointing editors at the stale file.
+
 ## 9.12.0 — review-plan runs on the Workflow tool, off the experimental flag (2026-09-01)
 
 ### Changed
