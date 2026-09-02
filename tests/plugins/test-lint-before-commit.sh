@@ -112,9 +112,25 @@ for need in git python3 sh; do
   src=$(command -v "$need" || true)
   [ -n "$src" ] && ln -sf "$src" "$MINPATH/$need"
 done
+# fire() with PATH replaced by MINPATH alone, so every linter is off it. Used
+# by the cases that assert a missing toolchain is a no-op rather than a block.
 fire_without_toolchain() {
   local saved="$PATH"
   PATH="$MINPATH"
+  fire "$@"
+  PATH="$saved"
+}
+
+# fire() with PATH *replaced* by $1 rather than prefixed. A case that needs one
+# toolchain genuinely present and another genuinely absent cannot use
+# fire_with_path: prefixing leaves the caller's PATH behind it, so a real
+# linter installed on the machine still wins the lookup and the case silently
+# stops testing the branch it names. Callers pass MINPATH themselves, since
+# the hook still needs git, python3, and sh.
+fire_with_only_path() {
+  local only="$1"; shift
+  local saved="$PATH"
+  PATH="$only"
   fire "$@"
   PATH="$saved"
 }
@@ -367,13 +383,26 @@ for eco in "pyproject.toml:ruff:RUFF_BROKE" "go.mod:go:GO_BROKE" "Cargo.toml:car
   check_rc 0 "$manifest without its toolchain is a no-op"
 done
 
-# flake8 is the documented fallback when ruff is absent.
+# flake8 is the documented fallback when ruff is absent. The PATH is *replaced*,
+# not prefixed: this repo's own dev containers ship a real ruff, which would
+# otherwise win the lookup, lint the empty fixture clean, and let the commit
+# through — turning the one assertion that covers the fallback into a check
+# that ruff exists.
 REPO=$(make_repo eco_flake8 "")
 touch "$REPO/pyproject.toml"
 mkdir -p "$TMPROOT/flakeonly" && cp "$FAKEBIN/flake8" "$TMPROOT/flakeonly/"
-fire_with_path "$TMPROOT/flakeonly" "git commit -m 'x'" "$REPO"
+PATH_BEFORE="$PATH"
+fire_with_only_path "$TMPROOT/flakeonly:$MINPATH" "git commit -m 'x'" "$REPO"
 check_rc 2 "pyproject.toml falls back to flake8 when ruff is absent"
 has_out "FLAKE8_BROKE" "flake8 output is fed back"
+
+# Every fire_* wrapper narrows PATH and is expected to put it back, so that a
+# later case runs against the caller's environment and not a leftover stub
+# directory. Nothing pinned that until now: a wrapper that dropped its restore
+# would leave every following case silently running under the narrowed PATH,
+# which is the failure mode this whole file exists to rule out.
+if [ "$PATH" = "$PATH_BEFORE" ]; then echo "  PASS: fire_with_only_path restores PATH"
+else echo "  FAIL: fire_with_only_path leaked its PATH into the rest of the suite"; FAILURES=$((FAILURES + 1)); fi
 
 # package.json wins where a directory carries more than one manifest.
 REPO=$(make_repo eco_both "$FAILING")
