@@ -391,9 +391,18 @@ done
 REPO=$(make_repo eco_flake8 "")
 touch "$REPO/pyproject.toml"
 mkdir -p "$TMPROOT/flakeonly" && cp "$FAKEBIN/flake8" "$TMPROOT/flakeonly/"
+PATH_BEFORE="$PATH"
 fire_with_only_path "$TMPROOT/flakeonly:$MINPATH" "git commit -m 'x'" "$REPO"
 check_rc 2 "pyproject.toml falls back to flake8 when ruff is absent"
 has_out "FLAKE8_BROKE" "flake8 output is fed back"
+
+# Every fire_* wrapper narrows PATH and is expected to put it back, so that a
+# later case runs against the caller's environment and not a leftover stub
+# directory. Nothing pinned that until now: a wrapper that dropped its restore
+# would leave every following case silently running under the narrowed PATH,
+# which is the failure mode this whole file exists to rule out.
+if [ "$PATH" = "$PATH_BEFORE" ]; then echo "  PASS: fire_with_only_path restores PATH"
+else echo "  FAIL: fire_with_only_path leaked its PATH into the rest of the suite"; FAILURES=$((FAILURES + 1)); fi
 
 # package.json wins where a directory carries more than one manifest.
 REPO=$(make_repo eco_both "$FAILING")
