@@ -9,8 +9,12 @@
  * assembles — this module just stamps the ~55 KB of boilerplate the model
  * used to emit by hand.
  *
- * The CSS / ICON_SPRITE / SCRIPT blocks are spliced from SKELETON.html by a
- * one-shot generator; regenerate them there if the skeleton changes.
+ * The CSS / ICON_SPRITE / SCRIPT blocks were originally spliced from
+ * SKELETON.html by a one-shot generator, but that file is now legacy (it
+ * still carries the pre-token hard-coded palette) and is kept only for
+ * reference and its smoke tests. THIS file is the template: edit the blocks
+ * here, then run `node scripts/rerender-plans.mjs` so the ~110 committed
+ * plans under docs/plans/ pick the change up.
  *
  * UI strings below were once byte-for-byte contracts that finalize-plan and
  * the status gates matched with literal find/replace on the HTML. Since the
@@ -240,15 +244,6 @@ export const CSS = `/* ── Design tokens ────────────
     margin: 0 auto;
     padding: 1.75rem 1.5rem 1.5rem;
   }
-  .plan-doc-type {
-    font-family: var(--mono);
-    font-size: .65rem;
-    font-weight: 600;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: .6rem;
-  }
   .plan-header-top {
     display: block;
   }
@@ -368,28 +363,37 @@ export const CSS = `/* ── Design tokens ────────────
   .save-pdf-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .save-pdf-btn { transition: none; } }
 
-  /* Theme toggle — same shape as Save as PDF, quieter fill. */
+  /* Theme toggle — a square sibling of Save as PDF, not a second label.
+     The comment here used to claim "same shape as Save as PDF" while
+     matching it on nothing: 44px tall against 32px, uppercase mono against
+     sentence case, plus .08em of extra tracking. The pair read as two
+     unrelated controls and the quieter one won an argument it should never
+     have entered.
+
+     The word is now a sun/moon icon, and the box is derived from the PDF
+     button rather than guessed — identical padding, and an icon of 1.4em at
+     the same .75rem font, which is exactly that button's line box. Both
+     resolve to 31.6px, so the toggle is a true square beside it.
+
+     The old min-width/min-height of 44px was a touch-target workaround. The
+     pointer: coarse block down by the print styles now gives every control
+     the same 44px hit area, so the base style no longer has to be
+     thumb-sized on a desktop where it will never be tapped. */
   .theme-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: .4rem;
-    min-width: 44px;
-    min-height: 44px;
-    padding: .4rem .9rem;
-    font-family: var(--mono);
-    font-size: .7rem;
-    font-weight: 600;
-    letter-spacing: .08em;
-    text-transform: uppercase;
+    padding: .4rem;
+    font-size: .75rem;
+    line-height: 1.4;
     color: var(--ink-2);
     background: var(--panel);
     border: 1px solid var(--rule);
     border-radius: 4px;
     cursor: pointer;
-    white-space: nowrap;
     flex-shrink: 0;
   }
+  .theme-toggle .icon { width: 1.4em; height: 1.4em; }
   .theme-toggle:hover { color: var(--accent); border-color: var(--accent-line); }
   .theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -401,6 +405,7 @@ export const CSS = `/* ── Design tokens ────────────
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--rule);
+    font-variant-numeric: tabular-nums;
     font-family: var(--mono);
     font-size: .7rem;
     color: var(--ink-2);
@@ -464,15 +469,22 @@ export const CSS = `/* ── Design tokens ────────────
     overflow: hidden;
     pointer-events: none;
   }
+  /* Scaled, not resized. This fill is rewritten on every scroll frame of a
+     document that routinely passes 9,000px, and animating the height property relaid
+     out the sidebar on each one. scaleY is compositor-only, and with the
+     handler throttled to one write per animation frame the growth is already
+     smooth — the old .1s transition only lagged the rail behind the
+     scrollbar. Nothing animates now, so there is no reduced-motion case: a
+     position indicator that tracks the scrollbar is not motion. */
   .scroll-rail::after {
     content: "";
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: calc(var(--scroll-pct, 0) * 1%);
+    height: 100%;
+    transform: scaleY(calc(var(--scroll-pct, 0) / 100));
+    transform-origin: top center;
     background: var(--accent);
-    transition: height .1s linear;
   }
-  @media (prefers-reduced-motion: reduce) { .scroll-rail::after { transition: none; } }
   .plan-nav ul { list-style: none; padding: 0; margin: 0; }
   .plan-nav > ul > li > a {
     display: flex;
@@ -636,6 +648,9 @@ export const CSS = `/* ── Design tokens ────────────
     justify-content: space-between;
     align-items: center;
     margin-bottom: .6rem;
+    /* "11 / 13 done" is rewritten every time a box is ticked. Proportional
+       figures reflow the label under the reader's cursor as it counts. */
+    font-variant-numeric: tabular-nums;
     font-family: var(--mono);
     font-size: .65rem;
     font-weight: 600;
@@ -644,6 +659,12 @@ export const CSS = `/* ── Design tokens ────────────
     letter-spacing: .16em;
   }
   .progress-bar-bg { height: 4px; background: var(--rule); border-radius: 999px; overflow: hidden; }
+  /* This one keeps its width transition, unlike the scroll rail above, and
+     the reasons are the pill and the no-JS render. scaleX on a 4px bar with
+     a 999px radius squashes the end caps into ellipses at low percentages,
+     and the server-rendered state is an inline width:N% so the bar is
+     correct with scripting off. It also animates once per checkbox tick
+     rather than once per scroll frame, so the layout cost is noise. */
   .progress-bar-fill {
     height: 100%;
     border-radius: 999px;
@@ -723,6 +744,7 @@ export const CSS = `/* ── Design tokens ────────────
   .step-number {
     flex-shrink: 0;
     width: 2rem;
+    font-variant-numeric: tabular-nums;
     font-family: var(--mono);
     color: var(--ink-3);
     font-size: .8rem;
@@ -1360,8 +1382,10 @@ export const CSS = `/* ── Design tokens ────────────
   }
   .objective-test-card {
     background: var(--moss-soft);
+    /* An even 1px rule, not a 4px tab on one edge. The fill, the border
+       tint, the Objective badge and the moss title already say "this is the
+       test that decides", three times over. */
     border: 1px solid var(--moss-line);
-    border-left: 4px solid var(--moss);
     border-radius: var(--radius);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1rem;
@@ -1385,8 +1409,89 @@ export const CSS = `/* ── Design tokens ────────────
   }
   .plan-footer .icon { opacity: .35; }
 
+  /* ── Browser surfaces ────────────────────────────────────────────
+     The parts nobody drew. A plan is a long read — this file is ~9,000px
+     tall — so the selection highlight and the scrollbar are two of the most
+     persistent elements on screen, and both shipped as OS defaults: a
+     system-blue highlight over a violet document, and a scrollbar belonging
+     to no palette here. Themed from existing tokens, so both palettes and
+     the toggle follow for free with no new names for the parity test to
+     police. Measured with the same checker as the token table: selected
+     text reads 10.8:1 (light) and 8.0:1 (dark); the thumb sits at 5.7:1 and
+     5.5:1 against paper, a target rather than a tint. ── */
+  ::selection {
+    background: var(--accent-line);
+    color: var(--ink);
+  }
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink-3) transparent;
+  }
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  /* Transparent border + content-box clip floats a 5px thumb inside an 11px
+     gutter, so it reads the same over paper, over --sunk code blocks, and
+     over any panel it crosses. */
+  ::-webkit-scrollbar-thumb {
+    background: var(--ink-3);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-2); }
+  /* Plan prose is dense with file paths; a default underline cuts straight
+     through every descender in them. */
+  a { text-underline-offset: .18em; text-decoration-thickness: .07em; }
+
   /* ── Focus styles ───────────────────────────────────────────────── */
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Touch targets ──────────────────────────────────────────────
+     The sidebar links and the theme toggle already commit to 44px; the rest
+     of the controls never got the same pass and measured 20-32px tall on a
+     phone. Finishing the decision rather than making a new one.
+
+     Buttons keep their drawn size — an invisible ::after centred on each one
+     stretches only the hit area, so the masthead does not grow a chunky
+     44px-tall back link. The step rail is a list, where taller rows are the
+     better touch design anyway, so that one takes the height for real.
+
+     Acceptance criteria are already fine: each 16px checkbox is paired with
+     a <label for> that measures 329x111, so the whole criterion is the
+     target. Nothing to add there. ── */
+  @media (pointer: coarse) {
+    .save-pdf-btn,
+    .plan-back-link,
+    .copy-prompt-btn,
+    .copy-cmd-btn,
+    .copy-src-btn,
+    .copy-workflow-btn,
+    .copy-goal-btn { position: relative; }
+    .save-pdf-btn::after,
+    .plan-back-link::after,
+    .copy-prompt-btn::after,
+    .copy-cmd-btn::after,
+    .copy-src-btn::after,
+    .copy-workflow-btn::after,
+    .copy-goal-btn::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 50%;
+      height: 44px;
+      transform: translateY(-50%);
+    }
+    a.rail-step { min-height: 44px; }
+    /* Square control, so this one needs the width too — the overlay above
+       only stretches height and inherits the button's own edges. */
+    .theme-toggle { position: relative; }
+    .theme-toggle::after {
+      content: "";
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 44px; height: 44px;
+      transform: translate(-50%, -50%);
+    }
+  }
 
   /* ── Print styles ───────────────────────────────────────────────── */
   @media print {
@@ -1473,7 +1578,11 @@ export const CSS = `/* ── Design tokens ────────────
   .resource-links a { font-weight: 600; word-break: break-word; }
   .resource-note { font-size: .78rem; color: var(--ink-3); font-style: italic; }
 
-  .plan-back-nav { margin-bottom: .5rem; }
+  /* Was .5rem under a mono "IMPLEMENTATION PLAN" eyebrow that named the one
+     thing every document in this directory already is — the back-link says
+     Plans, the title says what this one does, and the meta row carries the
+     type. With the eyebrow gone the title needs that space back. */
+  .plan-back-nav { margin-bottom: 1.1rem; }
   .plan-back-link {
     display: inline-flex;
     align-items: center;
@@ -1545,6 +1654,12 @@ export const ICON_SPRITE = `<svg xmlns="http://www.w3.org/2000/svg" style="displ
   <symbol id="ic-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
   </symbol>
+  <symbol id="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/>
+  </symbol>
+  <symbol id="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.752 15.002A9.718 9.718 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/>
+  </symbol>
 </svg>`;
 
 export const SCRIPT = `/* ── Theme toggle ───────────────────────────────────────────── */
@@ -1562,7 +1677,11 @@ function syncThemeButton(btn) {
   var dark = resolvedTheme() === 'dark';
   btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
   btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
-  btn.textContent = dark ? 'Light' : 'Dark';
+  /* The icon names the destination, not the current state — a sun while dark
+     means "go light", which is what aria-label has always said. Swap the
+     symbol reference; never innerHTML, so nothing here can inject markup. */
+  var use = btn.querySelector('use');
+  if (use) use.setAttribute('href', dark ? '#ic-sun' : '#ic-moon');
 }
 
 function toggleTheme(btn) {
@@ -1772,15 +1891,28 @@ function copyPrompt(btn) {
   }
 
   /* ── Scroll rail ─────────────────────────────────────────────── */
+  /* One style write per animation frame. The listener used to write on every
+     scroll event, which on a trackpad is several per frame and each one read
+     scrollHeight — a forced layout on the scroll hot path. */
   var rail = document.querySelector('.scroll-rail');
   if (rail) {
-    function updateRail() {
+    var raf = window.requestAnimationFrame
+      ? window.requestAnimationFrame.bind(window)
+      : function (fn) { return setTimeout(fn, 16); };
+    var railQueued = false;
+    function writeRail() {
+      railQueued = false;
       var maxY = document.documentElement.scrollHeight - window.innerHeight;
       var pct  = maxY > 0 ? (window.scrollY / maxY * 100).toFixed(1) : 0;
       rail.style.setProperty('--scroll-pct', pct);
     }
+    function updateRail() {
+      if (railQueued) return;
+      railQueued = true;
+      raf(writeRail);
+    }
     window.addEventListener('scroll', updateRail, { passive: true });
-    updateRail();
+    writeRail();
   }
 
   /* ── Step rail disclosure ────────────────────────────────────── */
@@ -1934,14 +2066,13 @@ export function header({ title, status, effortLabel, created, repo, type, protot
         Plans
       </a>
     </div>
-    <div class="plan-doc-type">Implementation Plan</div>
     <div class="plan-header-top">
       <h1 class="plan-title">${title}</h1>
       <div class="plan-header-actions">
         <button class="save-pdf-btn" type="button" onclick="savePDF()"
                 aria-label="Save this plan as PDF">Save as PDF</button>
         <button class="theme-toggle" type="button" id="theme-toggle" onclick="toggleTheme(this)"
-                aria-pressed="false" aria-label="Use dark theme">Dark</button>
+                aria-pressed="false" aria-label="Use dark theme"><svg class="icon" aria-hidden="true"><use href="#ic-moon"/></svg></button>
         <span class="effort-badge" aria-label="Effort level">${effortLabel}</span>${prototypeLink}${designLink}${issueLink}
         <span class="status-badge">${status}</span>
       </div>
