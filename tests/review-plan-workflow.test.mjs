@@ -5,7 +5,7 @@
 // instead, and that the shipped workflow script parses.
 // Run: node tests/review-plan-workflow.test.mjs
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -73,7 +73,7 @@ check('SKILL.md: lists Workflow in allowed-tools',
 // skill has always carried a "## Workflow" heading, so a substring check on
 // the word alone passes before the change and can never fail.
 check('SKILL.md: documents the Workflow call inputs (script + args)',
-  /Workflow[^\n]*\bscript\b|`script`/.test(skill) && /`args`/.test(skill));
+  /Workflow[^\n]*`?script`?|`script`[^\n]*Workflow/.test(skill) && /`args`/.test(skill));
 
 check('SKILL.md: passes the script inline rather than by plugin-root path',
   skill.includes('review-workflow.mjs') && !skill.includes('${CLAUDE_PLUGIN_ROOT}'));
@@ -134,11 +134,10 @@ if (existsSync(SCRIPT)) {
   check('script: pipelines review into verify rather than barriering',
     script.includes('pipeline('));
 
-  check('script: verifies only high/critical severity by default',
-    script.includes('critical') && script.includes('high'));
-
-  check('script: supports --deep to lift the severity filter',
-    script.includes('deep'));
+  // Severity filtering, --deep, and the unverified log are asserted
+  // behaviourally below by running the script — a substring check on
+  // 'critical'/'high'/'deep' passes on the schema enum and the comments alone,
+  // so it stays green even if MUST_VERIFY or the flag wiring is broken.
 
   check('script: logs how many findings went unverified',
     /log\([^)]*unverified/i.test(script));
@@ -164,6 +163,206 @@ const bgAgent = existsSync(BG_AGENT) ? readFileSync(BG_AGENT, 'utf8') : '';
 
 check('agent-review-plan.md: grants the Workflow tool',
   /^tools:.*\bWorkflow\b/m.test(frontmatter(bgAgent)));
+
+// ── Behavioural: run the script against a stubbed runtime ──────────────────
+// The substring checks above cannot tell a working severity filter from a
+// broken one — every keyword they look for also appears in the schema enum and
+// the comments. These run the script instead, with stubs matching the
+// documented runtime contract, and assert what actually comes back.
+
+/**
+ * Faithful stand-in for the runtime's `parallel`: a barrier that resolves a
+ * rejected thunk to null rather than rejecting the whole call.
+ *
+ * @param {Array<() => Promise<any>>} thunks - Work to run concurrently.
+ * @returns {Promise<any[]>} One slot per thunk; null where it rejected.
+ */
+const stubParallel = (thunks) =>
+  Promise.all(thunks.map((t) => Promise.resolve().then(t).catch(() => null)));
+
+/**
+ * Faithful stand-in for the runtime's `pipeline`: each item runs every stage
+ * independently, with no barrier between stages. A stage that throws drops
+ * that item to null and skips its remaining stages.
+ *
+ * @param {any[]} items - Work items.
+ * @param {...Function} stages - Stage callbacks, called (prev, item, index).
+ * @returns {Promise<any[]>} One result per item.
+ */
+const stubPipeline = (items, ...stages) =>
+  Promise.all(items.map(async (item, i) => {
+    let acc = item;
+    for (const stage of stages) {
+      try {
+        acc = await stage(acc, item, i);
+      } catch {
+        return null;
+      }
+    }
+    return acc;
+  }));
+
+/**
+ * Execute the workflow script body with stubs.
+ *
+ * @param {string} source - Raw script contents.
+ * @param {object} runArgs - Value exposed to the script as `args`.
+ * @param {Function} agentStub - Stands in for `agent(prompt, opts)`.
+ * @returns {Promise<{result: any, logs: string[]}>} The script's return value.
+ */
+function runScript(source, runArgs, agentStub) {
+  const logs = [];
+  const body = new AsyncFunction(
+    'args', 'agent', 'pipeline', 'parallel', 'log', 'phase', 'budget', 'workflow',
+    source.replace(/^export /gm, ''),
+  );
+  return body(runArgs, agentStub, stubPipeline, stubParallel, (m) => logs.push(String(m)),
+    () => {}, { total: null, spent: () => 0, remaining: () => Infinity }, async () => {})
+    .then((result) => ({ result, logs }));
+}
+
+const REVIEWERS = [
+  { key: 'architecture', agentType: 'plan-agent:plan-reviewer-architecture' },
+  { key: 'testability', agentType: 'plan-agent:plan-reviewer-testability' },
+];
+
+/** One finding per severity, so the filter has something to discriminate on. */
+const FOUR_SEVERITIES = {
+  assessment: 'ok',
+  findings: [
+    { target: 'a', action: 'edit', content: 'c', rationale: 'r', severity: 'critical' },
+    { target: 'b', action: 'edit', content: 'c', rationale: 'r', severity: 'high' },
+    { target: 'c', action: 'edit', content: 'c', rationale: 'r', severity: 'medium' },
+    { target: 'd', action: 'edit', content: 'c', rationale: 'r', severity: 'low' },
+  ],
+};
+
+if (existsSync(SCRIPT)) {
+  const source = readFileSync(SCRIPT, 'utf8');
+  const base = { planPath: '/tmp/plan.md', reviewers: REVIEWERS };
+
+  // Counts the verify calls so the severity filter is measured, not inferred.
+  const countingAgent = (counter, verdict = { refuted: false, reason: 'holds' }) =>
+    async (_prompt, opts) => {
+      if (opts.phase === 'Review') return FOUR_SEVERITIES;
+      counter.n++;
+      return verdict;
+    };
+
+  // ── Severity filter ──
+  const dflt = { n: 0 };
+  const { result: r1 } = await runScript(source, base, countingAgent(dflt));
+
+  // 2 reviewers x 4 findings = 8; only critical+high earn a skeptic = 4.
+  check('behaviour: default verifies only critical and high (4 of 8)', dflt.n === 4);
+  check('behaviour: default leaves the other 4 findings unverified',
+    r1.stats.unverified === 4 && r1.stats.verified === 4);
+  check('behaviour: every finding survives when nothing is refuted',
+    r1.stats.surviving === 8 && r1.stats.total === 8);
+  check('behaviour: only high/critical carry a verdict',
+    r1.findings.filter((f) => f.verdict !== null)
+      .every((f) => ['critical', 'high'].includes(f.severity)));
+
+  // ── --deep lifts the filter ──
+  const deep = { n: 0 };
+  const { result: r2 } = await runScript(source, { ...base, deep: true }, countingAgent(deep));
+
+  check('behaviour: --deep verifies every finding (8 of 8)', deep.n === 8);
+  check('behaviour: --deep leaves nothing unverified',
+    r2.stats.unverified === 0 && r2.stats.deep === true);
+
+  // ── A refuted finding is dropped before synthesis ──
+  const { result: r3 } = await runScript(source, base,
+    countingAgent({ n: 0 }, { refuted: true, reason: 'already handled' }));
+
+  check('behaviour: refuted findings are dropped, unverified ones kept',
+    r3.stats.refuted === 4 && r3.stats.surviving === 4);
+  check('behaviour: no surviving finding is marked refuted',
+    r3.findings.every((f) => !f.verdict?.refuted));
+
+  // ── A dead reviewer is reported, not silently counted as clean ──
+  // Regression: stage 2 used to coalesce a null lens to [], which is truthy,
+  // so lensesLost could never be non-zero and a crashed lens rendered
+  // identically to one that ran and found nothing.
+  const { result: r4, logs: l4 } = await runScript(source, base, async (_p, opts) => {
+    if (opts.phase === 'Review') {
+      return opts.label === 'review:testability' ? null : FOUR_SEVERITIES;
+    }
+    return { refuted: false, reason: 'holds' };
+  });
+
+  check('behaviour: a dead reviewer is counted as lost',
+    r4.stats.lensesLost === 1 && r4.stats.reviewersRun === 1);
+  check('behaviour: a dead reviewer is announced to the user',
+    l4.some((m) => /reviewer\(s\) failed/i.test(m)));
+  check('behaviour: only the surviving lens contributes findings',
+    r4.stats.total === 4 && r4.findings.every((f) => f.reviewer === 'architecture'));
+
+  // ── A crashed verifier is not reported as "below threshold" ──
+  // Regression: a failed verify agent resolved to null, which was
+  // indistinguishable from "never sent", so the run told the user to re-run
+  // with --deep — advice that cannot fix a broken verifier.
+  const { result: r5, logs: l5 } = await runScript(source, base, async (_p, opts) => {
+    if (opts.phase === 'Review') return FOUR_SEVERITIES;
+    return null; // every skeptic dies
+  });
+
+  check('behaviour: a crashed verifier is tracked separately from unverified',
+    r5.stats.verifierFailed === 4 && r5.stats.unverified === 4);
+  check('behaviour: a crashed verifier does not count as verified',
+    r5.stats.verified === 0);
+  check('behaviour: a finding whose verifier died is kept, not dropped',
+    r5.stats.surviving === 8);
+  check('behaviour: the crashed-verifier log does not blame the severity filter',
+    l5.some((m) => /verifier failed/i.test(m) && /--deep will not help/i.test(m)));
+
+  // ── Guard rails ──
+  let threw = '';
+  await runScript(source, { reviewers: REVIEWERS }, async () => FOUR_SEVERITIES)
+    .catch((e) => { threw = String(e); });
+  check('behaviour: a missing planPath fails loudly', /planPath is required/.test(threw));
+
+  threw = '';
+  await runScript(source, { planPath: '/tmp/p.md', reviewers: [] }, async () => FOUR_SEVERITIES)
+    .catch((e) => { threw = String(e); });
+  check('behaviour: an empty reviewer roster fails loudly', /reviewers is empty/.test(threw));
+}
+
+// ── The reviewer agents describe the contract they are actually called under ──
+// agentType reuse makes each callee's own prompt part of the caller's contract.
+// These files told the model to call SendMessage with a prose template — an
+// Agent Teams leftover that survived the engine swap, unfollowable (none of
+// them grant SendMessage) and silent about the fields the schema requires.
+
+const AGENTS_DIR = join(ROOT, 'kit', 'plugins', 'plan-agent', 'agents');
+const reviewerFiles = existsSync(AGENTS_DIR)
+  ? readdirSync(AGENTS_DIR).filter((f) => f.startsWith('plan-reviewer-') && f.endsWith('.md'))
+  : [];
+
+check('ten plan-reviewer agent definitions are present', reviewerFiles.length === 10);
+
+const stillProse = [];
+const missingFields = [];
+
+for (const file of reviewerFiles) {
+  const body = readFileSync(join(AGENTS_DIR, file), 'utf8');
+  const grants = /^tools:.*\bSendMessage\b/m.test(frontmatter(body));
+
+  // A positive instruction to use it. The rewritten section names SendMessage
+  // only to forbid it, so match the instruction, not the bare word.
+  if (/call `?SendMessage`? with/i.test(body) && !grants) stillProse.push(file);
+
+  // The schema's field names must appear, or the lens is told nothing about
+  // the shape it has to produce.
+  if (!['target', 'action', 'content', 'rationale', 'severity']
+    .every((f) => body.includes(`\`${f}\``))) missingFields.push(file);
+}
+
+check(`no reviewer agent instructs an ungranted SendMessage${stillProse.length ? ` (${stillProse.join(', ')})` : ''}`,
+  reviewerFiles.length === 10 && stillProse.length === 0);
+
+check(`every reviewer agent documents the schema fields it must return${missingFields.length ? ` (${missingFields.join(', ')})` : ''}`,
+  reviewerFiles.length === 10 && missingFields.length === 0);
 
 // ── Summary ────────────────────────────────────────────────────────────────
 

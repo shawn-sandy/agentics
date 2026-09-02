@@ -85,7 +85,7 @@ This template is used to structure the team's synthesis of reviewer findings and
 - Never modify `<style>` or `<script>` blocks.
 - Skip rows whose target element cannot be matched in the source plan; every skipped row feeds Step 7's applied/skipped tally.
 - The `Source / Rationale` column names the originating reviewer plus a one-line why for each edit; it feeds the per-finding triage in Step 6b — Walkthrough & Analysis.
-- The `Verdict` column records whether an independent skeptic challenged the finding and failed to refute it (`verified`), or whether it was never challenged because its severity fell below the verify threshold (`unverified — below verify threshold`). Refuted findings never reach this table — the workflow drops them before synthesis. Show this column in the Step 6b triage: an unverified finding is a suggestion, a verified one has already survived an attempt to kill it, and the developer deserves to know which is which before accepting either.
+- The `Verdict` column records one of three outcomes: an independent skeptic challenged the finding and failed to refute it (`verified`); it was never challenged because its severity fell below the verify threshold (`unverified — below verify threshold`); or it was sent for challenge but the skeptic itself failed (`unverified — verifier failed`). That last case is not a severity skip — `--deep` will not fix it; only re-running will. Refuted findings never reach this table — the workflow drops them before synthesis. Show this column in the Step 6b triage: an unverified finding is a suggestion, a verified one has already survived an attempt to kill it, and the developer deserves to know which is which before accepting either.
 
 ### Triage Outcome
 

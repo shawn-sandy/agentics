@@ -71,6 +71,14 @@ if (!reviewers.length) throw new Error('review-workflow: args.reviewers is empty
 const MUST_VERIFY = ['critical', 'high']
 
 /**
+ * Stands in for a verdict when the skeptic itself failed. Distinct from
+ * `verdict: null`, which means the finding was never sent for verification.
+ * `refuted: false` keeps the finding alive — a crashed verifier is not
+ * evidence against a finding.
+ */
+const VERIFIER_FAILED = { refuted: false, reason: 'The verifier failed to return a verdict.', failed: true }
+
+/**
  * Whether a finding gets its own skeptic. `--deep` lifts the severity filter
  * so every finding is refuted; the default keeps the agent count near 18
  * instead of ~50 by trusting low and medium findings to the human triage gate.
@@ -122,8 +130,13 @@ const reviewed = await pipeline(
   // Stage 2 — refute this reviewer's high-severity findings as soon as IT
   // finishes, without waiting for the other reviewers. No barrier: a slow
   // lens never holds up verification of a fast one's findings.
+  // A dead lens returns null here, NOT an empty array. `parallel([])` resolves
+  // to `[]`, which is truthy — so coalescing a dead reviewer to no-findings
+  // would make it indistinguishable from a lens that ran clean and found
+  // nothing, and `lensesLost` below could never be non-zero.
   (result, r) => {
-    const findings = (result?.findings ?? []).map((f) => ({ ...f, reviewer: r.key }))
+    if (!result) return null
+    const findings = (result.findings ?? []).map((f) => ({ ...f, reviewer: r.key }))
     return parallel(
       findings.map((f, i) => () => {
         if (!shouldVerify(f)) return Promise.resolve({ ...f, verdict: null })
@@ -131,37 +144,57 @@ const reviewed = await pipeline(
           label: `verify:${r.key}:${i + 1}`,
           phase: 'Verify',
           schema: VERDICT,
-        }).then((v) => ({ ...f, verdict: v }))
+        })
+          // A skeptic that dies resolves to null (or throws). Either way the
+          // finding is kept with an honest verdict: dropping it would let an
+          // infrastructure failure silently delete a critical finding, and
+          // leaving `verdict: null` would report it as "below threshold".
+          .then((v) => ({ ...f, verdict: v ?? VERIFIER_FAILED }))
+          .catch(() => ({ ...f, verdict: VERIFIER_FAILED }))
       }),
     )
   },
 )
 
-// A reviewer that died mid-run drops to null here rather than throwing, which
-// is what replaces the old respawn-once-then-mark-unavailable bookkeeping.
-const all = reviewed.filter(Boolean).flat().filter(Boolean)
+// A dead lens is `null` (stage 2 returns it deliberately); a live one is an
+// array. This is the count that replaces the old respawn-once-then-mark-
+// unavailable bookkeeping, so it has to distinguish the two.
+const liveLenses = reviewed.filter(Boolean)
+const lensesLost = reviewers.length - liveLenses.length
+
+// The trailing filter is not redundant: `parallel()` yields null for a thunk
+// that rejected, so a verify thunk that failed outside its own catch lands here.
+const all = liveLenses.flat().filter(Boolean)
 
 // A finding survives unless a skeptic actually refuted it. An unverified
 // finding is kept, not silently dropped — the human triage gate decides it.
 const surviving = all.filter((f) => !f.verdict?.refuted)
 const refuted = all.length - surviving.length
-const unverifiedCount = surviving.filter((f) => f.verdict === null).length
-const verifiedCount = surviving.length - unverifiedCount
 
-const lensesLost = reviewers.length - reviewed.filter(Boolean).length
+// Three distinct states, deliberately not collapsed: never sent (below the
+// severity filter), sent but the verifier broke, and genuinely survived a
+// challenge. Reporting the middle one as "below threshold" would tell the user
+// to re-run with --deep, which cannot fix a crashed verifier.
+const unverifiedCount = surviving.filter((f) => f.verdict === null).length
+const verifierFailedCount = surviving.filter((f) => f.verdict?.failed === true).length
+const verifiedCount = surviving.length - unverifiedCount - verifierFailedCount
+
 if (lensesLost > 0) log(`${lensesLost} reviewer(s) failed and returned nothing — their lens is missing from this review.`)
 
 log(`${surviving.length} findings stand: ${verifiedCount} survived refutation, ${unverifiedCount} unverified (below high severity; re-run with --deep to check them). ${refuted} refuted and dropped.`)
+if (verifierFailedCount > 0) log(`${verifierFailedCount} finding(s) were sent for verification but their verifier failed — treat them as unchallenged. --deep will not help; re-run the review.`)
 
 return {
   findings: surviving,
   stats: {
-    reviewersRun: reviewed.filter(Boolean).length,
+    reviewersRun: liveLenses.length,
     reviewersRequested: reviewers.length,
+    lensesLost,
     total: all.length,
     surviving: surviving.length,
     verified: verifiedCount,
     unverified: unverifiedCount,
+    verifierFailed: verifierFailedCount,
     refuted,
     deep,
   },

@@ -160,10 +160,10 @@ Reviewers read the **full plan HTML** with `Read`. They do not run
 Users who want the cheaper spec read can run the extractor themselves with a
 literal path and paste the result in.
 
-**Failures need no handling here.** A reviewer that dies resolves to `null`
-inside the script's `parallel()` rather than throwing, and the script filters
-those out and `log()`s how many lenses were lost. Do not respawn, do not wait,
-do not poll — the tool returns when the run is done.
+**Failures need no handling here.** A reviewer that dies is returned as `null`
+by the script's second pipeline stage rather than throwing; the script counts
+it in `stats.lensesLost` and `log()`s that the lens is missing. Do not respawn,
+do not wait, do not poll — the tool returns when the run is done.
 
 Announce progress: "`Running 7 core reviewers`" or "`Running 10 reviewers (7 core + 3 UI)`".
 
@@ -177,8 +177,11 @@ that every existing cross-reference to Step 6b, Step 7 and Step 8, here and in
 Read `references/output-template.md`. The workflow returned
 `{findings, stats}` — `findings` is an array of validated objects, each
 carrying `reviewer`, `target`, `action`, `content`, `rationale`, `severity`,
-and `verdict` (an object with `refuted` and `reason`, or `null` when the
-finding was below the verify threshold). **Populate the template from those
+and `verdict`, which has **three** states: an object with `refuted: false` (a
+skeptic challenged it and failed to refute it), `null` (never sent, because its
+severity was below the verify threshold), or an object with `failed: true`
+(sent, but the skeptic itself died). Keep the last two apart — telling a user to
+re-run with `--deep` cannot fix a crashed verifier. **Populate the template from those
 fields directly. Never re-derive a finding from prose** — the round-trip
 through free text is where findings used to go missing, and it is the reason
 this data is typed.
@@ -189,12 +192,13 @@ Populate the template:
 - **Role-by-Role:** Group `findings` by their `reviewer` field. A reviewer the script reported as lost has no findings — say so rather than leaving its subsection blank.
 - **Agreements & Conflicts:** Where reviewers agree (amplify), conflict (explain tradeoff). Two findings with the same `target` are the signal to look at.
 - **Highest-Risk Issues:** Rank by `severity`, `critical` first.
-- **Inline Edits to Apply:** One row per finding — `target`, `action`, `content`, Source / Rationale (its `reviewer` plus `rationale`), and **Verdict**. The verdict column reads `verified` when `verdict.refuted` is false, or `unverified — below verify threshold` when `verdict` is `null`. Refuted findings never reach this table; the script already dropped them. Step 6b's triage presents Source / Rationale and Verdict alongside each finding, so the user can see which findings survived a challenge and which were never challenged.
+- **Inline Edits to Apply:** One row per finding — `target`, `action`, `content`, Source / Rationale (its `reviewer` plus `rationale`), and **Verdict**. The verdict column reads `verified` when `verdict.refuted` is false, `unverified — below verify threshold` when `verdict` is `null`, and `unverified — verifier failed` when `verdict.failed` is true. Refuted findings never reach this table; the script already dropped them. Step 6b's triage presents Source / Rationale and Verdict alongside each finding, so the user can see which findings survived a challenge and which were never challenged.
 - **Revised Plan:** (Filled after Step 7.)
 
 Carry `stats` into the Executive Summary verbatim — how many findings stand,
-how many survived refutation, how many went unverified, how many were refuted
-and dropped, and whether any reviewer was lost. A review that silently omits
+how many survived refutation, how many went unverified, how many had their
+verifier fail, how many were refuted and dropped, and whether any reviewer was
+lost (`stats.lensesLost`). A review that silently omits
 its own coverage reads as exhaustive when it is not.
 
 **Rejection path:** If the team consensus is "reject", populate the reject-only subsections per the template. Otherwise, omit reject-only content.
@@ -212,7 +216,7 @@ An interactive triage of the synthesized findings before any edits are applied.
 
 Declining the gate is **not** equivalent to `--skip-analysis`: the gate was still shown. `--skip-analysis` suppresses the gate itself.
 
-**Per-finding triage loop:** Iterate the rows of the "Inline Edits to Apply" table, batching at most 4 findings per `AskUserQuestion` call (one question per finding). Each question presents the finding's Source / Rationale (originating reviewer + why, from the synthesis table), its **Verdict** (`verified`, or `unverified — below verify threshold`), and its proposed content, with options:
+**Per-finding triage loop:** Iterate the rows of the "Inline Edits to Apply" table, batching at most 4 findings per `AskUserQuestion` call (one question per finding). Each question presents the finding's Source / Rationale (originating reviewer + why, from the synthesis table), its **Verdict** (`verified`, `unverified — below verify threshold`, or `unverified — verifier failed`), and its proposed content, with options:
 - **Accept** — keep the edit as-is.
 - **Modify** — keep the edit, marked for revision.
 - **Reject** — drop the edit.
