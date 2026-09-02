@@ -51,7 +51,7 @@ VALID_TOOLS = {
     # Web
     "WebFetch", "WebSearch",
     # Orchestration and session
-    "Agent", "Skill", "SlashCommand", "TodoWrite",
+    "Agent", "Skill", "SlashCommand", "TodoWrite", "Workflow",
     "AskUserQuestion", "ExitPlanMode", "ToolSearch",
     # Publishing
     "Artifact", "SendUserFile",

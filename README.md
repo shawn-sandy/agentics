@@ -407,7 +407,7 @@ claude --plugin-dir ./kit/plugins/code-testing-agent
 
 #### `plan-agent`
 
-Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with a built-in structured interview; it authors the plan and stops, never writing source files. Implement a plan that already exists with `/plan-agent:build [<plan>]`, which walks the steps, ticks the spec, re-renders, and owns all three completion gates — acceptance criteria, end-to-end verification, and completion checklist. Turn a vague idea into a decision-complete proposal — saved as a copy-pasteable prompt under `docs/prompts/` — with `/plan-agent:build-proposal`, spawn a ten-reviewer Agent Team with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`, publish a multi-artboard design canvas for a plan with `/plan-agent:design`, or bundle a plan and its related HTML into one tabbed hub artifact with `/plan-agent:publish-hub`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans, and publishes them to a claude.ai artifact by default — the repo keeps the `.md` spec, and `--file` also commits the rendered HTML beside it. PostToolUse hooks auto-regenerate the plans, prototypes, and designs gallery indexes and flag prototype/design drift; a filename hook enforces verb-target kebab-case.
+Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with a built-in structured interview; it authors the plan and stops, never writing source files. Implement a plan that already exists with `/plan-agent:build [<plan>]`, which walks the steps, ticks the spec, re-renders, and owns all three completion gates — acceptance criteria, end-to-end verification, and completion checklist. Turn a vague idea into a decision-complete proposal — saved as a copy-pasteable prompt under `docs/prompts/` — with `/plan-agent:build-proposal`, run a ten-reviewer Workflow with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`, publish a multi-artboard design canvas for a plan with `/plan-agent:design`, or bundle a plan and its related HTML into one tabbed hub artifact with `/plan-agent:publish-hub`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans, and publishes them to a claude.ai artifact by default — the repo keeps the `.md` spec, and `--file` also commits the rendered HTML beside it. PostToolUse hooks auto-regenerate the plans, prototypes, and designs gallery indexes and flag prototype/design drift; a filename hook enforces verb-target kebab-case.
 
 **Commands:**
 
@@ -415,7 +415,7 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 |---------|-------------|
 | `/plan-agent:fix <objective>` | Author and implement a fix plan — the `/plan-agent:build` chain, typed as a fix |
 | `/plan-agent:refactor <objective>` | Author and implement a refactor plan — the `/plan-agent:build` chain, typed as a refactor |
-| `/plan-agent:review-plan-bg <path>` | Run the ten-reviewer plan-review Agent Team in the background — validates the path, spawns `agent-review-plan`, and returns an ack immediately |
+| `/plan-agent:review-plan-bg <path>` | Run the ten-reviewer plan-review Workflow in the background — validates the path, spawns `agent-review-plan`, and returns an ack immediately |
 | `/plan-agent:deep-grill [plan-file-path]` | Walk each decision branch in a plan with focused questions and codebase exploration |
 | `/plan-agent:plan-status [plan-file-path] [--all]` | Check and update a plan's lifecycle status (todo, in-progress, completed) and type, one file or in bulk |
 | `/plan-agent:documenting-plans [plan-file-path]` | Generate developer-friendly documentation at `docs/<slug>.md` from a completed plan |
@@ -432,7 +432,7 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | `build-feature` | Turn a feature idea into a team feature doc that splits into sized, dependency-ordered sub-features, each of which becomes its own plan |
 | `build-fleet` | Ship a backlog of plans in parallel — one isolated worktree agent per plan, each building its plan, opening a PR, and watching CI |
 | `build-proposal` | Turn a vague idea into a decision-complete proposal, saved as a copy-pasteable prompt (`docs/prompts/proposal-<slug>.md`) authored by delegating to `prompt` — researches web + codebase, separates facts from decisions, then hands off to `implementation-plan`; also writes the deprecated `docs/proposals/<slug>.md` copy through 6.0.x; auto-activates on idea / "should-we" / compare-and-align intent |
-| `review-plan` | Spawn a ten-reviewer Agent Team (architecture, completeness, testability, risk, conventions, product, security, + UI-conditional UX, accessibility, and frontend) to review a plan, synthesize findings, and apply improvements in place |
+| `review-plan` | Run a ten-reviewer Workflow (architecture, completeness, testability, risk, conventions, product, security, + UI-conditional UX, accessibility, and frontend) to review a plan, adversarially verify the high-severity findings, and apply what survives in place |
 | `finalize-plan` | Review a plan for completion evidence with per-criterion verification and mark it completed — manual invoke only |
 | `prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) across five types (`system`, `task`, `creative`, `analytical`, `proposal`) — command only, with a `commands/prompt.md` wrapper so other skills can reach it |
 | `setup-sites` | Scaffold the GitHub Pages deploy pipeline (workflow, `.nojekyll`, landing hub, preview script) into any repo so `docs/` HTML publishes to a public URL — command (`/plan-agent:setup-sites`) or auto-activates on "set up / publish GitHub Pages" intent |
@@ -451,11 +451,11 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | Agent | Purpose |
 |-------|---------|
 | `agent-review-plan` | Background plan-review agent — invokes the `review-plan` skill with `--background` and reports the updated path on completion |
-| `plan-reviewer-architecture` · `-completeness` · `-testability` · `-risk` · `-conventions` · `-product` · `-security` | Seven core reviewer teammates, always spawned by the Agent Team |
+| `plan-reviewer-architecture` · `-completeness` · `-testability` · `-risk` · `-conventions` · `-product` · `-security` | Seven core reviewer lenses, always run by the review Workflow |
 | `plan-reviewer-ux` · `-accessibility` · `-frontend` | Three UI-conditional reviewer teammates, spawned when UI signals are detected |
 | `plan-documenter` | Batch documentation agent — scans the plans directory for completed plans with no `docs/` counterpart and runs `documenting-plans` on each |
 
-> The `review-plan` Agent Team requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and Claude Code ≥ 2.1.32.
+> The `review-plan` Workflow requires the `Workflow` tool — no feature flag, and no minimum version to set.
 
 **Hooks:**
 
@@ -796,7 +796,7 @@ Total: 66 skills across 11 plugins.
 | [git-agent](./kit/plugins/git-agent/README.md) | 4.20.1 | development | 5 commands, 8 skills, 5 agents, 3 hooks |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.1.4 | productivity | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.23.4 | productivity | 1 command, 17 skills |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 9.11.0 | productivity | 9 commands, 18 skills, 12 agents, 2 hooks |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 9.12.0 | productivity | 9 commands, 18 skills, 12 agents, 2 hooks |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.12.0 | development | 3 commands, 5 skills |
 | [content-tools](./kit/plugins/content-tools/README.md) | 1.1.1 | documentation | 1 skill |
 
