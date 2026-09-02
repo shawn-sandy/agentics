@@ -38,7 +38,7 @@ Runs the PR readiness gate on the current branch and squash-merges only when gre
 - **Command** — `/git-agent:merge` — background variant `/git-agent:merge-bg [optional PR url or number]`
 - **Say it instead** — "is this PR ready to merge?"
 - **What happens** — Resolves the branch's PR, gates on `mergeable`, `mergeStateStatus`, every required check via `gh pr checks --required`, and `reviewDecision`, re-fetches all of it, asks for approval, then runs `gh pr merge --squash --match-head-commit <headRefOid>`.
-- **Watch out** — Green checks alone never authorize a merge, and `--delete-branch` is never passed; a dirty working tree triggers an ask (files listed) rather than a stop, and nothing is stashed, committed, or cleaned. An *absent* check is not a passing one: when the run list is empty, a run has no jobs, or every job failed with a zero-byte `--log-failed`, CI never dispatched (a billing block, an expired token, a workflow awaiting approval) and the summary says so by name — never "CI green".
+- **Watch out** — Green checks alone never authorize a merge, and `--delete-branch` is never passed; a dirty working tree triggers an ask (files listed) rather than a stop, and nothing is stashed, committed, or cleaned. An *absent* check is not a passing one: when the run list for the head commit is empty or its run has no jobs, CI never dispatched (a billing block, an expired token, a workflow awaiting approval) and the summary says so by name — never "CI green". A run whose jobs *started* is dispatched no matter what its logs return, so an unreadable log is reported as "CI failed — logs unavailable" and named down to the failing job and step, not written off as an external blocker.
 
 ## post-merge-cleanup
 
@@ -73,8 +73,8 @@ Runs the whole pipeline — branch, verify, commit, PR, CI watch, bounded autofi
 
 - **Command** — `/git-agent:ship-autonomous`
 - **Say it instead** — "ship this autonomously and watch CI until it's green"
-- **What happens** — Branches, runs tests, lint, and a browser preview, delegates the commit to commit-agent and the PR to pr-agent, then subscribes to PR events (falling back to polling `gh pr checks`) and ends the turn, handling each event as it arrives.
-- **Watch out** — Failing tests or lint, or any console or server error, stop the pipeline; autofix is capped at 3 attempts per failing check and limited to lint, typecheck, and peer-deps; the merge needs an explicit approval on green pinned to `headRefOid`, and branch deletion requires its own separate yes.
+- **What happens** — Checks the session length first (Step 0) and offers to clear, background, or continue, then branches, runs tests, lint, and a browser preview, delegates the commit to commit-agent and the PR to pr-agent, and finally subscribes to PR events (falling back to polling `gh pr checks`) and ends the turn, handling each event as it arrives.
+- **Watch out** — The context guard is skipped on a short session, and picking `clear` **stops** the run — a skill cannot clear its own context, so you run `/clear` and re-invoke; `background` chains `ship-bg` then `ship-ci-bg` for fresh context windows but still returns to the foreground to merge. Failing tests or lint, or any console or server error, stop the pipeline; autofix is capped at 3 attempts per failing check and limited to lint, typecheck, and peer-deps; the merge needs an explicit approval on green pinned to `headRefOid`, and branch deletion requires its own separate yes.
 
 ## Related commands
 
