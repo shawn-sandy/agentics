@@ -11,7 +11,7 @@ Implements a plan file that already exists.
 - **Command** — `/plan-agent:build [<plan.md|plan.html>] [<objective>] [--type feature|fix|refactor|docs|chore] [--dir <path>]`
 - **Say it instead** — "implement the plan in docs/plans/add-dark-mode.md"
 - **What happens** — Resolves the plan (with no path it first chains into authoring one), sets `status: in-progress`, walks each step ticking the markdown spec and re-rendering the HTML, then runs the acceptance-criteria, end-to-end verification, and completion checklist gates.
-- **Watch out** — The markdown spec is the source of truth: ticking a box in the browser is discarded on the next re-render, and the skill leaves everything uncommitted unless you ask it to commit.
+- **Watch out** — The markdown spec is the source of truth: ticking a box in the browser is discarded on the next re-render, and the skill leaves everything uncommitted unless you ask it to commit. For a plan published to claude.ai the completion gate renders to the scratchpad and checks that, never writing the `<stem>.html` the author chose not to publish — a sibling would flip the plan's gallery card off the shared artifact onto a local path.
 
 ## build-feature
 
@@ -53,10 +53,10 @@ Stress-tests a plan's decisions node by node with focused questions.
 
 Publishes a design canvas for a plan, so it can be seen before it is built.
 
-- **Command** — `/plan-agent:design <plan.html | one-line idea | image path | figma-url>`
+- **Command** — `/plan-agent:design <plan.html|plan.md | one-line idea | image path | figma-url>`
 - **Say it instead** — "design this plan" / "mock up the screens for this plan"
 - **What happens** — Derives one artboard per user-facing plan step, echoes the list back for correction, then hands authoring and publishing to Claude Code's built-in `design` skill. Working artboards land under `docs/designs/<plan-slug>/`, and the published canvas URL plus that directory are written back as `design:` and `design-dir:` so the plan header gains a **View design** link and `build` reads the artboards as the visual spec.
-- **Watch out** — Steps with no user-facing surface (a version bump, a test file) get no artboard by design, and the drift check never flags them; it also never compares your local artboards against the published canvas, so editing the canvas in the editor is expected, not drift. A plan with no UI signals warns in one line and proceeds rather than refusing.
+- **Watch out** — A first token ending in `.html` or `.md` is a plan path, so an artifact-published plan (a `.md` spec with no sibling HTML) is designed against, not treated as a raw idea string. Steps with no user-facing surface (a version bump, a test file) get no artboard by design, and the drift check never flags them; it also never compares your local artboards against the published canvas, so editing the canvas in the editor is expected, not drift. A plan with no UI signals warns in one line and proceeds rather than refusing.
 
 ## documenting-plans
 
@@ -73,8 +73,8 @@ Marks a plan completed after verifying the code actually shipped.
 
 - **Command** — `/plan-agent:finalize-plan [plan-file.md|.html] [--all] [--dir <path>]`
 - **Say it instead** — Not available; this skill is command-only (`disable-model-invocation: true`).
-- **What happens** — Scores codebase evidence per acceptance criterion, runs the objective-verification test, shows a findings table for confirmation, then writes `status`, `- [x]` criteria, step markers, and a `## Completion Report` into the spec and re-renders the HTML. For a plan published to claude.ai it republishes to the recorded URL instead, and `--all` finds those specs too — the sweep unions the on-disk HTML scan with a frontmatter-bounded spec scan, so a plan with no local HTML is no longer skipped.
-- **Watch out** — A phased spec with any unmarked step stays `in-progress` rather than completing, and the skill never commits, pushes, or implements. An artifact plan is delivered as the `.md` plus its artifact URL: there is no `<stem>.html` to hand back.
+- **What happens** — Scores codebase evidence per acceptance criterion, runs the objective-verification test, reconciles the spec against the commits that actually touched it (Step 3d: what shipped but was never planned, and what was built differently), shows a findings table for confirmation, then writes `status`, `- [x]` criteria, step markers, a `## Completion Report`, any unplanned work as already-done `Unplanned:` steps, and any changed approach into `## Decisions` — then re-renders the HTML. For a plan published to claude.ai it republishes to the recorded URL instead, and `--all` finds those specs too — the sweep unions the on-disk HTML scan with a frontmatter-bounded spec scan, so a plan with no local HTML is no longer skipped.
+- **Watch out** — Step 3d only observes; both reconcile buckets are shown in Step 4 before anything is written, and housekeeping paths (the spec itself, generated indexes, lockfiles, version bumps) are excluded from them. In a phased spec, unplanned work lands under a trailing `### Phase: Unplanned` so it cannot drop into a phase that was never started. A phased spec with any unmarked step stays `in-progress` rather than completing, and the skill never commits, pushes, or implements. An artifact plan is delivered as the `.md` plus its artifact URL: there is no `<stem>.html` to hand back.
 
 ## implementation-plan
 
@@ -134,10 +134,10 @@ Builds a structured AI prompt using Anthropic techniques and saves it.
 
 Generates a runnable static-HTML prototype from a plan, idea, image, or Figma design.
 
-- **Command** — `/plan-agent:prototype <plan.html | one-line idea>`
+- **Command** — `/plan-agent:prototype <plan.html|plan.md | image | figma-url | one-line idea> [--from-prompt <path>]`
 - **Say it instead** — "make a clickable prototype of this plan"
 - **What happens** — Derives a deterministic data model (entity, typed fields, action, success signal), echoes it back for correction, then fills the bundled skeleton into one self-contained file under `docs/prototypes/` — inline CSS, vanilla JS, seed JSON, localStorage store, no build step.
-- **Watch out** — An image input is read directly, but a Figma URL needs the Figma MCP server connected; without it the skill asks for a screenshot rather than guessing.
+- **Watch out** — A first token ending in `.html` or `.md` is a plan path, so an artifact-published plan's `.md` spec prototypes the plan rather than a filename. An image input is read directly, but a Figma URL needs the Figma MCP server connected; without it the skill asks for a screenshot rather than guessing.
 
 ## publish-hub
 
@@ -154,8 +154,8 @@ Runs a plan-review Workflow over a plan and applies the improvements in place.
 
 - **Command** — `/plan-agent:review-plan [<plan.md|plan.html>] [--dir <path>] [--deep]` (background variant: `/plan-agent:review-plan-bg <plan path>`)
 - **Say it instead** — "review and improve this implementation plan"
-- **What happens** — Runs seven core reviewers (architecture, completeness, testability, risk, conventions, product, security) plus three UI-conditional ones (UX, accessibility, frontend) when UI signals are detected. Every critical and high finding then faces an independent skeptic that tries to refute it; refuted findings are dropped. What survives is synthesized, and it edits the markdown spec then re-renders — or the HTML directly for legacy plans.
-- **Watch out** — Only critical and high findings are challenged by default, to keep the run near 18 agents instead of ~50; `--deep` challenges every finding. The report says how many went unverified. It reviews plans, not code.
+- **What happens** — Discovers the plan from the HTML glob *and* a frontmatter-bounded scan of `.md` specs carrying `artifact-url:` (an explicit `.md` path works too), then runs seven core reviewers (architecture, completeness, testability, risk, conventions, product, security) plus three UI-conditional ones (UX, accessibility, frontend) when UI signals are detected. Every critical and high finding then faces an independent skeptic that tries to refute it; refuted findings are dropped. What survives is synthesized, and it edits the markdown spec then re-renders: overwriting the sibling `<stem>.html` when one exists, otherwise rendering to the scratchpad and republishing to the plan's recorded `artifact-url:`. Legacy plans with no spec are edited as HTML directly.
+- **Watch out** — Only critical and high findings are challenged by default, to keep the run near 18 agents instead of ~50; `--deep` challenges every finding. The report says how many went unverified and whether any lens was lost, so a bounded review does not read as an exhaustive one. Run bare, it no longer silently picks the newest *file*-published plan when the plan you meant lives only at an artifact URL. It reviews plans, not code.
 
 ## setup-sites
 
