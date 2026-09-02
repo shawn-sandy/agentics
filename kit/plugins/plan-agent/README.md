@@ -14,7 +14,7 @@ The `finalize-plan` skill reviews a plan for codebase implementation evidence, v
 
 It also ships two `PostToolUse` registrations: a `Write`/`Edit`/`MultiEdit` dispatcher that path-gates once and fans out to seven child hooks — `verb-target` kebab-case filename enforcement, plan HTML re-render, the plans, prototypes, and designs gallery rebuilds, and the prototype and design drift checks — plus an `ExitPlanMode` nudge to stress-test a plan before implementing.
 
-Installers get on-demand planning with argument support, issue ingestion, built-in interviews, acceptance criteria verification, agent-team–powered review, and filename guardrails without maintaining a global `~/.claude/rules/plan-mode.md` file by hand.
+Installers get on-demand planning with argument support, issue ingestion, built-in interviews, acceptance criteria verification, Workflow-powered review with adversarial verification, and filename guardrails without maintaining a global `~/.claude/rules/plan-mode.md` file by hand.
 
 ## Features
 
