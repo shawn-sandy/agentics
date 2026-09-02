@@ -152,7 +152,7 @@ Bundles a plan and its related HTML into one tabbed hub artifact at a stable URL
 
 Runs a plan-review Workflow over a plan and applies the improvements in place.
 
-- **Command** — `/plan-agent:review-plan [plan.html] [--dir <path>] [--deep]` (background variant: `/plan-agent:review-plan-bg <plan path>`)
+- **Command** — `/plan-agent:review-plan [<plan.md|plan.html>] [--dir <path>] [--deep]` (background variant: `/plan-agent:review-plan-bg <plan path>`)
 - **Say it instead** — "review and improve this implementation plan"
 - **What happens** — Runs seven core reviewers (architecture, completeness, testability, risk, conventions, product, security) plus three UI-conditional ones (UX, accessibility, frontend) when UI signals are detected. Every critical and high finding then faces an independent skeptic that tries to refute it; refuted findings are dropped. What survives is synthesized, and it edits the markdown spec then re-renders — or the HTML directly for legacy plans.
 - **Watch out** — Only critical and high findings are challenged by default, to keep the run near 18 agents instead of ~50; `--deep` challenges every finding. The report says how many went unverified. It reviews plans, not code.
