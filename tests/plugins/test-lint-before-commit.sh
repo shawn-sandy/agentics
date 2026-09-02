@@ -112,6 +112,8 @@ for need in git python3 sh; do
   src=$(command -v "$need" || true)
   [ -n "$src" ] && ln -sf "$src" "$MINPATH/$need"
 done
+# fire() with PATH replaced by MINPATH alone, so every linter is off it. Used
+# by the cases that assert a missing toolchain is a no-op rather than a block.
 fire_without_toolchain() {
   local saved="$PATH"
   PATH="$MINPATH"
