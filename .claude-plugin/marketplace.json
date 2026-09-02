@@ -218,8 +218,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "9.11.0",
-      "description": "Plan creation, review, follow-through, and maintenance. Author a Markdown plan spec rendered as self-contained interactive HTML (implementation-plan), implement it end-to-end through the acceptance and completion gates (build), which authors a plan first when the command names none, and review it with a ten-reviewer Agent Team (review-plan) before marking it done (finalize-plan). Ship a whole backlog in parallel with one worktree agent per plan (build-fleet). Also ships build-proposal, build-feature, deep-grill, prompt, prototype, design, publish-hub, documenting-plans, markdown-to-html, plan-status, plan-maintenance, setup-sites, plans-library, and plans-open. Accepts issue URLs and .md plans as input; hooks enforce filenames and rebuild the plan gallery. Full detail in the plugin README.",
+      "version": "9.12.0",
+      "description": "Plan creation, review, follow-through, and maintenance. Author a Markdown plan spec rendered as self-contained interactive HTML (implementation-plan), implement it end-to-end through the acceptance and completion gates (build), which authors a plan first when the command names none, and review it with a ten-reviewer Workflow (review-plan) before marking it done (finalize-plan). Ship a whole backlog in parallel with one worktree agent per plan (build-fleet). Also ships build-proposal, build-feature, deep-grill, prompt, prototype, design, publish-hub, documenting-plans, markdown-to-html, plan-status, plan-maintenance, setup-sites, plans-library, and plans-open. Accepts issue URLs and .md plans as input; hooks enforce filenames and rebuild the plan gallery. Full detail in the plugin README.",
       "category": "productivity",
       "tags": [
         "planning",

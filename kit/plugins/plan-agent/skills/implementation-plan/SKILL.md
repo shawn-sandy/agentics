@@ -606,11 +606,11 @@ EOF
    - Options (when workflow prompt exists):
      - `Implement now` — Begin implementing the plan steps, in this session or a fresh one.
      - `Run as workflow` — Launch a dynamic workflow (`/workflows`) to implement steps in parallel with subagents.
-     - `Review the plan` — Run the `review-plan` Agent Team on this plan before implementing.
+     - `Review the plan` — Run the `review-plan` Workflow on this plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
    - Options (when no workflow prompt):
      - `Implement now` — Begin implementing the plan steps, in this session or a fresh one.
-     - `Review the plan` — Run the `review-plan` Agent Team on this plan before implementing.
+     - `Review the plan` — Run the `review-plan` Workflow on this plan before implementing.
      - `Edit the plan` — Revise or extend the plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
 
@@ -688,13 +688,13 @@ EOF
    - Question: "Run the plan review now, or dispatch it in the background?"
    - Options:
      - `Run now (foreground)` — Review runs in this session; you will see progress as it works.
-     - `Background` — Dispatch the review to a detached Agent Team; you will be notified on completion.
+     - `Background` — Dispatch the review to a background agent; you will be notified on completion.
 
    **If the user chooses `Run now (foreground)`:** Invoke
    `Skill(skill: "plan-agent:review-plan", args: "<plan path>")` with the
    rendered plan's relative path. Handle `review-plan`'s hard-stop
-   gracefully if Agent Teams are unavailable (Claude Code < 2.1.32 or
-   `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` unset): relay its guidance and
+   gracefully if the Workflow tool is unavailable in the session: relay its
+   guidance and
    return to the Step 8 menu without error. After a successful foreground
    review, re-render if the spec changed, republish via the Step 7 sub-steps,
    then loop back to this menu. Leave plan `status` at `todo` — reviewing

@@ -66,15 +66,15 @@ This template is used to structure the team's synthesis of reviewer findings and
 
 ## Inline Edits to Apply
 
-| Target Element | Action | New Content / Notes | Source / Rationale |
-|---|---|---|---|
-| `.objective-card` | edit | <New or revised objective statement if needed.> | Architecture — objective conflates two separate deliverables |
-| `#criteria-list li#ac1` | edit | <Revised acceptance criterion if needed.> | Testability — criterion ac1 is not falsifiable as written |
-| `.step-card #step-N .step-why` | edit | <Clarified "why" for step N if needed.> | Completeness — step N states what but not why |
-| `.step-card #step-N .verify-body` | edit | <More specific verification instructions for step N if needed.> | Completeness — step N's verification is too vague to confirm success |
-| `#criteria-list` | append | `<li id="ac-new">New acceptance criterion</li>` | Risk — no criterion covers the rollback path |
-| `.step-card:nth-child(N)` | insert after | `<div class="step-card">... new step ...</div>` | Completeness — a required step is missing between steps N and N+1 |
-| `.verification-section` | edit | <Revised end-to-end verification if needed.> | Testability — end-to-end verification never exercises the new flow |
+| Target Element | Action | New Content / Notes | Source / Rationale | Verdict |
+|---|---|---|---|---|
+| `.objective-card` | edit | <New or revised objective statement if needed.> | Architecture — objective conflates two separate deliverables | verified |
+| `#criteria-list li#ac1` | edit | <Revised acceptance criterion if needed.> | Testability — criterion ac1 is not falsifiable as written | verified |
+| `.step-card #step-N .step-why` | edit | <Clarified "why" for step N if needed.> | Completeness — step N states what but not why | unverified — below verify threshold |
+| `.step-card #step-N .verify-body` | edit | <More specific verification instructions for step N if needed.> | Completeness — step N's verification is too vague to confirm success | unverified — below verify threshold |
+| `#criteria-list` | append | `<li id="ac-new">New acceptance criterion</li>` | Risk — no criterion covers the rollback path | verified |
+| `.step-card:nth-child(N)` | insert after | `<div class="step-card">... new step ...</div>` | Completeness — a required step is missing between steps N and N+1 | verified |
+| `.verification-section` | edit | <Revised end-to-end verification if needed.> | Testability — end-to-end verification never exercises the new flow | verified |
 
 **Notes:**
 - Each row is applied as a separate `Edit` operation in order.
@@ -85,6 +85,7 @@ This template is used to structure the team's synthesis of reviewer findings and
 - Never modify `<style>` or `<script>` blocks.
 - Skip rows whose target element cannot be matched in the source plan; every skipped row feeds Step 7's applied/skipped tally.
 - The `Source / Rationale` column names the originating reviewer plus a one-line why for each edit; it feeds the per-finding triage in Step 6b — Walkthrough & Analysis.
+- The `Verdict` column records one of three outcomes: an independent skeptic challenged the finding and failed to refute it (`verified`); it was never challenged because its severity fell below the verify threshold (`unverified — below verify threshold`); or it was sent for challenge but the skeptic itself failed (`unverified — verifier failed`). That last case is not a severity skip — `--deep` will not fix it; only re-running will. Refuted findings never reach this table — the workflow drops them before synthesis. Show this column in the Step 6b triage: an unverified finding is a suggestion, a verified one has already survived an attempt to kill it, and the developer deserves to know which is which before accepting either.
 
 ### Triage Outcome
 

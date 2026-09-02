@@ -1,5 +1,85 @@
 # Changelog
 
+## 9.12.0 — review-plan runs on the Workflow tool, off the experimental flag (2026-09-01)
+
+### Changed
+
+- **`review-plan` no longer requires Agent Teams.** Step 3 used to stop dead
+  unless `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` was set *and* Claude Code was
+  at least 2.1.32, which meant the plugin's most expensive feature was dark for
+  everyone who never flipped a flag they were never told about. The reviewers
+  now run as a Workflow script, and Step 3 is a capability probe for the
+  `Workflow` tool — no flag, and no version number to guess wrong. Calling it
+  from a skill is authorized by the tool's own opt-in rule, which accepts "a
+  skill whose instructions tell you to call Workflow".
+- **Findings come back typed, not as prose.** Reviewers report through the
+  workflow's `schema` option, so each finding arrives validated with `target`,
+  `action`, `content`, `rationale` and `severity`. Step 6 populates the "Inline
+  Edits to Apply" table from those fields directly. The old path had every
+  reviewer write free text through `SendMessage` and had the lead re-read that
+  prose back into the table — a round-trip that silently dropped findings.
+- **Steps 4 and 5 collapsed into one.** The respawn-once-then-mark-unavailable
+  bookkeeping is gone: a reviewer that dies resolves to `null` inside the
+  script's `parallel()`, and the script filters it out and logs how many lenses
+  were lost. The step numbering deliberately keeps its gap — Step 6b, Step 7 and
+  Step 8 are referenced from `agents/agent-review-plan.md` and across this file.
+- **Step 8 no longer tears down a team.** The workflow runtime owns its agents'
+  lifecycle; Step 8 now reports the tally and the coverage line.
+- **The ten `plan-reviewer-*.md` agents describe the contract they are now called
+  under.** Each still ended with an Agent Teams "Report Back" section telling the
+  model to call `SendMessage` with a `Fit:/Concerns:/Recommendations:` prose
+  template — an instruction none of them could follow, since none grants
+  `SendMessage`, and one that said nothing about the `target`/`action`/`content`/
+  `rationale`/`severity` fields the schema now requires. `agentType` reuse makes
+  each callee's own prompt part of the caller's contract, so repointing the
+  caller without updating them left ten lenses briefed on the old engine.
+- **`agents/agent-review-plan.md` grants the `Workflow` tool.** It invokes a
+  skill that now calls Workflow, so without the grant the background path would
+  fail at runtime — a break no prose assertion would have caught.
+
+### Added
+
+- **Adversarial verify stage.** Every `critical` or `high` severity finding gets
+  an independent skeptic prompted to *refute* it, defaulting to refuted when
+  uncertain, before it is allowed to become a plan edit. Refuted findings are
+  dropped before synthesis. `pipeline()` runs this per reviewer with no barrier,
+  so one lens's findings are verified while another is still reviewing.
+- **`--deep`** lifts the severity filter so every finding is challenged, not just
+  the high and critical ones. The default keeps the run near 18 agents instead of
+  roughly 50.
+- **A verdict has three states, not two.** `refuted: false` means a skeptic
+  challenged the finding and failed to kill it; `null` means it was never sent,
+  because its severity was below the threshold; `failed: true` means it was sent
+  and the skeptic itself died. Collapsing the last two would tell the user to
+  re-run with `--deep`, which cannot fix a broken verifier — and a finding whose
+  verifier dies is kept with an honest verdict rather than dropped, so an
+  infrastructure failure can never silently delete a critical finding.
+- **A coverage line on every review.** The workflow logs how many findings stand,
+  how many survived refutation, how many went unverified, how many were refuted,
+  and whether any reviewer was lost. Step 6 carries it into the Executive
+  Summary, and the synthesis table gains a **Verdict** column so the Step 6b
+  triage shows which findings survived a challenge and which were never
+  challenged. A bounded review that hides its bound reads as exhaustive.
+- **`tests/review-plan-workflow.test.mjs`** — asserts the flag gate is gone, the
+  script exists and parses, and the background agent holds the tool grant. It
+  also **runs** the script against a stubbed runtime, because a substring check
+  cannot tell a working severity filter from a broken one: `critical`, `high`
+  and `deep` all appear in the schema enum and the comments no matter what the
+  logic does. The behavioural cases cover the severity split, `--deep`, refuted
+  findings being dropped, a dead lens being reported, and a crashed verifier
+  staying distinct from a severity skip. The
+  parse uses the `AsyncFunction` constructor rather than `node --check`: a
+  workflow script is a hybrid carrying module-level `export const meta` *and* a
+  top-level `return` that is only legal inside the runtime's async wrapper, and
+  no single parser accepts both.
+
+### Removed
+
+- **`skills/review-plan/references/role-prompts.md`.** `agent()` takes an
+  `agentType`, which resolves the shipped `plan-reviewer-*` agent definitions
+  whose system prompts *are* the lenses — so the ten hand-written spawn-prompt
+  templates had no remaining caller.
+
 ## 9.11.0 — finalize-plan reconciles the plan against what shipped (2026-08-30)
 
 ### Added

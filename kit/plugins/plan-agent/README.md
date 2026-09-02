@@ -8,13 +8,13 @@ This plugin packages the Plan Mode workflow (Steps 0 through 8, ending in Implem
 
 Plans are authored as a compact **`.md` spec** — the committed source of truth — and rendered into an interactive, visually rich HTML view. By default that view is **published as a claude.ai artifact** and the repo gets no generated HTML; pass `--file` to also write and commit a self-contained sibling `.html`. Complex plans include a workflow prompt for parallel subagent orchestration via Claude Code's `/workflows` runtime.
 
-The `review-plan` skill uses an **Agent Team** (seven core reviewers plus three UI-conditional reviewers) to review implementation plans in parallel, synthesize findings, and apply improvements directly in place. Detects UI signals (React, Vue, buttons, modals, etc.) and conditionally runs UX, accessibility, and frontend reviewers when present. Requires Agent Teams feature flag and Claude Code ≥ 2.1.32.
+The `review-plan` skill runs a **Workflow** (seven core reviewers plus three UI-conditional reviewers) to review implementation plans in parallel, adversarially verify the high-severity findings, synthesize them, and apply improvements directly in place. Detects UI signals (React, Vue, buttons, modals, etc.) and conditionally runs UX, accessibility, and frontend reviewers when present. No feature flag required.
 
 The `finalize-plan` skill reviews a plan for codebase implementation evidence, verifies each acceptance criterion individually, and marks the plan completed.
 
 It also ships two `PostToolUse` registrations: a `Write`/`Edit`/`MultiEdit` dispatcher that path-gates once and fans out to seven child hooks — `verb-target` kebab-case filename enforcement, plan HTML re-render, the plans, prototypes, and designs gallery rebuilds, and the prototype and design drift checks — plus an `ExitPlanMode` nudge to stress-test a plan before implementing.
 
-Installers get on-demand planning with argument support, issue ingestion, built-in interviews, acceptance criteria verification, agent-team–powered review, and filename guardrails without maintaining a global `~/.claude/rules/plan-mode.md` file by hand.
+Installers get on-demand planning with argument support, issue ingestion, built-in interviews, acceptance criteria verification, Workflow-powered review with adversarial verification, and filename guardrails without maintaining a global `~/.claude/rules/plan-mode.md` file by hand.
 
 ## Features
 
@@ -27,7 +27,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `build-fleet` | Skill | Command (`/plan-agent:build-fleet [<plan> ...] [--max N]`) or auto-activates on "implement the backlog in parallel" intent — one worktree subagent per `todo` plan, each running `build` → `ship-autonomous` to a green PR |
 | `fix` | Command | Typed entry point — `/plan-agent:fix <objective>` runs the `build` chain with `--type fix` |
 | `refactor` | Command | Typed entry point — `/plan-agent:refactor <objective>` runs the `build` chain with `--type refactor` |
-| `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan (requires Agent Teams) |
+| `review-plan` | Skill | Manual only — invoke as `/plan-agent:review-plan [plan-path]` or auto-activates when you ask to review a plan |
 | `review-plan-bg` | Command | Background dispatcher — invoke as `/plan-agent:review-plan-bg <path>` to run the review team without blocking |
 | `finalize-plan` | Skill (`disable-model-invocation`) | Manual only — invoke as `/plan-agent:finalize-plan [plan-filename.html] [--all]` |
 | `prompt` | Skill (`disable-model-invocation`) + Command | Invoke as `/plan-agent:prompt [type] [intent] [--out <path>] [--answers-gathered]`; a leading `system`/`task`/`creative`/`analytical` token pins the type. A fifth token, `proposal`, is caller-only — it counts just alongside `--answers-gathered`, since Phase 2 has no proposal question set. The command wrapper also makes it reachable from other skills, which the flag alone blocks |
@@ -46,7 +46,7 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `build-designs-index` | Child of `dispatch` | Regenerates the designs gallery for `docs/designs/` writes |
 | `check-design-drift` | Child of `dispatch` | Reports a user-facing plan step that no artboard covers |
 
-**Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper reviews, use the `review-plan` Agent Team. Note: `plan-agent:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
+**Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper reviews, use the `review-plan` panel. Note: `plan-agent:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
 
 ## Installation
 
@@ -158,12 +158,12 @@ The skill enforces the full Steps 1–8 workflow:
 
 The exit menu always offers `Review the plan` as a one-click path to critique the freshly-generated plan before implementing it. Selecting it triggers a foreground-or-background sub-choice:
 
-- **Run now (foreground):** invokes `Skill(skill: "plan-agent:review-plan", args: "<plan path>")`, runs the ten-reviewer Agent Team in-session, then re-renders the updated plan and loops back to the menu.
+- **Run now (foreground):** invokes `Skill(skill: "plan-agent:review-plan", args: "<plan path>")`, runs the ten-reviewer Workflow in-session, then re-renders the updated plan and loops back to the menu.
 - **Background:** invokes `Skill(skill: "plan-agent:review-plan-bg", args: "<plan path>")`, dispatches the review team detached via `agent-review-plan`, and returns to the menu immediately; reopen the plan after completion to view applied updates.
 
 **Adaptive menu swap:** The `AskUserQuestion` tool is capped at 4 options. When a workflow prompt is present the menu would otherwise have 5 slots, so `Edit the plan` is dropped from that variant — the full ordering becomes: `Implement now` / `Run as workflow` / `Review the plan` / `Exit`. Without a workflow prompt all four options appear: `Implement now` / `Review the plan` / `Edit the plan` / `Exit`.
 
-If Agent Teams are unavailable (Claude Code < 2.1.32 or `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` unset), selecting `Review the plan` surfaces `review-plan`'s guidance and returns to the menu without crashing the planning flow. Plan status stays `todo` throughout — reviewing is not implementing.
+If the Workflow tool is unavailable in the session, selecting `Review the plan` surfaces `review-plan`'s guidance and returns to the menu without crashing the planning flow. Plan status stays `todo` throughout — reviewing is not implementing.
 
 **Step 8 — "Want to see it before building?" (conditional):**
 
@@ -216,11 +216,11 @@ The extractor reads an embedded `#plan-digest` block when one is present (legacy
 
 #### `review-plan` — Manual invoke or auto-activate
 
-Reviews implementation plans using a ten-reviewer Agent Team (seven core reviewers plus three UI-conditional reviewers). Detects UI signals and conditionally spawns UX, accessibility, and frontend reviewers when present. Synthesizes findings and applies improvements directly to the source plan in place.
+Reviews implementation plans using a ten-reviewer Workflow (seven core reviewers plus three UI-conditional reviewers). Detects UI signals and conditionally runs UX, accessibility, and frontend reviewers when present. Adversarially verifies every high-severity finding, synthesizes what survives, and applies improvements directly to the source plan in place.
 
 Reviewers read the full plan HTML. They are scoped to `Bash(git *)` and do **not** run the spec extractor: Claude Code's Bash tool rejects any command containing `${...}` shell expansion before permission rules are consulted, so a `${CLAUDE_PLUGIN_ROOT}`-anchored invocation is unrunnable by any agent at any permission level — no `tools:` grant can enable it. To get the cheaper spec read, run the extractor yourself with a literal path (see above) and paste the output into the review. See CHANGELOG 8.2.1.
 
-**Requires:** Agent Teams enabled (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `~/.claude/settings.json`) and Claude Code ≥ 2.1.32.
+**Requires:** the `Workflow` tool. No feature flag, and no minimum version to set.
 
 ```
 /plan-agent:review-plan
@@ -268,13 +268,13 @@ The skill spawns the following reviewers:
 The workflow:
 
 1. **Resolve** — locates the HTML plan (`--dir` override, or glob `docs/plans/*.html` excluding `index.html`, or newest recent)
-2. **Verify** — confirms Agent Teams are available (feature flag + version check)
+2. **Verify** — confirms the `Workflow` tool is available in the session
 3. **Detect** — scans plan HTML for UI signals to determine reviewer roster
 4. **Spawn** — creates the team and spawns 7 core + optional 3 UI reviewers in parallel
 5. **Collect** — waits for all reviewers to report findings
 6. **Synthesize** — aggregates findings into a structured report (Executive Summary, Role-by-Role, Agreements/Conflicts, Highest-Risk Issues)
 7. **Update** — applies inline edits to the plan HTML (step refinements, criteria corrections, verification improvements) and appends a collapsible "Team Review" section
-8. **Cleanup** — tears down the Agent Team
+8. **Report** — reports the applied/skipped tally and the review's coverage line
 
 On success:
 
@@ -599,9 +599,9 @@ plan-agent/
         example-design-md-spec-alignment.md   — Trimmed Tier 2 worked exemplar
         example-proposal-builder-skill.md     — Trimmed recursive worked exemplar
     review-plan/
-      SKILL.md              — Agent Team review workflow (supports --background)
+      SKILL.md              — Workflow-driven review (supports --background, --deep)
       references/
-        role-prompts.md     — Spawn-prompt templates for each reviewer
+        review-workflow.mjs — Workflow script: reviewer pipeline + refute stage
         output-template.md  — Synthesis report structure
     finalize-plan/
       SKILL.md              — Plan completion review and acceptance criteria verification
@@ -869,7 +869,7 @@ PostToolUse hook that fires on every `Write`/`Edit`/`MultiEdit` to a non-`index.
 
 ### Merged from `plan-interview` (v4.0.0)
 
-As of v4.0.0, `plan-agent` absorbs the former `plan-interview` plugin — there is no separate install. The stress-test surface is covered by the built-in **Step 5b Interview** during plan creation and the **`review-plan`** Agent Team for deeper reviews. The unique capabilities `plan-interview` carried are now first-class plan-agent skills and commands:
+As of v4.0.0, `plan-agent` absorbs the former `plan-interview` plugin — there is no separate install. The stress-test surface is covered by the built-in **Step 5b Interview** during plan creation and the **`review-plan`** panel for deeper reviews. The unique capabilities `plan-interview` carried are now first-class plan-agent skills and commands:
 
 | Was | Now |
 |-----|-----|

@@ -33,24 +33,26 @@ Read the plan HTML at `<plan-path>` with the `Read` tool. Its authored content �
 
 ## Report Back
 
-When you've completed your review, call `SendMessage` with:
+You are invoked by `review-plan`'s Workflow script, which calls you with a
+JSON Schema attached. Return your findings through the structured-output tool
+it gives you — do **not** call `SendMessage`, and do not write a prose report.
+Each finding is one object:
 
-```
-[Accessibility Review]
+| Field | What goes in it |
+|---|---|
+| `target` | What the edit applies to — a spec section (`## Objective`, `step 4`) or, for a legacy HTML plan, a CSS selector (`.objective-card`) |
+| `action` | `edit`, `append`, or `insert after` |
+| `content` | The replacement or added text, ready to apply as-is |
+| `rationale` | One sentence: why the plan is wrong without this |
+| `severity` | `critical`, `high`, `medium`, or `low` |
 
-A11y compliance: <One short sentence on WCAG AA fitness>
+Alongside them, give a one-sentence `assessment` of the plan through your lens.
 
-Issues:
-- <accessibility issue 1, if any> (severity: critical|high|medium|low)
-- <accessibility issue 2, if any> (severity: ...)
-- ...
+**Severity is load-bearing, not decoration.** `critical` and `high` findings
+are the only ones sent to an independent skeptic whose job is to refute them,
+so inflating severity gets your finding challenged and likely dropped, while
+deflating it lets a real problem through unchallenged. Rate what you actually
+believe.
 
-Recommendations:
-- <recommendation 1, if any>
-- <recommendation 2, if any>
-- ...
-
-Accessibility Review complete.
-```
-
-If no issues, output `Issues: none.` Do not restate the plan.
+Return an empty `findings` array if the plan is sound through your lens. Do not
+restate the plan or summarize its steps.

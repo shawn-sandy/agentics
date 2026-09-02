@@ -77,3 +77,6 @@ docs/media/social/gap-preview-*
 # any depth. Never publishable content.
 __pycache__/
 *.pyc
+
+# Subagent scratch memory — private to a run, not part of the repo
+.claude/agent-memory/

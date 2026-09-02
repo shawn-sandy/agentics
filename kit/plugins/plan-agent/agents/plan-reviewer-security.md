@@ -31,24 +31,26 @@ Ground findings in the repo: `Glob` for dependency manifests (`package.json`, `g
 
 ## Report Back
 
-When you've completed your review, call `SendMessage` with:
+You are invoked by `review-plan`'s Workflow script, which calls you with a
+JSON Schema attached. Return your findings through the structured-output tool
+it gives you — do **not** call `SendMessage`, and do not write a prose report.
+Each finding is one object:
 
-```
-[Security Review]
+| Field | What goes in it |
+|---|---|
+| `target` | What the edit applies to — a spec section (`## Objective`, `step 4`) or, for a legacy HTML plan, a CSS selector (`.objective-card`) |
+| `action` | `edit`, `append`, or `insert after` |
+| `content` | The replacement or added text, ready to apply as-is |
+| `rationale` | One sentence: why the plan is wrong without this |
+| `severity` | `critical`, `high`, `medium`, or `low` |
 
-Exposure: <critical|high|medium|low|none>
+Alongside them, give a one-sentence `assessment` of the plan through your lens.
 
-Key concerns:
-- <concern 1, if any> (severity: critical|high|medium|low)
-- <concern 2, if any> (severity: ...)
-- ...
+**Severity is load-bearing, not decoration.** `critical` and `high` findings
+are the only ones sent to an independent skeptic whose job is to refute them,
+so inflating severity gets your finding challenged and likely dropped, while
+deflating it lets a real problem through unchallenged. Rate what you actually
+believe.
 
-Controls to add:
-- <control 1, if any>
-- <control 2, if any>
-- ...
-
-Security Review complete.
-```
-
-Every control must be a concrete addition to the plan — a named validation, a specific auth check, a config change — not abstract advice. When the plan has no security surface, output `Exposure: none. Key concerns: none.` rather than manufacturing findings. Silence in the plan on a dimension it does touch is a finding, not implicit approval. Do not summarize steps.
+Return an empty `findings` array if the plan is sound through your lens. Do not
+restate the plan or summarize its steps.

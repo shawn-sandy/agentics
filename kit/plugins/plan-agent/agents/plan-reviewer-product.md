@@ -31,24 +31,26 @@ Ground findings in the repo: `Glob` for READMEs, `docs/plans/*`, and `CHANGELOG.
 
 ## Report Back
 
-When you've completed your review, call `SendMessage` with:
+You are invoked by `review-plan`'s Workflow script, which calls you with a
+JSON Schema attached. Return your findings through the structured-output tool
+it gives you — do **not** call `SendMessage`, and do not write a prose report.
+Each finding is one object:
 
-```
-[Product Review]
+| Field | What goes in it |
+|---|---|
+| `target` | What the edit applies to — a spec section (`## Objective`, `step 4`) or, for a legacy HTML plan, a CSS selector (`.objective-card`) |
+| `action` | `edit`, `append`, or `insert after` |
+| `content` | The replacement or added text, ready to apply as-is |
+| `rationale` | One sentence: why the plan is wrong without this |
+| `severity` | `critical`, `high`, `medium`, or `low` |
 
-Value fit: <One sentence on whether the plan is worth building as scoped>
+Alongside them, give a one-sentence `assessment` of the plan through your lens.
 
-Concerns:
-- <concern 1, if any> (severity: critical|high|medium|low)
-- <concern 2, if any> (severity: ...)
-- ...
+**Severity is load-bearing, not decoration.** `critical` and `high` findings
+are the only ones sent to an independent skeptic whose job is to refute them,
+so inflating severity gets your finding challenged and likely dropped, while
+deflating it lets a real problem through unchallenged. Rate what you actually
+believe.
 
-Recommendations:
-- <recommendation 1, if any>
-- <recommendation 2, if any>
-- ...
-
-Product Review complete.
-```
-
-Every recommendation must be a concrete edit to the plan, not abstract advice. If the product framing is sound, say so and name what makes it sound. Do not summarize steps.
+Return an empty `findings` array if the plan is sound through your lens. Do not
+restate the plan or summarize its steps.

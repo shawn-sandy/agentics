@@ -1,18 +1,18 @@
 ---
 name: review-plan
 model: opus
-description: Plan review Agent Team. Reviews implementation plans in parallel, synthesizes findings, and applies improvements in place. Use when the user asks to review or improve an implementation plan.
-allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode, Artifact
+description: Plan review reviewer panel. Reviews implementation plans in parallel, refutes weak findings, and applies improvements in place. Use when the user asks to review or improve an implementation plan.
+allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode, Artifact, Workflow
 ---
 
-# Plan Review Team Skill
+# Plan Review Panel Skill
 
-**Primary purpose: improve and update plans in place.** Orchestrate a ten-reviewer Agent Team — seven core plan reviewers (architecture, completeness, testability, risk, conventions, product, security) plus three UI-conditional reviewers (UX, accessibility, frontend) — to review implementation plans, synthesize findings, and apply concrete improvements directly to the source plan.
+**Primary purpose: improve and update plans in place.** Run a ten-reviewer Workflow — seven core plan reviewers (architecture, completeness, testability, risk, conventions, product, security) plus three UI-conditional reviewers (UX, accessibility, frontend) — to review implementation plans, synthesize findings, and apply concrete improvements directly to the source plan.
 
 ## When not to use
 
 - **Not a code reviewer.** For code, use `code-review`. For conversational plan stress-testing, use the built-in Step 5b interview.
-- **Requires Agent Teams.** Hard-stops if the feature flag is unset or Claude Code is below v2.1.32.
+- **Requires the Workflow tool.** Hard-stops when it is unavailable in the session. No feature flag, and no minimum version to set.
 
 ## Background mode
 
@@ -25,7 +25,7 @@ When invoked with `--background` (typically via `/plan-agent:review-plan-bg <pat
 - **Implies `--skip-analysis`** — the Step 6b walkthrough never runs unattended.
 - **Safe for unattended execution** — no user interaction required at any step.
 
-Detection: check whether `$ARGUMENTS` (or the `args` string passed via `Skill()`) contains the `--background` token. If present, set `background_mode = true` and strip the token before further argument parsing. In the same pass, detect a `--skip-analysis` token (set `skip_analysis = true`) and a `--triage-top <N>` token (capture the integer `N`; default unset = full per-finding triage); strip both tokens before further argument parsing. `background_mode = true` forces `skip_analysis = true`, whether or not `--skip-analysis` was passed.
+Detection: check whether `$ARGUMENTS` (or the `args` string passed via `Skill()`) contains the `--background` token. If present, set `background_mode = true` and strip the token before further argument parsing. In the same pass, detect a `--skip-analysis` token (set `skip_analysis = true`), a `--triage-top <N>` token (capture the integer `N`; default unset = full per-finding triage), and a `--deep` token (set `deep = true`, passed straight through to the workflow's `args.deep`, where it lifts the severity filter so every finding is challenged instead of only the high and critical ones); strip all three tokens before further argument parsing. `background_mode = true` forces `skip_analysis = true`, whether or not `--skip-analysis` was passed.
 
 ## Workflow
 
@@ -96,16 +96,25 @@ Default to "review + update plan in place".
 - **Review + update plan in place** _(default)_
 - **Review only**
 
-### Step 3 — Verify Agent Teams availability
+### Step 3 — Confirm the Workflow tool is available
 
-Run `claude --version` and parse semver. If below `2.1.32`, stop with: "`Agent Teams require Claude Code ≥ 2.1.32. Your version is [version]. Update with: npm install -g @anthropic-ai/claude-code`"
+The reviewers run as a Workflow script. Confirm the `Workflow` tool is
+callable in this session; if it is not, stop with:
 
-Check feature flag:
-```bash
-echo "$CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS"
-```
+"`This review needs the Workflow tool, which is not available in this session. Update Claude Code and try again.`"
 
-If empty or `0`, stop with: "`Agent Teams are disabled. Enable by adding to ~/.claude/settings.json: { \"env\": { \"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS\": \"1\" } }`"
+**Probe, never assert a version number.** A capability check answers the only
+question that matters — can this session run the script — and it stays correct
+as the tool's availability changes. A hardcoded minimum version is a guess that
+silently blocks working sessions the moment it is wrong, which is exactly the
+failure this step replaced: the old Agent Teams gate demanded both a minimum
+Claude Code version and an experimental environment flag, so the plugin's most
+expensive feature was dark for everyone who never set a flag they were never
+told about. See `../../CHANGELOG.md` (9.12.0) for the exact gate removed.
+
+Calling `Workflow` from here is authorized: the tool accepts "a skill whose
+instructions tell you to call Workflow" as user opt-in, and this instruction is
+that. Do not additionally ask the user to type `ultracode`.
 
 ### Step 3b — Detect UI signals
 
@@ -115,39 +124,82 @@ Read the resolved plan HTML (excluding `<style>` and `<script>` blocks). Scan fo
 
 If 2+ signals found or UI-specific keywords present, set `ui_signals_present = true`. Announce: "`UI signals detected — running 10 reviewers`" or "`No UI signals — running 7 core reviewers`".
 
-### Step 4 — Spawn the review team
+### Step 4 — Run the review workflow
 
 Get absolute path:
 ```bash
 realpath "<path-from-step-1>"
 ```
 
-Read `references/role-prompts.md` to get the ten spawn-prompt templates. Substitute `<ABSOLUTE_PATH>` with the `realpath` output.
+Read `references/review-workflow.mjs` and pass its **contents** as the
+`Workflow` tool's inline `script` input. Never launch it by path: the Bash tool
+rejects any command carrying shell expansion outright ("Contains expansion")
+before permission rules are consulted, so a plugin-root-anchored invocation is
+unrunnable by *any* agent at *any* permission level. See `../../CHANGELOG.md`
+(8.2.1) for the same trap in its earlier form.
 
-Create an agent team and spawn:
+Pass `args` as an object — actual JSON, never a JSON-encoded string:
+
+| key | value |
+|---|---|
+| `planPath` | the `realpath` output from above |
+| `reviewers` | the roster below, as `[{key, agentType}]` |
+| `deep` | `true` only when `$ARGUMENTS` carried `--deep` |
+
+The roster, which Step 3b's `ui_signals_present` selects between:
 - Always: `plan-reviewer-architecture`, `-completeness`, `-testability`, `-risk`, `-conventions`, `-product`, `-security`
 - When `ui_signals_present`: also `plan-reviewer-ux`, `-accessibility`, `-frontend`
 
-Brief each with its matching prompt from `role-prompts.md`. Wait for all spawned teammates.
+Each entry's `agentType` is that reviewer's full agent name
+(`plan-agent:plan-reviewer-architecture`). The script briefs no lens of its
+own — `agentType` resolves the shipped agent definition, whose system prompt
+*is* the lens. That is why there are no spawn-prompt templates to maintain.
 
-**Lead-vs-reviewer read split:** Both the lead and the reviewers read the **full plan HTML**. Reviewers do *not* run `extract-plan-spec.mjs`: they are scoped to `Bash(git *)`, and Claude Code's Bash tool rejects any command containing shell expansion outright ("Contains expansion") — before permission rules are consulted. A plugin-root-anchored invocation is therefore unrunnable by *any* agent at *any* permission level, so no `tools:` grant can enable it. See `../../CHANGELOG.md` (8.2.1). Users who want the cheaper spec read can run the extractor themselves with a literal path and paste the result in.
+Reviewers read the **full plan HTML** with `Read`. They do not run
+`extract-plan-spec.mjs`: it is unrunnable for the same expansion reason above.
+Users who want the cheaper spec read can run the extractor themselves with a
+literal path and paste the result in.
 
-Announce progress: "`Spawned 7 core reviewers`" or "`Spawned 10 reviewers (7 core + 3 UI)`".
+**Failures need no handling here.** A reviewer that dies is returned as `null`
+by the script's second pipeline stage rather than throwing; the script counts
+it in `stats.lensesLost` and `log()`s that the lens is missing. Do not respawn,
+do not wait, do not poll — the tool returns when the run is done.
 
-### Step 5 — Wait, collect, and handle failures
+Announce progress: "`Running 7 core reviewers`" or "`Running 10 reviewers (7 core + 3 UI)`".
 
-Wait for all teammates to report via `SendMessage`. If a teammate errors or goes idle, respawn once. If it errors again, mark "`Reviewer unavailable`" and continue. Do not begin synthesis until all roles are either complete or marked unavailable.
+The old Step 5 — collect via `SendMessage`, respawn once, mark unavailable —
+is absorbed here. **The numbering below is deliberately left with a gap** so
+that every existing cross-reference to Step 6b, Step 7 and Step 8, here and in
+`agents/agent-review-plan.md`, keeps resolving. Do not renumber.
 
 ### Step 6 — Synthesize findings
 
-Read `references/output-template.md`. Gather each reviewer's findings (from their `SendMessage` output). Populate the template:
+Read `references/output-template.md`. The workflow returned
+`{findings, stats}` — `findings` is an array of validated objects, each
+carrying `reviewer`, `target`, `action`, `content`, `rationale`, `severity`,
+and `verdict`, which has **three** states: an object with `refuted: false` (a
+skeptic challenged it and failed to refute it), `null` (never sent, because its
+severity was below the verify threshold), or an object with `failed: true`
+(sent, but the skeptic itself died). Keep the last two apart — telling a user to
+re-run with `--deep` cannot fix a crashed verifier. **Populate the template from those
+fields directly. Never re-derive a finding from prose** — the round-trip
+through free text is where findings used to go missing, and it is the reason
+this data is typed.
+
+Populate the template:
 
 - **Executive Summary:** Synthesize overall assessment.
-- **Role-by-Role:** Summarize each reviewer's findings.
-- **Agreements & Conflicts:** Where reviewers agree (amplify), conflict (explain tradeoff).
-- **Highest-Risk Issues:** Distilled list from all findings.
-- **Inline Edits to Apply:** For each accepted improvement, a table row with: target HTML element (CSS selector), action (`edit`/`append`/`insert`), new content, and Source / Rationale — the originating reviewer plus a brief why. Step 6b's triage presents this Source / Rationale alongside each finding.
+- **Role-by-Role:** Group `findings` by their `reviewer` field. A reviewer the script reported as lost has no findings — say so rather than leaving its subsection blank.
+- **Agreements & Conflicts:** Where reviewers agree (amplify), conflict (explain tradeoff). Two findings with the same `target` are the signal to look at.
+- **Highest-Risk Issues:** Rank by `severity`, `critical` first.
+- **Inline Edits to Apply:** One row per finding — `target`, `action`, `content`, Source / Rationale (its `reviewer` plus `rationale`), and **Verdict**. The verdict column reads `verified` when `verdict.refuted` is false, `unverified — below verify threshold` when `verdict` is `null`, and `unverified — verifier failed` when `verdict.failed` is true. Refuted findings never reach this table; the script already dropped them. Step 6b's triage presents Source / Rationale and Verdict alongside each finding, so the user can see which findings survived a challenge and which were never challenged.
 - **Revised Plan:** (Filled after Step 7.)
+
+Carry `stats` into the Executive Summary verbatim — how many findings stand,
+how many survived refutation, how many went unverified, how many had their
+verifier fail, how many were refuted and dropped, and whether any reviewer was
+lost (`stats.lensesLost`). A review that silently omits
+its own coverage reads as exhaustive when it is not.
 
 **Rejection path:** If the team consensus is "reject", populate the reject-only subsections per the template. Otherwise, omit reject-only content.
 
@@ -164,7 +216,7 @@ An interactive triage of the synthesized findings before any edits are applied.
 
 Declining the gate is **not** equivalent to `--skip-analysis`: the gate was still shown. `--skip-analysis` suppresses the gate itself.
 
-**Per-finding triage loop:** Iterate the rows of the "Inline Edits to Apply" table, batching at most 4 findings per `AskUserQuestion` call (one question per finding). Each question presents the finding's Source / Rationale (originating reviewer + why, from the synthesis table) and its proposed content, with options:
+**Per-finding triage loop:** Iterate the rows of the "Inline Edits to Apply" table, batching at most 4 findings per `AskUserQuestion` call (one question per finding). Each question presents the finding's Source / Rationale (originating reviewer + why, from the synthesis table), its **Verdict** (`verified`, `unverified — below verify threshold`, or `unverified — verifier failed`), and its proposed content, with options:
 - **Accept** — keep the edit as-is.
 - **Modify** — keep the edit, marked for revision.
 - **Reject** — drop the edit.
@@ -244,9 +296,12 @@ When the Step 6b walkthrough ran, the appended review — either mode — also i
 
 **Background mode:** when the skipped list is non-empty, the final report must lead with `REVIEW INCOMPLETE` and carry the same tally instead of the success line — a skipped edit is a reported failure, not a warning nobody sees.
 
-### Step 8 — Clean up the team
+### Step 8 — Report and stop
 
-Ensure all teammates are finished or shut down, then issue: "`Clean up the team.`" (lead cleanup, not teammate cleanup).
+The workflow runtime owns its own agents' lifecycle — there is no team to tear
+down. Report the applied/skipped tally from Step 7 plus the coverage line from
+Step 6 (findings standing, verified, unverified, refuted, reviewers lost), then
+stop.
 
 ---
 
