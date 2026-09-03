@@ -188,6 +188,27 @@ reflects the current local state:
 Apply this check to every single-file target (settings.json, CLAUDE.md,
 keybindings.json, and settings.local.json if opt-in is enabled).
 
+**Entries that are not targets.** The repo root may hold entries that no
+Step 3 source produced — left behind by an older version of this skill, or
+added by hand. Nothing above removes them, and `settings-restore` copies every
+root entry it finds, so a stale `plans/` comes back on every new machine until
+someone notices. List them:
+
+```bash
+for p in "<repo-path>"/* "<repo-path>"/.*; do
+  [ -e "$p" ] || continue
+  e="$(basename "$p")"
+  case " . .. .git .gitignore .sync-log .settings-sync-meta.json settings.json CLAUDE.md keybindings.json settings.local.json rules commands skills hooks " in
+    *" $e "*) ;;
+    *) echo "$e" ;;
+  esac
+done
+```
+
+Do **not** delete them — a hand-added entry is deliberate. Carry the list to
+Step 8 so the user can remove each one from the repo or add it to the
+manifest.
+
 Skip any source that does not exist — do not error on copy.
 
 If `includeLocalSettings` is true, also copy `~/.claude/settings.local.json`.
@@ -253,6 +274,7 @@ Settings backup complete.
   Repo: <repo-path>
   Files backed up: <count> (<list of names>)
   Skipped (not found): <list or "none">
+  Not a backup target (left in repo): <list or "none">
   Commit: <short hash> — <commit message>
   Pushed: yes/no/failed
 ```

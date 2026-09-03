@@ -19,6 +19,15 @@
   and reports only those that are not executable locally. Pinned by
   `tests/plugins/test-settings-restore-exec-bits.sh`, which runs the skill's
   own snippet against a fixture.
+- **Backup never surfaced repo-root entries that are no longer targets.** A
+  `plans/` directory left by an older version sat in a real backup for six
+  weeks: nothing in the skill prunes or mentions root entries outside the
+  Step 3 list, and `settings-restore` copies every root entry it finds, so the
+  stale directory would have come back on every new machine. Step 5 now lists
+  every root entry that is neither a target nor a control file, and Step 8
+  reports them under `Not a backup target (left in repo):`. Nothing is deleted
+  — a hand-added entry is deliberate; the user removes it or adds it to the
+  manifest. Pinned by `tests/plugins/test-settings-backup-stale-entries.sh`.
 
 ---
 
