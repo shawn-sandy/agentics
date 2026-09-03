@@ -1,5 +1,36 @@
 # Changelog
 
+## v1.1.5 — 2026-09-03 — Fresh-machine install steps and exec-bit false failures
+
+### Fixed
+
+- **README omitted the marketplace step.** The Installation section gave only
+  `/plugin install settings-sync@agentics-kit`; on a machine that has never
+  added the `agentics-kit` marketplace that command fails and tells you to
+  update the marketplace, which is the wrong advice. The section now leads with
+  `/plugin marketplace add shawn-sandy/agentics`, and the new-machine section
+  says to install the plugin before asking for a restore — without it there is
+  no skill to run and the request has nothing to act on.
+- **Restore Step 7 reported false failures on interpreter-run hooks.** The
+  execute-bit check was a blanket `find ~/.claude/hooks -type f ! -perm -u+x`,
+  so a hook invoked as `python3 hook.py` — never executable, in the backup or
+  anywhere — was a `FAILED` entry and a perfect restore was reported
+  INCOMPLETE. The check now lists the files that are executable in the backup
+  and reports only those that are not executable locally. Pinned by
+  `tests/plugins/test-settings-restore-exec-bits.sh`, which runs the skill's
+  own snippet against a fixture.
+- **Backup never surfaced repo-root entries that are no longer targets.** A
+  `plans/` directory left by an older version sat in a real backup for six
+  weeks: nothing in the skill prunes or mentions root entries outside the
+  Step 3 list, and `settings-restore` copies every root entry it finds, so the
+  stale directory would have come back on every new machine. Step 5 now lists
+  every root entry that is neither a target nor a control file, and Step 8
+  reports them under `Not a backup target (left in repo):`. Nothing is deleted
+  — a hand-added entry is deliberate; the user removes it or adds it to the
+  manifest. Pinned by `tests/plugins/test-settings-backup-stale-entries.sh`.
+
+---
+
 ## v1.1.4 — 2026-08-17 — Plan-mode guard on backup and restore
 
 ### Changed

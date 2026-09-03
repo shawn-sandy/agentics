@@ -28,6 +28,7 @@ Auto-generated files (sessions, caches, plugins, telemetry) are excluded.
 ### Via Marketplace (recommended)
 
 ```bash
+/plugin marketplace add shawn-sandy/agentics
 /plugin install settings-sync@agentics-kit
 ```
 
@@ -81,7 +82,9 @@ Always interactive — requires user confirmation before overwriting local files
 
 ### Setting up a new machine
 
-There is no local backup repo on a fresh machine, so pass the **clone URL**:
+A fresh machine has neither this plugin nor a local backup repo. Install the
+plugin first (both commands under [Installation](#installation)), then pass
+the **clone URL**:
 
 ```
 restore my claude settings from https://github.com/you/claude-settings-backup.git

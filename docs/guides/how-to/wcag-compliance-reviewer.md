@@ -2,7 +2,7 @@
 
 Audits HTML, CSS, and React/TypeScript code for WCAG 2.2 Level AA accessibility violations and supplies the fix for each one.
 
-Install: `/plugin install wcag-compliance-reviewer@agentics-kit`
+Install: `/plugin marketplace add shawn-sandy/agentics`, then `/plugin install wcag-compliance-reviewer@agentics-kit`
 
 ## wcag-compliance-reviewer
 

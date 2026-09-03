@@ -2,7 +2,7 @@
 
 Publish diffs, session recaps, plans, prompts, and explainers as live claude.ai artifact pages without leaving Claude Code.
 
-Install: `/plugin install artifact-tools@agentics-kit`
+Install: `/plugin marketplace add shawn-sandy/agentics`, then `/plugin install artifact-tools@agentics-kit`
 
 ## diff-artifact
 

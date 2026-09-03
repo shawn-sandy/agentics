@@ -2,7 +2,7 @@
 
 Authoring, reviewing, implementing, and publishing implementation plans — from a vague idea through a rendered HTML plan to a shipped PR.
 
-Install: `/plugin install plan-agent@agentics-kit`
+Install: `/plugin marketplace add shawn-sandy/agentics`, then `/plugin install plan-agent@agentics-kit`
 
 ## build
 

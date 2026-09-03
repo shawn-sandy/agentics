@@ -2,7 +2,7 @@
 
 Turn code, commits, blog posts, videos, React components, artifacts, and whole sessions into platform-aware social copy and dark-mode card images — with a mandatory secret scrub in front of every share.
 
-Install: `/plugin install social-media-tools@agentics-kit`
+Install: `/plugin marketplace add shawn-sandy/agentics`, then `/plugin install social-media-tools@agentics-kit`
 
 ## export-session
 

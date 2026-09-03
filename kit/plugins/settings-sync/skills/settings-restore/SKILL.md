@@ -264,20 +264,26 @@ entries the user excluded in Step 5):
   deleted remainder → `FAILED: <entry>`, listing the differing paths.
 
 **Executable bits.** If `hooks/` was restored, verify no script lost its
-execute bit:
+execute bit. Measure against the backup, not against a blanket rule — a hook
+run through an interpreter (`python3 hook.py`) is legitimately non-executable
+and must not be reported:
 
 ```bash
-find ~/.claude/hooks -type f ! -perm -u+x
+src="<repo-path>/hooks"
+find -L "$src" -type f -perm -u+x | while IFS= read -r f; do
+  rel="${f#"$src"/}"
+  [ -x "$HOME/.claude/hooks/$rel" ] || echo "$rel"
+done
 ```
 
 Empty output passes. Every path it prints is
-`FAILED: hooks/<file> (not executable — non-executable hooks are silently
-inert)`.
+`FAILED: hooks/<file> (lost execute bit — executable in the backup, not
+locally; a non-executable hook is silently inert)`.
 
 Collect the results:
 
-- **Verified** — entries that now compare identical (and, for `hooks/`, are
-  executable).
+- **Verified** — entries that now compare identical (and, for `hooks/`, kept
+  the execute bits the backup has).
 - **FAILED** — everything else, each with a one-line reason.
 
 Step 9 reports only these verified results — never the planned list from
