@@ -2,7 +2,7 @@
 
 Back up and restore your Claude Code user settings through a dedicated git repo.
 
-Install: `/plugin install settings-sync@agentics-kit`
+Install: `/plugin marketplace add shawn-sandy/agentics`, then `/plugin install settings-sync@agentics-kit`
 
 ## settings-backup
 
