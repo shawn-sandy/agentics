@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.1.5 — 2026-09-03 — Fresh-machine install steps and exec-bit false failures
+
+### Fixed
+
+- **README omitted the marketplace step.** The Installation section gave only
+  `/plugin install settings-sync@agentics-kit`; on a machine that has never
+  added the `agentics-kit` marketplace that command fails and tells you to
+  update the marketplace, which is the wrong advice. The section now leads with
+  `/plugin marketplace add shawn-sandy/agentics`, and the new-machine section
+  says to install the plugin before asking for a restore — without it there is
+  no skill to run and the request has nothing to act on.
+- **Restore Step 7 reported false failures on interpreter-run hooks.** The
+  execute-bit check was a blanket `find ~/.claude/hooks -type f ! -perm -u+x`,
+  so a hook invoked as `python3 hook.py` — never executable, in the backup or
+  anywhere — was a `FAILED` entry and a perfect restore was reported
+  INCOMPLETE. The check now lists the files that are executable in the backup
+  and reports only those that are not executable locally. Pinned by
+  `tests/plugins/test-settings-restore-exec-bits.sh`, which runs the skill's
+  own snippet against a fixture.
+
+---
+
 ## v1.1.4 — 2026-08-17 — Plan-mode guard on backup and restore
 
 ### Changed
