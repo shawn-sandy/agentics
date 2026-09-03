@@ -2,7 +2,7 @@
 
 Audit, scaffold, and tune Claude Code skills — SKILL.md quality scores, `allowed-tools` permissions, and frontmatter budgets.
 
-Install: `/plugin install skill-reviewer@agentics-kit`
+Install: `/plugin marketplace add shawn-sandy/agentics`, then `/plugin install skill-reviewer@agentics-kit`
 
 ## auditing-allowed-tools
 

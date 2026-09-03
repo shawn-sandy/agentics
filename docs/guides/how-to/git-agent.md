@@ -2,7 +2,7 @@
 
 Git workflow automation — branch, commit, pull request, merge, issue, and post-merge cleanup — across GitHub (`gh`) and GitLab (`glab`).
 
-Install: `/plugin install git-agent@agentics-kit`
+Install: `/plugin marketplace add shawn-sandy/agentics`, then `/plugin install git-agent@agentics-kit`
 
 ## branch-agent
 

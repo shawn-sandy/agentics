@@ -2,7 +2,7 @@
 
 Reviews code for bugs, security issues, and breaking changes, and can fix a whole branch against the repo's own rules.
 
-Install: `/plugin install code-review@agentics-kit`
+Install: `/plugin marketplace add shawn-sandy/agentics`, then `/plugin install code-review@agentics-kit`
 
 ## code-review-agent
 

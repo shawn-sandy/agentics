@@ -2,7 +2,7 @@
 
 Turns work products — HTML artifacts and Markdown files — into draft posts for a static site.
 
-Install: `/plugin install content-tools@agentics-kit`
+Install: `/plugin marketplace add shawn-sandy/agentics`, then `/plugin install content-tools@agentics-kit`
 
 ## artifact-to-post
 

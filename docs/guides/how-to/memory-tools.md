@@ -2,7 +2,7 @@
 
 Audit and reshape Claude Code project memory — CLAUDE.md files, the path-scoped rule files in `.claude/rules/`, and usage-insights follow-through.
 
-Install: `/plugin install memory-tools@agentics-kit`
+Install: `/plugin marketplace add shawn-sandy/agentics`, then `/plugin install memory-tools@agentics-kit`
 
 ## agentic-memory-management
 

@@ -2,7 +2,7 @@
 
 Covers the test lifecycle: suggesting tests tied to real behavior, auditing an existing suite, running scoped tests, driving red-green TDD loops, and proving a change is merge-ready without waiting on CI.
 
-Install: `/plugin install code-testing-agent@agentics-kit`
+Install: `/plugin marketplace add shawn-sandy/agentics`, then `/plugin install code-testing-agent@agentics-kit`
 
 ## code-testing-agent
 
