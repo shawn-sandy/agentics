@@ -75,6 +75,20 @@ expect absent  'check\.py' "a hook that was never executable (interpreter-run) i
 expect absent  'kept\.sh'  "a hook that kept its execute bit is not reported"
 expect present 'linked\.sh' "a hook stored as a symlink in the backup is still checked"
 
+# The four checks above only assert membership, so a snippet that also
+# printed an unrelated fifth line would still pass every one of them.
+# Pin the complete set: exactly lost.sh and linked.sh, nothing else.
+EXPECTED="$(printf '%s\n' lost.sh linked.sh | sort)"
+ACTUAL="$(printf '%s\n' "$OUT" | sed '/^$/d' | sort)"
+if [ "$ACTUAL" = "$EXPECTED" ]; then
+  echo "ok   the reported set is exactly {lost.sh, linked.sh}, nothing else"
+else
+  echo "FAIL the reported set is exactly {lost.sh, linked.sh}, nothing else"
+  echo "  expected: $(echo "$EXPECTED" | tr '\n' ' ')"
+  echo "  actual:   $(echo "$ACTUAL" | tr '\n' ' ')"
+  FAILURES=$((FAILURES + 1))
+fi
+
 echo
 echo "snippet output:"
 printf '%s\n' "$OUT" | sed 's/^/  | /'
