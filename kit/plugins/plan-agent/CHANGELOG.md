@@ -1,5 +1,35 @@
 # Changelog
 
+## 9.13.1 — header links render as chips; prototype refocus reaches a leading select (2026-09-04)
+
+### Fixed
+
+- **`View prototype`, `Issue #N`, and `View design` render as chips, after the
+  badges.** `.plan-header-actions` is a flex row whose children are placed by
+  explicit `order` values (status 1, effort 2, Save as PDF 3, theme toggle 4).
+  The three anchors `header()` emits into it carried no CSS at all — a
+  deliberate "no CSS of its own" rule meant to keep the bytes of plans without
+  a prototype stable — so they fell to the flex default `order: 0`, sat ahead
+  of the status badge, and drew as bare underlined text beside two pills.
+  `scripts/lib/plan-shell.mjs` now gives the three links one chip rule (the
+  badges' geometry — `.25rem .75rem` padding, `999px` radius, `.7rem`
+  uppercase mono — in the accent colour, no underline, underline on hover)
+  and `order: 3`; Save as PDF and the theme toggle shift to 4 and 5. They also
+  join the `pointer: coarse` 44px hit-area list. Measured in a browser on a
+  spec carrying all three keys: computed orders 1, 2, 3, 3, 3, 4, 5, and the
+  row reads status, effort, prototype, design, issue, PDF, toggle left to
+  right in both themes. Pinned by `tests/plugins/test-plan-header-links.mjs`.
+  Found reviewing a rendered plan in shawn-sandy/agent-ui-skills#28.
+- **The prototype skeleton refocuses a leading `<select>` after submit.**
+  `skills/prototype/reference/PROTOTYPE-SKELETON.html`'s submit handler ended
+  with `form.querySelector('input')`, so a prototype whose first field is a
+  `<select>` or `<textarea>` never got focus back after a record was added —
+  the keyboard user landed on `<body>` every time. The selector is now
+  `'input, select, textarea'`. Verified in a browser: after `requestSubmit()`
+  on a form whose first field is a select, `document.activeElement` is that
+  select and the record is in the grid. Pinned by
+  `tests/plugins/test-prototype-refocus.mjs`.
+
 ## 9.13.0 — plan-document polish pass (2026-09-02)
 
 ### Changed
