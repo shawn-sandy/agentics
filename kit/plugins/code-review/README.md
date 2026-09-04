@@ -111,7 +111,7 @@ The plugin includes an `agent-code-reviewer` sub-agent for delegation from other
 | Tools | Read, Glob, Grep, Bash |
 | Disallowed Tools | Write, Edit, NotebookEdit |
 | Permission Mode | `plan` (enforced read-only) |
-| Max Turns | 10 |
+| Max Turns | 30 |
 | Memory | Project-scoped (`.claude/agent-memory/agent-code-reviewer/`) |
 | Background | Yes (non-blocking) |
 
@@ -134,7 +134,7 @@ Agent(
 )
 ```
 
-The agent runs in the background (`background: true`) and returns a structured report when complete. Because it uses `permissionMode: plan`, it cannot modify any files — it only reads and reports.
+The agent runs in the background (`background: true`) and returns a structured report when complete. Because it uses `permissionMode: plan`, it cannot modify any files — it only reads and reports. It has a 30-turn cap; when it hits the cap the harness returns the output marked partial. A caller whose next step depends on the report should treat a partial or empty result as no report and fall back to its own inline review rather than re-dispatching.
 
 ### Agent memory
 

@@ -32,6 +32,13 @@ subagent starts with no context:
 > continue after a failed step — a missing `set -e`, an unchecked exit code, or
 > a default env var that silently no-ops.
 
+The reviewer runs in the background with a 30-turn cap; when it hits the cap
+the harness returns its output marked partial. **A partial or empty result, or
+one missing its `### Summary` heading, is "no report."** Do not re-dispatch or
+resume it. Run the same checklist inline against `git diff <base>...HEAD` and
+say so in the report: "Self-review ran inline — reviewer agent returned no
+report."
+
 If the `Agent` tool is unavailable, run the same checklist inline against
 `git diff <base>...HEAD` and say so in the report: "Self-review ran inline — no
 subagent available."

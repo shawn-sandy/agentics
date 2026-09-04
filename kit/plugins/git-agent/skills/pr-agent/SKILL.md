@@ -117,6 +117,13 @@ context):
 > continue after a failed step — a missing `set -e`, an unchecked exit code, or
 > a default env var that silently no-ops.
 
+The reviewer runs in the background with a 30-turn cap; when it hits the cap
+the harness returns its output marked partial. **A partial or empty result, or
+one missing its `### Summary` heading, is "no report."** Do not re-dispatch or
+resume it. Run the same checklist inline against `git diff <base>...HEAD` and
+add the line "Pre-PR review ran inline — reviewer agent returned no report."
+under `## Review Notes` in the PR body (Step 5).
+
 **Single pass — never loop the review.** Confirm each finding against the
 actual source, fix only the confirmed ones, commit them as one
 `fix(<scope>): <description>` commit (Step 4 already pushed, so add — never
@@ -168,7 +175,7 @@ happen reads to a reviewer exactly like one that passed.
 Omit the `## Linked Issues` section entirely if Step 4.5 found no issue references.
 
 Add a `## Review Notes` section — one line per finding — only when Step 4.7
-left unconfirmed findings; omit it entirely otherwise.
+left unconfirmed findings or ran inline; omit it entirely otherwise.
 
 Output the PR URL returned by `gh pr create` and **STOP**.
 

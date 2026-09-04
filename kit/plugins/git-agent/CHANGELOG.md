@@ -1,5 +1,21 @@
 # Changelog — git-agent
 
+## v4.20.2 — 2026-09-03 — a stalled reviewer no longer stalls the ship
+
+### Fixed
+
+- **pr-agent Step 4.7 and ship Step 4.5 fall back to an inline review when the
+  adversarial reviewer returns no report.** Both steps block on the reviewer's
+  findings, yet dispatched `code-review:agent-code-reviewer` — a background
+  agent capped at ten turns — with no rule for what to do when the report never
+  came. In three sessions on 2026-09-03 the agent ran out of turns or stalled
+  before reporting, and the ship hung until the user re-sent the command. Both
+  steps now define "no report" — a partial, empty, or `### Summary`-less result
+  — and run the same checklist inline, saying so under `## Review Notes` in the
+  PR body (pr-agent) or in the step report (ship) instead of re-dispatching.
+  The review prompt itself is unchanged. Pairs with `code-review` 3.3.6, which
+  raises the agent's cap to 30 so the partial return is the exception.
+
 ## v4.20.1 — 2026-08-27 — an empty log is not an empty CI run
 
 ### Fixed
