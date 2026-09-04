@@ -106,10 +106,20 @@ function readSeed() {
   try { return JSON.parse(document.getElementById('seed').textContent); }
   catch (e) { return []; }
 }
+function isRecordList(value) {
+  // JSON.parse accepts shapes render() cannot walk ([null], {}, "x") — only an
+  // array of plain objects counts as stored records; anything else is dropped.
+  if (!Array.isArray(value)) return false;
+  for (var i = 0; i < value.length; i++) {
+    if (value[i] === null || typeof value[i] !== 'object' || Array.isArray(value[i])) return false;
+  }
+  return true;
+}
 function load() {
   try {
     var raw = localStorage.getItem(STORE_KEY);
-    return raw ? JSON.parse(raw) : readSeed();
+    var stored = raw ? JSON.parse(raw) : null;
+    return isRecordList(stored) ? stored : readSeed();
   } catch (e) { return readSeed(); }
 }
 function save(records) {
