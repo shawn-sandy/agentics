@@ -7,6 +7,9 @@ Routine-compatible for automated backups.
 
 - **settings-backup** — copies settings to a git repo, commits, and pushes
 - **settings-restore** — pulls from a backup repo and restores settings locally
+- **MCP server export** — optionally extracts `mcpServers` from
+  `~/.claude.json` into a scanned control file and restores by printing
+  `claude mcp add-json` commands
 
 ### What gets backed up
 
@@ -24,6 +27,7 @@ Routine-compatible for automated backups.
 | `scripts/` | Included |
 | `reference/` | Included |
 | `settings.local.json` | Opt-in |
+| `mcp-servers.json` from `~/.claude.json` top-level `mcpServers` | Opt-in |
 
 Auto-generated files (sessions, caches, plugins, telemetry) are excluded.
 
@@ -121,11 +125,23 @@ After first use, the repo path is stored in `~/.claude/settings-sync.json`:
 ```json
 {
   "repoPath": "/Users/you/dotfiles/claude-settings",
-  "includeLocalSettings": false
+  "includeLocalSettings": false,
+  "includeMcpServers": false
 }
 ```
 
 Set `"includeLocalSettings": true` to include `settings.local.json` in backups.
+Set `"includeMcpServers": true` to extract only the top-level `mcpServers`
+object from `~/.claude.json` into repo-root `mcp-servers.json`. That generated
+file is included in the backup secret scan and listed in
+`.settings-sync-meta.json` `filesIncluded` when present.
+
+`settings-restore` never copies `mcp-servers.json` into `~/.claude/` and never
+merges it into `~/.claude.json`. Instead, it prints one command per server:
+
+```bash
+claude mcp add-json <name> '<json>'
+```
 
 ## Plugin Structure
 
@@ -151,7 +167,8 @@ settings-sync/
 Activates when the user asks to back up, save, or sync their settings.
 
 Steps: resolve repo path, validate/init git repo and untrack already-ignored
-files, scan for secrets, copy files, commit only when something changed, push.
+files, optionally extract MCP servers, scan for secrets, copy files, commit
+only when something changed, push.
 
 Handles missing files gracefully. Uses rsync with cp fallback. A no-change run
 is logged locally to `.sync-log` (gitignored) and never committed, so the
@@ -163,7 +180,8 @@ Activates when the user asks to restore, import, or recover their settings.
 
 Steps: resolve the source (local path or clone URL), clone if needed, pull
 latest, build the file list from the backup repo root (minus control files),
-generate a file-level diff summary, confirm with user, copy files, report.
+print MCP import commands when `mcp-servers.json` exists, generate a file-level
+diff summary, confirm with user, copy files, report.
 
 Always interactive — requires user confirmation before overwriting.
 Warns that changes take effect after restarting Claude Code.

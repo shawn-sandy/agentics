@@ -24,6 +24,19 @@ Files and directories to include in backup/restore operations. Both
 | Source path | Type | Opt-in flag | Notes |
 |-------------|------|-------------|-------|
 | `~/.claude/settings.local.json` | File | `"includeLocalSettings": true` in `settings-sync.json` | Machine-specific overrides — excluded by default |
+| `~/.claude.json` top-level `mcpServers` | Generated control file | `"includeMcpServers": true` in `settings-sync.json` | Writes only the top-level `mcpServers` object to repo-root `mcp-servers.json`; restore prints `claude mcp add-json` commands instead of copying or merging it |
+
+## Backup repo control files
+
+These files can live in the backup repo root but are not copied into
+`~/.claude/` during restore:
+
+- `.settings-sync-meta.json` — provenance and `filesIncluded` metadata for
+  the last real backup commit
+- `.sync-log` — gitignored local routine/no-change audit trail
+- `mcp-servers.json` — opt-in MCP server export generated from
+  `~/.claude.json`; scan it for secrets during backup and use it only to print
+  `claude mcp add-json <name> '<json>'` commands during restore
 
 ## Excluded (never backed up)
 
@@ -50,3 +63,5 @@ These are auto-generated, machine-specific, or reinstallable:
 - **Missing sources**: skip silently — not every user has all targets
 - **Permissions**: preserve source permissions (`-a` flag on both cp and rsync)
 - **Path safety**: always quote paths in shell commands
+- **MCP servers**: never back up or restore the full `~/.claude.json`; the
+  opt-in export is limited to its top-level `mcpServers` object

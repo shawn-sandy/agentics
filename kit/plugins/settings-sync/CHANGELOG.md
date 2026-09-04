@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.3.0 — 2026-09-04 — Optional MCP server export
+
+### Added
+
+- **`includeMcpServers` exports MCP server definitions without backing up all
+  of `~/.claude.json`.** When `~/.claude/settings-sync.json` sets
+  `"includeMcpServers": true`, `settings-backup` extracts only the top-level
+  `mcpServers` object from `~/.claude.json` into repo-root
+  `mcp-servers.json`. That generated control file is included in the Step 4
+  secret scan and appears in `.settings-sync-meta.json` `filesIncluded` when
+  present.
+- **`settings-restore` prints MCP import commands instead of mutating
+  `~/.claude.json`.** `mcp-servers.json` is now a restore control file, never a
+  `~/.claude/` target. Restore prints one `claude mcp add-json <name> '<json>'`
+  command per server for the user to run deliberately. Pinned by
+  `tests/plugins/test-settings-sync-mcp-export.sh`, which extracts the skill
+  snippets, scans an MCP server env carrying a runtime-built fake `sk-` token,
+  and asserts the token is reported.
+
+---
+
 ## v1.2.0 — 2026-09-04 — Back up what a restore needs, commit only real changes
 
 ### Added

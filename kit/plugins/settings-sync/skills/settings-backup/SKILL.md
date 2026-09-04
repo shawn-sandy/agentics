@@ -56,7 +56,8 @@ After resolving, persist the path to `~/.claude/settings-sync.json`:
 ```json
 {
   "repoPath": "/absolute/path/to/repo",
-  "includeLocalSettings": false
+  "includeLocalSettings": false,
+  "includeMcpServers": false
 }
 ```
 
@@ -99,7 +100,8 @@ those runs into a commit of its own.
 
 ### Step 3 — Read config and build the file list
 
-Read `~/.claude/settings-sync.json` to check for `"includeLocalSettings"`.
+Read `~/.claude/settings-sync.json` to check for `"includeLocalSettings"`
+and `"includeMcpServers"`.
 
 Build the list of sources from the file manifest:
 
@@ -118,9 +120,53 @@ Build the list of sources from the file manifest:
 
 **Conditionally included:**
 - `~/.claude/settings.local.json` — only if `"includeLocalSettings": true`
+- `<repo-path>/mcp-servers.json` — only if `"includeMcpServers": true`
+  and top-level `mcpServers` exists in `~/.claude.json`; this is a generated
+  control file, not a direct copy of `~/.claude.json`
 
-For each source, check if it exists before attempting to copy. Track which
-sources were found and which were skipped.
+**Extract MCP servers.** If `"includeMcpServers": true`, extract only the
+top-level `mcpServers` object from `~/.claude.json` and write that object
+itself to `<repo-path>/mcp-servers.json`. Do not copy any other key from
+`~/.claude.json`. If the file or top-level object is absent, remove a stale
+`mcp-servers.json` from the repo so an opt-in backup reflects the current
+source state. If `~/.claude.json` exists but is not valid JSON, stop rather
+than committing a stale MCP export.
+
+```bash
+repo="<repo-path>"
+if grep -q '"includeMcpServers"[[:space:]]*:[[:space:]]*true' "$HOME/.claude/settings-sync.json" 2>/dev/null; then
+  if [ -f "$HOME/.claude.json" ]; then
+    node -e '
+const fs = require("node:fs");
+const [src, dest] = process.argv.slice(1);
+let doc;
+try {
+  doc = JSON.parse(fs.readFileSync(src, "utf8"));
+} catch (error) {
+  console.error("Unable to parse ~/.claude.json: " + error.message);
+  process.exit(1);
+}
+const servers = doc && typeof doc === "object" && !Array.isArray(doc) ? doc.mcpServers : undefined;
+if (servers && typeof servers === "object" && !Array.isArray(servers)) {
+  fs.writeFileSync(dest, JSON.stringify(servers, null, 2) + "\n");
+} else {
+  try {
+    fs.unlinkSync(dest);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+}
+' "$HOME/.claude.json" "$repo/mcp-servers.json"
+  else
+    rm -f "$repo/mcp-servers.json"
+  fi
+else
+  rm -f "$repo/mcp-servers.json"
+fi
+```
+
+For each source, check if it exists before attempting to copy or scan. Track
+which sources were found and which were skipped.
 
 ### Step 4 — Secret scan (every backup)
 
@@ -132,7 +178,8 @@ The scan is a fast grep over a handful of text files — the cost is negligible.
 Scan every source in the Step 3 file list (files directly, directories
 recursively) for common secret patterns:
 
-- `sk-` (API keys — covers `sk-ant-…` Anthropic keys and `sk_live_` Stripe keys)
+- `sk-` (API keys — covers `sk-ant-…` Anthropic and OpenAI-style keys)
+- `sk_live_` (Stripe live keys)
 - `ghp_`, `ghs_`, `gho_`, `github_pat_` (GitHub tokens)
 - `glpat-` (GitLab tokens)
 - `AKIA` (AWS access keys)
@@ -140,6 +187,38 @@ recursively) for common secret patterns:
 - `xoxb-`, `xoxp-` (Slack tokens)
 - `hooks.slack.com/services/` (Slack webhook URLs)
 - Strings that look like base64-encoded secrets (40+ chars of `[A-Za-z0-9+/=]`)
+
+**Scan the backup sources.** Include the generated
+`<repo-path>/mcp-servers.json` control file when it exists, because MCP server
+environment blocks commonly hold API keys. Use this output to drive the
+interactive warning or routine `.sync-log` entry described below.
+
+```bash
+repo="<repo-path>"
+secret_patterns='sk-[A-Za-z0-9-]{20,}|sk_live_[A-Za-z0-9]{24,}|ghp_[A-Za-z0-9]{36}|ghs_[A-Za-z0-9]{36}|gho_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,}|glpat-[A-Za-z0-9_-]{20,}|AKIA[A-Z0-9]{16}|AIza[A-Za-z0-9_-]{35}|xox[bp]-[A-Za-z0-9-]{10,}|hooks\.slack\.com/services/|[A-Za-z0-9+/=]{40,}'
+scan_one() {
+  if [ -d "$1" ]; then
+    grep -RHInE "$secret_patterns" "$1" 2>/dev/null || true
+  elif [ -f "$1" ]; then
+    grep -HInE "$secret_patterns" "$1" 2>/dev/null || true
+  fi
+}
+scan_one "$HOME/.claude/settings.json"
+scan_one "$HOME/.claude/CLAUDE.md"
+scan_one "$HOME/.claude/keybindings.json"
+scan_one "$HOME/.claude/rules"
+scan_one "$HOME/.claude/commands"
+scan_one "$HOME/.claude/skills"
+scan_one "$HOME/.claude/hooks"
+scan_one "$HOME/.claude/agents"
+scan_one "$HOME/.claude/output-styles"
+scan_one "$HOME/.claude/scripts"
+scan_one "$HOME/.claude/reference"
+if grep -q '"includeLocalSettings"[[:space:]]*:[[:space:]]*true' "$HOME/.claude/settings-sync.json" 2>/dev/null; then
+  scan_one "$HOME/.claude/settings.local.json"
+fi
+[ -f "$repo/mcp-servers.json" ] && scan_one "$repo/mcp-servers.json"
+```
 
 If any matches are found, warn the user:
 
@@ -202,7 +281,7 @@ someone notices. List them:
 for p in "<repo-path>"/* "<repo-path>"/.*; do
   [ -e "$p" ] || continue
   e="$(basename "$p")"
-  case " . .. .git .gitignore .sync-log .settings-sync-meta.json settings.json CLAUDE.md keybindings.json settings.local.json rules commands skills hooks agents output-styles scripts reference " in
+  case " . .. .git .gitignore .sync-log .settings-sync-meta.json mcp-servers.json settings.json CLAUDE.md keybindings.json settings.local.json rules commands skills hooks agents output-styles scripts reference " in
     *" $e "*) ;;
     *) echo "$e" ;;
   esac

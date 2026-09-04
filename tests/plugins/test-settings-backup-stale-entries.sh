@@ -22,7 +22,7 @@ trap 'rm -rf "$TMP"' EXIT
 REPO="$TMP/backup"
 mkdir -p "$REPO/.git" "$REPO/rules" "$REPO/hooks" "$REPO/plans" "$REPO/vscode"
 touch "$REPO/.gitignore" "$REPO/.sync-log" "$REPO/.settings-sync-meta.json" \
-      "$REPO/settings.json" "$REPO/CLAUDE.md" "$REPO/notes.txt"
+      "$REPO/mcp-servers.json" "$REPO/settings.json" "$REPO/CLAUDE.md" "$REPO/notes.txt"
 # targets + control files: never printed.   strays: plans/ vscode/ notes.txt
 
 SNIPPET="$(awk '/^\*\*Entries that are not targets\.\*\*/{f=1} f&&/^```bash/{c=1;next} c&&/^```/{exit} c{print}' "$SKILL")"
@@ -64,6 +64,7 @@ expect absent  'CLAUDE.md'      "a second file target is not reported"
 expect absent  '.git'           "the .git directory is not reported"
 expect absent  '.gitignore'     "a control file is not reported"
 expect absent  '.sync-log'      "a second control file is not reported"
+expect absent  'mcp-servers.json' "the MCP control file is not reported"
 
 echo
 echo "snippet output:"

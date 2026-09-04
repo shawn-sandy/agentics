@@ -125,9 +125,15 @@ which belong to the repo and never to `~/.claude/`:
 - `.gitignore`
 - `.sync-log`
 - `.settings-sync-meta.json`
+- `mcp-servers.json`
 
-Every entry maps to the same name under `~/.claude/`:
+Every non-control entry maps to the same name under `~/.claude/`:
 `<repo-path>/<entry>` → `~/.claude/<entry>`.
+
+`mcp-servers.json` is a generated control file. Never copy it into
+`~/.claude/`, and never merge it into `~/.claude.json`; Claude Code owns that
+file's broader machine state. Use it only to print import commands the user
+can run deliberately.
 
 **Validate every entry before it is used as a path.** These names come from the
 repo, and Step 6 feeds them to `rm -rf` and `rsync --delete`. Accept an entry
@@ -147,6 +153,45 @@ even when it appears in `filesIncluded` or the repo root. On a new machine that
 config file does not exist yet, so the default is to skip it.
 
 Track which entries exist in the repo and which are missing.
+
+**Print MCP add-json commands.** If `mcp-servers.json` exists, print one
+command per server. The file contains the extracted top-level `mcpServers`
+object itself, so each top-level key is a server name and each value is the
+JSON passed to `claude mcp add-json`.
+
+```bash
+repo="<repo-path>"
+if [ -f "$repo/mcp-servers.json" ]; then
+  node -e '
+const fs = require("node:fs");
+const [src] = process.argv.slice(1);
+const sq = String.fromCharCode(39);
+const shellQuote = (value) => sq + String(value).replaceAll(sq, sq + "\"" + sq + "\"" + sq) + sq;
+let servers;
+try {
+  servers = JSON.parse(fs.readFileSync(src, "utf8"));
+} catch (error) {
+  console.error("Unable to parse mcp-servers.json: " + error.message);
+  process.exit(1);
+}
+if (!servers || typeof servers !== "object" || Array.isArray(servers)) {
+  console.error("mcp-servers.json must contain a JSON object of server definitions");
+  process.exit(1);
+}
+for (const [name, config] of Object.entries(servers)) {
+  if (!config || typeof config !== "object" || Array.isArray(config)) {
+    console.error("Skipping " + name + ": server definition is not a JSON object");
+    continue;
+  }
+  const serverName = /^[A-Za-z0-9._:-]+$/.test(name) ? name : shellQuote(name);
+  console.log("claude mcp add-json " + serverName + " " + shellQuote(JSON.stringify(config)));
+}
+' "$repo/mcp-servers.json"
+fi
+```
+
+Carry the printed commands to Step 9. They are instructions for the user, not
+restore work to verify.
 
 ### Step 4 — Generate diff summary
 
@@ -211,7 +256,7 @@ command -v rsync >/dev/null 2>&1
 ```
 
 Work through the list built in Step 3, treating each entry as a file or a
-directory.
+directory. That list excludes control files, including `mcp-servers.json`.
 
 **If rsync is available:**
 
@@ -298,7 +343,8 @@ it:
 ```json
 {
   "repoPath": "/absolute/path/to/repo",
-  "includeLocalSettings": false
+  "includeLocalSettings": false,
+  "includeMcpServers": false
 }
 ```
 
@@ -336,6 +382,16 @@ Restart your session or run `claude` again to pick up the changes.
 
 If the repo was cloned in Step 1, name the clone location so the user knows
 where it landed.
+
+If Step 3 printed MCP commands, add them after the restore result:
+
+```
+MCP servers were exported separately. Run these commands to import them:
+  claude mcp add-json <name> '<json>'
+```
+
+Do not report `mcp-servers.json` as restored or verified; it is a control file,
+not a `~/.claude/` target.
 
 On a **new machine**, add:
 
