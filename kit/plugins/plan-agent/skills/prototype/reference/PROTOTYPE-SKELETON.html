@@ -213,7 +213,7 @@ function resetStore() {
     save(records);
     render();
     form.reset();
-    var first = form.querySelector('input');
+    var first = form.querySelector('input, select, textarea');
     if (first) first.focus();
     announce('Record added. ' + records.length + ' total.');
   });

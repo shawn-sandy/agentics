@@ -163,14 +163,14 @@ Run everything and confirm it passes.
 `;
 
 /** sha256 of renderUnphased() under the current renderer. Regenerate only for
- * a deliberate shell change. Re-derived 2026-09-02 for the plan-document
- * polish: the doc-type eyebrow was removed from the masthead, and the shell
- * gained browser-surface theming (selection, scrollbars, underline offset),
- * tabular figures, a compositor-driven scroll rail, and lost the 4px
- * side-tab on the objective-test card, and coarse-pointer hit areas were
- * brought up to 44px. The theme toggle became a square sun/moon icon
- * button matching the Save as PDF box. */
-const BASELINE_SHA256 = '4d5968b056a2e39a921baf96247f7d773d899c601cdcf0d180a64b78fcb9e33d';
+ * a deliberate shell change. Re-derived 2026-09-04 for the header-link chips
+ * (9.13.1): the prototype / issue / design anchors gained one chip rule and an
+ * `order` slot in `.plan-header-actions`, shifting Save as PDF and the theme
+ * toggle to orders 4 and 5, and joined the coarse-pointer 44px hit-area list.
+ * Previously re-derived 2026-09-02 for the plan-document polish (eyebrow
+ * removed, browser-surface theming, tabular figures, compositor-driven scroll
+ * rail, objective-card side-tab removed, 44px hit areas, square theme toggle). */
+const BASELINE_SHA256 = '6e3f557789423f6d829d16ffac19855efdfb7c38e106d7f5566bd74f810d93ab';
 
 const render = (parsed, stem) =>
   renderPlanHtml(parsed, {

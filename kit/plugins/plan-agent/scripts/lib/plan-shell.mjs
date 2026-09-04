@@ -271,8 +271,11 @@ export const CSS = `/* ── Design tokens ────────────
   }
   .plan-header-actions .status-badge { order: 1; }
   .plan-header-actions .effort-badge { order: 2; }
-  .plan-header-actions .save-pdf-btn { order: 3; margin-left: auto; }
-  .plan-header-actions .theme-toggle { order: 4; }
+  .plan-header-actions .prototype-link,
+  .plan-header-actions .issue-link,
+  .plan-header-actions .design-link { order: 3; }
+  .plan-header-actions .save-pdf-btn { order: 4; margin-left: auto; }
+  .plan-header-actions .theme-toggle { order: 5; }
   @media (max-width: 560px) {
     .plan-header-actions .save-pdf-btn { margin-left: 0; }
   }
@@ -329,6 +332,35 @@ export const CSS = `/* ── Design tokens ────────────
   [data-effort="low"]    .effort-badge { color: var(--moss);   border-color: var(--moss-line); }
   [data-effort="medium"] .effort-badge { color: var(--signal); border-color: var(--signal-line); }
   [data-effort="high"]   .effort-badge { color: var(--red);    border-color: var(--red-border); }
+
+  /* Header links (prototype / issue / design) — the badges' chip, in the
+     accent colour so they still read as links. Before this rule they had no
+     CSS at all: bare underlined text at the flex default order 0, ahead of
+     the status badge. No underline — the pill border is the affordance, and
+     an underline under .7rem uppercase mono cuts straight through it. */
+  .prototype-link,
+  .issue-link,
+  .design-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .25rem .75rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    text-decoration: none;
+  }
+  .prototype-link:hover,
+  .issue-link:hover,
+  .design-link:hover { border-color: var(--accent); text-decoration: underline; }
 
   @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
   [data-status="in-progress"] .status-badge::before {
@@ -1462,6 +1494,9 @@ export const CSS = `/* ── Design tokens ────────────
   @media (pointer: coarse) {
     .save-pdf-btn,
     .plan-back-link,
+    .prototype-link,
+    .issue-link,
+    .design-link,
     .copy-prompt-btn,
     .copy-cmd-btn,
     .copy-src-btn,
@@ -1469,6 +1504,9 @@ export const CSS = `/* ── Design tokens ────────────
     .copy-goal-btn { position: relative; }
     .save-pdf-btn::after,
     .plan-back-link::after,
+    .prototype-link::after,
+    .issue-link::after,
+    .design-link::after,
     .copy-prompt-btn::after,
     .copy-cmd-btn::after,
     .copy-src-btn::after,
@@ -2031,19 +2069,21 @@ export function metaTags({ status, effort, type, created, repo, file, path, md, 
  * directory to its prototype — empty when the spec carries no `prototype:`
  * key, in which case no anchor is emitted at all.
  *
- * Deliberately carries no CSS of its own: the shared CSS block is emitted into
- * every plan, so a new rule would change the bytes of plans that have no
- * prototype. `a { color: var(--accent) }` and the actions row's flex gap
- * already style it.
+ * The three anchors below share one chip rule (`.prototype-link, .issue-link,
+ * .design-link`) and one `order` slot in `.plan-header-actions`, between the
+ * badges and the controls. They used to carry no CSS at all so that plans
+ * without a prototype kept their bytes; the cost was a link in a flex row of
+ * explicitly ordered children — it fell to `order: 0` and rendered as bare
+ * underlined text ahead of the status badge.
  *
  * `issueHref` is the tracking ticket's full URL, empty when the spec carries
- * no `issue:` key — same all-or-nothing anchor, same no-CSS-of-its-own rule.
+ * no `issue:` key — same all-or-nothing anchor.
  *
  * `designHref` is the published design canvas's artifact URL, empty when the
  * spec carries no `design:` key. Emitted VERBATIM — unlike `prototypeHref`,
  * which is a repo path the caller relativized against this plan's own output
  * directory, a canvas is not a file in the tree and has nothing to relativize
- * against. Same all-or-nothing anchor, same no-CSS-of-its-own rule.
+ * against. Same all-or-nothing anchor.
  */
 export function header({ title, status, effortLabel, created, repo, type, prototypeHref, issueHref, issueLabel, designHref }) {
   const prototypeLink = prototypeHref
