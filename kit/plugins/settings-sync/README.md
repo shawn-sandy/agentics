@@ -19,6 +19,10 @@ Routine-compatible for automated backups.
 | `commands/` | Included |
 | `skills/` | Included |
 | `hooks/` | Included |
+| `agents/` | Included |
+| `output-styles/` | Included |
+| `scripts/` | Included |
+| `reference/` | Included |
 | `settings.local.json` | Opt-in |
 
 Auto-generated files (sessions, caches, plugins, telemetry) are excluded.
@@ -146,11 +150,12 @@ settings-sync/
 
 Activates when the user asks to back up, save, or sync their settings.
 
-Steps: resolve repo path, validate/init git repo, scan for secrets (first run),
-copy files, write metadata, commit, push.
+Steps: resolve repo path, validate/init git repo and untrack already-ignored
+files, scan for secrets, copy files, commit only when something changed, push.
 
-Handles missing files gracefully. Uses rsync with cp fallback. Logs no-change
-runs to `.sync-log` for audit trail.
+Handles missing files gracefully. Uses rsync with cp fallback. A no-change run
+is logged locally to `.sync-log` (gitignored) and never committed, so the
+repo's history shows only real settings changes.
 
 ### settings-restore (Skill)
 

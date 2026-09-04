@@ -1,5 +1,63 @@
 # Changelog
 
+## v1.2.0 — 2026-09-04 — Back up what a restore needs, commit only real changes
+
+### Added
+
+- **Four new default targets: `agents/`, `output-styles/`, `scripts/`,
+  `reference/`.** A coverage audit compared the manifest against a real
+  `~/.claude/` and found the files already captured pointing at folders never
+  copied: `settings.json` names an `outputStyle` that lives in
+  `output-styles/`, its SessionEnd hook runs a script in `scripts/`,
+  `CLAUDE.md` links files in `reference/`, and `agents/` holds the user's
+  subagents. A restore from that backup looked complete and was not — the
+  restored style did not exist and the restored hook pointed at a missing
+  file. All four are now in `references/file-manifest.md`, the Step 3 list,
+  the copy block, and the stray-entries detector, pinned to each other by
+  `tests/plugins/test-settings-sync-manifest-targets.sh`. `settings-restore`
+  needs no change: it restores every repo-root entry it finds.
+- **Step 2 untracks files the ignore rules already cover.** An ignore rule
+  never untracks a file that is already in git, so the four `.pyc` files
+  committed before `__pycache__/` was ignored rode along in the real repo
+  indefinitely. The new `**Ignore rules and already-tracked files.**` block
+  appends any missing rule to `.gitignore`, then runs
+  `git ls-files -ci --exclude-standard` through `git rm --cached`, which
+  handles `__pycache__/`, `.sync-log`, and any rule added later in one line.
+  Working files are untouched.
+
+### Changed
+
+- **A no-change run no longer commits.** Steps 6 and 7 wrote
+  `.settings-sync-meta.json` with a fresh timestamp and only then asked
+  whether anything had changed, so the answer was always yes: 4,477 of one
+  real repo's 4,601 commits changed nothing but that timestamp, and the
+  no-change branch committed a timestamped `.sync-log` line on top. The two
+  steps are now one `**Commit only real changes.**` block that stages, tests
+  `git diff --cached --quiet`, and writes the metadata only inside the
+  real-change branch. `.sync-log` is gitignored and stays a local audit trail.
+  Pinned by `tests/plugins/test-settings-backup-no-change-commit.sh` (the
+  metadata timestamp survives a no-change run) and
+  `tests/plugins/test-settings-backup-e2e.sh` (two runs against a fake home
+  produce one commit).
+- **The copy step is one bash block under `**Copy the targets.**`.** It
+  detects rsync, copies the three single files and eight directories with the
+  existing `-aL` / `--delete` semantics or the `cp` fallback, honours
+  `includeLocalSettings`, quotes every path, and removes single-file targets
+  that no longer exist locally — so the e2e test can run the skill's real
+  commands instead of a paraphrase.
+
+### Fixed
+
+- **Manifest notes were wrong.** `agents/` was filed under task state, and
+  `projects/` claimed memory "lives with each project" when auto-memory lives
+  under `~/.claude/projects/*/memory/`. Both notes are corrected; `docs/`,
+  `GITHUB_COMMANDS.md`, and the per-project `.claude/launch.json` are now
+  listed as excluded with their reasons, and Copy behavior says that a
+  symlinked skill folder comes back as a real folder the skills CLI must
+  re-link.
+
+---
+
 ## v1.1.5 — 2026-09-03 — Fresh-machine install steps and exec-bit false failures
 
 ### Fixed
