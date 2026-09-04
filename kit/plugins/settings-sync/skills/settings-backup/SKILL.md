@@ -70,22 +70,32 @@ Run `git -C <repo-path> rev-parse --is-inside-work-tree`.
   `git init <repo-path>`. On confirmation, run `git init`.
 - If the directory is already a git repo, continue.
 
-Ensure the repo root `.gitignore` contains every rule below — create the file
-if missing, and **append any individual rule it lacks** if it already exists:
+**Ignore rules and already-tracked files.** The block below makes sure the
+repo root `.gitignore` carries every rule in its list — creating the file if
+missing, appending any individual rule it lacks — and then untracks whatever
+those rules already cover. Checking only that `.gitignore` exists is not
+enough: every repo created before `hooks/` became a target has one without
+`__pycache__/`, and an ignore rule never untracks a file that is already in
+git, so the `.pyc` files committed before the rule arrived kept riding along on
+every run. `git rm --cached` drops only the index entry; the working file
+stays on disk, and `--force` only skips the up-to-date check so a file someone
+hand-staged in the backup repo is untracked too.
 
-```
-.DS_Store
-*.swp
-*.swo
-*~
-.*.swp
-__pycache__/
+```bash
+repo="<repo-path>"
+touch "$repo/.gitignore"
+[ -n "$(tail -c1 "$repo/.gitignore")" ] && echo >> "$repo/.gitignore"
+for rule in .DS_Store '*.swp' '*.swo' '*~' '.*.swp' __pycache__/ .sync-log; do
+  grep -qxF -- "$rule" "$repo/.gitignore" || echo "$rule" >> "$repo/.gitignore"
+done
+if git -C "$repo" ls-files -ci --exclude-standard | grep -q .; then
+  git -C "$repo" ls-files -ci --exclude-standard -z | xargs -0 git -C "$repo" rm --cached --force --quiet --
+fi
 ```
 
-Checking only for the file's existence is not enough. Every repo created before
-`hooks/` became a backup target already has a `.gitignore` without
-`__pycache__/`, so those rules would never arrive and the `git add -A` in Step 7
-would commit `hooks/__pycache__` on the next run.
+`.sync-log` is ignored because it is a local audit trail: Step 6 appends a
+line to it on every no-change run, and committing that line would turn each of
+those runs into a commit of its own.
 
 ### Step 3 — Read config and build the file list
 
@@ -101,6 +111,10 @@ Build the list of sources from the file manifest:
 - `~/.claude/commands/`
 - `~/.claude/skills/`
 - `~/.claude/hooks/`
+- `~/.claude/agents/`
+- `~/.claude/output-styles/`
+- `~/.claude/scripts/`
+- `~/.claude/reference/`
 
 **Conditionally included:**
 - `~/.claude/settings.local.json` — only if `"includeLocalSettings": true`
@@ -140,53 +154,43 @@ the routine.
 
 ### Step 5 — Copy files to the repo
 
-Determine the copy method:
+**Copy the targets.** One block copies every Step 3 source that exists. With
+rsync, `-aL` follows symlinks and `--delete` is scoped to each target
+subdirectory, never the repo root; without it, `cp` runs after an `rm -rf` of
+the target subdirectory so deleted source files do not linger. A single-file
+target that no longer exists locally is removed from the repo so the backup
+reflects the current local state. Every path is quoted.
 
 ```bash
-command -v rsync >/dev/null 2>&1
+repo="<repo-path>"
+files="settings.json CLAUDE.md keybindings.json"
+if grep -q '"includeLocalSettings"[[:space:]]*:[[:space:]]*true' "$HOME/.claude/settings-sync.json" 2>/dev/null; then
+  files="$files settings.local.json"
+fi
+dirs="rules commands skills hooks agents output-styles scripts reference"
+if command -v rsync >/dev/null 2>&1; then
+  for f in $files; do
+    if [ -f "$HOME/.claude/$f" ]; then rsync -aL "$HOME/.claude/$f" "$repo/$f"; fi
+  done
+  for d in $dirs; do
+    if [ -d "$HOME/.claude/$d" ]; then rsync -aL --delete "$HOME/.claude/$d/" "$repo/$d/"; fi
+  done
+else
+  for f in $files; do
+    if [ -f "$HOME/.claude/$f" ]; then cp -fL "$HOME/.claude/$f" "$repo/$f"; fi
+  done
+  for d in $dirs; do
+    if [ -d "$HOME/.claude/$d" ]; then rm -rf "$repo/$d" && cp -aL "$HOME/.claude/$d" "$repo/$d"; fi
+  done
+fi
+for f in $files; do
+  if [ ! -f "$HOME/.claude/$f" ] && [ -f "$repo/$f" ]; then rm "$repo/$f"; fi
+done
 ```
 
-**If rsync is available:**
-
-For single files (no `--delete` — it would remove unrelated repo-root files):
-
-```bash
-rsync -aL ~/.claude/settings.json <repo-path>/settings.json
-rsync -aL ~/.claude/CLAUDE.md <repo-path>/CLAUDE.md
-rsync -aL ~/.claude/keybindings.json <repo-path>/keybindings.json
-```
-
-For directories (`--delete` is safe here — scoped to the target subdir):
-
-```bash
-rsync -aL --delete ~/.claude/rules/ <repo-path>/rules/
-rsync -aL --delete ~/.claude/commands/ <repo-path>/commands/
-rsync -aL --delete ~/.claude/skills/ <repo-path>/skills/
-rsync -aL --delete ~/.claude/hooks/ <repo-path>/hooks/
-```
-
-**If rsync is not available (cp fallback):**
-
-For each file target, use `cp -fL <source> <repo-path>/<filename>`.
-For each directory target, use:
-
-```bash
-rm -rf <repo-path>/<dir> && cp -aL ~/.claude/<dir> <repo-path>/<dir>
-```
-
-The `rm -rf` before copy ensures deleted source files don't persist in the
-backup (mirrors rsync `--delete` behavior).
-
-**Cleanup for deleted sources:** for each file target that does **not** exist
-locally but **does** exist in the repo, remove it from the repo so the backup
-reflects the current local state:
-
-```bash
-[ ! -f ~/.claude/keybindings.json ] && [ -f <repo-path>/keybindings.json ] && rm <repo-path>/keybindings.json
-```
-
-Apply this check to every single-file target (settings.json, CLAUDE.md,
-keybindings.json, and settings.local.json if opt-in is enabled).
+A symlinked skill folder (one the skills CLI installed elsewhere and linked
+into `~/.claude/skills/`) is copied as a real folder. It still works after a
+restore; only the CLI's link to it is lost.
 
 **Entries that are not targets.** The repo root may hold entries that no
 Step 3 source produced — left behind by an older version of this skill, or
@@ -198,7 +202,7 @@ someone notices. List them:
 for p in "<repo-path>"/* "<repo-path>"/.*; do
   [ -e "$p" ] || continue
   e="$(basename "$p")"
-  case " . .. .git .gitignore .sync-log .settings-sync-meta.json settings.json CLAUDE.md keybindings.json settings.local.json rules commands skills hooks " in
+  case " . .. .git .gitignore .sync-log .settings-sync-meta.json settings.json CLAUDE.md keybindings.json settings.local.json rules commands skills hooks agents output-styles scripts reference " in
     *" $e "*) ;;
     *) echo "$e" ;;
   esac
@@ -206,46 +210,46 @@ done
 ```
 
 Do **not** delete them — a hand-added entry is deliberate. Carry the list to
-Step 8 so the user can remove each one from the repo or add it to the
+Step 7 so the user can remove each one from the repo or add it to the
 manifest.
 
-Skip any source that does not exist — do not error on copy.
+### Step 6 — Commit only real changes
 
-If `includeLocalSettings` is true, also copy `~/.claude/settings.local.json`.
-
-### Step 6 — Write metadata
-
-Write `.settings-sync-meta.json` to the repo root:
-
-```bash
-cat > <repo-path>/.settings-sync-meta.json << 'METAEOF'
-{
-  "hostname": "<output of hostname>",
-  "timestamp": "<ISO 8601 UTC>",
-  "claudeVersion": "<output of claude --version or 'unknown'>",
-  "filesIncluded": [<list of files/dirs that were copied>]
-}
-METAEOF
-```
-
-Use `hostname` and `date -u +%Y-%m-%dT%H:%M:%SZ` for the values. For Claude
-version, run `claude --version 2>/dev/null || echo 'unknown'`.
-
-### Step 7 — Commit and push
-
-Run `git -C <repo-path> add -A`.
-
-Check `git -C <repo-path> status --porcelain`.
-
-**If there are changes:**
+**Commit only real changes.** Stage everything, then ask git whether anything
+is actually staged before writing a single byte of metadata. The old order —
+write a fresh timestamp into `.settings-sync-meta.json`, then check for
+changes — made every run a commit: 4,477 of one real repo's 4,601 commits
+changed nothing but that timestamp, and `git log` could no longer show when a
+setting changed. Now a no-change run appends one line to the local, gitignored
+`.sync-log` and touches nothing git tracks. A real change writes the metadata
+(hostname, UTC timestamp, `claude --version`, and the top-level entries the
+backup holds, each JSON-escaped so a stray root entry with a quote in its name
+cannot corrupt the file) and commits it together with the copied files.
 
 ```bash
-git -C <repo-path> commit -m "backup: Claude settings $(date +%Y-%m-%d\ %H:%M)"
+repo="<repo-path>"
+json_escape() { sed 's/\\/\\\\/g; s/"/\\"/g'; }
+git -C "$repo" add -A
+if git -C "$repo" diff --cached --quiet; then
+  printf '[%s] no changes — backup skipped (hostname: %s)\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(hostname)" >> "$repo/.sync-log"
+  echo no-change
+else
+  {
+    printf '{\n  "hostname": "%s",\n  "timestamp": "%s",\n  "claudeVersion": "%s",\n  "filesIncluded": [\n' \
+      "$(hostname | json_escape)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$({ claude --version 2>/dev/null || echo unknown; } | json_escape)"
+    git -C "$repo" ls-files -z | tr '\0' '\n' | cut -d/ -f1 | grep -vx -e .gitignore -e .settings-sync-meta.json | sort -u \
+      | json_escape | awk 'NR > 1 { printf ",\n" } { printf "    \"%s\"", $0 } END { print "" }'
+    printf '  ]\n}\n'
+  } > "$repo/.settings-sync-meta.json"
+  git -C "$repo" add .settings-sync-meta.json \
+    && git -C "$repo" commit -q -m "backup: Claude settings $(date +%Y-%m-%d\ %H:%M)" \
+    && echo committed
+fi
 ```
 
-Check if a remote exists: `git -C <repo-path> remote get-url origin 2>/dev/null`.
-
-If a remote exists, attempt `git -C <repo-path> push`.
+**After `committed`:** check for a remote with
+`git -C <repo-path> remote get-url origin 2>/dev/null`. If one exists, run
+`git -C <repo-path> push`.
 
 - If push succeeds, report success.
 - If push fails (conflict), output: "Push failed — another machine may have
@@ -253,19 +257,10 @@ If a remote exists, attempt `git -C <repo-path> push`.
   `git -C <repo-path> pull --rebase && git push`" and **STOP**. Do not
   auto-resolve.
 
-**If there are no changes:**
+**After `no-change`:** there is nothing to push. Output: "No settings changes
+since last backup. Logged locally to .sync-log (not committed)."
 
-Append a timestamped entry to `<repo-path>/.sync-log`:
-
-```
-[YYYY-MM-DDTHH:MM:SSZ] no changes — backup skipped (hostname: <hostname>)
-```
-
-Commit the updated `.sync-log` if it changed, then push if remote exists.
-
-Output: "No settings changes since last backup. Logged to .sync-log."
-
-### Step 8 — Report
+### Step 7 — Report
 
 Output a summary:
 
@@ -275,8 +270,8 @@ Settings backup complete.
   Files backed up: <count> (<list of names>)
   Skipped (not found): <list or "none">
   Not a backup target (left in repo): <list or "none">
-  Commit: <short hash> — <commit message>
-  Pushed: yes/no/failed
+  Commit: <short hash> — <commit message>, or "none — no changes"
+  Pushed: yes/no/failed/not needed
 ```
 
 **STOP after this step.**
