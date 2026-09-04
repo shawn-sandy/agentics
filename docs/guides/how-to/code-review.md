@@ -16,3 +16,7 @@ Reviews the code you point it at and reports prioritized findings with line numb
 ## Related commands
 
 - `/code-review:fix-branch [base-branch]` — Reviews every file changed vs the default branch against repo rules, project conventions, and frontmatter constraints, then autonomously applies blocking, major, and minor fixes (left uncommitted). Refuses to run on a dirty working tree, and does not review code logic — that is the `code-review-agent` skill's job.
+
+## Related agents
+
+- `agent-code-reviewer` — The read-only background subagent other plugins dispatch for the same checks (git-agent's `pr-agent` and `ship` pre-PR review among them). It is capped at 30 turns, and when it hits the cap the harness returns its output marked partial; a caller treats a partial or empty result as no report and runs its own checklist inline rather than re-dispatching.

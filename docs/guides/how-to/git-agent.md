@@ -56,7 +56,7 @@ Pushes the current branch and opens a pull request with an auto-filled title and
 - **Command** — `/git-agent:pr-agent` — background variant `/git-agent:pr-bg [optional PR title or context hint]`
 - **Say it instead** — Not available; this skill is command-only (`disable-model-invocation: true`).
 - **What happens** — Guards against detached HEAD, the default branch, and an unauthenticated `gh`; stops on an existing open PR, pushes (with `-u` when there is no upstream), scans changed plan HTML for `plan-issue` URLs to add `Closes` lines, runs an adversarial pre-PR review of `git diff <base>...HEAD` in a fresh-context subagent (six checks: no-op edits, vacuous test assertions, self-introduced regressions, unsafe auth lookups, secrets, accessibility regressions), pushes any review fix commit, then prints the URL from `gh pr create`.
-- **Watch out** — It runs no tests, so Test Plan boxes are only ticked for checks actually run in the session — and it does not commit your working-tree changes (the sole commit it makes is the review's fix commit), so run commit-agent first. The review is single-pass: unconfirmed findings ride in the PR body under `## Review Notes`, and a confirmed secret stops the run — it needs rotation, not a follow-up commit.
+- **Watch out** — It runs no tests, so Test Plan boxes are only ticked for checks actually run in the session — and it does not commit your working-tree changes (the sole commit it makes is the review's fix commit), so run commit-agent first. The review is single-pass: unconfirmed findings ride in the PR body under `## Review Notes`, and a confirmed secret stops the run — it needs rotation, not a follow-up commit. The reviewer subagent runs in the background with a 30-turn cap: a partial or empty result, or one missing its `### Summary` heading, counts as no report, so the same checklist runs inline — never a re-dispatch — and `## Review Notes` says so.
 
 ## ship
 
@@ -65,7 +65,7 @@ Stages, commits, self-reviews, pushes, and opens the PR or MR in one guided flow
 - **Command** — `/git-agent:ship` (accepts `--no-review`) — background variant `/git-agent:ship-bg [optional commit/PR hint]`
 - **Say it instead** — Not available; this skill is command-only (`disable-model-invocation: true`).
 - **What happens** — Runs all five pre-flight guards against the unmutated tree and prints a single PASS/BLOCKED table with remediation commands, then stages, commits, self-reviews before pushing (a fresh-context subagent runs the same six adversarial checks as pr-agent against `git diff <base>...HEAD`, amending confirmed fixes into the commit), pushes, and creates the PR/MR through `gh` or `glab`, printing the URL.
-- **Watch out** — Any BLOCKED row stops the run before any mutation and is never auto-remediated (no re-auth, no stash, no `.env` copy); a pre-commit hook failure is reported verbatim and stops. `--no-review` skips the self-review; when it runs, only a confirmed secret blocks the ship — everything unconfirmed is reported, not fixed.
+- **Watch out** — Any BLOCKED row stops the run before any mutation and is never auto-remediated (no re-auth, no stash, no `.env` copy); a pre-commit hook failure is reported verbatim and stops. `--no-review` skips the self-review; when it runs, only a confirmed secret blocks the ship — everything unconfirmed is reported, not fixed. A reviewer subagent that returns no report (partial, empty, or missing its `### Summary` heading) is not re-dispatched — the checklist runs inline and the step report says so.
 
 ## ship-autonomous
 

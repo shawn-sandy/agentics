@@ -16,7 +16,7 @@ Verify **Settings > Actions > General > Workflow permissions** is set to **Read 
 
 | Workflow | Permission | Notes |
 |----------|------------|-------|
-| `update-readme.yml` | `contents: write`, `pull-requests: write` | Uses `claude-code-action` to open PRs rather than pushing directly to `main`; still has write scopes, so keep branch protections and any bypass policy scoped tightly. |
+| `update-docs.yml` | `contents: write`, `pull-requests: write` | Uses `claude-code-action` to open PRs rather than pushing directly to `main`; still has write scopes, so keep branch protections and any bypass policy scoped tightly. |
 
 **If you add a new workflow with `contents: write`**, review whether it could inadvertently push to `main` without a PR. If it does, either scope it to a branch or run it under a dedicated App identity.
 

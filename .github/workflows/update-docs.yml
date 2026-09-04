@@ -1,0 +1,102 @@
+name: Update docs
+
+# Keeps README.md, docs/guides/how-to/*.md, and CHANGELOG.md in step with the
+# plugin releases merged since the last `docs: sync` commit. The procedure is
+# .claude/skills/docs-sync/SKILL.md — the same steps run locally as /docs-sync —
+# so this file only supplies the schedule, the runtime, and the PR.
+#
+# Replaces update-readme.yml, which failed every week from July 2026: it asked
+# for an ANTHROPIC_API_KEY secret that does not exist and never granted the
+# id-token permission its OIDC fallback needed, so the Claude step was skipped.
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"   # Sundays 00:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print the diff in the log instead of opening a PR"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# One run at a time: two overlapping runs would both force-push docs/auto-sync.
+concurrency:
+  group: update-docs
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Step 1 of the skill walks history back to the last docs: sync commit
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Sync the docs
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            Read .claude/skills/docs-sync/SKILL.md and carry out its steps exactly.
+            Edit files only. Do not branch, commit, or push — the workflow does that.
+          claude_args: >-
+            --allowed-tools "Read,Edit,Write,Glob,Grep,Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(node scripts/build-readme-table.mjs:*),Bash(jq:*)"
+
+      # The Plugin Reference Table is generated; a hand edit here fails the run
+      # before it can reach a PR, the same check scripts/verify.sh runs locally.
+      - name: Check the generated README table
+        run: node scripts/build-readme-table.mjs --check
+
+      - name: Show the diff (dry run)
+        if: ${{ inputs.dry_run }}
+        run: |
+          git --no-pager diff --stat
+          git --no-pager diff
+
+      - name: Open or refresh the docs-sync PR
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add README.md CHANGELOG.md docs/guides/how-to
+          if git diff --cached --quiet; then
+            echo "Docs already current — nothing to sync."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B docs/auto-sync
+          # The subject must keep the `docs: sync` prefix — it is the anchor the
+          # skill's Step 1 searches for on the next run.
+          git commit -m "docs: sync README, how-to guides, and changelog with recent releases"
+          git push --force origin docs/auto-sync
+          cat > "$RUNNER_TEMP/pr-body.md" <<'BODY'
+          Automated docs sync from the Update docs workflow.
+
+          Procedure: `.claude/skills/docs-sync/SKILL.md`. The how-to guides and
+          changelog are hand-written prose that this run edited — read the diff
+          before merging.
+
+          ## VERIFICATION
+
+          - `node scripts/build-readme-table.mjs --check` — PASS (run in this workflow)
+          - `bash scripts/verify.sh` — not run here; run it locally before merging
+          BODY
+          # ponytail: GITHUB_TOKEN — a PR it opens does not trigger pull_request
+          # workflows; swap in a PAT secret here if the checks must run on it.
+          if [ -z "$(gh pr list --head docs/auto-sync --state open --json number --jq '.[0].number')" ]; then
+            gh pr create --base main --head docs/auto-sync \
+              --title "docs: sync README, how-to guides, and changelog with recent releases" \
+              --body-file "$RUNNER_TEMP/pr-body.md"
+          else
+            echo "Open docs/auto-sync PR refreshed by the force-push."
+          fi
