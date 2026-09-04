@@ -10,7 +10,7 @@ Plugins under `kit/plugins/` change in their own PRs. Three documents describe
 them from the outside and drift unless someone re-reads each release:
 
 - `README.md` — the `## Plugins` skill tables and the generated Plugin Reference Table
-- `docs/guides/how-to/<plugin>.md` — the "quick docs": one four-part entry per skill
+- `docs/guides/how-to/<plugin>.md` — the "quick docs": one four-part entry per skill, indexed by `README.md` in that folder
 - `CHANGELOG.md` — the root `## [Unreleased]` section, one bullet per release
 
 This skill edits those three files and nothing else. It never commits.
@@ -71,8 +71,9 @@ happens**, **Watch out** — and the guide ends with `## Related commands`
 - Every guide carries the same install line:
   `Install: \`/plugin marketplace add shawn-sandy/agentics\`, then \`/plugin install <name>@agentics-kit\``
 
-If a skill was added or removed, fix that plugin's count and the total in the
-README `## How-To Guides` table.
+If a skill was added or removed, fix that plugin's count and the total in two
+places: the root README `## How-To Guides` table and `docs/guides/how-to/README.md`.
+A new or deleted guide changes both lists too.
 
 ## Step 4 — README.md
 

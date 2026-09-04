@@ -762,7 +762,7 @@ claude --plugin-dir ./kit/plugins/content-tools
 
 ## How-To Guides
 
-One brief "How do I" entry per skill: the slash command to type, the plain-English phrasing that triggers it, what it actually does, and the gotcha worth knowing. Skills marked command-only cannot be triggered by natural language.
+One brief "How do I" entry per skill: the slash command to type, the plain-English phrasing that triggers it, what it actually does, and the gotcha worth knowing. Skills marked command-only cannot be triggered by natural language. The folder carries its own index at [docs/guides/how-to/README.md](./docs/guides/how-to/README.md).
 
 | Plugin | Guide | Skills |
 |--------|-------|--------|
