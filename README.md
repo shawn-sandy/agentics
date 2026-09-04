@@ -4,7 +4,7 @@
 
 A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
 
-**Marketplace:** `agentics-kit` v4.0.0 · **12 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
+**Marketplace:** `agentics-kit` v4.0.0 · **11 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
 
 > **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories have been removed from the repository and are recoverable from git history at the commit preceding their deletion. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
@@ -84,7 +84,7 @@ The agentics project serves two purposes:
 
 | Purpose | What it contains |
 |---------|-----------------|
-| **Active Plugins** | 12 marketplace plugins in `kit/plugins/` — installable via `/plugin install`, covering code review, planning, testing, git workflows, accessibility, and more |
+| **Active Plugins** | 11 marketplace plugins in `kit/plugins/` — installable via `/plugin install`, covering code review, planning, testing, git workflows, accessibility, and more |
 | **Marketplace Infrastructure** | `agentics-kit` marketplace manifest (`marketplace.json`) that enables installation via `/plugin install` |
 
 Every plugin in this repo is a working, production-quality tool you can install and use immediately.
@@ -357,7 +357,7 @@ Systematic code review across quality, bugs, security, and best practices with s
 
 | Agent | Purpose |
 |-------|---------|
-| `agent-code-reviewer` | Internal background code review agent for delegation from other agents or automated workflows |
+| `agent-code-reviewer` | Internal background code review agent for delegation from other agents or automated workflows — capped at 30 turns; a partial or empty result is no report, and the caller falls back to its own inline review |
 
 ```bash
 claude --plugin-dir ./kit/plugins/code-review
@@ -495,7 +495,7 @@ claude --plugin-dir ./kit/plugins/plan-agent
 
 #### `git-agent`
 
-Automated git workflow — create branches, commit with conventional messages, create PRs, and merge them once they are green. Auto-links plan issue references in PR descriptions. By default, every PR-opening flow (`pr-agent`, `ship`, and their background agents) runs an adversarial review of `git diff <base>...HEAD` against a six-point checklist before the PR is created; `ship --no-review` skips this review.
+Automated git workflow — create branches, commit with conventional messages, create PRs, and merge them once they are green. Auto-links plan issue references in PR descriptions. By default, every PR-opening flow (`pr-agent`, `ship`, and their background agents) runs an adversarial review of `git diff <base>...HEAD` against an eleven-point checklist before the PR is created; `ship --no-review` skips this review. A reviewer subagent that returns no report (partial, empty, or missing its `### Summary` heading) is not re-dispatched — the checklist runs inline and the PR body says so.
 
 **Commands:**
 
@@ -762,7 +762,7 @@ claude --plugin-dir ./kit/plugins/content-tools
 
 ## How-To Guides
 
-One brief "How do I" entry per skill: the slash command to type, the plain-English phrasing that triggers it, what it actually does, and the gotcha worth knowing. Skills marked command-only cannot be triggered by natural language.
+One brief "How do I" entry per skill: the slash command to type, the plain-English phrasing that triggers it, what it actually does, and the gotcha worth knowing. Skills marked command-only cannot be triggered by natural language. The folder carries its own index at [docs/guides/how-to/README.md](./docs/guides/how-to/README.md).
 
 | Plugin | Guide | Skills |
 |--------|-------|--------|
@@ -1080,7 +1080,7 @@ GitHub Actions workflows:
 | `claude.yml` | `@claude` mention in issues/PRs | Respond to questions and implement requested changes |
 | `claude-code-review.yml` | PR opened / synchronized / reopened | Automated code review as PR comments |
 | `deploy-pages.yml` | Push to `main` (docs changes) | Deploy `docs/` to GitHub Pages |
-| `update-readme.yml` | Every Sunday at 00:00 UTC | Keep the README in sync with `marketplace.json` |
+| `update-docs.yml` | Every Sunday at 00:00 UTC, or manual dispatch | Run the `docs-sync` skill and open a PR bringing the README, how-to guides, and changelog up to date with the releases since the last sync |
 | `check-plugin-versions.yml` | Pull request | Fail the PR if a touched plugin's `marketplace.json` version does not exceed the base branch, and run the test suite |
 | `publish-dist.yml` | Daily + manual dispatch | Build `dist/` and push it to the `shawn-sandy/agentics-kit` distribution repo |
 | `regen-plans.yml` | Push to `main` (plan changes) | Re-render plan HTML and rebuild the plans gallery index |
