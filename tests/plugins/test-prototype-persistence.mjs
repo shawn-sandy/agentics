@@ -86,4 +86,22 @@ check('5. reset is cancellable via confirm', () => {
   assert.equal(C.load().length, 3);          // changes kept
 });
 
+check('6. malformed stored JSON falls back to the seed instead of crashing render', () => {
+  // Every shape JSON.parse accepts but render() cannot iterate as records.
+  const bad = ['[null]', '{}', '"x"', '42', 'null', '[[]]', '[1]', '[{"name":"ok"},null]'];
+  for (const stored of bad) {
+    const ls3 = makeLocalStorage();
+    ls3.setItem('proto:d', stored);
+    assert.deepEqual(makeStore(ls3, 'proto:d', seedA).load(), JSON.parse(seedA),
+      'stored ' + stored + ' should yield the seed');
+  }
+  // A well-formed record list still wins over the seed — including an empty
+  // one, which means "the user deleted every row", not "reset me".
+  const ls4 = makeLocalStorage();
+  ls4.setItem('proto:e', '[{"name":"kept"}]');
+  assert.deepEqual(makeStore(ls4, 'proto:e', seedA).load(), [{ name: 'kept' }]);
+  ls4.setItem('proto:e', '[]');
+  assert.deepEqual(makeStore(ls4, 'proto:e', seedA).load(), []);
+});
+
 console.log(`\nAll ${passed} persistence checks passed.`);

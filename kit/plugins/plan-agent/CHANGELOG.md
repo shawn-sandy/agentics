@@ -1,5 +1,29 @@
 # Changelog
 
+## 9.13.2 — the prototype store stops handing render() shapes it cannot walk (2026-09-04)
+
+### Fixed
+
+- **`skills/prototype/reference/PROTOTYPE-SKELETON.html` — `load()` only
+  trusts a stored value that is an array of plain objects.** `JSON.parse`
+  accepts `[null]`, `"x"`, `{}`, or `[[]]` without complaint, and `load()`
+  returned whichever it got, so `render()` walked a value it was never
+  written for. `[null]` throws on `rec[f.key]` and `"x"` throws on
+  `records.forEach`, leaving the table empty with an uncaught `TypeError` in
+  the console; `{}` takes the empty-state branch with the summary badge
+  counting `undefined`; `[[]]` renders a blank row with a Delete button. In
+  every case the seed should have shown. A new `isRecordList()` inside the
+  extractable STORE block
+  rejects anything that is not an array whose every element is a non-null,
+  non-array object, and `load()` returns `readSeed()` in that case — the bad
+  value stays in localStorage untouched until the next `save()` overwrites
+  it. `[]` still counts as records: an empty list means the user deleted every
+  row, not "reset me". ES5 only, no new dependency, and the block's contract
+  (depends only on `STORE_KEY`, `document#seed`, `localStorage`, `confirm`)
+  is unchanged. `tests/plugins/test-prototype-persistence.mjs` check 6 pins
+  every rejected shape plus the kept-`[]` case. Prototypes generated before
+  this release carry their own copy of the old block and are not patched.
+
 ## 9.13.1 — header links render as chips; prototype refocus reaches a leading select (2026-09-04)
 
 ### Fixed
