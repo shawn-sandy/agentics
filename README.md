@@ -495,7 +495,7 @@ claude --plugin-dir ./kit/plugins/plan-agent
 
 #### `git-agent`
 
-Automated git workflow — create branches, commit with conventional messages, create PRs, and merge them once they are green. Auto-links plan issue references in PR descriptions. By default, every PR-opening flow (`pr-agent`, `ship`, and their background agents) runs an adversarial review of `git diff <base>...HEAD` against a six-point checklist before the PR is created; `ship --no-review` skips this review. A reviewer subagent that returns no report (partial, empty, or missing its `### Summary` heading) is not re-dispatched — the checklist runs inline and the PR body says so.
+Automated git workflow — create branches, commit with conventional messages, create PRs, and merge them once they are green. Auto-links plan issue references in PR descriptions. By default, every PR-opening flow (`pr-agent`, `ship`, and their background agents) runs an adversarial review of `git diff <base>...HEAD` against an eleven-point checklist before the PR is created; `ship --no-review` skips this review. A reviewer subagent that returns no report (partial, empty, or missing its `### Summary` heading) is not re-dispatched — the checklist runs inline and the PR body says so.
 
 **Commands:**
 
