@@ -1,5 +1,19 @@
 # Changelog
 
+## v3.3.6 — 2026-09-03 — Reviewer gets the turns a diff review needs
+
+### Fixed
+
+- **`agent-code-reviewer` `maxTurns` raised from 10 to 30.** A diff review
+  spends one turn per changed file it reads plus the diff itself, so a ten-turn
+  cap ran out before the report on three ships in the 2026-09-03 usage data —
+  the caller waited on a background agent that never reported. 30 matches
+  `plan-agent`'s `agent-review-plan`, the other 30-turn agent.
+- **README names the caller's side of the contract.** When the cap is hit the
+  harness returns the output marked partial; a caller whose next step depends
+  on the report treats a partial or empty result as no report and falls back
+  to its own inline review instead of re-dispatching (`git-agent` 4.20.2 does).
+
 ## v3.3.5 — 2026-08-21 — Checklist names the bugs that survive review
 
 ### Changed
