@@ -82,7 +82,7 @@ The split is transparent to end users — skill triggers and invocation syntax a
 bash tests/plugins/test-remaining-skill-splits.sh
 ```
 
-Expected output: exit 0 with one line per skill listing its word count (all under 600) and a link-integrity summary. To prove the gate is not a tautology: delete the `security-scrub` paragraph from `prompt-artifact/SKILL.md` and confirm the test exits 1 naming the missing gate, then restore with `git checkout --`.
+Expected output: exit 0 with one line per skill listing its word count (all under 600) and a link-integrity summary. To prove the gate is not a tautology: delete the `security-scrub` paragraph from `prompt-artifact/SKILL.md` and confirm the test exits 1 naming the missing gate, then restore with `git restore <path>`.
 
 ## Commit history
 

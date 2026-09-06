@@ -10,7 +10,7 @@
 ## What shipped
 
 - Created four guideline documents under `kit/plugins/plan-agent/skills/implementation-plan/guidelines/`: `planning-principles.md` (falsifiable done criteria, what/why/verify discipline, scope), `section-catalog.md` (section menu with purpose, triggers, and exact spec syntax), `right-sizing.md` (minimal/standard/deep depth profiles and calibration table), and `writing-style.md` (tone and plain-language rules).
-- Rewrote `implementation-plan` SKILL.md around the markdown-spec pipeline: explore, load guidelines, author a Markdown spec, render via `build-plan-html.mjs`, deliver. All seven workflow Steps 0–8 remain intact — only the authoring medium changed.
+- Rewrote `implementation-plan` SKILL.md around the markdown-spec pipeline: explore, load guidelines, author a Markdown spec, render via `build-plan-html.mjs`, deliver. All nine workflow Steps 0–8 remain intact — only the authoring medium changed.
 - Rewrote `reference/SKELETON.md` as the copyable spec starter in the exact format `parseSpecMarkdown()` accepts, replacing the old humanized-headings skeleton whose headings the renderer rejects.
 - Updated `tests/plugins/test-goal-prompt.sh` to assert the derived goal-prompt contract against SKILL.md rather than grepping for the `{goal-prompt}` placeholder the renderer now owns.
 - Updated `tests/plugins/test-resources-section.sh` to repoint its Resources guidance assertion to the guidelines and spec skeleton.

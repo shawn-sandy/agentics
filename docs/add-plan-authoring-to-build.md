@@ -65,7 +65,7 @@ Activation trigger: `/plan-agent:build` (slash command only)
 /plan-agent:build docs/plans/my-feature.md
 ```
 
-A bare `/plan-agent:build` with no argument shows up to three recent `todo` plans and an author-a-new-plan option. Supplying an objective skips discovery and goes straight to the proposal-vs-direct gate. An objective containing a leading slash (e.g. `A/B testing for checkout`) stops with a message naming the misparse and offering a reworded form.
+A bare `/plan-agent:build` with no argument shows up to three recent `todo` plans and an author-a-new-plan option. Supplying an objective skips discovery and goes straight to the proposal-vs-direct gate. An objective that starts with a slash (e.g. `/api-redesign`) stops with a message naming the misparse and offering a reworded form, since a leading slash would be misread as a skill path.
 
 ## Commit history
 

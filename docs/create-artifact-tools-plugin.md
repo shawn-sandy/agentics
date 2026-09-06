@@ -1,6 +1,6 @@
 # Create the artifact-tools plugin — publish diffs, sessions, and plans as claude.ai artifacts
 
-> Ships the `artifact-tools` plugin with three skills — `diff-artifact`, `session-artifact`, and `plan-artifact` — that turn branch diffs, session recaps, and implementation plans into live claude.ai artifact pages with a scrub gate and a local-HTML fallback.
+> Ships the `artifact-tools` plugin with three skills — `diff-artifact`, `session-artifact`, and `plan-artifact` — that turn branch diffs, session recaps, and implementation plans into live claude.ai artifact pages with a scrub gate and a local-HTML fallback. _(Initial v1.0.0 release; the current plugin has five skills.)_
 
 <!-- generated:start -->
 
@@ -11,7 +11,7 @@
 
 - Scaffolded `kit/plugins/artifact-tools/` with `.claude-plugin/plugin.json` (name, description, author, license, keywords, homepage pointing at the plugin directory, no `version` key), `README.md`, and `CHANGELOG.md` (1.0.0 entry).
 - Authored `skills/diff-artifact/SKILL.md`: resolves the diff source (current branch vs default branch; commit range argument; or PR number via `gh pr diff <n>` with degradation to branch mode when `gh` or GitHub remote is missing), runs `social-media-tools:security-scrub` as a blocking hard-stop gate, builds one self-contained annotated-diff HTML page (sticky changed-files sidebar with add/del counts, per-hunk margin annotations, severity coding with text labels and legend, adaptive light/dark palettes, cap-and-summarize policy for the 16 MiB artifact cap), publishes via the `Artifact` tool, saves locally with the returned URL as `artifact-url:`, and on publish failure keeps local HTML and offers `social-media-tools:save-artifact`.
-- Authored `skills/session-artifact/SKILL.md` plus a bundled `skills/session-artifact/scripts/export_session.py` (copied from social-media-tools so the plugin works standalone with no install-order dependency): locates the session transcript via JSONL lookup conventions, writes the recap in reviewer-first order (Summary, Decisions with rationale, Learnings, Files touched), scrubs it, saves under `{plansDirectory}/sessions/` with `artifact-url:` frontmatter, and publishes the `.md` directly as an artifact (Markdown renders as styled HTML at the lowest token cost).
+- Authored `skills/session-artifact/SKILL.md` plus a bundled `skills/session-artifact/scripts/export_session.py` (copied from social-media-tools so the plugin works standalone with no install-order dependency): locates the session transcript via JSONL lookup conventions, writes the recap in reviewer-first order (Summary, Decisions with rationale, Learnings, Files touched), scrubs it, saves under `{plansDirectory}/sessions/` with `artifact-url:` frontmatter, and publishes the `.md` directly as an artifact _(HTML publish was added in a later patch; see fix-artifact-title-mechanism)_.
 - Authored `skills/plan-artifact/SKILL.md`: accepts a plan `.html` path, reads `artifact-url:` from the sibling `.md` spec's frontmatter and passes it to the `Artifact` tool's `url` parameter when present (republishing to the same page), otherwise publishes fresh and writes the new URL back into the spec frontmatter.
 - Registered `artifact-tools` in `.claude-plugin/marketplace.json` at version 1.0.0 (source `git-subdir`, category `development`, tags: `artifacts`, `diff-review`, `session-recap`, `plan-publishing`) with a matching 1.0.0 CHANGELOG entry.
 - Wrote `tests/plugins/test-artifact-tools.sh`: asserts `plugin.json` is valid JSON without a `version` key, all three SKILL.md files exist with required frontmatter, the bundled `export_session.py` exists, the marketplace entry is at 1.0.0, and the diff and session skill bodies contain the scrub gate, cap-and-summarize, and fallback wording.
@@ -79,7 +79,7 @@ plan-artifact docs/plans/my-plan.html    # second publish republishes to same UR
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
-| `e1e8840` | 2026-08-15 | feat(git-agent): add post-merge-cleanup skill (4.19.0) (#565) |
+| _(feature commit not isolated in available git log scope)_ | | |
 
 <!-- generated:end -->
 

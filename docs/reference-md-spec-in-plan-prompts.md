@@ -70,7 +70,7 @@ After rendering, the HTML plan's Next Steps section appears as collapsible cards
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
-| `e1e8840` | 2026-08-15 | feat(git-agent): add post-merge-cleanup skill (4.19.0) (#565) |
+| _(feature commit not isolated in available git log scope)_ | | |
 
 <!-- generated:end -->
 

@@ -60,7 +60,6 @@ When `/plan-agent:implementation-plan` reaches Step 8, it asks a second batched 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
 | `bcaf6fa` | 2026-08-17 | feat: worked examples and remaining verification checks (audit Tier 4) (#570) |
-| `e1e8840` | 2026-08-15 | feat(git-agent): add post-merge-cleanup skill (4.19.0) (#565) |
 
 <!-- generated:end -->
 

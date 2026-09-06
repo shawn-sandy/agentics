@@ -88,7 +88,6 @@ bash tests/plugins/test-progressive-disclosure.sh
 | --- | ---- | ------- |
 | `17114d5` | 2026-08-25 | feat(plan-agent): card artifact-only plans in the plans gallery (9.7.0) (#601) |
 | `94c0569` | 2026-08-23 | feat(plan-agent): add design phase — canvas link, gallery, and drift check (#596) |
-| `e1e8840` | 2026-08-15 | feat(git-agent): add post-merge-cleanup skill (4.19.0) (#565) |
 
 <!-- generated:end -->
 

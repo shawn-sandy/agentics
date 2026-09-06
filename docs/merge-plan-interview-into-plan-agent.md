@@ -42,7 +42,7 @@
 
 The marketplace shipped two planning plugins operating as one system split by file format. The decision to merge locked three choices: full absorption into plan-agent v4.0.0 (MAJOR bump); de-register plus delete plan-interview (source recoverable from git history); and plan-agent wins every overlap — only capabilities plan-agent lacked entirely were ported.
 
-The carry-over set was five skills: `documenting-plans` (skill, command, `plan-documenter` agent), `markdown-to-html` (skill, command, assets, reference, scripts), `plan-status` (skill, command, as legacy `.md` support), and `deep-grill` (skill, command — kept for its node-by-node decision walk). The dropped components — `plan-interview`, `plan-to-html`, `plan-hygiene`, `review-rename-plans` — overlapped with plan-agent's built-in interview, `review-plan` team, `validate-plan-filename` hook, and plan-agent's own conversion path.
+The carry-over set was four skills: `documenting-plans` (skill, command, `plan-documenter` agent), `markdown-to-html` (skill, command, assets, reference, scripts), `plan-status` (skill, command, as legacy `.md` support), and `deep-grill` (skill, command — kept for its node-by-node decision walk). The dropped components — `plan-interview`, `plan-to-html`, `plan-hygiene`, `review-rename-plans` — overlapped with plan-agent's built-in interview, `review-plan` team, `validate-plan-filename` hook, and plan-agent's own conversion path.
 
 Namespace rewriting touched every skill body, command body, the plan-documenter agent, and cross-links between moved skills. The CHANGELOG migration note and the README migration map intentionally retain `plan-interview:` as historical documentation; those are the only remaining occurrences under `kit/plugins/plan-agent/`.
 

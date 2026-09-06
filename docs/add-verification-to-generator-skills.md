@@ -1,6 +1,6 @@
 # Give the HTML-generating and publishing skills a check they can run
 
-> Adds a runnable output check to nine skills that generate or publish HTML without one, so each closes its own verification loop instead of reporting success on "looks done".
+> Adds a runnable output check to eight skills that generate or publish HTML without one, so each closes its own verification loop instead of reporting success on "looks done".
 
 <!-- generated:start -->
 
@@ -51,7 +51,6 @@ The motivation for this plan was grounded in a specific precedent: PR #405 shipp
 | SHA | Date | Subject |
 | --- | ---- | ------- |
 | `bcaf6fa` | 2026-08-17 | feat: worked examples and remaining verification checks (audit Tier 4) (#570) |
-| `e1e8840` | 2026-08-15 | feat(git-agent): add post-merge-cleanup skill (4.19.0) (#565) |
 
 <!-- generated:end -->
 

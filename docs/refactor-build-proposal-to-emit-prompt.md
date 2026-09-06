@@ -54,7 +54,7 @@ Step 6's dual-write output — a `docs/prompts/` prompt and a `docs/proposals/` 
 
 `/plan-agent:build-proposal <idea>` — the Step 6 output is now a saved prompt under `docs/prompts/proposal-{slug}.md`. Step 8 hands off that path. A `docs/proposals/<slug>.md` copy is also written with a deprecation banner for the 6.0.0 release cycle.
 
-`/plan-agent:write-prompt` — now invocable as a command (the wrapper enables this). Accepts `--out <path>` to override directory resolution and intent-slug derivation.
+`/plan-agent:write-prompt` — now invocable as a command (the wrapper enables this). Accepts `--out <path>` to override directory resolution and intent-slug derivation. _(Historical 6.0.0 name; renamed to `/plan-agent:prompt` in 6.1.0.)_
 
 `/artifact-tools:prompt-artifact --library` — the rendered gallery now offers five filter chips including `proposal`, and renders `type: proposal` cards.
 

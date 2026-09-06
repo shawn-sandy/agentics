@@ -54,7 +54,7 @@ The skill writes the Markdown file to `{plansDirectory}/sessions/` with the file
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
-| `e1e8840` | 2026-08-15 | feat(git-agent): add post-merge-cleanup skill (4.19.0) (#565) |
+| _(feature commit not isolated in available git log scope)_ | | |
 
 <!-- generated:end -->
 

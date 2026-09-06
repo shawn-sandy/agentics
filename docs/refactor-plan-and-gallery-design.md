@@ -10,9 +10,9 @@
 ## What shipped
 
 - Replaced the `scripts/lib/plan-shell.mjs` CSS token block with a complete light/dark palette (`--paper`, `--ink`, `--accent`, `--mono`, `--prose`, etc.) retiring `--subtle: #9ca3af` which measured 2.5:1 and failed WCAG AA.
-- Added a dark-mode theme toggle — an inline `<head>` script reads `localStorage` before first paint, and a labelled button in the header flips `documentElement.dataset.theme` so a toggled preference survives reload.
+- Added a dark-mode theme toggle — an inline `<head>` script reads `localStorage` before first paint, and a labeled button in the header flips `documentElement.dataset.theme` so a toggled preference survives reload.
 - Nested the At-a-glance block inside the objective card so readers encounter one summary instead of two stacked abstracts (the `objectiveCard` now accepts a `glanceHtml` parameter).
-- Made step `Verify:` text always visible — replaced the `<details class="step-verify-toggle">` disclosure with a plain labelled block so the verification instruction is never hidden behind a toggle.
+- Made step `Verify:` text always visible — replaced the `<details class="step-verify-toggle">` disclosure with a plain labeled block so the verification instruction is never hidden behind a toggle.
 - Added a sidebar step rail: each step card received `id="step-N"` and `nav()` was extended with `<ul class="rail-steps">` listing every step as a jump target with a visually-hidden state span (supports mobile via a `<details>` disclosure below 900px).
 - Fixed the scroll-spy observer so the active link clears when nothing intersects, and removed the superseded selectors (`.steps-list::before`, `.step-verify-toggle`, the `.plan-glance` sibling margin) and all token aliases.
 - Re-copied `scripts/build-plan-html.mjs` and `scripts/lib/plan-shell.mjs` into `kit/plugins/plan-agent/scripts/` to keep the bundled copies byte-identical.
@@ -69,7 +69,7 @@ Open the file and use the theme toggle (top-right of the header) to switch betwe
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
-| `e1e8840` | 2026-08-15 | feat(git-agent): add post-merge-cleanup skill (4.19.0) (#565) |
+| _(feature commit not isolated in available git log scope)_ | | |
 
 <!-- generated:end -->
 

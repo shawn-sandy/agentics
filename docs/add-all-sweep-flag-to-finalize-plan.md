@@ -62,7 +62,6 @@ The sweep presents a multi-select menu of candidates sorted by evidence score. S
 | --- | ---- | ------- |
 | `3263bbc` | 2026-08-30 | feat(plan-agent): reconcile a plan against what actually shipped (9.11.0) (#613) |
 | `17114d5` | 2026-08-25 | feat(plan-agent): card artifact-only plans in the plans gallery (9.7.0) (#601) |
-| `e1e8840` | 2026-08-15 | feat(git-agent): add post-merge-cleanup skill (4.19.0) (#565) |
 
 <!-- generated:end -->
 

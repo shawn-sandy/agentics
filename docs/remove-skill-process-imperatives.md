@@ -55,13 +55,13 @@ The objective gate runs as part of CI:
 bash tests/plugins/test-imperative-pruning.sh
 ```
 
-Expected output: exit 0 with a per-skill line for all five targets and a `baselines: 5/5 match` summary. To confirm the gate is not a tautology, delete the merge-on-green guard line from `ship-autonomous/SKILL.md` and re-run — it must exit 1 naming that phrase. Restore with `git checkout -- <path>` and the test returns to green.
+Expected output: exit 0 with a per-skill line for all five targets and a `baselines: 5/5 match` summary. To confirm the gate is not a tautology, delete the merge-on-green guard line from `ship-autonomous/SKILL.md` and re-run — it must exit 1 naming that phrase. Restore with `git restore <path>` and the test returns to green.
 
 ## Commit history
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
-| `e1e8840` | 2026-08-15 | feat(git-agent): add post-merge-cleanup skill (4.19.0) (#565) |
+| _(feature commit not isolated in available git log scope)_ | | |
 
 <!-- generated:end -->
 

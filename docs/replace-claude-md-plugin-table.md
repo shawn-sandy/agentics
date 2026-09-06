@@ -24,6 +24,8 @@
 | `tests/plugins/test-claude-md-budget.sh` | New test — CLAUDE.md word count under 800, all plugins listed, no row over 25 words | Created |
 | `.github/workflows/check-plugin-versions.yml` | CI — new step running `test-claude-md-budget.sh` | Modified |
 | `.claude-plugin/marketplace.json` | Version bumps for any plugin whose README was modified | Modified |
+| `kit/plugins/<name>/README.md` | Plugin READMEs modified for orphaned CLAUDE.md sentences (conditional on step 1 audit) | Modified |
+| `kit/plugins/<name>/CHANGELOG.md` | CHANGELOG entries for any plugin whose README was modified | Modified |
 
 ## How it works
 
@@ -54,7 +56,6 @@ To confirm the test is not a tautology, temporarily pad a plugin row past 25 wor
 | SHA | Date | Subject |
 | --- | ---- | ------- |
 | `fd41fec` | 2026-08-22 | feat: prove merge readiness locally with a verify gate and verified-change skill (#594) |
-| `e1e8840` | 2026-08-15 | feat(git-agent): add post-merge-cleanup skill (4.19.0) (#565) |
 
 <!-- generated:end -->
 
