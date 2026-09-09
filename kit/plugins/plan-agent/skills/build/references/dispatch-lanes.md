@@ -221,3 +221,63 @@ failed. Ask via `AskUserQuestion` with exactly these options:
 
 Headless: take **Stop** and report the table; re-dispatching or running a
 failed lane without a user is guessing at what went wrong.
+
+## Workflow engine (escalation)
+
+Everything above runs the wave loop on the `Agent` tool, one lane per call.
+This section is the escalation: the same wave loop run inside a single
+`Workflow` tool invocation, for the callers who ask for it.
+
+### Selection
+
+The Workflow engine is selected only on a spec with 2 or more `### Lane:`
+headings, and only by `workflow: always` in the frontmatter, the `--workflow`
+flag, or the spec carrying 6 or more lanes. Fewer than 2 lanes never reaches
+this section at all: it takes the sequential Step 2 and only emits the
+`/workflows` prompt, whatever the frontmatter says.
+
+### Probe before dispatch
+
+Before using the Workflow engine, probe that the `Workflow` tool is callable
+in this session — the same way `review-plan` Step 3 probes for it, **never
+asserting a version number.** A capability check answers the only question
+that matters (is it here right now); a hardcoded minimum version is a guess
+that goes stale the moment the tool's availability changes.
+
+When the `Workflow` tool is absent, print exactly:
+
+"`This laned build asked for the Workflow engine, which is not available in this session; re-run without --workflow (or with workflow: auto) to use the Agent dispatcher.`"
+
+and stop. Calling `Workflow` from this skill is authorized by the tool's own
+opt-in rule for a skill whose instructions say to call it — these
+instructions are that, and no further user confirmation is needed.
+
+### Dispatch
+
+Otherwise, Read `references/implement-workflow.mjs` and pass its contents as
+the `Workflow` tool's inline `script` input — never by path, for the same
+shell-expansion reason section 1 gives for `plan-agent-render`: a
+plugin-root-anchored invocation is unrunnable at any permission level.
+
+Pass `args` as a real object, never a JSON-encoded string:
+
+| key | value |
+|---|---|
+| `planPath` | the plan's absolute path |
+| `planBranch` | the plan branch every lane forks from and merges back to (section 3) |
+| `workerModel` | `--worker-model`'s value, default `sonnet` |
+| `lanes` | `[{ name, owns, after, brief }]` — one entry per worker lane |
+
+Each `brief` is section 5's "The worker brief" — the renderer's worker brief
+for that lane, with `<plan-branch>` substituted — the exact text the Agent
+path uses. `lead` is never included in `lanes`: the lead always runs in this
+session, after every worker lane here has merged.
+
+### On return
+
+The script returns `{ reports, mergeOrder }`. Merge each lane named in
+`mergeOrder`, in that order, following section 6 exactly as the Agent path
+does for each one: verify the LANE REPORT against git, audit ownership,
+merge `--no-ff`, tick the lane's steps, re-render, and print the progress
+table. Once every lane in `mergeOrder` is merged, run the `lead` lane
+(section 7) and then Steps 3-5 (section 8).
