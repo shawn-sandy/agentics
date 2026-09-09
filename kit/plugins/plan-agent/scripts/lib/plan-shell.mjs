@@ -2015,6 +2015,7 @@ export const SECTION_CHROME = {
   context: { icon: 'ic-document-text', heading: 'Context', intro: 'The story behind this plan — what prompted the work and why it matters now.' },
   decisions: { icon: 'ic-sparkles', heading: 'Decisions', intro: 'Choices already settled — read these before re-opening any of them.' },
   files: { icon: 'ic-folder', heading: 'Files that change', intro: 'Every file this plan touches, and what happens to each one.' },
+  lanes: { icon: 'ic-code-bracket', heading: 'Lanes', intro: 'Independent groups of steps, each with the paths it owns — one worker per lane, merged back in dependency order.' },
   steps: { icon: 'ic-list-bullet', heading: 'Steps', intro: 'The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.' },
   tests: { icon: 'ic-beaker', heading: 'Tests', intro: 'The tests that prove the change does what it promises.' },
   criteria: { icon: 'ic-check-circle', heading: 'Definition of done', intro: 'The plan counts as done when every statement below is true — check each one off as you verify it.' },
@@ -2031,6 +2032,7 @@ export const NAV_ENTRIES = [
   { id: 'context', icon: 'ic-document-text', label: 'Context' },
   { id: 'decisions', icon: 'ic-sparkles', label: 'Decisions' },
   { id: 'files', icon: 'ic-folder', label: 'Files that change' },
+  { id: 'lanes', icon: 'ic-code-bracket', label: 'Lanes' },
   { id: 'steps', icon: 'ic-list-bullet', label: 'Steps' },
   { id: 'tests', icon: 'ic-beaker', label: 'Tests' },
   { id: 'criteria', icon: 'ic-check-circle', label: 'Definition of done' },
@@ -2043,8 +2045,8 @@ const icon = (id) => `<svg class="icon" aria-hidden="true"><use href="#${id}"/><
 
 /* ── Template functions — args are pre-escaped HTML strings ────────── */
 
-/** <head> meta tags. `workflow`/`prototype`/`issue`/`design` may be empty → tag omitted entirely. */
-export function metaTags({ status, effort, type, created, repo, file, path, md, implement, goal, workflow, prototype, issue, design }) {
+/** <head> meta tags. `workflow`/`prototype`/`issue`/`design`/`lanes` may be empty → tag omitted entirely. */
+export function metaTags({ status, effort, type, created, repo, file, path, md, implement, goal, workflow, prototype, issue, design, lanes }) {
   const tags = [
     `<meta name="plan-status" content="${status}">`,
     `<meta name="plan-effort" content="${effort}">`,
@@ -2061,6 +2063,7 @@ export function metaTags({ status, effort, type, created, repo, file, path, md, 
   if (prototype) tags.push(`<meta name="plan-prototype" content="${prototype}">`);
   if (issue) tags.push(`<meta name="plan-issue" content="${issue}">`);
   if (design) tags.push(`<meta name="plan-design" content="${design}">`);
+  if (lanes) tags.push(`<meta name="plan-lanes" content="${lanes}">`);
   return tags.join('\n');
 }
 
@@ -2207,8 +2210,25 @@ export function implementRow(implement) {
  * More-ways drawer. `workflow` empty → row omitted, drawer kept.
  * A non-empty `workflow` is also the gate for the goal prompt's fan-out
  * phrasing, so the label tracks it rather than taking its own parameter.
+ *
+ * `briefs` is [{ name, text }] — one copyable worker brief per worker lane,
+ * pre-escaped, rendered on the workflow row's pattern so it inherits that
+ * row's styling and print/completed hiding. Empty (the default) emits nothing,
+ * which is what keeps every lane-free plan byte-identical.
  */
-export function moreWaysDrawer({ goal, workflow, file, path, md }) {
+export function moreWaysDrawer({ goal, workflow, file, path, md, briefs = [] }) {
+  const briefRows = briefs
+    .map((b) => `
+        <div class="plan-workflow plan-lane-brief">
+          <div class="plan-workflow-label">Copy worker brief — lane ${b.name}</div>
+          <div class="plan-workflow-inner">
+            <code id="lane-brief-${b.name}" aria-label="Worker brief for lane ${b.name}">${b.text}</code>
+            <button class="copy-workflow-btn" type="button"
+                    onclick="copyPath(this, 'lane-brief-${b.name}')" aria-label="Copy worker brief — lane ${b.name}">Copy</button>
+          </div>
+        </div>
+`)
+    .join('');
   const workflowRow = workflow
     ? `
         <div class="plan-workflow">
@@ -2233,7 +2253,7 @@ export function moreWaysDrawer({ goal, workflow, file, path, md }) {
                     onclick="copyGoal(this)" aria-label="Copy goal prompt to clipboard">Copy</button>
           </div>
         </div>
-${workflowRow}
+${workflowRow}${briefRows}
         <div class="plan-source">
           <div class="plan-source-row">
             <span class="plan-source-label">File</span>
@@ -2336,13 +2356,16 @@ ${rows}
  * links to. The verify text is plain visible content inside
  * `<div class="verify-body">`, no longer wrapped in a <details>.
  */
-export function stepCard(n, { action, why, verify, done = false }) {
+export function stepCard(n, { action, why, verify, done = false, lane = '' }) {
+  // The lane chip reuses the done/todo chip's class and palette — text-labeled,
+  // never color alone — and is absent on a lane-free plan so those bytes hold.
+  const laneChip = lane ? `\n                <span class="step-chip lane-chip">lane ${lane}</span>` : '';
   return `        <div class="step-card${done ? ' completed' : ''}" id="step-${n}">
           <div class="step-card-header">
             <div class="step-number">${n}</div>
             <div class="step-body">
               <div class="step-action">
-                ${done ? STEP_CHIP_DONE : STEP_CHIP}
+                ${done ? STEP_CHIP_DONE : STEP_CHIP}${laneChip}
                 <span class="step-chip-text">${action}</span>
               </div>
               <div class="step-note step-why-note">
@@ -2376,6 +2399,32 @@ export function phaseGroup({ name, heading, body }) {
           <h3 class="phase-name" style="${PHASE_NAME_STYLE}">${heading}</h3>
 ${body}
         </div>`;
+}
+
+/**
+ * The Lanes panel: one list item per lane with nested lists for the paths it
+ * owns and the lanes it waits on — real list semantics, like the file tree.
+ * items: [{ name, owns, after, range }], pre-escaped. Same inline-style rule
+ * as phaseGroup(): local styling keeps lane-free plans byte-stable.
+ */
+export function lanesBlock(items) {
+  const li = (text) => `            <li><code>${text}</code></li>`;
+  const rows = items
+    .map((l) => {
+      const owns = l.owns.length > 0
+        ? `\n          <div class="lane-label" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-top:.35rem;">Owns</div>\n          <ul class="lane-owns" style="padding-left:1.15rem;margin:.2rem 0;">\n${l.owns.map(li).join('\n')}\n          </ul>`
+        : `\n          <div class="lane-label" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-top:.35rem;">Runs in the main session — owns the shared files</div>`;
+      const after = l.after.length > 0
+        ? `\n          <div class="lane-label" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-top:.35rem;">After</div>\n          <ul class="lane-after" style="padding-left:1.15rem;margin:.2rem 0;">\n${l.after.map(li).join('\n')}\n          </ul>`
+        : '';
+      return `        <li class="lane-item" style="margin-bottom:.9rem;">
+          <span class="step-chip lane-chip">lane ${l.name}</span> <span style="color:var(--ink-2);font-size:.85rem;">${l.range}</span>${owns}${after}
+        </li>`;
+    })
+    .join('\n');
+  return `      <ul class="lanes-list" style="list-style:none;padding-left:0;margin:0;">
+${rows}
+      </ul>`;
 }
 
 /** One `- ` bullet per settled decision. Same inline-style rule as

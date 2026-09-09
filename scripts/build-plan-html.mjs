@@ -39,14 +39,23 @@
  * way to evaluate them, so it was reached with `Grep` against the source
  * markup and reported drift that was not there.
  *
- * Usage: node scripts/build-plan-html.mjs <spec.md> [-o <plan.html>] [--check]
- * Exit:  0 on success; 1 on missing/unparseable input or a failed --check;
- *        2 on misuse.
+ * `--lanes` prints the spec's `### Lane:` groupings — name, owns, after, and
+ * each lane's steps — as JSON, so the build skill's dispatcher consumes the
+ * split without hand-parsing Markdown. The same table lands in the rendered
+ * page's plan-lanes meta tag. The lane ownership rules (checkLanes below) run
+ * on every render, so a spec whose lanes overlap fails to render at all.
+ *
+ * Usage: node scripts/build-plan-html.mjs <spec.md> [-o <plan.html>] [--check] [--lanes]
+ * Exit:  0 on success; 1 on missing/unparseable input, a lane rule violation,
+ *        or a failed --check; 2 on misuse.
  */
 
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { basename, dirname, posix, relative, resolve } from 'node:path';
+// matchesGlob is the Node standard library's path matcher (Node 22+). It sets
+// this renderer's floor deliberately: zero dependencies beats a hand-rolled
+// glob matcher that is one more parser to get subtly wrong.
+import { basename, dirname, matchesGlob, posix, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { parseSpecMarkdown, ParseError } from './lib/plan-spec.mjs';
@@ -224,6 +233,163 @@ function stepsBody(cards, phases) {
     i += 1;
   }
   return wrap(blocks);
+}
+
+/* ── Lanes ────────────────────────────────────────────────────────── */
+
+/** The reserved lane that runs in the main session after every lane it lists. */
+const LEAD_LANE = 'lead';
+
+/** A path matches an `owns:` entry literally or as a glob. */
+const owned = (path, pattern) => path === pattern || matchesGlob(path, pattern);
+
+/**
+ * The wildcard-free prefix of an `owns:` pattern — `scripts/lib/**` →
+ * `scripts/lib/`, a literal path → itself. Tested against the other lanes'
+ * patterns to catch nesting without computing a full glob intersection.
+ */
+const literalPrefix = (pattern) => pattern.split(/[*?[{]/, 1)[0];
+
+/**
+ * The ownership rules a laned spec must satisfy before anything dispatches
+ * against it. Returns `{ errors, warnings }`; a lane-free spec has nothing to
+ * check. Every message names the lane (or file) it is about, because the fix
+ * is always to the spec and the reader needs to know where.
+ *
+ *   - a lane other than `lead` names at least one `owns:` path;
+ *   - every step sits under a lane heading (explicit membership beats implicit);
+ *   - every `after:` names an existing lane and never `lead` — `lead` runs last
+ *     and owns the shared files, so depending on it would deadlock;
+ *   - the `after:` graph is acyclic;
+ *   - every `## Files` path is owned by at most one lane;
+ *   - no lane's pattern nests inside another lane's — the wildcard-free prefix
+ *     of one must not match the other's glob, so `scripts/**` beside
+ *     `scripts/lib/**` fails even when no listed file sits in the overlap;
+ *   - an `owns:` entry matching no `## Files` path is a warning, not an error:
+ *     lanes may own paths the implementation creates.
+ */
+export function checkLanes(sections) {
+  const lanes = sections.lanes || [];
+  const errors = [];
+  const warnings = [];
+  if (lanes.length === 0) return { errors, warnings };
+
+  const byName = new Map();
+  for (const lane of lanes) {
+    if (byName.has(lane.name)) errors.push(`lane "${lane.name}" is declared twice`);
+    byName.set(lane.name, lane);
+    if (lane.name !== LEAD_LANE && lane.owns.length === 0) errors.push(`lane "${lane.name}" has no owns: clause (only ${LEAD_LANE} may omit it)`);
+  }
+
+  const covered = new Set();
+  for (const lane of lanes) for (let n = lane.firstStep; n <= lane.lastStep; n += 1) covered.add(n);
+  const loose = sections.steps.findIndex((_, i) => !covered.has(i + 1));
+  if (loose !== -1) errors.push(`step ${loose + 1} is outside every lane — every step in a laned spec sits under a ### Lane: heading`);
+
+  for (const lane of lanes) {
+    for (const dep of lane.after) {
+      if (dep === LEAD_LANE) errors.push(`lane "${lane.name}" after: ${LEAD_LANE} is not allowed — ${LEAD_LANE} runs last`);
+      else if (!byName.has(dep)) errors.push(`lane "${lane.name}" after: names unknown lane "${dep}"`);
+    }
+  }
+
+  // Cycle detection: a plain DFS with a path stack, so the message can show
+  // the loop rather than just assert one exists.
+  const state = new Map();
+  const walk = (name, path) => {
+    if (state.get(name) === 'done') return;
+    if (state.get(name) === 'open') {
+      const loop = path.slice(path.indexOf(name)).concat(name);
+      errors.push(`lane "${name}" is on an after: cycle: ${loop.map((n) => `"${n}"`).join(' → ')}`);
+      return;
+    }
+    state.set(name, 'open');
+    for (const dep of (byName.get(name) || { after: [] }).after) if (byName.has(dep)) walk(dep, path.concat(name));
+    state.set(name, 'done');
+  };
+  for (const lane of lanes) walk(lane.name, []);
+
+  for (const f of sections.files || []) {
+    const owners = lanes.filter((l) => l.owns.some((p) => owned(f.path, p))).map((l) => `"${l.name}"`);
+    if (owners.length > 1) errors.push(`${f.path} is owned by lanes ${owners.join(' and ')} — one file, one owner`);
+  }
+
+  for (const a of lanes) {
+    for (const pa of a.owns) {
+      const prefix = literalPrefix(pa);
+      for (const b of lanes) {
+        if (b === a) continue;
+        for (const pb of b.owns) {
+          // `scripts/lib/` matches `scripts/**` but bare `scripts/lib` does
+          // not match `scripts/lib/**`, so test both spellings of the prefix.
+          const candidates = prefix === '' ? [''] : [prefix, prefix.replace(/\/$/, '')];
+          const nested = prefix === '' || candidates.some((c) => owned(c, pb));
+          if (nested) errors.push(`lane "${a.name}" owns: ${pa} nests inside lane "${b.name}" owns: ${pb}`);
+        }
+      }
+    }
+  }
+
+  if (sections.files) {
+    for (const lane of lanes) {
+      for (const p of lane.owns) {
+        if (!sections.files.some((f) => owned(f.path, p))) warnings.push(`lane "${lane.name}" owns: ${p} matches no ## Files path`);
+      }
+    }
+  }
+
+  return { errors, warnings };
+}
+
+/**
+ * Every lane with its steps — the JSON `--lanes` prints and the plan-lanes
+ * meta carries, so the dispatcher never parses Markdown by hand. `done`
+ * rides along from the spec's `[x]` markers so a resumed build can skip a
+ * lane whose steps are already ticked.
+ */
+export function laneTable(parsed) {
+  const stepsDone = (parsed.progress && parsed.progress.steps) || [];
+  return (parsed.sections.lanes || []).map((lane) => ({
+    ...lane,
+    steps: parsed.sections.steps.slice(lane.firstStep - 1, lane.lastStep).map((st, i) => ({
+      n: lane.firstStep + i,
+      action: st.action,
+      why: st.why,
+      verify: st.verify,
+      done: Boolean(stepsDone[lane.firstStep - 1 + i]),
+    })),
+  }));
+}
+
+/**
+ * The worker brief for one lane (the proposal's Appendix B). Everything the
+ * renderer knows is substituted — the spec path, the title, the owned paths,
+ * the steps verbatim. `<plan-branch>` is the one placeholder left, because
+ * only `build` knows which branch it is dispatching from; it substitutes that
+ * before the Agent call, and a brief that reaches a worker unsubstituted is a
+ * dead run. `lead` gets no brief: it never runs as a worker.
+ */
+export function workerBrief(lane, { specPath, title }) {
+  const steps = lane.steps.map((s) => `   ${s.n}. ${s.action} Why: ${s.why} Verify: ${s.verify}`).join('\n');
+  return [
+    `You are implementing lane "${lane.name}" of the plan at ${specPath} — ${title}.`,
+    `You own ONLY these paths: ${lane.owns.join(', ')}. Do not create, edit, or delete any file outside them; if a step needs one, stop and report it.`,
+    '',
+    `1. git checkout -b <plan-branch>--${lane.name} <plan-branch>`,
+    '2. Implement these steps in order, exactly as written:',
+    steps,
+    '3. After each step run its Verify command and record pass or fail.',
+    `4. Commit on your branch after the last step. Do not push. Do not edit ${specPath}.`,
+    '5. End with exactly this block:',
+    '',
+    'LANE REPORT',
+    `lane: ${lane.name}`,
+    `branch: <plan-branch>--${lane.name}`,
+    'steps_done: <comma-separated step numbers>',
+    'verify: <N: pass|fail, one per step>',
+    'files_changed: <paths>',
+    'blocked: <none | what and why>',
+  ].join('\n');
 }
 
 /** `## Completion Report` entries → the dl.report-list markup finalize-plan
@@ -409,8 +575,20 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   // the heuristic on their own.
   const dirCount = new Set((s.files || []).map((f) => (f.path.includes('/') ? f.path.split('/')[0] : ''))).size;
   const workflowMode = enumValue(md, 'workflow', 'auto');
-  const wantsWorkflow = workflowMode === 'always' || workflowMode === 'true'
-    || (workflowMode === 'auto' && fileCount >= 4 && dirCount >= 2);
+  // Two gates, chosen by the spec's shape. A lane-free spec keeps the
+  // file-count heuristic exactly as it was, so every committed plan renders
+  // byte-for-byte. Once a spec declares lanes, its declared shape — not
+  // incidental file spread — is what licenses fan-out: `auto` wants the
+  // prompt at two or more lanes, `never` suppresses it, `always` keeps it.
+  // `build` dispatches by lane count alone and never consults either gate.
+  const lanes = laneTable({ sections: s, progress });
+  const { errors: laneErrors, warnings: laneWarnings } = checkLanes(s);
+  if (laneErrors.length > 0) throw new ParseError(laneErrors.join('; '));
+  for (const w of laneWarnings) console.warn(`  ! ${basename(path)}: ${w}`);
+  const wantsAlways = workflowMode === 'always' || workflowMode === 'true';
+  const wantsWorkflow = lanes.length === 0
+    ? wantsAlways || (workflowMode === 'auto' && fileCount >= 4 && dirCount >= 2)
+    : wantsAlways || (workflowMode === 'auto' && lanes.length >= 2);
 
   const implement = `Read and implement all steps in the plan at ${specPath} — ${s.title}. ${verifyTail}`;
   // Same gate as the workflow row: a plan too small to show that row must not
@@ -437,14 +615,27 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
     file: esc(file),
     path: esc(path),
     md: esc(specPath),
+    briefs: lanes.filter((l) => l.name !== LEAD_LANE).map((l) => ({ name: esc(l.name), text: esc(workerBrief(l, { specPath, title: s.title })) })),
   }));
   const criteriaDoneCount = s.criteria.filter((_, i) => Boolean(criteriaDone[i])).length;
   main.push('', shell.progressBlock(criteriaDoneCount, s.criteria.length));
   if (s.context) main.push('', shell.sectionCard('context', paragraphs(s.context)));
   if (s.decisions) main.push('', shell.sectionCard('decisions', shell.decisionsListBlock(s.decisions.map(inline))));
   if (s.files) main.push('', shell.sectionCard('files', shell.fileTreeBlock(esc(repoName), fileTreeRows(s.files))));
+  if (lanes.length > 0) {
+    main.push('', shell.sectionCard('lanes', shell.lanesBlock(lanes.map((l) => ({
+      name: esc(l.name),
+      owns: l.owns.map(esc),
+      after: l.after.map(esc),
+      range: l.firstStep === l.lastStep ? `step ${l.firstStep}` : `steps ${l.firstStep}–${l.lastStep}`,
+    })))));
+  }
+  const laneOf = (n) => {
+    const lane = lanes.find((l) => n >= l.firstStep && n <= l.lastStep);
+    return lane ? esc(lane.name) : '';
+  };
   const stepCards = s.steps
-    .map((st, i) => shell.stepCard(i + 1, { action: inline(st.action), why: inline(st.why), verify: inline(st.verify), done: Boolean(stepsDone[i]) }));
+    .map((st, i) => shell.stepCard(i + 1, { action: inline(st.action), why: inline(st.why), verify: inline(st.verify), done: Boolean(stepsDone[i]), lane: laneOf(i + 1) }));
   main.push('', shell.sectionCard('steps', stepsBody(stepCards, s.phases)));
   if (s.tests) main.push('', shell.sectionCard('tests', testsBody(s.tests)));
   main.push('', shell.sectionCard('criteria', shell.criteriaListBlock(s.criteria.map((c, i) => ({ text: inline(c), done: Boolean(criteriaDone[i]) })))));
@@ -475,6 +666,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
     if (id === 'context') return Boolean(s.context);
     if (id === 'decisions') return Boolean(s.decisions);
     if (id === 'files') return Boolean(s.files);
+    if (id === 'lanes') return lanes.length > 0;
     if (id === 'tests') return Boolean(s.tests);
     if (id === 'next-steps') return Boolean(nextSteps);
     return true;
@@ -499,6 +691,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
       prototype: prototype ? esc(prototype) : '',
       issue: issue ? esc(issue) : '',
       design: design ? esc(design) : '',
+      lanes: lanes.length > 0 ? esc(JSON.stringify(lanes)) : '',
     }),
     headerHtml: shell.header({
       title: esc(s.title),
@@ -652,12 +845,15 @@ function main() {
   let specPath = null;
   let outPath = null;
   let check = false;
+  let lanes = false;
   for (let i = 0; i < args.length; i += 1) {
     if (args[i] === '-o' || args[i] === '--output') {
       outPath = args[i + 1];
       i += 1;
     } else if (args[i] === '--check') {
       check = true;
+    } else if (args[i] === '--lanes') {
+      lanes = true;
     } else if (!specPath) {
       specPath = args[i];
     } else {
@@ -666,7 +862,7 @@ function main() {
     }
   }
   if (!specPath || (outPath !== null && !outPath)) {
-    console.error('Usage: node scripts/build-plan-html.mjs <spec.md> [-o <plan.html>] [--check]');
+    console.error('Usage: node scripts/build-plan-html.mjs <spec.md> [-o <plan.html>] [--check] [--lanes]');
     process.exit(2);
   }
   if (!outPath) outPath = specPath.replace(/\.md$/, '') + '.html';
@@ -731,13 +927,20 @@ function main() {
       today: created || undefined,
     });
   } catch (err) {
-    // Enumerated frontmatter is validated during render, so its errors surface
-    // here rather than from parseSpecMarkdown above.
+    // Enumerated frontmatter and the lane ownership rules are validated during
+    // render, so their errors surface here rather than from parseSpecMarkdown
+    // above. Both name what to fix; neither is a crash.
     if (err instanceof ParseError) {
-      console.error(`build-plan-html: ${specPath} has invalid frontmatter — ${err.message}`);
+      console.error(`build-plan-html: ${specPath} has invalid frontmatter or lanes — ${err.message}`);
       process.exit(1);
     }
     throw err;
+  }
+  // --lanes prints the dispatch table and writes nothing — the render above
+  // is what validated the lanes, so a spec that reaches here is dispatchable.
+  if (lanes) {
+    console.log(JSON.stringify(laneTable(parsed), null, 2));
+    process.exit(0);
   }
   // --check verifies and writes nothing. The render above is the comparison
   // baseline, and it went through the identical code path — including the

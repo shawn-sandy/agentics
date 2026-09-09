@@ -1,5 +1,59 @@
 # Changelog
 
+## 9.14.0 — the plan spec declares lanes: parsed, checked, and rendered (2026-09-09)
+
+Phase 1 of `docs/plans/add-lane-orchestration.md` (the
+`docs/prompts/proposal-orchestrate-plan-implementation.md` roadmap). A spec
+with no `### Lane:` heading renders byte-for-byte as it did in 9.13.2 —
+`tests/plan-lanes.test.mjs` pins that with digest round-trip and
+zero-lane-markup assertions, and a diff of two committed plans rendered by
+both versions came back identical.
+
+### Added
+
+- **`### Lane: <name> (owns: <path-or-glob>, …; after: <lane>, …)` inside
+  `## Steps`.** `parseSpecMarkdown()` (`scripts/lib/plan-spec.mjs`) returns
+  `sections.lanes` as `[{ name, owns, after, firstStep, lastStep }]` beside
+  the existing `phases`; numbering stays flat and global, and a `### Phase:`
+  inside a lane stays a checkpoint for that lane. `buildDigest()` re-emits the
+  headings (lane before phase when both start on one step), and
+  `extractSections()` reads them back from the new `plan-lanes` meta tag, so
+  HTML → spec → HTML stays byte-stable. The reserved lane `lead` may omit
+  `owns:`; every other lane must own something.
+- **Six ownership rules on every render** (`checkLanes()` in
+  `scripts/build-plan-html.mjs`, exit 1 naming the lane): a non-`lead` lane
+  without `owns:`, a step outside every lane, an `after:` naming an unknown
+  lane, `after: lead` (lead runs last), a dependency cycle, a `## Files` path
+  owned by two lanes, and two lanes whose `owns:` patterns nest — the
+  wildcard-free prefix of one matched against the other's glob, so
+  `scripts/**` beside `scripts/lib/**` fails with both lanes named even when
+  no listed file sits in the overlap. An `owns:` entry matching no `## Files`
+  path warns without failing; lanes may own paths the implementation creates.
+  Globs go through Node's own `path.matchesGlob`, which sets a documented
+  Node 22 floor for the renderer rather than adding a dependency.
+- **`plan-agent-render <spec> --lanes`** prints every lane with its owns,
+  after, and steps (`n`, `action`, `why`, `verify`, `done`) as JSON — the
+  table the build skill's dispatcher will consume without hand-parsing
+  Markdown. The same table lands in `<meta name="plan-lanes">`.
+- **Lane surfaces in the rendered plan** (`scripts/lib/plan-shell.mjs`): a
+  text-labeled `lane <name>` chip on each step card reusing the todo/done chip
+  palette in both themes, a Lanes panel between Files and Steps with its own
+  sidebar entry and one list item per lane (nested lists for owns and after),
+  and one "Copy worker brief — lane <name>" row per worker lane in the
+  More-ways drawer carrying the proposal's Appendix B brief with every
+  renderer-known placeholder substituted. `<plan-branch>` is the one left for
+  `build` to fill. All of it is inline-styled or reuses existing classes: no
+  new CSS rule, so lane-free plans keep their bytes.
+
+### Changed
+
+- **`workflow:` gains lane-count meaning once a spec has lanes.** With no
+  `### Lane:` heading the `fileCount >= 4 && dirCount >= 2` heuristic decides
+  the workflow prompt exactly as before. With lanes, `auto` emits it at two or
+  more lanes, `never` suppresses it, `always` keeps it; `true`/`false` stay
+  accepted as aliases. The file-count gate is no longer a dispatch trigger —
+  it survives only as the render gate for lane-free specs.
+
 ## 9.13.2 — the prototype store stops handing render() shapes it cannot walk (2026-09-04)
 
 ### Fixed
