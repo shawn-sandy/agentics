@@ -37,7 +37,7 @@ mistyped filename into a whole authored plan.
 ### Rule 0 — Strip flags first
 
 Remove `--dir <path>`, `--type <kind>`, `--continue`, `--sequential`,
-`--max <n>`, `--worker-model <alias>`, and any other recognized option
+`--workflow`, `--max <n>`, `--worker-model <alias>`, and any other recognized option
 **together with its value** from `$ARGUMENTS`. What survives is the
 **rest string**. Every rule below reads the rest string, never raw
 `$ARGUMENTS`.
@@ -78,6 +78,11 @@ entire plan named after a flag.
   would. Ignored by a spec with fewer than two lanes, which is sequential
   anyway. `build-fleet` passes it to every fleet agent so worktrees never
   nest inside worktrees.
+- **`--workflow`** — a valueless flag that selects the Workflow engine
+  (`references/dispatch-lanes.md`'s escalation section) on a spec with two or
+  more `### Lane:` headings, as `workflow: always` would. Ignored by a spec
+  with fewer than two lanes, which never reaches the Workflow engine anyway.
+  `--sequential` and `--workflow` together is an error naming both flags.
 - **`--max <n>`** — how many lane workers run at once in Step 2's dispatch
   path: default 3, hard cap 5 (a larger value is clamped to 5 and said so).
   Value-taking: `--max` with no value, or a non-integer or non-positive one,
