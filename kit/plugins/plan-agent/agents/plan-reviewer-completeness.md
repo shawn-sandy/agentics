@@ -26,6 +26,8 @@ Read the plan HTML at `<plan-path>` with the `Read` tool. Its authored content �
 3. **Ambiguous acceptance criteria** — Any criteria that feel like a task description rather than a condition?
 4. **Incomplete verification** — Can someone actually run the verification and know they're done?
 
+**Laned plans** (`### Lane: <name> (owns: …; after: …)` headings in Steps, or a Lanes panel in the HTML): check that every `## Files` path is owned by exactly one lane — a path in no lane's `owns:` has no worker to write it, and a path in two lanes' `owns:` (including a glob nested inside another lane's glob) has two. Shared files such as `CHANGELOG.md`, `README.md`, `marketplace.json`, and generated indexes belong to the `lead` lane and nowhere else. The renderer's `--check` rejects the mechanical cases; you are the check for the file a step edits without listing, and for the `owns:` glob that is wider than the steps under it actually need.
+
 ## Report Back
 
 You are invoked by `review-plan`'s Workflow script, which calls you with a

@@ -38,20 +38,37 @@ Cross-cutting work, 3+ domains, decisions that are expensive to reverse.
   known risks with mitigations. Open questions go to the interview or an
   `## Unresolved Questions` markdown section — never planned around.
 - Tests: full Tier 1 spread; Verification walks a real end-to-end scenario.
-- Consider `workflow: always` when the work is parallelizable: 5+ files across
-  3+ directories, repetitive per-file changes (migrations, renames, sweeps),
-  independent steps, or steps needing cross-checking review. The renderer's
-  own heuristic only sees file/directory counts — set the key explicitly for
-  the other cases.
+- When the work is parallelizable — independent file sets, repetitive
+  per-file changes (migrations, renames, sweeps), steps that never touch
+  each other's files — declare it as `### Lane:` groupings (see **Laned**
+  below) rather than reaching for `workflow: always`. `build` dispatches by
+  lane count; the renderer's file-count heuristic only ever decided a
+  paste-prompt, and only for lane-free specs.
 - Consider `effort: high` explicitly when the interview classified the plan
   as complex but the raw step/file counts alone would read as medium.
 - Interview: Rounds 1 + 2 + 3.
 
+## Chain or lanes? The case split
+
+Long work comes in two shapes, and each has its own tool:
+
+- **A chain** — step seven depends on a choice made in step two. Its limit is
+  *context*, not parallelism; phases bound it (below).
+- **Independent lanes** — groups of steps that touch disjoint files and can
+  each be verified on their own. Their limit is *wall-clock*; lanes fan them
+  out (**Laned**, further below).
+- **Both** — a plan with two independent lanes whose steps are each a long
+  chain. Lanes are the outer grouping; phases go *inside* a lane as that
+  worker's checkpoints.
+
+Fan-out helps exactly one of these shapes. A chain gains nothing from
+subagents, and a set of lanes gains nothing from compaction — pick by shape,
+not by size.
+
 ## Phased — long sequential work that outlasts one context window
 
 A Deep plan whose steps must run **in order**, where step seven depends on a
-choice made in step two. The limit here is context, not parallelism: `workflow`
-fans out across subagents, which does nothing for a chain that cannot be split.
+choice made in step two. The limit here is context, not parallelism.
 
 Reach for phases when any of these hold:
 
@@ -59,7 +76,8 @@ Reach for phases when any of these hold:
   ten of them will not fit in one session.
 - Natural seams where a run of steps ends in something verifiable on its own
   (parse works / render works / docs updated), not mid-refactor.
-- Ordered edits to the same file — the exact shape `workflow` cannot help with.
+- Ordered edits to the same file — the exact shape lanes cannot help with,
+  because one file has one owner.
 
 Then:
 
@@ -76,6 +94,36 @@ Then:
 
 Splitting into separate plan files is still the answer when the objectives are
 genuinely different — phases are for one objective that is simply long.
+
+## Laned — independent work that fans out
+
+A Standard or Deep plan whose steps fall into groups that touch **disjoint
+files** — a parser and the skill that documents it, three sweeps over three
+directories, a script and its tests. `/plan-agent:build` runs one
+worktree-isolated worker per lane and merges the lane branches back in
+`after:` order; the human confirms the split in Align before anything runs.
+
+Reach for lanes when all of these hold:
+
+- Two or more groups of steps whose owned paths do not overlap — no path or
+  glob in two lanes, no glob nested inside another lane's.
+- Each group ends in a `Verify:` that holds on its own branch before the
+  others merge (`planning-principles.md`, "A lane is a deliverable").
+- The shared files — `CHANGELOG.md`, `README.md`, `marketplace.json`,
+  generated indexes — fit in one trailing `lead` lane that runs last in the
+  main session.
+
+Then:
+
+- Group the steps with `### Lane: <name> (owns: …; after: …)` headings
+  (syntax and the `--check` rules in `section-catalog.md`). Numbering stays
+  flat; lanes are pure grouping. 2 to 5 lanes; never force lanes on a chain.
+- Declare every real dependency as an `after:` edge; an undeclared one shows
+  up as a merge conflict or a lane that fails in isolation.
+- Leave `workflow:` at `auto` — two or more lanes is what makes `build`
+  dispatch. `never` keeps a laned plan sequential; `always` also asks for the
+  Workflow-engine escalation.
+- Long chains inside a lane take `### Phase:` headings inside that lane.
 
 Phases have a second, unrelated use: the RED/GREEN/VERIFY/SHIP shape in
 `red-green-verify.md` groups by discipline rather than by context budget, and
@@ -98,14 +146,15 @@ code.
 
 ## Calibration knobs, in one place
 
-| Knob | Minimal | Standard | Deep | Phased |
-|------|---------|----------|------|--------|
-| Steps | 1–3 | 3–6 | 6–10 | 10+, in 2–5 phases |
-| Context | omit | short | decision story | decision story |
-| `## Decisions` | no | no | optional | yes |
-| Files section | optional | yes | yes | yes |
-| Tests | objective only / 1 unit | Tier 1, applicable types | full Tier 1 spread | full Tier 1 spread |
-| `glance` | no | yes | yes | yes |
-| `workflow` key | no | rarely | when parallelizable | usually `never` |
-| Red-green-verify | rarely | when code + a runner | when code + a runner | wins the headings; see above |
-| Interview rounds | 1 | 1–2 | 1–3 | 1–3 |
+| Knob | Minimal | Standard | Deep | Phased | Laned |
+|------|---------|----------|------|--------|-------|
+| Steps | 1–3 | 3–6 | 6–10 | 10+, in 2–5 phases | 4+, in 2–5 lanes |
+| Context | omit | short | decision story | decision story | decision story |
+| `## Decisions` | no | no | optional | yes | optional |
+| Files section | optional | yes | yes | yes | yes — it is what `owns:` is checked against |
+| Tests | objective only / 1 unit | Tier 1, applicable types | full Tier 1 spread | full Tier 1 spread | full Tier 1 spread, one verify per lane |
+| `glance` | no | yes | yes | yes | yes |
+| `### Lane:` headings | no | when 2+ disjoint file sets | when 2+ disjoint file sets | inside a lane if both | yes |
+| `workflow` key | no | rarely | rarely | usually `never` | `auto`; `never` opts out |
+| Red-green-verify | rarely | when code + a runner | when code + a runner | wins the headings; see above | inside each lane |
+| Interview rounds | 1 | 1–2 | 1–3 | 1–3 | 1–3 |

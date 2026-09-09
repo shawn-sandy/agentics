@@ -1,5 +1,48 @@
 # Changelog
 
+## 9.15.0 — implementation-plan authors lanes, and the guidance stops arguing against fan-out (2026-09-09)
+
+Phase 2 of `docs/plans/add-lane-orchestration.md`. Authoring guidance only —
+no renderer change, so every committed plan renders as it did in 9.14.0.
+
+### Added
+
+- **A lane-split pass in `implementation-plan` Step 2** with five rules: a
+  lane owns a disjoint set of paths; a lane's steps form a chain the worker
+  runs in order; steps touching the same file stay in one lane; shared files
+  (`CHANGELOG.md`, `README.md`, `marketplace.json`, generated indexes)
+  belong to the `lead` lane; aim for 2 to 5 lanes and never force lanes on a
+  chain. Align (Step 5) gains a batched "Confirm the lane split" question —
+  one option per lane naming its owned paths and `after:` — so a human
+  confirms the split before any agent runs, and `build` never re-splits.
+  Step 8's `Implement now` says `build` dispatches by shape; `Run as
+  workflow` is kept as the Workflow-engine escalation and its help text says
+  so.
+- **`### Lane:` in the section catalog**, beside `### Phase:`, with the
+  parser's literal grammar, the Appendix A two-lanes-plus-`lead` example,
+  the `--check` rules the renderer enforces, and the `workflow:` semantics
+  table. `reference/SKELETON.md` carries the same example as placeholders.
+- **"A lane is a deliverable"** in `guidelines/planning-principles.md`: each
+  lane's last `Verify:` proves the lane on its own branch; a verify that
+  needs another lane merged first is an `after:` edge, not a lane.
+- **A one-file-one-owner check in `plan-reviewer-completeness`** (every
+  `## Files` path owned by exactly one lane, shared files in `lead` only)
+  and **a lane-independence check in `plan-reviewer-risk`** (no hidden
+  shared state, no missing `after:` edge) — the second look at the split
+  after the human, one paragraph each, no new agent.
+
+### Changed
+
+- **`guidelines/right-sizing.md` and `build/references/phase-checkpoints.md`
+  no longer argue against all fan-out.** Both said a long plan cannot be
+  split across subagents; that is true of a chain and was silent about
+  lanes. Each is now a case split — a chain bounds context with phases,
+  independent lanes fan out, a plan can be both with phases inside lanes —
+  plus a **Laned** profile and a Laned column in the calibration table.
+  The Deep profile's "consider `workflow: always`" bullet points at lanes
+  instead: `build` dispatches by lane count, and the file-count heuristic
+  only ever decided a paste-prompt.
+
 ## 9.14.0 — the plan spec declares lanes: parsed, checked, and rendered (2026-09-09)
 
 Phase 1 of `docs/plans/add-lane-orchestration.md` (the

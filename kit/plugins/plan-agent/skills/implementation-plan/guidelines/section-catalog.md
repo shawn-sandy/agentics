@@ -75,6 +75,68 @@ Do not author a phase heading between two steps in a plan rendered by
 plan-agent < 8.6.0 — older parsers fold it into the preceding step's
 `Verify:` text with no error raised.
 
+#### `### Lane: <name> (owns: …; after: …)` *(optional, inside Steps)*
+
+Groups a run of steps one worktree-isolated worker can own end to end.
+`/plan-agent:build` runs one worker per lane and merges the lane branches
+back onto the plan branch in `after:` order; a spec with no lane heading is
+one implicit lane and runs sequentially, exactly as before. The parser's
+literal grammar:
+
+```text
+### Lane: <name>[ (owns: <path-or-glob>{, <path-or-glob>}[; after: <lane>{, <lane>}])]
+```
+
+`<name>` is kebab-case. Both clauses are optional to the parser; the reserved
+lane `lead` may omit `owns:` and is the only lane that may — it holds the
+shared files (`CHANGELOG.md`, `README.md`, `marketplace.json`, generated
+indexes), lists every lane in `after:`, and runs last in the main session,
+never as a worker. Two worker lanes plus `lead`:
+
+```markdown
+## Steps
+
+### Lane: renderer (owns: scripts/lib/plan-spec.mjs, scripts/build-plan-html.mjs, tests/plan-lanes.test.mjs)
+
+1. Parse the headings. Why: … Verify: `node tests/plan-lanes.test.mjs` exits 0.
+2. Add the check rules. Why: … Verify: …
+
+### Lane: build-skill (owns: skills/build/**, commands/fix.md, commands/refactor.md; after: renderer)
+
+3. Rewrite Step 2 as the dispatcher. Why: … Verify: …
+
+### Lane: lead (after: renderer, build-skill)
+
+4. Bump marketplace.json and write the CHANGELOG entry. Why: … Verify: …
+```
+
+Numbering stays **flat and global**, as with phases. `### Phase:` remains
+valid at top level or inside a lane — inside, it is a checkpoint for that
+lane's worker, and a lane heading also closes any open phase. Globs go
+through Node's `path.matchesGlob` (`**` spans directories).
+
+The renderer enforces the split on every render and `--check`, naming the
+lane in each message: a lane other than `lead` with no `owns:`; a step
+outside every lane; an `after:` naming an unknown lane or `lead` (lead runs
+last); a dependency cycle; a `## Files` path owned by two lanes; and two
+lanes whose patterns **nest** — the wildcard-free prefix of one matches the
+other's glob, so `scripts/**` beside `scripts/lib/**` fails with both lanes
+named even when no listed file sits in the overlap. An `owns:` entry that
+matches no `## Files` path warns without failing; lanes may own paths the
+implementation creates. `plan-agent-render <spec> --lanes` prints every
+lane with its owns, after, and steps as JSON — the table `build` dispatches
+from.
+
+Lanes also change what `workflow:` means. With no lane heading the
+four-files-across-two-directories heuristic decides the workflow prompt as
+it always has. With lanes, the declared shape decides:
+
+| `workflow:` | fewer than 2 lanes | 2 or more lanes |
+|---|---|---|
+| `auto` (default) | sequential, no prompt | `build` dispatches; the prompt row renders |
+| `never` | sequential | sequential — lanes still document ownership |
+| `always` | sequential plus the prompt | dispatch plus the prompt (Workflow-engine escalation) |
+
 ### `## Acceptance Criteria`
 
 One bullet per criterion; each a single-line falsifiable statement.
@@ -239,7 +301,7 @@ created: 2026-07-12     # YYYY-MM-DD; preserved across re-renders when set
 repo: my-repo           # default: origin remote basename, else cwd basename
 effort: high            # low | medium | high; omit to auto-derive from step/file counts
 glance: <one line>      # 2–3 plain-language sentences, on ONE line — the At-a-glance block
-workflow: auto          # auto (heuristic) | always | never; omit for auto
+workflow: auto          # auto (file heuristic; with lanes: dispatch at 2+) | always | never; omit for auto
 ---
 ```
 

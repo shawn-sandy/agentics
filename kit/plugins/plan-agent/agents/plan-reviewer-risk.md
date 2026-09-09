@@ -27,6 +27,8 @@ Read the plan HTML at `<plan-path>` with the `Read` tool. Its authored content �
 3. **Unguarded mutations** — Database or state changes without transaction semantics.
 4. **Undersized rollback** — Steps that are hard to undo if something goes wrong.
 
+**Laned plans** (`### Lane: <name> (owns: …; after: …)` headings in Steps, or a Lanes panel in the HTML): each lane runs as its own worktree worker on its own branch, so check that the lanes are genuinely independent — no hidden shared state (a lane that reads a file another lane rewrites, a generated index both touch, a test that only passes once the other lane merges) and no missing `after:` edge (a lane whose last `Verify:` depends on another lane's output must list it). A dependency the spec does not declare surfaces as a merge conflict or a lane that fails in isolation; name the two lanes and the path or state they share. The renderer's `--check` catches cycles and unknown lanes; it cannot see the state a step reaches for outside its `owns:`.
+
 ## Report Back
 
 You are invoked by `review-plan`'s Workflow script, which calls you with a
