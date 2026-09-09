@@ -1,0 +1,11 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 110, "w": 720, "h": 420, "title": "Overview" },
+    { "file": "lane-spec-anatomy.dc.html", "x": 820, "y": 0, "w": 880, "h": 640, "title": "Lane spec anatomy" },
+    { "file": "rendered-plan-lane-surfaces.dc.html", "x": 1800, "y": 0, "w": 900, "h": 640, "title": "Rendered plan surfaces" },
+    { "file": "dispatch-wave-flow.dc.html", "x": 0, "y": 800, "w": 1100, "h": 680, "title": "Dispatch wave flow" },
+    { "file": "lane-failure-paths.dc.html", "x": 1200, "y": 800, "w": 900, "h": 640, "title": "Failure paths" },
+    { "file": "pilot-measurement-loop.dc.html", "x": 2200, "y": 800, "w": 900, "h": 560, "title": "Pilot measurement" }
+  ],
+  "launch": { "view": "canvas" }
+}

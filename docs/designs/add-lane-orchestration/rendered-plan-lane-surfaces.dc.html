@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    a { color: #3730c4; } a:hover { color: #2a2496; }
+  </style>
+</helmet>
+<div style="width: 900px; height: 640px; background: #fbfbfd; color: #14141c; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px;">
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+    <div style="font-size: 22px; font-weight: 700;">Rendered plan page — the three lane surfaces</div>
+    <div style="font-size: 14px; color: #4a4a58;">What ships in plan-shell.mjs: the Lanes panel card, lane chips on step cards, and per-lane copy rows</div>
+  </div>
+  <div style="display: flex; gap: 16px; flex: 1; min-height: 0;">
+    <div style="width: 150px; background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 11px; color: #4a4a58;">
+      <div>Objective</div>
+      <div>Context</div>
+      <div>Decisions</div>
+      <div>Files</div>
+      <div style="background: #eeedfb; color: #3730c4; font-weight: 600; border-radius: 4px; padding: 3px 6px; margin: 0 -6px;">Lanes</div>
+      <div>Steps</div>
+      <div>Tests</div>
+      <div>Criteria</div>
+      <div>Verification</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 12px; min-height: 0;">
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; box-shadow: 0 1px 2px rgba(20,20,28,.05); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 14px; font-weight: 700;">Lanes</div>
+        <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 11px; line-height: 1.45;">
+          <li><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-weight: 600;">renderer</span>
+            <ul style="margin: 2px 0 0; padding-left: 16px; color: #4a4a58;">
+              <li>owns <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px;">scripts/lib/plan-spec.mjs, scripts/build-plan-html.mjs</span></li>
+            </ul>
+          </li>
+          <li><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-weight: 600;">build-skill</span>
+            <ul style="margin: 2px 0 0; padding-left: 16px; color: #4a4a58;">
+              <li>owns <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px;">skills/build/**, commands/fix.md</span> &middot; after <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px;">renderer</span></li>
+            </ul>
+          </li>
+          <li><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-weight: 600;">lead</span>
+            <ul style="margin: 2px 0 0; padding-left: 16px; color: #4a4a58;">
+              <li>after <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px;">renderer, build-skill</span> &middot; runs last, main session</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; box-shadow: 0 1px 2px rgba(20,20,28,.05); padding: 12px 16px; display: flex; align-items: flex-start; gap: 10px;">
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; color: #6a6a78; flex: none;">1</div>
+        <div style="flex: 1; font-size: 11px; line-height: 1.5;">Parse <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; background: #f4f4f8; padding: 1px 4px; border-radius: 4px;">### Lane:</span> headings into sections.lanes</div>
+        <div style="flex: none; font-size: 10px; font-weight: 600; color: #3730c4; background: #eeedfb; border: 1px solid #c6c2f0; border-radius: 999px; padding: 2px 8px;">renderer</div>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; box-shadow: 0 1px 2px rgba(20,20,28,.05); padding: 12px 16px; display: flex; align-items: flex-start; gap: 10px;">
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; color: #6a6a78; flex: none;">3</div>
+        <div style="flex: 1; font-size: 11px; line-height: 1.5;">Rewrite build Step 2 as the lane dispatcher</div>
+        <div style="flex: none; font-size: 10px; font-weight: 600; color: #3730c4; background: #eeedfb; border: 1px solid #c6c2f0; border-radius: 999px; padding: 2px 8px;">build-skill</div>
+      </div>
+      <div style="background: #f4f4f8; border: 1px solid #e4e4ee; border-radius: 4px; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 11px; font-weight: 600; color: #6a6a78; letter-spacing: 0.06em; text-transform: uppercase;">More ways to run this plan</div>
+        <div style="display: flex; flex-direction: column; gap: 6px; font-size: 11px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 7px 10px;">
+            <span>Copy worker brief &mdash; lane <span style="font-family: ui-monospace, Menlo, monospace; font-weight: 600;">renderer</span></span>
+            <span style="font-size: 11px; color: #3730c4; font-weight: 600;">Copy</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 7px 10px;">
+            <span>Copy worker brief &mdash; lane <span style="font-family: ui-monospace, Menlo, monospace; font-weight: 600;">build-skill</span></span>
+            <span style="font-size: 11px; color: #3730c4; font-weight: 600;">Copy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="width: 190px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="background: #ecf4ef; border: 1px solid #c0dccb; border-radius: 4px; padding: 10px 12px; font-size: 11px; line-height: 1.5; color: #2c6a44;"><strong>Panel card</strong> sits between Files and Steps with its own sidebar nav entry. Real list semantics, like the file tree.</div>
+      <div style="background: #ecf4ef; border: 1px solid #c0dccb; border-radius: 4px; padding: 10px 12px; font-size: 11px; line-height: 1.5; color: #2c6a44;"><strong>Chips</strong> are text-labeled on the existing chip palette in both themes &mdash; never color alone.</div>
+      <div style="background: #ecf4ef; border: 1px solid #c0dccb; border-radius: 4px; padding: 10px 12px; font-size: 11px; line-height: 1.5; color: #2c6a44;"><strong>Copy rows</strong> are real buttons, each announcing its lane name. Briefs arrive fully substituted &mdash; a cold worktree resolves nothing.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

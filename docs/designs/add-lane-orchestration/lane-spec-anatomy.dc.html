@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    a { color: #3730c4; } a:hover { color: #2a2496; }
+  </style>
+</helmet>
+<div style="width: 880px; height: 640px; background: #fbfbfd; color: #14141c; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px;">
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+    <div style="font-size: 22px; font-weight: 700;">Lane spec anatomy</div>
+    <div style="font-size: 14px; color: #4a4a58;">The grammar inside <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; background: #f4f4f8; padding: 1px 5px; border-radius: 4px;">## Steps</span> — three lanes, flat global numbering</div>
+  </div>
+  <div style="display: flex; gap: 20px; flex: 1; min-height: 0;">
+    <div style="flex: 1.4; background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; box-shadow: 0 1px 2px rgba(20,20,28,.05); padding: 20px; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; line-height: 1.75; overflow: hidden;">
+      <div style="color: #6a6a78;">## Steps</div>
+      <div style="margin-top: 10px; background: #eeedfb; border-left: 3px solid #3730c4; padding: 4px 8px; border-radius: 0 4px 4px 0;">### Lane: renderer <span style="color: #3730c4;">(owns: scripts/lib/plan-spec.mjs, scripts/build-plan-html.mjs)</span></div>
+      <div>1. Parse lane headings&hellip; <span style="color: #8a8a9a;">Why: &hellip; Verify: node tests/plan-lanes.test.mjs</span></div>
+      <div>2. Add the --check rules&hellip; <span style="color: #8a8a9a;">Why: &hellip; Verify: &hellip;</span></div>
+      <div style="margin-top: 10px; background: #eeedfb; border-left: 3px solid #3730c4; padding: 4px 8px; border-radius: 0 4px 4px 0;">### Lane: build-skill <span style="color: #3730c4;">(owns: skills/build/**, commands/fix.md;</span> <span style="color: #8a5209;">after: renderer</span><span style="color: #3730c4;">)</span></div>
+      <div>3. Rewrite Step 2 as the dispatcher&hellip; <span style="color: #8a8a9a;">Why: &hellip; Verify: &hellip;</span></div>
+      <div style="margin-top: 10px; background: #ecf4ef; border-left: 3px solid #2c6a44; padding: 4px 8px; border-radius: 0 4px 4px 0;">### Lane: lead <span style="color: #8a5209;">(after: renderer, build-skill)</span></div>
+      <div>4. Bump marketplace.json, write the CHANGELOG entry&hellip; <span style="color: #8a8a9a;">Why: &hellip; Verify: &hellip;</span></div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-size: 14px; font-weight: 600; color: #3730c4;">Disjoint ownership</div>
+        <div style="font-size: 11px; line-height: 1.5; color: #4a4a58;">Every <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px;">## Files</span> path matches at most one lane's <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px;">owns:</span> — one file, one owner. Overlap fails --check naming the lane.</div>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-size: 14px; font-weight: 600; color: #3730c4;">Flat global numbering</div>
+        <div style="font-size: 11px; line-height: 1.5; color: #4a4a58;">Steps 1&ndash;4 never restart per lane, so every existing [x] marker stays valid.</div>
+      </div>
+      <div style="background: #ecf4ef; border: 1px solid #c0dccb; border-radius: 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-size: 14px; font-weight: 600; color: #2c6a44;">lead is reserved</div>
+        <div style="font-size: 11px; line-height: 1.5; color: #4a4a58;">May omit <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px;">owns:</span>, owns the shared files (CHANGELOG.md, marketplace.json), and always runs last in the main session.</div>
+      </div>
+      <div style="background: #fdf1f0; border: 1px solid #edc4bf; border-radius: 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-size: 14px; font-weight: 600; color: #b42318;">after: lead is an error</div>
+        <div style="font-size: 11px; line-height: 1.5; color: #4a4a58;">Nothing may depend on lead — it would deadlock the run. --check exits 1 naming the lane. A step outside every lane errors too.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

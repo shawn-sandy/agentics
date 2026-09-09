@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    a { color: #3730c4; } a:hover { color: #2a2496; }
+  </style>
+</helmet>
+<div style="width: 900px; height: 560px; background: #fbfbfd; color: #14141c; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px;">
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+    <div style="font-size: 22px; font-weight: 700;">Pilot measurement — Phase 4 dogfoods the dispatcher</div>
+    <div style="font-size: 14px; color: #4a4a58;">The Workflow-engine plan (lanes: script / wiring / tests / lead) is built twice; the numbers are the release's headline</div>
+  </div>
+  <div style="display: flex; gap: 20px; flex: 1; min-height: 0;">
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+      <div style="background: #eeedfb; border: 1px solid #c6c2f0; border-radius: 4px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 14px; font-weight: 700; color: #3730c4;">Fresh session A — dispatch</div>
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; color: #4a4a58;">/plan-agent:build docs/plans/&lt;pilot&gt;.md</div>
+        <div style="display: flex; gap: 6px;">
+          <span style="font-size: 10px; font-weight: 600; color: #3730c4; background: #ffffff; border: 1px solid #c6c2f0; border-radius: 999px; padding: 2px 8px;">script</span>
+          <span style="font-size: 10px; font-weight: 600; color: #3730c4; background: #ffffff; border: 1px solid #c6c2f0; border-radius: 999px; padding: 2px 8px;">wiring</span>
+          <span style="font-size: 10px; font-weight: 600; color: #3730c4; background: #ffffff; border: 1px solid #c6c2f0; border-radius: 999px; padding: 2px 8px;">tests</span>
+          <span style="font-size: 10px; font-weight: 600; color: #2c6a44; background: #ffffff; border: 1px solid #c0dccb; border-radius: 999px; padding: 2px 8px;">lead</span>
+        </div>
+        <div style="font-size: 11px; color: #4a4a58; line-height: 1.5;">Three worktree workers in parallel, lead merges and gates.</div>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 14px; font-weight: 700;">Fresh session B — sequential</div>
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; color: #4a4a58;">/plan-agent:build &lt;pilot&gt;.md --sequential</div>
+        <div style="font-size: 11px; color: #4a4a58; line-height: 1.5;">Same plan, one thread, on a scratch branch. The control run.</div>
+      </div>
+      <div style="background: #f4f4f8; border: 1px solid #e4e4ee; border-radius: 4px; padding: 10px 12px; font-size: 11px; color: #6a6a78; line-height: 1.5;">One session per run — an accumulating session cannot attribute tokens cleanly.</div>
+    </div>
+    <svg width="24" height="60" viewBox="0 0 24 100" preserveAspectRatio="none" style="flex: none; align-self: center;"><path d="M2 50 H16 M12 44 L18 50 L12 56" fill="none" stroke="#8a8a9a" stroke-width="1.5"></path></svg>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-size: 14px; font-weight: 700;">Recorded per run, from actual output</div>
+        <div style="display: flex; gap: 10px;">
+          <div style="flex: 1; background: #f4f4f8; border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 11px; color: #6a6a78;">wall-clock</span>
+            <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 14px; font-weight: 600;">mm:ss</span>
+          </div>
+          <div style="flex: 1; background: #f4f4f8; border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 11px; color: #6a6a78;">tokens, /usage</span>
+            <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 14px; font-weight: 600;">in / out</span>
+          </div>
+        </div>
+        <div style="font-size: 11px; color: #4a4a58; line-height: 1.5;">Never estimated — the plan's own rule: any metric written into docs comes from a real run.</div>
+      </div>
+      <div style="background: #ecf4ef; border: 1px solid #c0dccb; border-radius: 4px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="font-size: 14px; font-weight: 700; color: #2c6a44;">Published in CHANGELOG 9.17.0</div>
+        <div style="font-size: 11px; color: #4a4a58; line-height: 1.55;">Both figures, dispatch vs sequential, ship in the release entry. The default is not trusted on large plans until these numbers exist — and <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px;">--sequential</span> stays one flag away.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
