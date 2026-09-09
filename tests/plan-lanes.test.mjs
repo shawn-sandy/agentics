@@ -219,6 +219,16 @@ ok('extractSections reads lanes back out of the rendered HTML', () => {
   assert.equal(extractSections(render(NO_LANES_SPEC)).lanes, null);
 });
 
+ok('a malformed plan-lanes meta row is a ParseError, never a downstream TypeError', () => {
+  // A hand-edited or truncated page can carry a row with no owns/after. The
+  // backfill batch catches ParseError only, so anything else aborts the run.
+  const html = render(LANED_SPEC).replace(/<meta name="plan-lanes" content="([^"]*)">/, (_, c) => {
+    const rows = JSON.parse(decodeEntities(c)).map(({ name, firstStep, lastStep }) => ({ name, firstStep, lastStep }));
+    return `<meta name="plan-lanes" content="${JSON.stringify(rows).replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">`;
+  });
+  assert.throws(() => buildDigest(extractSections(html)), (err) => err instanceof ParseError && /plan-lanes/.test(err.message));
+});
+
 /* ── --check rules (library) ──────────────────────────────────────── */
 
 const errorsOf = (spec) => checkLanes(parseSpecMarkdown(spec).sections).errors;

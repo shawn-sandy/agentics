@@ -347,7 +347,21 @@ export function extractSections(html) {
       fail('plan-lanes meta present but not JSON');
     }
     if (!Array.isArray(table) || table.length === 0) fail('plan-lanes meta present but empty');
-    lanes = table.map(({ name, owns, after, firstStep, lastStep }) => ({ name, owns, after, firstStep, lastStep }));
+    // Every field is checked here, not trusted: a hand-edited or truncated
+    // page can carry a row with no owns/after, and buildDigest() would then
+    // throw a TypeError from laneHeading() — which the backfill batch does not
+    // catch (it catches ParseError only), so one bad page would abort the run.
+    lanes = table.map((row, i) => {
+      const bad = (what) => fail(`plan-lanes meta row ${i + 1} ${what}`);
+      if (!row || typeof row !== 'object') bad('is not an object');
+      const { name, owns, after, firstStep, lastStep } = row;
+      if (typeof name !== 'string' || !name) bad('has no name');
+      const strings = (v) => Array.isArray(v) && v.every((s) => typeof s === 'string');
+      if (!strings(owns)) bad(`("${name}") has no owns list`);
+      if (!strings(after)) bad(`("${name}") has no after list`);
+      if (!Number.isInteger(firstStep) || !Number.isInteger(lastStep) || firstStep < 1 || lastStep < firstStep) bad(`("${name}") has an invalid step range`);
+      return { name, owns, after, firstStep, lastStep };
+    });
   }
 
   let tests = null;

@@ -71,6 +71,19 @@ multiplier stays unmeasured; no estimate is published in its place.
   reworded five and wrapped a sixth across a line break, so the first CI run
   of the branch failed. All seven are back verbatim on single lines, and the
   core sits at 590 words.
+- **A malformed `plan-lanes` meta row is a `ParseError`, not a `TypeError`.**
+  `extractSections()` now checks every row's `name`, `owns`, `after`,
+  `firstStep`, and `lastStep` before returning it. A hand-edited or truncated
+  page with a row missing `owns` used to reach `laneHeading()` in
+  `buildDigest()` and throw a `TypeError` — which the digest backfill batch
+  does not catch, so one bad page would have aborted the whole run. Pinned
+  by a new case in `tests/plan-lanes.test.mjs`. (Raised in review of #628.)
+- **Align writes the lane decision into the spec.** The 9.15.0 lane question
+  said an unticked lane was a request to fold it away, but not that the spec
+  must change before the flow continues; `build` reads the headings the spec
+  carries, so a rejected lane left in place would still have been dispatched.
+  Step 5 now says to fold the lane's steps or drop every `### Lane:` heading,
+  then re-render, before Step 5b. (Raised in review of #628.)
 
 ## 9.16.0 — build dispatches one worktree worker per lane (2026-09-09)
 

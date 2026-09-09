@@ -451,7 +451,11 @@ EOF
    the split before any agent runs against it. `build` dispatches exactly
    the lanes confirmed here and never re-splits; an unticked lane is a
    request to fold it into a neighbour or make it sequential, not a lane to
-   dispatch anyway.
+   dispatch anyway. **Write the answer into the spec before continuing**:
+   fold an unticked lane's steps under the lane they belong with, or drop
+   every `### Lane:` heading to make the plan sequential, then re-render.
+   `build` reads the headings the spec carries, so a rejected lane left in
+   place is still dispatched.
    *(Skip entirely when `--quick` or `--no-align`.)*
 
 5b. **Interview** — Stress-test the drafted spec before delivering.
