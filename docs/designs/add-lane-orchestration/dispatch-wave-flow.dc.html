@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    a { color: #3730c4; } a:hover { color: #2a2496; }
+  </style>
+</helmet>
+<div style="width: 1100px; height: 680px; background: #fbfbfd; color: #14141c; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px;">
+  <div style="display: flex; flex-direction: column; gap: 4px;">
+    <div style="font-size: 22px; font-weight: 700;">Dispatch wave flow — build Step 2 on a laned plan</div>
+    <div style="font-size: 14px; color: #4a4a58;">Fewer than 2 lanes, <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px;">workflow: never</span>, or <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px;">--sequential</span> takes today's path instead</div>
+  </div>
+  <div style="display: flex; gap: 14px; align-items: stretch; flex: 1; min-height: 0;">
+    <div style="width: 170px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 10px 12px; font-size: 11px; line-height: 1.45;"><span style="font-weight: 600;">1 &middot; Check</span><br><span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #4a4a58;">plan-agent-render --check, then --lanes</span></div>
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 10px 12px; font-size: 11px; line-height: 1.45;"><span style="font-weight: 600;">2 &middot; Guards</span><br><span style="font-size: 11px; color: #4a4a58;">staleness + dirty tree</span></div>
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 10px 12px; font-size: 11px; line-height: 1.45;"><span style="font-weight: 600;">3 &middot; Commit spec</span><br><span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #4a4a58;">chore(plan): start &lt;stem&gt;</span><br><span style="font-size: 11px; color: #4a4a58;">status: in-progress, re-render</span></div>
+      <div style="background: #f4f4f8; border: 1px solid #e4e4ee; border-radius: 4px; padding: 10px 12px; font-size: 11px; line-height: 1.5; color: #4a4a58;">Lane branches can only fork from committed state — uncommitted work never travels.</div>
+    </div>
+    <svg width="24" height="100%" viewBox="0 0 24 100" preserveAspectRatio="none" style="flex: none; align-self: center; height: 60px;"><path d="M2 50 H16 M12 44 L18 50 L12 56" fill="none" stroke="#8a8a9a" stroke-width="1.5"></path></svg>
+    <div style="width: 240px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 11px; font-weight: 600; color: #6a6a78; letter-spacing: 0.06em; text-transform: uppercase;">Wave 1 — empty after:</div>
+      <div style="background: #eeedfb; border: 1px solid #c6c2f0; border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-size: 11px; font-weight: 600; color: #3730c4;">Worker: lane renderer</div>
+        <div style="font-size: 11px; color: #4a4a58; line-height: 1.5;">Agent &middot; worktree isolation &middot; sonnet &middot; background</div>
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; color: #3730c4;">&lt;plan-branch&gt;--renderer</div>
+        <div style="font-size: 11px; color: #4a4a58;">commits, never pushes, never edits the spec</div>
+      </div>
+      <div style="background: #ffffff; border: 1px dashed #c6c2f0; border-radius: 4px; padding: 10px 12px; font-size: 11px; color: #6a6a78; line-height: 1.5;">Up to --max lanes at once (default 3, cap 5). All Agent calls in one message.</div>
+      <div style="background: #f4f4f8; border: 1px solid #e4e4ee; border-radius: 4px; padding: 10px 12px; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; line-height: 1.6; color: #4a4a58;">LANE REPORT<br>lane &middot; branch &middot; steps_done<br>verify &middot; files_changed &middot; blocked</div>
+    </div>
+    <svg width="24" height="60" viewBox="0 0 24 100" preserveAspectRatio="none" style="flex: none; align-self: center;"><path d="M2 50 H16 M12 44 L18 50 L12 56" fill="none" stroke="#8a8a9a" stroke-width="1.5"></path></svg>
+    <div style="width: 250px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="font-size: 11px; font-weight: 600; color: #6a6a78; letter-spacing: 0.06em; text-transform: uppercase;">Lead, per completed lane</div>
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 7px; font-size: 11px; line-height: 1.45;">
+        <div><span style="font-weight: 600;">Verify report</span> <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #4a4a58;">git log &lt;plan&gt;..&lt;plan&gt;--&lt;lane&gt;</span></div>
+        <div><span style="font-weight: 600;">Audit ownership</span> <span style="font-size: 11px; color: #4a4a58;">diff paths vs owns: — stray file refuses the merge</span></div>
+        <div><span style="font-weight: 600;">Merge</span> <span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #4a4a58;">git merge --no-ff</span> <span style="font-size: 11px; color: #4a4a58;">in after: order</span></div>
+        <div><span style="font-weight: 600;">Tick + re-render</span> <span style="font-size: 11px; color: #4a4a58;">lead is the spec's only writer</span></div>
+        <div><span style="font-weight: 600;">Print table</span> <span style="font-size: 11px; color: #4a4a58;">lane &middot; steps &middot; verify &middot; branch &middot; merged</span></div>
+      </div>
+      <div style="background: #eeedfb; border: 1px solid #c6c2f0; border-radius: 4px; padding: 10px 12px; font-size: 11px; line-height: 1.5; color: #3730c4;"><strong>Wave 2</strong> — dispatch newly unblocked lanes (build-skill, now that renderer merged) from the updated plan branch.</div>
+    </div>
+    <svg width="24" height="60" viewBox="0 0 24 100" preserveAspectRatio="none" style="flex: none; align-self: center;"><path d="M2 50 H16 M12 44 L18 50 L12 56" fill="none" stroke="#8a8a9a" stroke-width="1.5"></path></svg>
+    <div style="width: 200px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="background: #ecf4ef; border: 1px solid #c0dccb; border-radius: 4px; padding: 12px; font-size: 11px; line-height: 1.5;"><span style="font-weight: 600; color: #2c6a44;">Lane lead</span><br><span style="font-size: 11px; color: #4a4a58;">runs in the main session after all merges — shared files, version bump, CHANGELOG</span></div>
+      <div style="background: #ecf4ef; border: 1px solid #c0dccb; border-radius: 4px; padding: 12px; font-size: 11px; line-height: 1.5;"><span style="font-weight: 600; color: #2c6a44;">Completion gates &times;3</span><br><span style="font-size: 11px; color: #4a4a58;">acceptance criteria, end-to-end, checklist — once, on the merged tree</span></div>
+      <div style="background: #ffffff; border: 1px solid #e4e4ee; border-radius: 4px; padding: 10px 12px; font-size: 11px; color: #4a4a58; line-height: 1.5;">Tree ends committed on the plan branch, unpushed. One plan, one PR.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

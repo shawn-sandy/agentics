@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    a { color: #3730c4; } a:hover { color: #2a2496; }
+  </style>
+</helmet>
+<div style="width: 720px; height: 420px; background: #fbfbfd; color: #14141c; padding: 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px;">
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; color: #3730c4; letter-spacing: 0.08em; text-transform: uppercase;">plan-agent · design canvas</div>
+    <div style="font-size: 30px; font-weight: 700; line-height: 1.15;">Make the plan the dispatch contract</div>
+    <div style="font-size: 14px; line-height: 1.5; color: #4a4a58; max-width: 560px;">Lanes in the spec declare which steps are independent and which files each group owns. The build skill dispatches one worktree worker per lane and merges the branches back in dependency order.</div>
+  </div>
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <div style="background: #eeedfb; border: 1px solid #c6c2f0; border-radius: 4px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 14px; font-weight: 600;">Renderer</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; color: #3730c4;">9.14.0</span>
+    </div>
+    <svg width="20" height="12" viewBox="0 0 20 12" style="flex: none;"><path d="M0 6 H14 M10 1 L15 6 L10 11" fill="none" stroke="#8a8a9a" stroke-width="1.5"></path></svg>
+    <div style="background: #eeedfb; border: 1px solid #c6c2f0; border-radius: 4px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 14px; font-weight: 600;">Authoring</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; color: #3730c4;">9.15.0</span>
+    </div>
+    <svg width="20" height="12" viewBox="0 0 20 12" style="flex: none;"><path d="M0 6 H14 M10 1 L15 6 L10 11" fill="none" stroke="#8a8a9a" stroke-width="1.5"></path></svg>
+    <div style="background: #eeedfb; border: 1px solid #c6c2f0; border-radius: 4px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 14px; font-weight: 600;">Dispatch</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; color: #3730c4;">9.16.0</span>
+    </div>
+    <svg width="20" height="12" viewBox="0 0 20 12" style="flex: none;"><path d="M0 6 H14 M10 1 L15 6 L10 11" fill="none" stroke="#8a8a9a" stroke-width="1.5"></path></svg>
+    <div style="background: #ecf4ef; border: 1px solid #c0dccb; border-radius: 4px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 14px; font-weight: 600;">Pilot</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; color: #2c6a44;">9.17.0</span>
+    </div>
+  </div>
+  <div style="margin-top: auto; border-top: 1px solid #e4e4ee; padding-top: 14px; display: flex; gap: 24px; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; color: #6a6a78;">
+    <span>docs/plans/add-lane-orchestration.md</span>
+    <span>issue #626</span>
+    <span>one phase per PR</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
