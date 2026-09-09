@@ -112,7 +112,7 @@ Scope: `skills/implementation-plan/SKILL.md`, `guidelines/section-catalog.md`, `
 Scope: `skills/build/SKILL.md`, new `skills/build/references/dispatch-lanes.md`, `commands/fix.md`, `commands/refactor.md`, `skills/build-fleet/SKILL.md`.
 
 - `allowed-tools` adds `Agent` in `build`, `fix.md`, and `refactor.md` in the same commit (the lockstep rule those files state). The existing drift, both commands lacking `Artifact`, is fixed in the same edit.
-- Step 2 branches on `plan-agent-render --lanes`: zero or one lane, `workflow: never`, or `--sequential` takes today's sequential path, unchanged. Two or more lanes takes the dispatch sequence in Appendix C: commit the spec, dispatch wave 1 (lanes with empty `after:`) in one message with `--max` concurrency, on each completion merge the lane branch in `after:` order, tick its steps, re-render, dispatch newly unblocked lanes from the updated plan branch, run the `lead` lane last, then the three gates.
+- Step 2 branches on `plan-agent-render --lanes`: zero or one lane, `workflow: never`, or `--sequential` takes today's sequential path, unchanged. Two or more lanes takes the dispatch sequence in Appendix C: commit the spec, dispatch wave 1 (non-`lead` lanes with empty `after:`) in one message with `--max` concurrency, on each completion merge the lane branch in `after:` order, tick its steps, re-render, dispatch newly unblocked lanes from the updated plan branch, run the `lead` lane last, then the three gates.
 - Each worker gets the brief in Appendix B with every placeholder substituted (a cold worktree resolves nothing, `build-fleet` `SKILL.md:115-116`). Workers end with a fixed `LANE REPORT` block; `build` verifies self-reports with `git log --oneline <plan-branch>..<plan-branch>--<lane>` and marks unverifiable rows the way `build-fleet` Step 4 does.
 - Merge conflicts on a disjoint-ownership plan are a plan bug: `build` stops, names the two lanes and the file, and asks whether to resolve by hand or fix the lanes and re-run. It never auto-resolves outside the registered merge drivers.
 - A failed lane (worker died, `Verify:` failed, blocked) is reported and the lead offers three choices: re-dispatch the lane, run it sequentially in the lead, or stop. The other lanes' merged work is kept.
@@ -224,7 +224,7 @@ Agent call: `subagent_type: "general-purpose"`, `isolation: "worktree"`, `run_in
 2. Staleness guard (`git log HEAD..<base>`) and dirty-tree guard (as `build-fleet`).
 3. Set `status: in-progress`, re-render, commit `chore(plan): start <verb-target>`.
 4. In manual permission mode, print the one-line bubbling warning once.
-5. Wave loop: dispatch every lane whose `after:` lanes are all merged, up to `--max` at once, all `Agent` calls in one message.
+5. Wave loop: dispatch every lane except `lead` whose `after:` lanes are all merged, up to `--max` at once, all `Agent` calls in one message. `lead` is never dispatched as a worker; it runs once, in the main session, at step 7.
 6. On each completion: verify the self-report against `git log`; `git merge --no-ff <plan-branch>--<lane>` into the plan branch; on conflict stop and ask; tick the lane's steps `[x]`; re-render; return to 5.
 7. Run the `lead` lane's steps in the main session.
 8. Completion gates 3 to 5 unchanged (`references/completion-gates.md`).
@@ -259,4 +259,4 @@ Agent call: `subagent_type: "general-purpose"`, `isolation: "worktree"`, `run_in
 | `.claude-plugin/marketplace.json`, `CHANGELOG.md`, `README.md`, `docs/guides/how-to/` | each phase | bump plus docs |
 </appendices>
 
-Author an execution plan that delivers WS-A through WS-D in roadmap order, one phase per PR with its own minor version bump. Draft real, actionable steps naming the files in Appendix E; do not restate the workstream headings as steps. Treat locked decisions 1 to 16 as settled inputs; there are no open questions to carry forward. The plan itself should be authored with lanes once WS-A lands; until then, author it as today's sequential spec, and note in its Context that Phase 4 is the first plan that will be authored with `### Lane:` headings.
+Author an execution plan that delivers WS-A through WS-E in roadmap order (WS-E ships inside Phase 4 as the subject of the WS-D pilot), one phase per PR with its own minor version bump. Draft real, actionable steps naming the files in Appendix E; do not restate the workstream headings as steps. Treat locked decisions 1 to 16 as settled inputs; there are no open questions to carry forward. The plan itself should be authored with lanes once WS-A lands; until then, author it as today's sequential spec, and note in its Context that Phase 4 is the first plan that will be authored with `### Lane:` headings.
