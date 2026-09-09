@@ -7,10 +7,15 @@ change of any kind.
 
 ## Why this exists
 
-A plan whose steps must run in order cannot be split across subagents: step
-seven depends on a choice made in step two. `workflow` fans out and does
-nothing for that shape. Bounding *context* rather than parallelising work is
-what a checkpoint buys, and stopping is what makes the bound real.
+Two shapes of long plan, two different tools. A **chain** — step seven
+depends on a choice made in step two — has nothing to fan out; its limit is
+context, and a checkpoint bounds *context* by stopping at a seam a fresh
+session can pick up from. **Independent lanes** (`### Lane:` headings) have
+nothing to checkpoint between them; their limit is wall-clock, and `build`
+fans them out to one worktree worker each. A plan can
+be both: phases *inside* a lane are that lane's worker's checkpoints, and a
+lane heading closes any open phase. Stopping is what makes the bound real,
+whichever shape asked for it.
 
 ## The loop
 

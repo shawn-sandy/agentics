@@ -1,5 +1,250 @@
 # Changelog
 
+## 9.17.0 — the Workflow-engine escalation ships as the first laned plan (2026-09-09)
+
+Phase 4 of `docs/plans/add-lane-orchestration.md`, and the pilot: the
+escalation engine was authored as `docs/plans/add-workflow-engine-escalation.md`
+— the first plan in this repository with `### Lane:` headings — and built by
+the 9.16.0 dispatcher itself. Three worker lanes (`script`; then `wiring` and
+`tests` together once `script` merged) plus `lead` in the main session. Every
+lane branch was audited with `git diff --name-only` against its `owns:` before
+its `--no-ff` merge; every path stayed inside its lane.
+
+### Added
+
+- **`skills/build/references/implement-workflow.mjs`** — the Workflow script
+  behind `--workflow`, mirroring `review-plan`'s `review-workflow.mjs`: one
+  `agent()` per worker lane with `isolation: 'worktree'`,
+  `agentType: 'general-purpose'`, the `--worker-model` alias (default
+  `sonnet`), and a `LANE_REPORT` schema (`lane`, `branch`, `steps_done`,
+  `verify`, `files_changed`, `blocked`). Wave ordering is a promise per lane
+  — each lane awaits the promises its `after:` names, then dispatches — so a
+  lane starts the moment its dependencies finish, with no barrier, and a dead
+  worker resolves to null rather than failing the run. The script never runs
+  git: it returns `{ reports, mergeOrder }` and the lead merges with the same
+  section-6 audit the Agent path uses, so there is one merge procedure.
+- **Selection gate** in `references/dispatch-lanes.md` and `build` Step 2:
+  the engine is chosen only on a spec with 2 or more lanes, and only by
+  `workflow: always`, the new `--workflow` flag, or 6 or more lanes; fewer
+  than 2 lanes runs sequentially and only emits the /workflows prompt. The
+  Workflow tool is probed for, never version-asserted, and its absence stops
+  with a message naming the re-run without `--workflow`. `--sequential` and
+  `--workflow` together is an error naming both.
+- **`tests/implement-workflow.test.mjs`** — parses the script as a workflow
+  body the way `tests/review-plan-workflow.test.mjs` does, and pins the
+  schema fields, the promise-ordered waves, the `lead` skip, `mergeOrder`,
+  the three selectors, the probe-not-version rule, and the absence of
+  `Date.now`/`Math.random`/`new Date(`/`require(`. 18 checks.
+
+### The pilot numbers
+
+Measured on the dispatch run of `add-workflow-engine-escalation.md` in the
+session that built it. Worker tokens and durations are the harness's
+per-subagent figures; wall-clock is from the first `Agent` call to the last
+lane merge. The lead's own orchestration tokens are not separable from the
+rest of that session and are not claimed.
+
+| lane | model | tokens | duration | tool uses |
+|---|---|---|---|---|
+| script (wave 1) | sonnet | 181,864 | 200.8 s | 19 |
+| wiring (wave 2) | sonnet | 135,815 | 140.4 s | 27 |
+| tests (wave 2) | sonnet | 148,528 | 310.2 s | 20 |
+| **workers total** | | **466,207** | **651 s** wall-clock end to end | 66 |
+
+Wave 2 ran its two lanes concurrently. The workers' critical path — `script`,
+then the slower wave-2 lane — was 511 s; the remaining 140 s of the 651 s
+wall-clock was lead-side work between and after the waves: verifying each
+LANE REPORT against `git log`, the ownership audit, the `--no-ff` merge, the
+spec tick, and the re-render. That the three durations also sum to 651.4 s
+is coincidence, not the shape of the run.
+
+**The `--sequential` comparison run has not been made.** The plan calls for it
+in a second, fresh session with its own `/usage` reading, and the session
+that produced the figures above could not start one. Until it exists the
+multiplier stays unmeasured; no estimate is published in its place.
+
+### Fixed
+
+- **The build core's pinned guard phrases.** `tests/plugins/test-imperative-pruning.sh`
+  (CI-only; on the local run-all skip list) pins seven KEEP phrases in
+  `skills/build/SKILL.md` by literal grep. The 9.16.0 word-ceiling trims
+  reworded five and wrapped a sixth across a line break, so the first CI run
+  of the branch failed. All seven are back verbatim on single lines, and the
+  core sits at 590 words.
+- **A malformed `plan-lanes` meta row is a `ParseError`, not a `TypeError`.**
+  `extractSections()` now checks every row's `name`, `owns`, `after`,
+  `firstStep`, and `lastStep` before returning it. A hand-edited or truncated
+  page with a row missing `owns` used to reach `laneHeading()` in
+  `buildDigest()` and throw a `TypeError` — which the digest backfill batch
+  does not catch, so one bad page would have aborted the whole run. Pinned
+  by a new case in `tests/plan-lanes.test.mjs`. (Raised in review of #628.)
+- **Align writes the lane decision into the spec.** The 9.15.0 lane question
+  said an unticked lane was a request to fold it away, but not that the spec
+  must change before the flow continues; `build` reads the headings the spec
+  carries, so a rejected lane left in place would still have been dispatched.
+  Step 5 now says to fold the lane's steps or drop every `### Lane:` heading,
+  then re-render, before Step 5b. (Raised in review of #628.)
+
+## 9.16.0 — build dispatches one worktree worker per lane (2026-09-09)
+
+Phase 3 of `docs/plans/add-lane-orchestration.md`. On a spec with no
+`### Lane:` heading, with `workflow: never`, or with `--sequential`, `build`
+behaves exactly as before — the sequential Step 2 wording is unchanged.
+
+### Added
+
+- **`build` Step 2 branches on the plan's shape.** Two or more lanes takes
+  the dispatch sequence in the new `references/dispatch-lanes.md`: run
+  `plan-agent-render --check` then `--lanes`; re-run the staleness and
+  dirty-tree guards; set `status: in-progress`, re-render, and commit
+  `chore(plan): start <verb-target>` on the plan branch (subagent worktrees
+  fork from committed state only); then a wave loop that dispatches every
+  ready lane except `lead` — up to `--max` at once, all `Agent` calls in one
+  message, `subagent_type: "general-purpose"`, `isolation: "worktree"`,
+  `run_in_background: true`, `model: "sonnet"` — and on each completion
+  verifies the worker's LANE REPORT against
+  `git log <plan-branch>..<plan-branch>--<lane>`, audits ownership with
+  `git diff --name-only` against the lane's `owns:` (a path outside stops
+  the run naming the file and the lane — the boundary the whole model
+  depends on cannot rest on worker discipline alone), merges `--no-ff`,
+  ticks the lane's steps, re-renders, and reprints a per-lane table. `lead`
+  is never dispatched: it runs last in the main session, and the three
+  completion gates run once on the merged tree.
+- **The worker brief is the renderer's.** `build` copies the "Copy worker
+  brief" text the plan already carries and substitutes the one placeholder
+  it leaves, `<plan-branch>`. Workers own only their `owns:` paths, run
+  their steps in order, record each `Verify:`, commit and never push, never
+  edit the spec, and end with the fixed LANE REPORT block.
+- **Failure rules.** A merge conflict on a disjoint-ownership plan is a plan
+  bug: the merge is aborted, both lanes and the file are named, and the lead
+  asks rather than auto-resolving outside the registered merge drivers. A
+  failed lane (dead worker, failed `Verify:`, `blocked:`) keeps every other
+  lane's merged work and offers re-dispatch, run-in-lead, or stop; a
+  re-dispatch deletes the lane branch and forks fresh from the current plan
+  branch, never resuming half-done state the report already flagged.
+- **Flags:** `--sequential` (take the sequential path on a laned spec),
+  `--max <n>` (concurrent workers, default 3, hard cap 5),
+  `--worker-model <alias>` (default `sonnet`; the lead keeps the session
+  model). `references/invocation.md` parses and validates them like `--dir`.
+  In manual permission mode `build` prints one line before the first
+  dispatch — worker prompts bubble to this session; pre-approve tools — and
+  never downgrades to sequential on permission mode alone.
+
+### Changed
+
+- **`allowed-tools` lockstep.** `build`, `commands/fix.md`, and
+  `commands/refactor.md` add `Agent` in one edit, and the two commands pick
+  up the `Artifact` they had been missing, so all three lists are identical
+  again — `Skill()` runs inline under the caller's permissions, and a
+  dispatching `build` would otherwise stall on the first `Agent` call inside
+  `/fix` and `/refactor`.
+- **`build-fleet` passes `--sequential`** in its dispatch prompt, so a fleet
+  agent running a laned plan never spawns lane workers inside its own
+  worktree (worktrees nested in worktrees, concurrency of plans times
+  lanes). Nested dispatch is deferred until the lane pilot has numbers.
+- **`build` Step 6** now says which of two states it leaves: a sequential
+  run leaves the tree uncommitted as before; a laned run leaves it committed
+  on the plan branch, unpushed. The core was re-cut to stay under its
+  600-word ceiling — the dispatch detail lives in the reference, not the
+  core.
+
+## 9.15.0 — implementation-plan authors lanes, and the guidance stops arguing against fan-out (2026-09-09)
+
+Phase 2 of `docs/plans/add-lane-orchestration.md`. Authoring guidance only —
+no renderer change, so every committed plan renders as it did in 9.14.0.
+
+### Added
+
+- **A lane-split pass in `implementation-plan` Step 2** with five rules: a
+  lane owns a disjoint set of paths; a lane's steps form a chain the worker
+  runs in order; steps touching the same file stay in one lane; shared files
+  (`CHANGELOG.md`, `README.md`, `marketplace.json`, generated indexes)
+  belong to the `lead` lane; aim for 2 to 5 lanes and never force lanes on a
+  chain. Align (Step 5) gains a batched "Confirm the lane split" question —
+  one option per lane naming its owned paths and `after:` — so a human
+  confirms the split before any agent runs, and `build` never re-splits.
+  Step 8's `Implement now` says `build` dispatches by shape; `Run as
+  workflow` is kept as the Workflow-engine escalation and its help text says
+  so.
+- **`### Lane:` in the section catalog**, beside `### Phase:`, with the
+  parser's literal grammar, the Appendix A two-lanes-plus-`lead` example,
+  the `--check` rules the renderer enforces, and the `workflow:` semantics
+  table. `reference/SKELETON.md` carries the same example as placeholders.
+- **"A lane is a deliverable"** in `guidelines/planning-principles.md`: each
+  lane's last `Verify:` proves the lane on its own branch; a verify that
+  needs another lane merged first is an `after:` edge, not a lane.
+- **A one-file-one-owner check in `plan-reviewer-completeness`** (every
+  `## Files` path owned by exactly one lane, shared files in `lead` only)
+  and **a lane-independence check in `plan-reviewer-risk`** (no hidden
+  shared state, no missing `after:` edge) — the second look at the split
+  after the human, one paragraph each, no new agent.
+
+### Changed
+
+- **`guidelines/right-sizing.md` and `build/references/phase-checkpoints.md`
+  no longer argue against all fan-out.** Both said a long plan cannot be
+  split across subagents; that is true of a chain and was silent about
+  lanes. Each is now a case split — a chain bounds context with phases,
+  independent lanes fan out, a plan can be both with phases inside lanes —
+  plus a **Laned** profile and a Laned column in the calibration table.
+  The Deep profile's "consider `workflow: always`" bullet points at lanes
+  instead: `build` dispatches by lane count, and the file-count heuristic
+  only ever decided a paste-prompt.
+
+## 9.14.0 — the plan spec declares lanes: parsed, checked, and rendered (2026-09-09)
+
+Phase 1 of `docs/plans/add-lane-orchestration.md` (the
+`docs/prompts/proposal-orchestrate-plan-implementation.md` roadmap). A spec
+with no `### Lane:` heading renders byte-for-byte as it did in 9.13.2 —
+`tests/plan-lanes.test.mjs` pins that with digest round-trip and
+zero-lane-markup assertions, and a diff of two committed plans rendered by
+both versions came back identical.
+
+### Added
+
+- **`### Lane: <name> (owns: <path-or-glob>, …; after: <lane>, …)` inside
+  `## Steps`.** `parseSpecMarkdown()` (`scripts/lib/plan-spec.mjs`) returns
+  `sections.lanes` as `[{ name, owns, after, firstStep, lastStep }]` beside
+  the existing `phases`; numbering stays flat and global, and a `### Phase:`
+  inside a lane stays a checkpoint for that lane. `buildDigest()` re-emits the
+  headings (lane before phase when both start on one step), and
+  `extractSections()` reads them back from the new `plan-lanes` meta tag, so
+  HTML → spec → HTML stays byte-stable. The reserved lane `lead` may omit
+  `owns:`; every other lane must own something.
+- **Six ownership rules on every render** (`checkLanes()` in
+  `scripts/build-plan-html.mjs`, exit 1 naming the lane): a non-`lead` lane
+  without `owns:`, a step outside every lane, an `after:` naming an unknown
+  lane, `after: lead` (lead runs last), a dependency cycle, a `## Files` path
+  owned by two lanes, and two lanes whose `owns:` patterns nest — the
+  wildcard-free prefix of one matched against the other's glob, so
+  `scripts/**` beside `scripts/lib/**` fails with both lanes named even when
+  no listed file sits in the overlap. An `owns:` entry matching no `## Files`
+  path warns without failing; lanes may own paths the implementation creates.
+  Globs go through Node's own `path.matchesGlob`, which sets a documented
+  Node 22 floor for the renderer rather than adding a dependency.
+- **`plan-agent-render <spec> --lanes`** prints every lane with its owns,
+  after, and steps (`n`, `action`, `why`, `verify`, `done`) as JSON — the
+  table the build skill's dispatcher will consume without hand-parsing
+  Markdown. The same table lands in `<meta name="plan-lanes">`.
+- **Lane surfaces in the rendered plan** (`scripts/lib/plan-shell.mjs`): a
+  text-labeled `lane <name>` chip on each step card reusing the todo/done chip
+  palette in both themes, a Lanes panel between Files and Steps with its own
+  sidebar entry and one list item per lane (nested lists for owns and after),
+  and one "Copy worker brief — lane <name>" row per worker lane in the
+  More-ways drawer carrying the proposal's Appendix B brief with every
+  renderer-known placeholder substituted. `<plan-branch>` is the one left for
+  `build` to fill. All of it is inline-styled or reuses existing classes: no
+  new CSS rule, so lane-free plans keep their bytes.
+
+### Changed
+
+- **`workflow:` gains lane-count meaning once a spec has lanes.** With no
+  `### Lane:` heading the `fileCount >= 4 && dirCount >= 2` heuristic decides
+  the workflow prompt exactly as before. With lanes, `auto` emits it at two or
+  more lanes, `never` suppresses it, `always` keeps it; `true`/`false` stay
+  accepted as aliases. The file-count gate is no longer a dispatch trigger —
+  it survives only as the render gate for lane-free specs.
+
 ## 9.13.2 — the prototype store stops handing render() shapes it cannot walk (2026-09-04)
 
 ### Fixed

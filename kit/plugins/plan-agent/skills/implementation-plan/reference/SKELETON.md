@@ -25,8 +25,24 @@ self-evident chores.>
 
 ## Steps
 
+<optional lanes — `### Lane:` headings group independent runs of steps that
+one worktree worker owns end to end; omit every heading for a chain, which
+runs sequentially. Numbering stays flat and global across lanes. The
+example below is two worker lanes plus the reserved `lead` lane that holds
+the shared files and runs last in the main session.>
+
+### Lane: <name-a> (owns: <path-or-glob>, <path-or-glob>)
+
 1. <action naming real files/commands> Why: <reason a newcomer understands> Verify: <command or state that confirms this step worked>.
-2. <action> Why: <reason> Verify: <how to confirm>.
+2. <action> Why: <reason> Verify: <how to confirm — the lane's last Verify proves the lane on its own>.
+
+### Lane: <name-b> (owns: <path-or-glob>; after: <name-a>)
+
+3. <action> Why: <reason> Verify: <how to confirm>.
+
+### Lane: lead (after: <name-a>, <name-b>)
+
+4. <bump the version, write the CHANGELOG entry, regenerate indexes> Why: <reason> Verify: <how to confirm>.
 
 ## Tests
 

@@ -119,7 +119,7 @@ call per selected plan, all in a single message so they run concurrently:
   Branch off <base-branch>, then implement and ship this plan end to end.
 
   1. git checkout -b <verb-target-YYYY-MM-DD> <base-branch>
-  2. Skill(skill: "plan-agent:build", args: "<abs-path>")
+  2. Skill(skill: "plan-agent:build", args: "<abs-path> --sequential")
   3. Skill(skill: "git-agent:ship-autonomous")
 
   Both skills carry their own gates and guardrails — follow them as written.
@@ -127,6 +127,12 @@ call per selected plan, all in a single message so they run concurrently:
   Report the plan name, the branch, the PR URL, and any gate you could not
   clear.
   ```
+
+  `--sequential` is not optional. A laned plan would otherwise make the
+  fleet agent dispatch its own lane workers from inside its worktree —
+  worktrees nested in worktrees, and concurrency of plans times lanes
+  instead of `--max`. Nested dispatch is deferred until the lane pilot has
+  numbers.
 
 Return control with a one-line ack per dispatched plan. Do not poll, sleep, or
 `--watch` — `ship-autonomous` subscribes to PR events, and the harness notifies

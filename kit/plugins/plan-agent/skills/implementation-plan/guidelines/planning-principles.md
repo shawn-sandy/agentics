@@ -24,6 +24,19 @@ what a good plan *says*. Apply them to every plan regardless of size.
   to run, a file state to inspect, an output to compare. Step-local, cheap,
   immediate.
 
+## A lane is a deliverable
+
+- A `### Lane:` groups steps one worker owns end to end, so **its last
+  step's `Verify:` proves the lane on its own** — a command or file state
+  that holds on the lane branch before anything else merges. "Passes once
+  the other lane lands" is an `after:` edge to declare, not a lane to
+  dispatch.
+- A lane that cannot be verified without editing a path it does not own is
+  mis-split: either it owns that path, or the two lanes are one.
+- The `lead` lane is the exception that proves the rule — it owns the
+  shared files, runs last in the main session, and its verify is the plan's
+  merge gate.
+
 ## Verification is end-to-end, not just per-step
 
 Per-step verifies prove each move; the Verification section proves the

@@ -333,6 +333,37 @@ export function extractSections(html) {
     });
   }
 
+  // Lanes ride in the plan-lanes meta tag, which the renderer fills from the
+  // same table --lanes prints. Reading the Lanes panel DOM instead would mean a
+  // second parser for owns/after lists; the meta is rendered from the spec
+  // and is the shape every other lane consumer already reads.
+  let lanes = null;
+  const lanesMeta = html.match(/<meta name="plan-lanes" content="([^"]*)">/);
+  if (lanesMeta) {
+    let table;
+    try {
+      table = JSON.parse(decodeEntities(lanesMeta[1]));
+    } catch {
+      fail('plan-lanes meta present but not JSON');
+    }
+    if (!Array.isArray(table) || table.length === 0) fail('plan-lanes meta present but empty');
+    // Every field is checked here, not trusted: a hand-edited or truncated
+    // page can carry a row with no owns/after, and buildDigest() would then
+    // throw a TypeError from laneHeading() — which the backfill batch does not
+    // catch (it catches ParseError only), so one bad page would abort the run.
+    lanes = table.map((row, i) => {
+      const bad = (what) => fail(`plan-lanes meta row ${i + 1} ${what}`);
+      if (!row || typeof row !== 'object') bad('is not an object');
+      const { name, owns, after, firstStep, lastStep } = row;
+      if (typeof name !== 'string' || !name) bad('has no name');
+      const strings = (v) => Array.isArray(v) && v.every((s) => typeof s === 'string');
+      if (!strings(owns)) bad(`("${name}") has no owns list`);
+      if (!strings(after)) bad(`("${name}") has no after list`);
+      if (!Number.isInteger(firstStep) || !Number.isInteger(lastStep) || firstStep < 1 || lastStep < firstStep) bad(`("${name}") has an invalid step range`);
+      return { name, owns, after, firstStep, lastStep };
+    });
+  }
+
   let tests = null;
   const testsInner = innerByMarker(html, 'id="tests"', 'section');
   if (testsInner !== null) {
@@ -370,7 +401,7 @@ export function extractSections(html) {
   const verification = blockTextOf(stripIntro(stripHeading(verificationInner)));
   if (!verification) fail('verification section is empty');
 
-  return { title, objective, context, decisions, files, steps, phases, tests, criteria, verification };
+  return { title, objective, context, decisions, files, steps, phases, lanes, tests, criteria, verification };
 }
 
 /**
@@ -571,26 +602,54 @@ export function parseSpecMarkdown(md) {
   if (!('Steps' in chunks)) fail('no "## Steps" section');
   const steps = [];
   const stepsDone = [];
-  // Split on `### Phase: <name>` headings BEFORE the numbered-item split.
-  // The item splitter folds every continuation line into the preceding step
-  // and inline() then collapses it, so a heading left in place lands silently
-  // inside step N's Verify: text — corruption with no error raised.
+  // Split on `### Phase: <name>` and `### Lane: <name> (…)` headings BEFORE
+  // the numbered-item split. The item splitter folds every continuation line
+  // into the preceding step and inline() then collapses it, so a heading left
+  // in place lands silently inside step N's Verify: text — corruption with no
+  // error raised.
   const segments = [];
-  let segment = { name: null, lines: [] };
+  let segment = { phase: null, lane: null, lines: [] };
   for (const line of chunks.Steps.split('\n')) {
-    const heading = line.match(/^###\s+Phase:\s*(.+?)\s*$/);
-    if (heading) {
+    const phase = line.match(/^###\s+Phase:\s*(.+?)\s*$/);
+    const lane = phase ? null : line.match(/^###\s+Lane:\s*(.+?)\s*$/);
+    if (phase || lane) {
       segments.push(segment);
-      segment = { name: heading[1], lines: [] };
+      segment = { phase: phase ? phase[1] : null, lane: lane ? parseLaneHeading(lane[1], fail) : null, lines: [] };
     } else {
       segment.lines.push(line);
     }
   }
   segments.push(segment);
 
+  // Phases and lanes are two independent groupings over the same flat
+  // numbering. A lane is the outer one: a `### Phase:` inside a lane is a
+  // checkpoint for that lane's worker, so any heading closes the open phase,
+  // while only a lane heading closes the open lane.
   const phaseList = [];
+  const laneList = [];
+  let openPhase = null;
+  let openLane = null;
+  const closePhase = () => {
+    if (openPhase === null) return;
+    // buildDigest anchors a heading to its first step, so a group with no
+    // steps cannot round-trip — it would silently vanish. Fail here.
+    if (steps.length < openPhase.firstStep) fail(`phase "${openPhase.name}" has no steps under it`);
+    phaseList.push({ name: openPhase.name, firstStep: openPhase.firstStep, lastStep: steps.length });
+    openPhase = null;
+  };
+  const closeLane = () => {
+    if (openLane === null) return;
+    if (steps.length < openLane.firstStep) fail(`lane "${openLane.name}" has no steps under it`);
+    laneList.push({ ...openLane, lastStep: steps.length });
+    openLane = null;
+  };
   for (const seg of segments) {
-    const firstStep = steps.length + 1;
+    if (seg.phase !== null || seg.lane !== null) closePhase();
+    if (seg.lane !== null) {
+      closeLane();
+      openLane = { ...seg.lane, firstStep: steps.length + 1 };
+    }
+    if (seg.phase !== null) openPhase = { name: seg.phase, firstStep: steps.length + 1 };
     // Numbered items may wrap across lines in hand-written specs; fold
     // continuations into the item before splitting on the Why:/Verify: markers.
     for (const raw of seg.lines.join('\n').split(/\n(?=\d+\.\s)/)) {
@@ -607,14 +666,12 @@ export function parseSpecMarkdown(md) {
       steps.push({ action, why, verify });
       stepsDone.push(stepDone);
     }
-    if (seg.name === null) continue;
-    // buildDigest anchors a phase heading to its first step, so a phase with
-    // no steps cannot round-trip — it would silently vanish. Fail here.
-    if (steps.length < firstStep) fail(`phase "${seg.name}" has no steps under it`);
-    phaseList.push({ name: seg.name, firstStep, lastStep: steps.length });
   }
+  closePhase();
+  closeLane();
   if (steps.length === 0) fail('Steps section has no numbered steps');
   const phases = phaseList.length > 0 ? phaseList : null;
+  const lanes = laneList.length > 0 ? laneList : null;
 
   let tests = null;
   if ('Tests' in chunks) {
@@ -729,10 +786,40 @@ export function parseSpecMarkdown(md) {
 
   return {
     metadata,
-    sections: { title, objective, context, decisions, files, steps, phases, tests, criteria, verification },
+    sections: { title, objective, context, decisions, files, steps, phases, lanes, tests, criteria, verification },
     progress: { steps: stepsDone, criteria: criteriaDone, report },
     nextSteps,
   };
+}
+
+/**
+ * The text after `### Lane: ` → `{ name, owns, after }`. Grammar:
+ *
+ *   <name>[ (owns: <path-or-glob>{, <path-or-glob>}[; after: <lane>{, <lane>}])]
+ *
+ * Both clauses are optional at parse time; whether a lane may omit `owns:`
+ * (only the reserved `lead` may) is a --check rule in build-plan-html.mjs,
+ * because that rule needs the whole lane list to name what it is checking.
+ */
+function parseLaneHeading(text, fail) {
+  const m = text.match(/^([A-Za-z0-9][\w-]*)\s*(?:\((.*)\))?$/);
+  if (!m) fail(`unparseable lane heading "### Lane: ${text}" — want <name> (owns: …; after: …)`);
+  const lane = { name: m[1], owns: [], after: [] };
+  for (const clause of (m[2] || '').split(';')) {
+    if (!clause.trim()) continue;
+    const kv = clause.match(/^\s*(owns|after):\s*(.*?)\s*$/);
+    if (!kv) fail(`lane "${lane.name}": unknown clause "${clause.trim()}" — want owns: or after:`);
+    lane[kv[1]] = kv[2].split(',').map((s) => s.trim()).filter(Boolean);
+  }
+  return lane;
+}
+
+/** A lane as its `### Lane:` heading line — the exact form parseLaneHeading() reads. */
+export function laneHeading(lane) {
+  const clauses = [];
+  if (lane.owns.length > 0) clauses.push(`owns: ${lane.owns.join(', ')}`);
+  if (lane.after.length > 0) clauses.push(`after: ${lane.after.join(', ')}`);
+  return `### Lane: ${lane.name}${clauses.length ? ` (${clauses.join('; ')})` : ''}`;
 }
 
 /**
@@ -800,7 +887,18 @@ export function buildDigest(sections, nextSteps = null) {
   // untouched and inserting a step cannot shift a phase off its range the way
   // a `phases: 1-3, 4-6` frontmatter list would.
   const phaseStart = new Map((sections.phases || []).map((p) => [p.firstStep, p.name]));
+  // Same anchoring for lanes. A lane heading precedes a phase heading that
+  // starts on the same step: the lane is the outer grouping, and a phase
+  // inside a lane is that lane's checkpoint (parseSpecMarkdown reads it the
+  // same way, which is what keeps the two byte-stable across a round trip).
+  const laneStart = new Map((sections.lanes || []).map((l) => [l.firstStep, l]));
   sections.steps.forEach((s, i) => {
+    const lane = laneStart.get(i + 1);
+    if (lane !== undefined) {
+      lines.push('');
+      lines.push(laneHeading(lane));
+      lines.push('');
+    }
     const name = phaseStart.get(i + 1);
     if (name !== undefined) {
       lines.push('');

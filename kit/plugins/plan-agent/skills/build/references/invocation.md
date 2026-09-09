@@ -13,9 +13,11 @@ already exists and routes elsewhere when there is none.
 ## Invocation
 
 - **Command:** `/plan-agent:build [<plan path>] [<objective>] [--type <kind>]
-  [--dir <path>] [--continue]` — `$ARGUMENTS` carries an optional plan path (`.md` spec or
-  `.html`; an `.html` resolves to its sibling `.md`), an optional free-text
-  objective, an optional plan type, and an optional plans-directory override.
+  [--dir <path>] [--continue] [--sequential] [--workflow] [--max <n>]
+  [--worker-model <alias>]` — `$ARGUMENTS` carries an optional plan path
+  (`.md` spec or `.html`; an `.html` resolves to its sibling `.md`), an
+  optional free-text objective, an optional plan type, an optional
+  plans-directory override, and the four lane-dispatch flags.
 - **The Step 1b chain is reachable only from the slash command.** The objective
   is a command parameter read from `$ARGUMENTS`. `/plan-agent:build a todo app`
   enters the chain; the same words typed as plain text do not.
@@ -34,8 +36,9 @@ mistyped filename into a whole authored plan.
 
 ### Rule 0 — Strip flags first
 
-Remove `--dir <path>`, `--type <kind>`, `--continue`, and any other recognized
-option **together with its value** from `$ARGUMENTS`. What survives is the
+Remove `--dir <path>`, `--type <kind>`, `--continue`, `--sequential`,
+`--workflow`, `--max <n>`, `--worker-model <alias>`, and any other recognized option
+**together with its value** from `$ARGUMENTS`. What survives is the
 **rest string**. Every rule below reads the rest string, never raw
 `$ARGUMENTS`.
 
@@ -70,6 +73,24 @@ entire plan named after a flag.
 - **`--continue`** — a valueless flag that suppresses the phase checkpoint
   offer in Step 2, so a phased plan runs end to end in one session. Ignored by
   a plan that declares no `### Phase:` headings, which never stops anyway.
+- **`--sequential`** — a valueless flag that takes Step 2's sequential path
+  on a spec with two or more `### Lane:` headings, as `workflow: never`
+  would. Ignored by a spec with fewer than two lanes, which is sequential
+  anyway. `build-fleet` passes it to every fleet agent so worktrees never
+  nest inside worktrees.
+- **`--workflow`** — a valueless flag that selects the Workflow engine
+  (`references/dispatch-lanes.md`'s escalation section) on a spec with two or
+  more `### Lane:` headings, as `workflow: always` would. Ignored by a spec
+  with fewer than two lanes, which never reaches the Workflow engine anyway.
+  `--sequential` and `--workflow` together is an error naming both flags.
+- **`--max <n>`** — how many lane workers run at once in Step 2's dispatch
+  path: default 3, hard cap 5 (a larger value is clamped to 5 and said so).
+  Value-taking: `--max` with no value, or a non-integer or non-positive one,
+  is "`--max` requires a whole number from 1 to 5" — never a silent default.
+  Ignored on the sequential path.
+- **`--worker-model <alias>`** — the model every lane worker runs on: default
+  `sonnet`; the lead keeps the session model. Value-taking, same missing-value
+  rule as `--dir`. Ignored on the sequential path.
 
 ### Rule 1 — Path (the rest string names a plan file)
 

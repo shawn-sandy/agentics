@@ -1,8 +1,8 @@
 ---
 name: build
 description: "Implements a plan file that already exists. Walks its steps, ticks the spec, re-renders, and runs the completion gates. Use when asked to implement an existing plan."
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, Artifact
-argument-hint: "[<plan.md|plan.html>] [<objective>] [--type feature|fix|refactor|docs|chore] [--dir <path>]"
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, Artifact, Agent
+argument-hint: "[<plan.md|plan.html>] [<objective>] [--type feature|fix|refactor|docs|chore] [--dir <path>] [--sequential] [--workflow] [--max <n>] [--worker-model <alias>]"
 model: opus
 ---
 
@@ -11,22 +11,20 @@ model: opus
 ## Overview
 
 **The markdown spec is the source of truth.** Every progress mark is a spec
-edit followed by a re-render: `[x]` step markers, `- [x]` criteria, `status:`,
+edit plus a re-render: `[x]` step markers, `- [x]` criteria, `status:`,
 `## Completion Report`. Never `checked` attributes in the HTML, never a JS
-toggle, never browser-only persistence — a user ticking a box in the preview
-browser changes only their local DOM, and the next re-render discards it.
-Unchecking is the same rule in reverse: flip the bullet back to `- [ ]` in the
-spec.
+toggle, never browser-only persistence.
 
 ## References
 
-- `references/invocation.md` — activation, flags, argument precedence
+- `references/invocation.md` — flags, argument precedence
 - `references/resolve-plan.md` — Steps 0-1
 - `references/author-plan-chain.md` — Step 1b
-- `references/phase-checkpoints.md` — Step 2, phased specs
-- `references/design-spec.md` — Step 2, specs carrying a design canvas
+- `references/phase-checkpoints.md` — phased specs
+- `references/dispatch-lanes.md` — laned specs
+- `references/design-spec.md` — design canvas
 - `references/completion-gates.md` — Steps 3-5
-- `references/re-render.md` — a re-render that exits non-zero
+- `references/re-render.md` — non-zero exit
 
 ## Invocation & Arguments
 
@@ -40,23 +38,17 @@ Per `references/resolve-plan.md`.
 
 ## Re-render (subroutine)
 
-Sibling exists — overwrite it:
+Sibling exists — overwrite it. No sibling is an artifact plan: render to the
+scratchpad and republish to its `artifact-url:`; never create the sibling.
 
 ```bash
 plan-agent-render "<stem>.md" -o "<stem>.html"
-```
-
-No sibling — an artifact plan. Render to scratchpad, republish to its
-`artifact-url:`, never create it:
-
-```bash
 plan-agent-render "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
 ```
 
-Bare name, never a path; `bin/` is on `PATH`. `<stem>` is from Step 1. Run
-after **every** batch of spec edits, status changes included, and last.
+Bare name; `bin/` is on `PATH`. Run after **every** batch of spec edits.
 Non-zero exit means the spec broke the format: fix the markdown,
-never hand-edit the HTML to compensate. `references/re-render.md`.
+never hand-edit the HTML to compensate.
 
 ## Step 1 — Resolve the plan
 
@@ -67,20 +59,28 @@ Already `status: completed` → ask; do not silently redo finished work.
 
 ## Step 1b — Author a plan first (the no-plan chain)
 
-Reached only from Step 1's no-path branch. Read
+Reached only from Step 1's no-path branch: read
 `references/author-plan-chain.md` and follow it. An abandoned chain leaves both
 artifacts uncommitted: **Never clean either one up.**
 
 ## Step 2 — Implement
 
-Set the spec's `status:` to `in-progress` and re-render, then work through each
-step sequentially — apply the changes, verify each step, and mark progress in
-the spec as you go (insert the `[x]` marker after the finished step's number;
-the re-render flips the card and chip).
+Set the spec's `status:` to `in-progress` and re-render, then branch on the
+plan's shape:
+
+- **Fewer than 2 `### Lane:` headings, `workflow: never`, or `--sequential`**
+  — work through each step sequentially — apply the changes, verify each
+  step, and mark progress in the spec as you go (insert the `[x]` marker
+  after the finished step's number; the re-render flips the card and chip).
+- **2 or more lanes** — follow `references/dispatch-lanes.md` (`--max`,
+  `--worker-model`). `workflow: always`, `--workflow`, or 6+ lanes takes its
+  Workflow engine section. In manual permission mode print once, before the
+  first dispatch: *Worker permission prompts will bubble to this session; the
+  docs recommend pre-approving tools.* Never fall back to sequential on
+  permission mode alone.
 
 **Visual spec** (`design-dir:` in the frontmatter): follow
-`references/design-spec.md` before writing code. Its artboards are what the
-user-facing steps are built to match; steps with none are unaffected.
+`references/design-spec.md` before writing code.
 
 **Phased spec** (`### Phase: <name>` headings in `## Steps`): follow
 `references/phase-checkpoints.md`. It **stops at each boundary by default**;
@@ -88,7 +88,7 @@ user-facing steps are built to match; steps with none are unaffected.
 
 ## Step 3 — Acceptance criteria gate (mandatory)
 
-Read `references/completion-gates.md` now and run its Step 3.
+Per `references/completion-gates.md` Step 3.
 
 ## Step 4 — End-to-end verification gate (mandatory)
 
@@ -101,7 +101,7 @@ and never by promoting `status:` to satisfy the check.
 
 ## Step 6 — Report and hand off
 
-State what was implemented, what verification ran, and the final status. Then
-stop: leave the source changes, the updated spec, and the re-rendered HTML in
-the working tree. Commit only if the user asks — and confirm the branch is not
-a protected one (`main`/`master`) before doing so.
+Report what was implemented, what ran, and the final status, then stop. A
+sequential run leaves everything uncommitted; a laned run leaves it committed
+on the plan branch, unpushed. Commit or push only if the user asks, and never
+on `main`/`master`.

@@ -380,6 +380,26 @@ EOF
       8-iteration GREEN cap, the UI-only scoping of the browser steps, the
       user-asked-to-ship condition on SHIP, and the foreground Node driver
       that replaces `&`/`nohup` (blocked by permissions).
+
+      Then **split into lanes** — `### Lane: <name> (owns: …; after: …)`
+      groupings inside Steps that let `/plan-agent:build` run one
+      worktree-isolated worker per lane and merge the lane branches back in
+      `after:` order. Five rules, all of them: **a lane owns a disjoint set
+      of paths** (no path or glob in two lanes, no glob nested inside
+      another lane's);
+      **a lane's steps form a chain the worker runs in order**;
+      **steps touching the same file stay in one lane**;
+      **shared files** (`CHANGELOG.md`, `README.md`, `marketplace.json`,
+      generated indexes) **belong to the `lead` lane**, which owns nothing
+      else, lists every lane in `after:`, and runs last in the main session;
+      **aim for 2 to 5 lanes and never force lanes on a chain** — a plan
+      whose every step depends on the one before is one implicit lane and
+      gets no heading. Syntax and the `workflow:` semantics in
+      `guidelines/section-catalog.md`; the chain-versus-lanes call in
+      `guidelines/right-sizing.md`; every lane's last `Verify:` proves that
+      lane on its own (`guidelines/planning-principles.md`). A split that
+      fails `plan-agent-render <spec> --check` is fixed in the spec before
+      Step 5 — the message names the lane.
    2. Read `guidelines/section-catalog.md` and
       `guidelines/writing-style.md`, then draft the spec —
       `reference/SKELETON.md` is a copyable starter. Required always:
@@ -425,6 +445,17 @@ EOF
 5. **Align** — After steps are drafted, use `AskUserQuestion` (batched,
    covering each step) to confirm every step aligns with the objective.
    This verifies step-to-objective alignment, not overall approval.
+   **When the spec has lanes, add one lane question to the same batch** —
+   "Confirm the lane split" with `multiSelect: true` and one option per
+   lane naming its owned paths and its `after:` lanes — so a human confirms
+   the split before any agent runs against it. `build` dispatches exactly
+   the lanes confirmed here and never re-splits; an unticked lane is a
+   request to fold it into a neighbour or make it sequential, not a lane to
+   dispatch anyway. **Write the answer into the spec before continuing**:
+   fold an unticked lane's steps under the lane they belong with, or drop
+   every `### Lane:` heading to make the plan sequential, then re-render.
+   `build` reads the headings the spec carries, so a rejected lane left in
+   place is still dispatched.
    *(Skip entirely when `--quick` or `--no-align`.)*
 
 5b. **Interview** — Stress-test the drafted spec before delivering.
@@ -604,12 +635,12 @@ EOF
    workflow option:
    - Question: "The plan is complete. What would you like to do next?"
    - Options (when workflow prompt exists):
-     - `Implement now` — Begin implementing the plan steps, in this session or a fresh one.
-     - `Run as workflow` — Launch a dynamic workflow (`/workflows`) to implement steps in parallel with subagents.
+     - `Implement now` — Begin implementing the plan steps, in this session or a fresh one; `build` dispatches by the plan's shape — one worktree worker per lane on a spec with two or more lanes, sequential otherwise.
+     - `Run as workflow` — The Workflow-engine escalation: launch a dynamic workflow (`/workflows`) that implements the lanes as pipeline stages with subagents. Keep `Implement now` for the default dispatcher.
      - `Review the plan` — Run the `review-plan` Workflow on this plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
    - Options (when no workflow prompt):
-     - `Implement now` — Begin implementing the plan steps, in this session or a fresh one.
+     - `Implement now` — Begin implementing the plan steps, in this session or a fresh one; `build` dispatches by the plan's shape.
      - `Review the plan` — Run the `review-plan` Workflow on this plan before implementing.
      - `Edit the plan` — Revise or extend the plan before implementing.
      - `Exit — I'll implement later` — Stop here; no further action.
