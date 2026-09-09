@@ -100,7 +100,7 @@ This plan is itself authored sequential — lanes do not exist until Phase 1 shi
 ### Phase: Pilot (9.17.0)
 
 17. [x] Author the Workflow-engine escalation as a three-lane plan — lane `script` owning kit/plugins/plan-agent/skills/build/references/implement-workflow.mjs, lane `wiring` owning the build SKILL.md selection hook, lane `tests` owning tests/implement-workflow.test.mjs, plus a `lead` lane for the version bump and CHANGELOG — the first plan ever authored with `### Lane:` headings. Why: the pilot dogfoods the dispatcher on the escalation engine itself, so the feature ships by using the feature. Verify: `plan-agent-render <pilot-spec> --check` exits 0 and `--lanes` lists the four lanes with their steps.
-18. Build the pilot plan with the new dispatcher, delivering implement-workflow.mjs — a pipeline of agent() calls with worktree isolation, Sonnet workers, a LANE_REPORT schema, and wave ordering expressed as pipeline stages — selected only on a plan with 2+ lanes by `workflow: always`, --workflow, or 6+ lanes (fewer than two lanes runs sequentially and only emits the /workflows prompt), probed for Workflow-tool availability rather than version-asserted, plus tests/implement-workflow.test.mjs. Why: the Workflow engine mirrors the proven review-workflow.mjs shape, and building it via dispatch is the pilot run. Verify: the dispatch run completes with all lanes merged and `node tests/implement-workflow.test.mjs` exits 0.
+18. [x] Build the pilot plan with the new dispatcher, delivering implement-workflow.mjs — a pipeline of agent() calls with worktree isolation, Sonnet workers, a LANE_REPORT schema, and wave ordering expressed as pipeline stages — selected only on a plan with 2+ lanes by `workflow: always`, --workflow, or 6+ lanes (fewer than two lanes runs sequentially and only emits the /workflows prompt), probed for Workflow-tool availability rather than version-asserted, plus tests/implement-workflow.test.mjs. Why: the Workflow engine mirrors the proven review-workflow.mjs shape, and building it via dispatch is the pilot run. Verify: the dispatch run completes with all lanes merged and `node tests/implement-workflow.test.mjs` exits 0.
 19. Re-build the same pilot plan with --sequential on a scratch branch, running each build in its own fresh session and recording per-session /usage tokens plus wall-clock for both. Why: the token multiplier is the proposal's open empirical question — the default is not trusted on large plans until this repo has its own measurement, and one accumulating session would blur which run spent what, so each gets a clean session and the numbers come from actual runs, never estimates. Verify: both wall-clock and token figures are captured from the two isolated sessions and written into the draft CHANGELOG entry.
 20. Bump plan-agent to 9.17.0, write the CHANGELOG entry carrying the measured dispatch-vs-sequential numbers, run docs-sync so README.md and docs/guides/how-to/ pick up the four releases, run the merge gate, and open the Phase 4 PR. Why: the pilot numbers are the release's headline and the quick docs must not drift four minor versions behind. Verify: the version guard and `bash scripts/verify.sh` exit 0 and the CHANGELOG entry contains both measured figures.
 
@@ -113,16 +113,24 @@ Tier 1 — This plan changes application code
 
 ## Acceptance Criteria
 
-- [ ] A spec with no `### Lane:` heading renders byte-for-byte identically to the 9.13.2 output, its workflow prompt included — proven by the lane-free fixture tests, not by inspection
-- [ ] `plan-agent-render <spec> --check` exits 1 naming the lane on overlapping ownership, nested `owns:` globs across lanes, an unknown `after:`, `after: lead`, a dependency cycle, or a step outside every lane, exits 0 with a warning on an `owns:` glob matching no `## Files` path, and exits 0 clean on the proposal's Appendix A example
-- [ ] build refuses to merge a lane branch whose diff touches a path outside that lane's `owns:`, stopping with the file and lane named
-- [ ] `plan-agent-render <spec> --lanes` prints every lane with its owns, after, and steps as JSON
-- [ ] On a 2+ lane spec, /plan-agent:build commits the spec, dispatches one worktree Agent per lane, merges lane branches --no-ff in `after:` order, and runs the completion gates once on the merged tree
-- [ ] On a no-lane spec, with `workflow: never`, or with --sequential, /plan-agent:build behaves exactly as today
-- [ ] The allowed-tools lines of build SKILL.md, fix.md, and refactor.md all carry Agent and Artifact and match
+- [x] A spec with no `### Lane:` heading renders byte-for-byte identically to the 9.13.2 output, its workflow prompt included — proven by the lane-free fixture tests, not by inspection
+- [x] `plan-agent-render <spec> --check` exits 1 naming the lane on overlapping ownership, nested `owns:` globs across lanes, an unknown `after:`, `after: lead`, a dependency cycle, or a step outside every lane, exits 0 with a warning on an `owns:` glob matching no `## Files` path, and exits 0 clean on the proposal's Appendix A example
+- [x] build refuses to merge a lane branch whose diff touches a path outside that lane's `owns:`, stopping with the file and lane named
+- [x] `plan-agent-render <spec> --lanes` prints every lane with its owns, after, and steps as JSON
+- [x] On a 2+ lane spec, /plan-agent:build commits the spec, dispatches one worktree Agent per lane, merges lane branches --no-ff in `after:` order, and runs the completion gates once on the merged tree
+- [x] On a no-lane spec, with `workflow: never`, or with --sequential, /plan-agent:build behaves exactly as today
+- [x] The allowed-tools lines of build SKILL.md, fix.md, and refactor.md all carry Agent and Artifact and match
 - [ ] Four PRs merged, each with its own minor bump (9.14.0, 9.15.0, 9.16.0, 9.17.0) passing scripts/check-plugin-versions.mjs
 - [ ] The Phase 4 CHANGELOG entry publishes measured wall-clock and token numbers for the dispatch run against the --sequential run
-- [ ] `bash tests/run-all.sh` exits 0 with tests/plan-lanes.test.mjs and tests/implement-workflow.test.mjs included
+- [x] `bash tests/run-all.sh` exits 0 with tests/plan-lanes.test.mjs and tests/implement-workflow.test.mjs included
+
+## Completion Report
+
+- Step 19 — only the dispatch run was measured (466,207 worker tokens, 651 s wall-clock, per-lane figures in the 9.17.0 entry); the `--sequential` run needs a second fresh session with its own /usage reading, which the building session could not start
+- Step 20 — the 9.17.0 bump, changelog, docs sync, and merge gate ran, and one PR opened (#628); the changelog carries the dispatch figures only, and the four phases shipped as four release commits on that one branch rather than four PRs
+- Acceptance criterion 8 — one PR (#628) is open carrying the four minor bumps as commits; merging needs the user's approval and has not happened
+- Acceptance criterion 9 — the dispatch figures are published; the sequential figure is pending, and no estimate stands in for it
+- Steps 11 and 16 — the live `claude --plugin-dir kit/plugins/plan-agent --add-dir <repo-root>` session check was not exercised; the skill edits were verified by the test suite and the plan's grep verifies only
 
 ## Verification
 

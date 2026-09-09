@@ -56,7 +56,7 @@ Constraints every lane inherits: `kit/plugins/plan-agent/skills/build/SKILL.md` 
 
 ### Lane: lead (after: script, wiring, tests)
 
-5. Bump plan-agent to 9.17.0 in .claude-plugin/marketplace.json, write the kit/plugins/plan-agent/CHANGELOG.md entry carrying the pilot's measured dispatch-versus-sequential wall-clock and token numbers, run docs-sync so README.md, docs/guides/how-to/plan-agent.md, and the root CHANGELOG.md pick up 9.14.0 through 9.17.0, and run the merge gate. Why: the pilot numbers are the release's headline and the quick docs must not drift four minor versions behind. Verify: `git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs` and `bash scripts/verify.sh` both exit 0.
+5. [x] Bump plan-agent to 9.17.0 in .claude-plugin/marketplace.json, write the kit/plugins/plan-agent/CHANGELOG.md entry carrying the pilot's measured dispatch-versus-sequential wall-clock and token numbers, run docs-sync so README.md, docs/guides/how-to/plan-agent.md, and the root CHANGELOG.md pick up 9.14.0 through 9.17.0, and run the merge gate. Why: the pilot numbers are the release's headline and the quick docs must not drift four minor versions behind. Verify: `git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs` and `bash scripts/verify.sh` both exit 0.
 
 ## Tests
 
@@ -66,12 +66,16 @@ Tier 1 — This plan changes application code
 
 ## Acceptance Criteria
 
-- [ ] `plan-agent-render docs/plans/add-workflow-engine-escalation.md --check` exits 0 and `--lanes` lists script, wiring, tests, and lead with their steps
-- [ ] implement-workflow.mjs parses as a workflow body, runs one `agent()` per non-lead lane with `isolation: 'worktree'` and `schema: LANE_REPORT`, and orders lanes by `after:` without a barrier
-- [ ] `build` selects the Workflow engine only on a 2+ lane spec by `workflow: always`, `--workflow`, or 6+ lanes, and hard-stops with the named message when the tool is absent
-- [ ] `node tests/implement-workflow.test.mjs` exits 0 on the merged tree
-- [ ] The three worker lanes merged back onto the plan branch in `after:` order with every `git diff --name-only` path inside its lane's `owns:`
+- [x] `plan-agent-render docs/plans/add-workflow-engine-escalation.md --check` exits 0 and `--lanes` lists script, wiring, tests, and lead with their steps
+- [x] implement-workflow.mjs parses as a workflow body, runs one `agent()` per non-lead lane with `isolation: 'worktree'` and `schema: LANE_REPORT`, and orders lanes by `after:` without a barrier
+- [x] `build` selects the Workflow engine only on a 2+ lane spec by `workflow: always`, `--workflow`, or 6+ lanes, and hard-stops with the named message when the tool is absent
+- [x] `node tests/implement-workflow.test.mjs` exits 0 on the merged tree
+- [x] The three worker lanes merged back onto the plan branch in `after:` order with every `git diff --name-only` path inside its lane's `owns:`
 - [ ] The 9.17.0 CHANGELOG entry carries measured wall-clock and token figures for the dispatch run against the `--sequential` run
+
+## Completion Report
+
+- Acceptance criterion 6 — the dispatch run's figures are published in the 9.17.0 entry (466,207 worker tokens, 651 s wall-clock, per lane), but the `--sequential` comparison needs a second, fresh session with its own /usage reading, which the building session could not start; the sequential figure is pending and no estimate stands in for it
 
 ## Verification
 

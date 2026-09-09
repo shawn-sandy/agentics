@@ -1,5 +1,77 @@
 # Changelog
 
+## 9.17.0 — the Workflow-engine escalation ships as the first laned plan (2026-09-09)
+
+Phase 4 of `docs/plans/add-lane-orchestration.md`, and the pilot: the
+escalation engine was authored as `docs/plans/add-workflow-engine-escalation.md`
+— the first plan in this repository with `### Lane:` headings — and built by
+the 9.16.0 dispatcher itself. Three worker lanes (`script`; then `wiring` and
+`tests` together once `script` merged) plus `lead` in the main session. Every
+lane branch was audited with `git diff --name-only` against its `owns:` before
+its `--no-ff` merge; every path stayed inside its lane.
+
+### Added
+
+- **`skills/build/references/implement-workflow.mjs`** — the Workflow script
+  behind `--workflow`, mirroring `review-plan`'s `review-workflow.mjs`: one
+  `agent()` per worker lane with `isolation: 'worktree'`,
+  `agentType: 'general-purpose'`, the `--worker-model` alias (default
+  `sonnet`), and a `LANE_REPORT` schema (`lane`, `branch`, `steps_done`,
+  `verify`, `files_changed`, `blocked`). Wave ordering is a promise per lane
+  — each lane awaits the promises its `after:` names, then dispatches — so a
+  lane starts the moment its dependencies finish, with no barrier, and a dead
+  worker resolves to null rather than failing the run. The script never runs
+  git: it returns `{ reports, mergeOrder }` and the lead merges with the same
+  section-6 audit the Agent path uses, so there is one merge procedure.
+- **Selection gate** in `references/dispatch-lanes.md` and `build` Step 2:
+  the engine is chosen only on a spec with 2 or more lanes, and only by
+  `workflow: always`, the new `--workflow` flag, or 6 or more lanes; fewer
+  than 2 lanes runs sequentially and only emits the /workflows prompt. The
+  Workflow tool is probed for, never version-asserted, and its absence stops
+  with a message naming the re-run without `--workflow`. `--sequential` and
+  `--workflow` together is an error naming both.
+- **`tests/implement-workflow.test.mjs`** — parses the script as a workflow
+  body the way `tests/review-plan-workflow.test.mjs` does, and pins the
+  schema fields, the promise-ordered waves, the `lead` skip, `mergeOrder`,
+  the three selectors, the probe-not-version rule, and the absence of
+  `Date.now`/`Math.random`/`new Date(`/`require(`. 18 checks.
+
+### The pilot numbers
+
+Measured on the dispatch run of `add-workflow-engine-escalation.md` in the
+session that built it. Worker tokens and durations are the harness's
+per-subagent figures; wall-clock is from the first `Agent` call to the last
+lane merge. The lead's own orchestration tokens are not separable from the
+rest of that session and are not claimed.
+
+| lane | model | tokens | duration | tool uses |
+|---|---|---|---|---|
+| script (wave 1) | sonnet | 181,864 | 200.8 s | 19 |
+| wiring (wave 2) | sonnet | 135,815 | 140.4 s | 27 |
+| tests (wave 2) | sonnet | 148,528 | 310.2 s | 20 |
+| **workers total** | | **466,207** | **651 s** wall-clock end to end | 66 |
+
+Wave 2 ran its two lanes concurrently. The workers' critical path — `script`,
+then the slower wave-2 lane — was 511 s; the remaining 140 s of the 651 s
+wall-clock was lead-side work between and after the waves: verifying each
+LANE REPORT against `git log`, the ownership audit, the `--no-ff` merge, the
+spec tick, and the re-render. That the three durations also sum to 651.4 s
+is coincidence, not the shape of the run.
+
+**The `--sequential` comparison run has not been made.** The plan calls for it
+in a second, fresh session with its own `/usage` reading, and the session
+that produced the figures above could not start one. Until it exists the
+multiplier stays unmeasured; no estimate is published in its place.
+
+### Fixed
+
+- **The build core's pinned guard phrases.** `tests/plugins/test-imperative-pruning.sh`
+  (CI-only; on the local run-all skip list) pins seven KEEP phrases in
+  `skills/build/SKILL.md` by literal grep. The 9.16.0 word-ceiling trims
+  reworded five and wrapped a sixth across a line break, so the first CI run
+  of the branch failed. All seven are back verbatim on single lines, and the
+  core sits at 590 words.
+
 ## 9.16.0 — build dispatches one worktree worker per lane (2026-09-09)
 
 Phase 3 of `docs/plans/add-lane-orchestration.md`. On a spec with no
