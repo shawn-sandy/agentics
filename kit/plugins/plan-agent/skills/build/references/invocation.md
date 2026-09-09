@@ -13,11 +13,11 @@ already exists and routes elsewhere when there is none.
 ## Invocation
 
 - **Command:** `/plan-agent:build [<plan path>] [<objective>] [--type <kind>]
-  [--dir <path>] [--continue] [--sequential] [--max <n>] [--worker-model <alias>]`
-  — `$ARGUMENTS` carries an optional plan path (`.md` spec or
-  `.html`; an `.html` resolves to its sibling `.md`), an optional free-text
-  objective, an optional plan type, an optional plans-directory override, and
-  the three lane-dispatch flags.
+  [--dir <path>] [--continue] [--sequential] [--workflow] [--max <n>]
+  [--worker-model <alias>]` — `$ARGUMENTS` carries an optional plan path
+  (`.md` spec or `.html`; an `.html` resolves to its sibling `.md`), an
+  optional free-text objective, an optional plan type, an optional
+  plans-directory override, and the four lane-dispatch flags.
 - **The Step 1b chain is reachable only from the slash command.** The objective
   is a command parameter read from `$ARGUMENTS`. `/plan-agent:build a todo app`
   enters the chain; the same words typed as plain text do not.
