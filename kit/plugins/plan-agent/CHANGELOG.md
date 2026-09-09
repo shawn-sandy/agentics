@@ -1,5 +1,68 @@
 # Changelog
 
+## 9.16.0 — build dispatches one worktree worker per lane (2026-09-09)
+
+Phase 3 of `docs/plans/add-lane-orchestration.md`. On a spec with no
+`### Lane:` heading, with `workflow: never`, or with `--sequential`, `build`
+behaves exactly as before — the sequential Step 2 wording is unchanged.
+
+### Added
+
+- **`build` Step 2 branches on the plan's shape.** Two or more lanes takes
+  the dispatch sequence in the new `references/dispatch-lanes.md`: run
+  `plan-agent-render --check` then `--lanes`; re-run the staleness and
+  dirty-tree guards; set `status: in-progress`, re-render, and commit
+  `chore(plan): start <verb-target>` on the plan branch (subagent worktrees
+  fork from committed state only); then a wave loop that dispatches every
+  ready lane except `lead` — up to `--max` at once, all `Agent` calls in one
+  message, `subagent_type: "general-purpose"`, `isolation: "worktree"`,
+  `run_in_background: true`, `model: "sonnet"` — and on each completion
+  verifies the worker's LANE REPORT against
+  `git log <plan-branch>..<plan-branch>--<lane>`, audits ownership with
+  `git diff --name-only` against the lane's `owns:` (a path outside stops
+  the run naming the file and the lane — the boundary the whole model
+  depends on cannot rest on worker discipline alone), merges `--no-ff`,
+  ticks the lane's steps, re-renders, and reprints a per-lane table. `lead`
+  is never dispatched: it runs last in the main session, and the three
+  completion gates run once on the merged tree.
+- **The worker brief is the renderer's.** `build` copies the "Copy worker
+  brief" text the plan already carries and substitutes the one placeholder
+  it leaves, `<plan-branch>`. Workers own only their `owns:` paths, run
+  their steps in order, record each `Verify:`, commit and never push, never
+  edit the spec, and end with the fixed LANE REPORT block.
+- **Failure rules.** A merge conflict on a disjoint-ownership plan is a plan
+  bug: the merge is aborted, both lanes and the file are named, and the lead
+  asks rather than auto-resolving outside the registered merge drivers. A
+  failed lane (dead worker, failed `Verify:`, `blocked:`) keeps every other
+  lane's merged work and offers re-dispatch, run-in-lead, or stop; a
+  re-dispatch deletes the lane branch and forks fresh from the current plan
+  branch, never resuming half-done state the report already flagged.
+- **Flags:** `--sequential` (take the sequential path on a laned spec),
+  `--max <n>` (concurrent workers, default 3, hard cap 5),
+  `--worker-model <alias>` (default `sonnet`; the lead keeps the session
+  model). `references/invocation.md` parses and validates them like `--dir`.
+  In manual permission mode `build` prints one line before the first
+  dispatch — worker prompts bubble to this session; pre-approve tools — and
+  never downgrades to sequential on permission mode alone.
+
+### Changed
+
+- **`allowed-tools` lockstep.** `build`, `commands/fix.md`, and
+  `commands/refactor.md` add `Agent` in one edit, and the two commands pick
+  up the `Artifact` they had been missing, so all three lists are identical
+  again — `Skill()` runs inline under the caller's permissions, and a
+  dispatching `build` would otherwise stall on the first `Agent` call inside
+  `/fix` and `/refactor`.
+- **`build-fleet` passes `--sequential`** in its dispatch prompt, so a fleet
+  agent running a laned plan never spawns lane workers inside its own
+  worktree (worktrees nested in worktrees, concurrency of plans times
+  lanes). Nested dispatch is deferred until the lane pilot has numbers.
+- **`build` Step 6** now says which of two states it leaves: a sequential
+  run leaves the tree uncommitted as before; a laned run leaves it committed
+  on the plan branch, unpushed. The core was re-cut to stay under its
+  600-word ceiling — the dispatch detail lives in the reference, not the
+  core.
+
 ## 9.15.0 — implementation-plan authors lanes, and the guidance stops arguing against fan-out (2026-09-09)
 
 Phase 2 of `docs/plans/add-lane-orchestration.md`. Authoring guidance only —

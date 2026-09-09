@@ -1,6 +1,6 @@
 ---
 description: Author and implement a fix plan — the /plan-agent:build chain, typed as a fix
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, Artifact, Agent
 argument-hint: "<objective> [--dir <path>]"
 ---
 
