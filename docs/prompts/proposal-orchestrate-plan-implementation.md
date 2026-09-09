@@ -66,7 +66,7 @@ Settled before this draft:
 Resolved in the 2026-09-09 review:
 
 4. **The split lives in the plan spec.** `implementation-plan` authors `### Lane:` groupings with `owns:` and `after:`; the human reviews the split before any agent runs; `review-plan`'s completeness and risk reviewers check that ownership is disjoint and lanes are genuinely independent. Propagates to WS-A (parser), WS-B (authoring rules), WS-C (the dispatcher reads lanes and never re-splits).
-5. **Multi-agent implementation is the default, gated by shape.** `build` dispatches whenever the spec has two or more lanes; a single-lane plan stays sequential; `workflow: never` opts out. The 4-files/2-directories heuristic is retired; `workflow:` keeps its three values with new meaning (Appendix A). Propagates to WS-A (`workflow:` semantics), WS-B (right-sizing guidance), WS-C (dispatch condition).
+5. **Multi-agent implementation is the default, gated by shape.** `build` dispatches whenever the spec has two or more lanes; a single-lane plan stays sequential; `workflow: never` opts out. The 4-files/2-directories heuristic is retired as a dispatch trigger — `build` never consults it — and survives only as the render-time gate for the workflow prompt on lane-free specs, so those keep rendering byte-for-byte (decision 3); `workflow:` keeps its three values with new meaning (Appendix A). Propagates to WS-A (`workflow:` semantics), WS-B (right-sizing guidance), WS-C (dispatch condition).
 6. **Engine: the `Agent` tool first.** One `Agent` call per lane with `subagent_type: "general-purpose"`, `isolation: "worktree"`, `run_in_background: true`, `model: "sonnet"`, exactly the shape `build-fleet` proves. No opt-in keyword, no feature flag, works in every session that has `Agent`. A Workflow-script engine is a later escalation (WS-E) for six or more lanes or `workflow: always`. Agent teams are rejected: experimental, no worktree isolation, absent in `-p`. `/batch` is rejected as the engine because it re-splits the work itself and opens one PR per unit, which changes what a plan delivers. Propagates to WS-C, WS-E, Appendix D.
 7. **Integration: the lead merges lane branches.** Each worker commits on `<plan-branch>--<lane>` inside its worktree and never pushes. `build` merges lanes onto the plan branch in `after:` order with `git merge --no-ff`, resolves conflicts, ticks the spec, re-renders, then runs the three completion gates once on the merged tree. "One plan, one PR" stays true; `build-fleet` and `/batch` keep the one-PR-per-unit model for their own use. Propagates to WS-C, Appendix C, Risks.
 8. **Fleet agents run laned plans sequentially for now.** `build-fleet` passes `--sequential` to each fleet agent, so concurrency stays at `--max` plans with no worktrees nested inside worktrees. Nested dispatch is deferred until the WS-D pilot has numbers; it gets no roadmap phase in this round. Propagates to WS-C (the `build-fleet` edit), Appendix E, Risks.
@@ -90,10 +90,10 @@ Scope: `scripts/lib/plan-spec.mjs`, `scripts/build-plan-html.mjs`, `scripts/lib/
 
 - `parseSpecMarkdown()` recognises `### Lane: <name> (owns: <glob>[, <glob>...][; after: <lane>[, <lane>...]])` inside `## Steps` and returns `sections.lanes: [{ name, owns, after, firstStep, lastStep }]` alongside the existing `phases`. A `### Phase:` inside a lane is a checkpoint for that lane's worker; top-level phases with no lanes behave exactly as today. Numbering stays flat and global.
 - `buildDigest()` re-emits lane headings verbatim so HTML to spec to HTML stays byte-stable (the existing round-trip contract, `plan-spec.mjs:771-827`).
-- `--check` gains three rules: every path in `## Files` matches at most one lane's `owns:` (one file, one owner); every `after:` names an existing lane; the `after:` graph is acyclic. The reserved lane name `lead` may omit `owns:` and runs in the main session after everything it lists in `after:`. Violations exit 1 with the offending lane named, and the fix is always to the spec.
+- `--check` gains four rules: every path in `## Files` matches at most one lane's `owns:` (one file, one owner); no two lanes' `owns:` patterns nest — the wildcard-free prefix of one pattern must not match another lane's pattern, so `scripts/**` beside `scripts/lib/**` is rejected even when no listed file sits in the overlap, with both lanes named (a pairwise prefix test, not full glob intersection; a merge conflict between lanes remains a plan bug that stops the run, Appendix C step 6); every `after:` names an existing lane; the `after:` graph is acyclic. The reserved lane name `lead` may omit `owns:` and runs in the main session after everything it lists in `after:`. Violations exit 1 with the offending lane named, and the fix is always to the spec.
 - `--lanes` prints `sections.lanes` plus each lane's steps as JSON, so the dispatcher never parses Markdown by hand.
 - The HTML gains a lane chip on each step card, a "Lanes" panel listing owned paths and dependencies, one copyable worker brief per lane (Appendix B), and `<meta name="plan-lanes">` carrying the JSON. The existing `plan-implement`, `plan-goal`, and `plan-workflow` metas are unchanged.
-- `workflow:` frontmatter: `auto` (default) dispatches when there are two or more lanes; `never` runs sequentially even with lanes; `always` dispatches and also emits the `/workflows` prompt for the Workflow engine. The `fileCount >= 4 && dirCount >= 2` gate at `build-plan-html.mjs:410-413` is deleted.
+- `workflow:` frontmatter: `auto` (default) dispatches when there are two or more lanes; `never` runs sequentially even with lanes; `always` dispatches and also emits the `/workflows` prompt for the Workflow engine. The `fileCount >= 4 && dirCount >= 2` gate at `build-plan-html.mjs:410-413` is kept for lane-free specs only — it still decides whether their `plan-workflow` meta and drawer row render, exactly as today, so decision 3's byte-for-byte guarantee holds — and is never consulted once a spec has a `### Lane:` heading, where the lane count decides instead. It stops being a dispatch trigger: `build` dispatches by lane count alone.
 - Tests: `tests/plan-lanes.test.mjs` covers parse, round-trip, the three `--check` rules, the `--lanes` JSON shape, and a no-lanes fixture producing today's exact output.
 
 ### WS-B — Authoring: `implementation-plan` writes lanes by default
@@ -130,7 +130,7 @@ Scope: the WS-E plan, `CHANGELOG.md`, `README.md`, `docs/guides/how-to/` via `do
 
 Scope: new `skills/build/references/implement-workflow.mjs`, `skills/build/SKILL.md`, `tests/implement-workflow.test.mjs`.
 
-- Mirrors `review-workflow.mjs`: `pipeline(lanes, lane => agent(brief(lane), { isolation: 'worktree', agentType: 'general-purpose', model: 'sonnet', schema: LANE_REPORT, phase: 'Implement' }))`, followed by a lead-side merge and gate phase. Selected by `workflow: always`, `--workflow`, or six or more lanes. Probed the way `review-plan` Step 3 probes, never version-asserted. Wave ordering for `after:` is expressed as pipeline stages that wait on the named lanes' results.
+- Mirrors `review-workflow.mjs`: `pipeline(lanes, lane => agent(brief(lane), { isolation: 'worktree', agentType: 'general-purpose', model: 'sonnet', schema: LANE_REPORT, phase: 'Implement' }))`, followed by a lead-side merge and gate phase. Selected only on a plan with two or more lanes, by `workflow: always`, `--workflow`, or six or more lanes; with fewer than two lanes there is nothing to fan out, so the plan runs sequentially and only the `/workflows` prompt is emitted, as Appendix A states. Probed the way `review-plan` Step 3 probes, never version-asserted. Wave ordering for `after:` is expressed as pipeline stages that wait on the named lanes' results.
 </workstreams>
 
 <risks>
@@ -189,7 +189,7 @@ Grammar: `### Lane: <name> (owns: <path-or-glob>{, <path-or-glob>}[; after: <lan
 
 | Value | Fewer than 2 lanes | 2 or more lanes |
 |---|---|---|
-| `auto` (default) | sequential | dispatch via `Agent` |
+| `auto` (default) | sequential (the workflow prompt row still follows today's file-count gate) | dispatch via `Agent` |
 | `never` | sequential | sequential (lanes still document ownership) |
 | `always` | sequential plus the `/workflows` prompt | dispatch plus the `/workflows` prompt (WS-E engine when present) |
 
@@ -245,7 +245,7 @@ Agent call: `subagent_type: "general-purpose"`, `isolation: "worktree"`, `run_in
 | File | Workstream | Change |
 |---|---|---|
 | `scripts/lib/plan-spec.mjs` | A | lane parse plus digest round-trip |
-| `scripts/build-plan-html.mjs` | A | `--check` rules, `--lanes`, delete the file-count gate, `workflow:` semantics |
+| `scripts/build-plan-html.mjs` | A | `--check` rules, `--lanes`, scope the file-count gate to lane-free specs, `workflow:` semantics |
 | `scripts/lib/plan-shell.mjs` | A | lane chips, Lanes panel, briefs, `plan-lanes` meta |
 | `tests/plan-lanes.test.mjs` | A | new |
 | `skills/implementation-plan/SKILL.md` | B | Step 2 split pass, Step 5 lane question, Step 8 wording |
