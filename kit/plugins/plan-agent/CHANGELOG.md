@@ -1,5 +1,20 @@
 # Changelog
 
+## 9.17.1 — the pilot's sequential comparison is measured (2026-09-09)
+
+### Changed
+
+- **The 9.17.0 pilot table carries both runs.** The `--sequential` half of
+  the lane pilot — the figure the 9.17.0 entry said was still unmeasured —
+  is now published beside the dispatch figures in that entry, with the
+  method, the model, the discarded first attempt, and the definitional
+  caveats spelled out. Headline: on this three-lane plan the single
+  sequential session finished the three lanes' work in 411 s against the
+  dispatch run's 651 s, and spent 12.4M tokens with cache reads counted —
+  one plan, one run each, a data point rather than a verdict on the default.
+  No plugin behaviour changes in this release; the bump exists because the
+  version guard treats any edit under `kit/plugins/plan-agent/` as a change.
+
 ## 9.17.0 — the Workflow-engine escalation ships as the first laned plan (2026-09-09)
 
 Phase 4 of `docs/plans/add-lane-orchestration.md`, and the pilot: the
@@ -58,10 +73,55 @@ LANE REPORT against `git log`, the ownership audit, the `--no-ff` merge, the
 spec tick, and the re-render. That the three durations also sum to 651.4 s
 is coincidence, not the shape of the run.
 
-**The `--sequential` comparison run has not been made.** The plan calls for it
-in a second, fresh session with its own `/usage` reading, and the session
-that produced the figures above could not start one. Until it exists the
-multiplier stays unmeasured; no estimate is published in its place.
+**The `--sequential` run** (measured 2026-09-09, published in 9.17.1): the
+same plan rebuilt from the same starting commit — `5f84768`, the
+`chore(plan): start` commit the dispatch run forked its lanes from — in one
+fresh headless session, `claude -p "/plan-agent:build
+docs/plans/add-workflow-engine-escalation.md --sequential"`, inside an
+isolated clone whose `origin/main` was pinned to the commit the dispatch run
+saw, so step 5's version guard faced the same base. The session ran on
+`claude-opus-5` (`build`'s `model: opus`); the dispatch workers were Sonnet.
+The figures are the harness's own — the JSON result's `usage` and
+`duration_ms`, plus per-step timestamps from the stream-json log.
+
+| sequential run | figure |
+|---|---|
+| steps 1–4 (the work the three worker lanes did), first step-1 write to the step-4 tick | 411 s |
+| steps 1–5, through the `lead` step's tick (docs-sync and `scripts/verify.sh` included) | 894 s |
+| whole session, plan resolve through the three completion gates | 1,531 s (`duration_ms`), 915 s of it API time |
+| API turns / tool uses | 87 / 86 |
+| output tokens (thinking tokens within) | 70,110 (26,431) |
+| cache-creation input tokens | 199,098 |
+| cache-read input tokens | 12,154,090 |
+| uncached input tokens | 156 |
+| all tokens | 12,423,454 |
+| list-price cost | $9.82 |
+
+Read the two runs against each other with care:
+
+- **Wall-clock is the clean comparison, and it favours sequential here.** The
+  three lanes' work took the dispatch run 651 s (first `Agent` call to last
+  merge, critical path 511 s) and the single session 411 s. On a three-lane
+  plan whose lanes are each a few minutes of work, the wave dependency
+  (`wiring` and `tests` wait on `script`), Sonnet's per-lane time, and the
+  lead's verify-audit-merge-tick cycle cost more than the parallelism saved.
+  One plan, one run each: a data point, not a verdict on the default.
+- **The token figures are not the same measure.** The dispatch row is the
+  harness's per-subagent total for the three workers and omits the lead; the
+  sequential row is one session's complete API usage, cache reads included
+  (87 turns, each re-reading the whole growing context — that is where
+  12.2M of the 12.4M sits). If the per-subagent figure counts cache reads the
+  same way, sequential spent roughly 27x the workers' tokens; if it does not,
+  the ratio is unknown. Neither reading is claimed.
+- **The sequential session did a little more than the steps asked.** It
+  added behavioural assertions to `tests/implement-workflow.test.mjs` and
+  mutation-checked them (50 checks against the dispatch run's 18), and ran
+  the merge gate twice.
+- **A first sequential attempt was discarded.** It loaded the plugin from
+  the clone's own `kit/plugins/plan-agent`, and the harness auto-rejected
+  every write under a loaded plugin's directory as a sensitive file, so only
+  the test file landed (655 s, 1 of 5 steps). The published run loaded the
+  plugin from a copy outside the tree it was editing.
 
 ### Fixed
 

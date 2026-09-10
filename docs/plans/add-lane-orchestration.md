@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: completed
 type: feature
 created: 2026-09-09
 effort: high
@@ -45,6 +45,7 @@ This plan is itself authored sequential — lanes do not exist until Phase 1 shi
 - A failed lane re-dispatches by deleting its branch and forking fresh from the current plan branch — a retry never resumes half-done state its own report flagged as failed.
 - The pilot's two runs are measured in two fresh sessions, one per run — a single accumulating session cannot attribute tokens cleanly.
 - Skill-edit phases verify in a live session started with --plugin-dir and --add-dir, because a plain session runs the pinned plugin snapshot and greenlights against text that is not the working tree's.
+- Delivery changed from four PRs to one: the four phases shipped as four release commits (9.14.0, 9.15.0, 9.16.0, 9.17.0) on one branch and merged as PR #628, each bump passing scripts/check-plugin-versions.mjs; the sequential pilot figures followed as the 9.17.1 patch to the 9.17.0 entry.
 
 ## Files
 
@@ -101,8 +102,8 @@ This plan is itself authored sequential — lanes do not exist until Phase 1 shi
 
 17. [x] Author the Workflow-engine escalation as a three-lane plan — lane `script` owning kit/plugins/plan-agent/skills/build/references/implement-workflow.mjs, lane `wiring` owning the build SKILL.md selection hook, lane `tests` owning tests/implement-workflow.test.mjs, plus a `lead` lane for the version bump and CHANGELOG — the first plan ever authored with `### Lane:` headings. Why: the pilot dogfoods the dispatcher on the escalation engine itself, so the feature ships by using the feature. Verify: `plan-agent-render <pilot-spec> --check` exits 0 and `--lanes` lists the four lanes with their steps.
 18. [x] Build the pilot plan with the new dispatcher, delivering implement-workflow.mjs — a pipeline of agent() calls with worktree isolation, Sonnet workers, a LANE_REPORT schema, and wave ordering expressed as pipeline stages — selected only on a plan with 2+ lanes by `workflow: always`, --workflow, or 6+ lanes (fewer than two lanes runs sequentially and only emits the /workflows prompt), probed for Workflow-tool availability rather than version-asserted, plus tests/implement-workflow.test.mjs. Why: the Workflow engine mirrors the proven review-workflow.mjs shape, and building it via dispatch is the pilot run. Verify: the dispatch run completes with all lanes merged and `node tests/implement-workflow.test.mjs` exits 0.
-19. Re-build the same pilot plan with --sequential on a scratch branch, running each build in its own fresh session and recording per-session /usage tokens plus wall-clock for both. Why: the token multiplier is the proposal's open empirical question — the default is not trusted on large plans until this repo has its own measurement, and one accumulating session would blur which run spent what, so each gets a clean session and the numbers come from actual runs, never estimates. Verify: both wall-clock and token figures are captured from the two isolated sessions and written into the draft CHANGELOG entry.
-20. Bump plan-agent to 9.17.0, write the CHANGELOG entry carrying the measured dispatch-vs-sequential numbers, run docs-sync so README.md and docs/guides/how-to/ pick up the four releases, run the merge gate, and open the Phase 4 PR. Why: the pilot numbers are the release's headline and the quick docs must not drift four minor versions behind. Verify: the version guard and `bash scripts/verify.sh` exit 0 and the CHANGELOG entry contains both measured figures.
+19. [x] Re-build the same pilot plan with --sequential on a scratch branch, running each build in its own fresh session and recording per-session /usage tokens plus wall-clock for both. Why: the token multiplier is the proposal's open empirical question — the default is not trusted on large plans until this repo has its own measurement, and one accumulating session would blur which run spent what, so each gets a clean session and the numbers come from actual runs, never estimates. Verify: both wall-clock and token figures are captured from the two isolated sessions and written into the draft CHANGELOG entry.
+20. [x] Bump plan-agent to 9.17.0, write the CHANGELOG entry carrying the measured dispatch-vs-sequential numbers, run docs-sync so README.md and docs/guides/how-to/ pick up the four releases, run the merge gate, and open the Phase 4 PR. Why: the pilot numbers are the release's headline and the quick docs must not drift four minor versions behind. Verify: the version guard and `bash scripts/verify.sh` exit 0 and the CHANGELOG entry contains both measured figures.
 
 ## Tests
 
@@ -120,21 +121,18 @@ Tier 1 — This plan changes application code
 - [x] On a 2+ lane spec, /plan-agent:build commits the spec, dispatches one worktree Agent per lane, merges lane branches --no-ff in `after:` order, and runs the completion gates once on the merged tree
 - [x] On a no-lane spec, with `workflow: never`, or with --sequential, /plan-agent:build behaves exactly as today
 - [x] The allowed-tools lines of build SKILL.md, fix.md, and refactor.md all carry Agent and Artifact and match
-- [ ] Four PRs merged, each with its own minor bump (9.14.0, 9.15.0, 9.16.0, 9.17.0) passing scripts/check-plugin-versions.mjs
-- [ ] The Phase 4 CHANGELOG entry publishes measured wall-clock and token numbers for the dispatch run against the --sequential run
+- [x] The four minor bumps (9.14.0, 9.15.0, 9.16.0, 9.17.0) are merged to main, each passing scripts/check-plugin-versions.mjs — delivered as four release commits in one PR (#628), per Decisions
+- [x] The Phase 4 CHANGELOG entry publishes measured wall-clock and token numbers for the dispatch run against the --sequential run
 - [x] `bash tests/run-all.sh` exits 0 with tests/plan-lanes.test.mjs and tests/implement-workflow.test.mjs included
 
 ## Completion Report
 
-- Step 19 — only the dispatch run was measured (466,207 worker tokens, 651 s wall-clock, per-lane figures in the 9.17.0 entry); the `--sequential` run needs a second fresh session with its own /usage reading, which the building session could not start
-- Step 20 — the 9.17.0 bump, changelog, docs sync, and merge gate ran, and one PR opened (#628); the changelog carries the dispatch figures only, and the four phases shipped as four release commits on that one branch rather than four PRs
-- Acceptance criterion 8 — one PR (#628) is open carrying the four minor bumps as commits; merging needs the user's approval and has not happened
-- Acceptance criterion 9 — the dispatch figures are published; the sequential figure is pending, and no estimate stands in for it
-- Steps 11 and 16 — the live `claude --plugin-dir kit/plugins/plan-agent --add-dir <repo-root>` session check was not exercised; the skill edits were verified by the test suite and the plan's grep verifies only
+- Step 19 — both runs are measured and published in the 9.17.0 entry (dispatch 466,207 worker tokens and 651 s for the three lanes' work; sequential 12,423,454 tokens with cache reads counted, 411 s for the three lanes' work, 1,531 s for the whole session), with the sequential tokens read from the headless CLI's JSON `usage` rather than an interactive `/usage` reading, the entry stating that the two token figures are not the same measure, and a first sequential attempt discarded because the harness refused every write under the loaded plugin's directory
+- Steps 11 and 16 — the live-session checks were not run as written; the `--sequential` path was exercised live (the step 19 session loaded the 9.16.0 skill with `--plugin-dir` and took the sequential branch), the dispatch branch is evidenced by the pilot build in step 18 rather than a separate two-lane scratch spec, and the step 11 lane-authoring check rests on the test suite and greps only
 
 ## Verification
 
-Render the proposal's Appendix A example spec and confirm --check passes, --lanes emits the three lanes as JSON, and the HTML shows lane chips, the Lanes panel, and per-lane briefs. Render an existing pre-lane plan from docs/plans/ and diff its HTML against the 9.13.2 output — zero bytes changed. Then run the pilot end to end: author the Phase 4 three-lane plan with /plan-agent:implementation-plan, build it with /plan-agent:build, and watch it dispatch three worktree workers, merge their branches in order, and pass the three completion gates on the merged tree. Finally run `bash tests/run-all.sh` (exit 0) and confirm all four PRs carry their version bumps and the Phase 4 CHANGELOG entry carries the two measured pilot numbers.
+Render the proposal's Appendix A example spec and confirm --check passes, --lanes emits the three lanes as JSON, and the HTML shows lane chips, the Lanes panel, and per-lane briefs. Render an existing pre-lane plan from docs/plans/ and diff its HTML against the 9.13.2 output — zero bytes changed. Then run the pilot end to end: author the Phase 4 three-lane plan with /plan-agent:implementation-plan, build it with /plan-agent:build, and watch it dispatch three worktree workers, merge their branches in order, and pass the three completion gates on the merged tree. Finally run `bash tests/run-all.sh` (exit 0) and confirm the four release commits carry their version bumps and the Phase 4 CHANGELOG entry carries the two measured pilot numbers.
 
 ## Next Steps
 

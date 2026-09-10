@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: completed
 type: feature
 created: 2026-09-09
 effort: medium
@@ -71,11 +71,7 @@ Tier 1 — This plan changes application code
 - [x] `build` selects the Workflow engine only on a 2+ lane spec by `workflow: always`, `--workflow`, or 6+ lanes, and hard-stops with the named message when the tool is absent
 - [x] `node tests/implement-workflow.test.mjs` exits 0 on the merged tree
 - [x] The three worker lanes merged back onto the plan branch in `after:` order with every `git diff --name-only` path inside its lane's `owns:`
-- [ ] The 9.17.0 CHANGELOG entry carries measured wall-clock and token figures for the dispatch run against the `--sequential` run
-
-## Completion Report
-
-- Acceptance criterion 6 — the dispatch run's figures are published in the 9.17.0 entry (466,207 worker tokens, 651 s wall-clock, per lane), but the `--sequential` comparison needs a second, fresh session with its own /usage reading, which the building session could not start; the sequential figure is pending and no estimate stands in for it
+- [x] The 9.17.0 CHANGELOG entry carries measured wall-clock and token figures for the dispatch run against the `--sequential` run
 
 ## Verification
 
