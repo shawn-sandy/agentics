@@ -85,11 +85,19 @@ try {
     'docs/plans/pair.html': html('completed', url(7)),
     'docs/plans/body-only.md': spec('completed', '', `\n\`\`\`yaml\nissue: ${url(8)}\n\`\`\`\n`),
     'docs/plans/unsafe.md': spec('completed', '$(touch pwned)'),
+    // The renderer normalizes CRLF (scripts/lib/plan-spec.mjs), so such a spec is valid.
+    'docs/plans/crlf-done.md': spec('completed', url(11)).replace(/\n/g, '\r\n'),
+    'docs/plans/no-frontmatter.md': `# Notes\nstatus: completed\nissue: ${url(12)}\n---\n`,
   });
   git('add', '-A');
   git('commit', '-q', '-m', 'plans');
 
   const r = scan('main');
+
+  ok('a completed .md plan saved with CRLF line endings yields its ticket', () =>
+    assert.ok(r.lines.includes(url(11)), `got: ${r.lines.join(', ')}`));
+  ok('a .md file with no frontmatter block is ignored', () =>
+    assert.ok(!r.lines.includes(url(12)), 'body lines were read as frontmatter'));
 
   ok('exits 0', () => assert.equal(r.status, 0, r.stderr));
   ok('a completed .md plan with no .html sibling yields its ticket', () =>
@@ -113,7 +121,7 @@ try {
   ok('every printed line is an https URL', () =>
     assert.deepEqual(r.lines.filter((l) => !/^https:\/\/\S+$/.test(l)), []));
   ok('prints exactly the completed plans touched by the branch', () =>
-    assert.deepEqual(r.lines, [url(1), url(2), url(5), url(7)].sort()));
+    assert.deepEqual(r.lines, [url(1), url(2), url(5), url(7), url(11)].sort()));
 
   const none = scan('feature');
   ok('a branch with no plan changes exits 0 with no output', () => {
