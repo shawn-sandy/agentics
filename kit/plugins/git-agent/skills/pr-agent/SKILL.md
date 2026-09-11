@@ -1,7 +1,7 @@
 ---
 name: pr-agent
 description: "Pushes the branch and creates a pull request. Supports GitHub and GitLab via gh and glab with auto-filled title and body. Use when the user asks to create a PR or open a pull request."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, Agent, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(git-agent-extract-plan-issues *), Read, Grep, Glob, Agent, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 model: sonnet
 ---
@@ -78,16 +78,20 @@ git push
 
 ## Step 4.5: Scan for Issue References
 
-Look for plan files on this branch that link to GitHub or GitLab issues.
+Look for completed plans on this branch that link to GitHub or GitLab issues.
 
-Run:
+Run, substituting the base branch name literally:
 ```
-git diff --name-only <base>...HEAD -- 'docs/plans/*.html' 'docs/plans/**/*.html'
+git-agent-extract-plan-issues <base>
 ```
 
-For each file listed, use `Grep` to search for the pattern `<meta name="plan-issue" content="` and extract the URL value. Collect all unique URLs found.
+`git-agent-extract-plan-issues` is a bundled `bin/` wrapper on the Bash tool's
+`PATH` — call it by bare name. It reads a spec's `status:`/`issue:` frontmatter
+and a rendered plan's `plan-status`/`plan-issue` meta tags, and prints a ticket
+only for a plan marked `completed`. Do not hand-roll a scan of `.html` files
+instead: artifact-delivered plans have no `.html`, so their tickets never close.
 
-If any URLs are found, include a `## Linked Issues` section in the PR body (Step 5) with one `Closes <url>` line per unique URL. If no plan files are found or none contain issue references, skip this section entirely.
+Each line of output is a unique issue URL. If any URLs are returned, include a `## Linked Issues` section in the PR body (Step 5) with one `Closes <url>` line per URL. If the script produces no output, skip this section entirely.
 
 ## Step 4.7: Adversarial Pre-PR Review
 

@@ -1,6 +1,6 @@
 # git-agent
 
-Automated git workflow for Claude Code — branch creation, commits, PRs, ship pipelines, and GitHub/GitLab issue creation. Encodes a strict plan→commit→PR pipeline with hard STOP boundaries — no autonomous test runs, coverage analysis, or scope expansion after the task is done. Automatically links plan issue references (from `<meta name="plan-issue">` tags) in PR descriptions.
+Automated git workflow for Claude Code — branch creation, commits, PRs, ship pipelines, and GitHub/GitLab issue creation. Encodes a strict plan→commit→PR pipeline with hard STOP boundaries — no autonomous test runs, coverage analysis, or scope expansion after the task is done. Automatically adds a `Closes <url>` line to PR descriptions for every completed plan on the branch that links a ticket (a spec's `issue:` frontmatter or a rendered plan's `<meta name="plan-issue">` tag).
 
 ## Features
 
@@ -471,7 +471,7 @@ plugins/git-agent/
 ├── bin/
 │   └── git-agent-extract-plan-issues  # On the Bash tool's PATH; call by bare name
 ├── scripts/
-│   └── extract-plan-issues.sh    # Extracts plan-issue meta tags for PR descriptions
+│   └── extract-plan-issues.sh    # Ticket URLs of completed plans, for PR descriptions
 ├── skills/
 │   ├── branch-agent/
 │   │   └── SKILL.md
