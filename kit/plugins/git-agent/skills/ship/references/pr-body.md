@@ -39,16 +39,20 @@ command fails, fall back to `main`, then `master` (try
 
 ## Step 7.5: Scan for Issue References
 
-Look for plan files on this branch that link to GitHub or GitLab issues.
+Look for completed plans on this branch that link to GitHub or GitLab issues.
 
-Run:
+Run, substituting the base branch name literally:
 ```
-git diff --name-only <base>...HEAD -- 'docs/plans/*.html' 'docs/plans/**/*.html'
+git-agent-extract-plan-issues <base>
 ```
 
-For each file listed, use `Grep` to search for the pattern `<meta name="plan-issue" content="` and extract the URL value. Collect all unique URLs found.
+`git-agent-extract-plan-issues` is a bundled `bin/` wrapper on the Bash tool's
+`PATH` — call it by bare name. It reads a spec's `status:`/`issue:` frontmatter
+and a rendered plan's `plan-status`/`plan-issue` meta tags, and prints a ticket
+only for a plan marked `completed`. Do not hand-roll a scan of `.html` files
+instead: artifact-delivered plans have no `.html`, so their tickets never close.
 
-If any URLs are found, include a `## Linked Issues` section in the PR/MR body (Step 8) with one `Closes <url>` line per unique URL. If no plan files are found or none contain issue references, skip this section entirely.
+Each line of output is a unique issue URL. If any URLs are returned, include a `## Linked Issues` section in the PR/MR body (Step 8) with one `Closes <url>` line per URL. If the script produces no output, skip this section entirely.
 
 ## Step 8: Create Pull/Merge Request
 

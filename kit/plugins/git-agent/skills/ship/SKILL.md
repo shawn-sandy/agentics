@@ -1,7 +1,7 @@
 ---
 name: ship
 description: "Ships changes by staging, committing, pushing, and opening a PR. Supports GitHub and GitLab in a single guided flow. Use when the user asks to ship changes or commit and create a PR."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Edit, Grep, Glob, Agent, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(git-agent-extract-plan-issues *), Read, Edit, Grep, Glob, Agent, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---
 
@@ -97,8 +97,8 @@ Same reference, its Step 7 section — resolve `<base>` from `origin/HEAD`.
 
 ## Step 7.5: Scan for Issue References
 
-Same reference, its Step 7.5 section — collect plan-file issue URLs for the
-body's `## Linked Issues`.
+Same reference, its Step 7.5 section — collect completed plans' ticket URLs
+for the body's `## Linked Issues`.
 
 ## Step 8: Create Pull/Merge Request
 

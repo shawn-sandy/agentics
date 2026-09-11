@@ -1,5 +1,21 @@
 # Changelog — git-agent
 
+## v4.20.3 — 2026-09-11 — a completed plan's PR closes its ticket again
+
+### Fixed
+
+- **The plan-ticket scan reads `.md` specs, and only completed plans close a
+  ticket.** The PR steps (pr-agent 4.5, ship 7.5, agent-pr, agent-ship) looked
+  for the `plan-issue` meta tag in `docs/plans/*.html` only. An
+  artifact-delivered plan is a `.md` spec with no `.html`, so no `Closes` line
+  was written and the ticket stayed open after merge (#626 sat open with its
+  plan `completed`). `extract-plan-issues.sh` now reads a
+  spec's `issue:` frontmatter too, and emits a ticket only when the plan's
+  status is `completed`, so the PR that authors or checkpoints a plan no longer
+  closes it early. pr-agent and ship call the script instead of carrying their
+  own HTML-only copy of the scan. Pinned by
+  `tests/plugins/test-extract-plan-issues.mjs`.
+
 ## v4.20.2 — 2026-09-03 — a stalled reviewer no longer stalls the ship
 
 ### Fixed
