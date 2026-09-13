@@ -80,3 +80,5 @@ __pycache__/
 
 # Subagent scratch memory — private to a run, not part of the repo
 .claude/agent-memory/
+# .claude/hook-cache left in worktrees; ignored so plain `git worktree remove` works without --force
+.claude/hook-cache/
