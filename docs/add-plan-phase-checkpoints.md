@@ -32,6 +32,7 @@
 | `kit/plugins/plan-agent/scripts/lib/plan-spec.mjs` | Byte-identical re-copy | Modified |
 | `kit/plugins/plan-agent/scripts/lib/plan-shell.mjs` | Byte-identical re-copy | Modified |
 | `kit/plugins/plan-agent/skills/build/SKILL.md` | Phase checkpoint loop and `--continue` override | Modified |
+| `kit/plugins/plan-agent/skills/build/references/phase-checkpoints.md` | Checkpoint contract (extracted from SKILL.md due to word ceiling) | Created |
 | `kit/plugins/plan-agent/skills/finalize-plan/SKILL.md` | Refuse to complete a plan with unfinished phases | Modified |
 | `kit/plugins/plan-agent/skills/implementation-plan/SKILL.md` | Note phases and Decisions in the renderer-derives list | Modified |
 | `kit/plugins/plan-agent/skills/implementation-plan/guidelines/section-catalog.md` | Syntax entries for both new sections | Modified |

@@ -37,6 +37,12 @@
 | `CLAUDE.md` | Plugin table 13 → 12 rows | Modified |
 | `kit/plugins/plan-agent/README.md` | Replaced plan-interview pairing section | Modified |
 | `kit/plugins/plan-agent/CHANGELOG.md` | 4.0.0 entry with migration map | Modified |
+| `kit/plugins/README.md` | Removed plan-interview row from marketplace table | Modified |
+| `tests/plugins/test-command-delegation.sh` | Repointed plan-interview command references | Modified |
+| `tests/publish/smoke-clean-dist.sh` | Repointed plan-interview references | Modified |
+| `tests/publish/test-dist-transforms.mjs` | Repointed plan-interview install-line assertion | Modified |
+| `kit/plugins/product-plans/skills/plan-review-agents/SKILL.md` | Removed plan-interview cross-reference | Modified |
+| `kit/plugins/social-media-tools/skills/write-guide/SKILL.md` | Removed plan-interview cross-reference | Modified |
 
 ## How it works
 

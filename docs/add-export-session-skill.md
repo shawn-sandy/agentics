@@ -34,7 +34,7 @@ The skill avoids this by keeping all transcript parsing out of Claude's context.
 
 The Python script reads the JSONL line-by-line. It keeps only records where `role` is `user` or `assistant` and `type` is `message`. Sidechain records (identifiable by their `isSidechain` flag), tool-use and tool-result content blocks, and messages whose text begins with recognized harness injection markers are all discarded. The remaining turns are written in sequence as `## Human` / `## Claude` headers with their text content.
 
-The output filename is derived from the transcript's session date and a slug computed from the first user message. YAML frontmatter includes `session-id`, `date`, `source` (the transcript path), and `type: session-export`, enabling downstream indexing.
+The output filename is derived from the transcript's session date and a slug computed from the first user message. YAML frontmatter includes `session-id`, `date`, `source` (the transcript filename only — not the full path, to avoid embedding local usernames or project paths), and `type: session-export`, enabling downstream indexing.
 
 The skill auto-discovers the most recent transcript for the current project when none is specified, using `ls -t` on the project's JSONL directory. Worktree support is included: when the standard path does not exist, it lists `~/.claude/projects/` and selects the entry matching the main repo path.
 

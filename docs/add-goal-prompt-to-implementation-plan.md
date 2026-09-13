@@ -33,7 +33,7 @@
 
 Every generated HTML plan already rendered two copy-paste prompts: an **implement prompt** (strict, step-by-step) and a conditional **workflow prompt** (parallel subagent orchestration). Both are wired through three coordinated surfaces: a `<meta>` tag in `<head>` for machine readability, a visible/collapsible row in the body for human use, and a placeholder in the SKILL.md Step 2 computation that the model fills from the objective and plan path.
 
-The goal prompt follows exactly the same three-surface pattern. The SKILL.md contract was updated so Step 2 unconditionally computes `{goal-prompt}` — a phrase shaped as "Achieve this goal: … use the plan as reference, but optimize for the outcome." There is no flag or complexity heuristic; the prompt appears on every plan.
+The goal prompt follows exactly the same three-surface pattern. The SKILL.md contract was updated so Step 2 unconditionally computes `{goal-prompt}` — a phrase led by `"Goal:"` followed by the plan's objective and a directive to use the plan as reference but optimize for the outcome. There is no flag or complexity heuristic; the prompt appears on every plan.
 
 In the skeleton, `<meta name="plan-goal">` is emitted alongside `plan-implement` and `plan-workflow`. The rendered row is a purple `<details>` element (`.plan-goal`) positioned between the green implement row and the blue workflow block, preserving the visual hierarchy. The `copyGoal()` function mirrors `copyWorkflow()` — clicking the row copies the goal text to the clipboard.
 

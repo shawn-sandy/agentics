@@ -10,7 +10,7 @@
 ## What shipped
 
 - Created `kit/plugins/git-agent/skills/merge/SKILL.md` — the merge-readiness skill: checks PR state, runs the project's lint script before merging, requires explicit user approval even when everything is green, and merges with `--match-head-commit <headRefOid>` to prevent landing commits that arrived after verification.
-- Created `kit/plugins/git-agent/hooks/merge-shorthand.py` — a `UserPromptSubmit` hook that matches the anchored regex `^\s*merge\?\s*$` (case-insensitive) and emits `additionalContext` routing to `git-agent:merge`; exits 0 silently on every other prompt.
+- Created `kit/plugins/git-agent/hooks/merge-shorthand.py` — a `UserPromptSubmit` hook that matches the anchored regex `^\s*merge\?\s*$` (case-insensitive) and prints a plain-text instruction routing to `git-agent:merge`; exits 0 silently on every other prompt.
 - Added the `merge-shorthand.py` entry to `kit/plugins/git-agent/hooks.json` under `UserPromptSubmit`, using `${CLAUDE_PLUGIN_ROOT}` for portability.
 - Created `tests/plugins/test-merge-shorthand.sh` asserting exact-match triggering, whitespace tolerance, case-insensitivity, and silence on all near-miss inputs.
 - Bumped `git-agent` to `4.4.0` in `.claude-plugin/marketplace.json` with a CHANGELOG entry and README update.
@@ -34,7 +34,7 @@ Before this change, typing `merge?` relied on a private memory note (`feedback-m
 
 The formalization has two parts. The skill (`SKILL.md`) owns all the logic: it is explicitly invocable as `/git-agent:merge` independently of the shorthand. The hook (`merge-shorthand.py`) owns the ergonomic trigger.
 
-The hook reads the prompt JSON from stdin and checks the `prompt` field against `^\s*merge\?\s*$` (case-insensitive, `re.IGNORECASE`). On a match it emits an `additionalContext` JSON object instructing Claude to run the `git-agent:merge` skill. On any non-match it writes nothing and exits 0 — silence is the correct output for the vast majority of prompts. The anchored regex ensures that phrases like "please merge?", "merge? now", or "how do merges work" pass through untouched.
+The hook reads the prompt JSON from stdin and checks the `prompt` field against `^\s*merge\?\s*$` (case-insensitive, `re.IGNORECASE`). On a match it prints a plain-text instruction to stdout telling Claude to run the `git-agent:merge` skill. On any non-match it writes nothing and exits 0 — silence is the correct output for the vast majority of prompts. The anchored regex ensures that phrases like "please merge?", "merge? now", or "how do merges work" pass through untouched.
 
 The skill's readiness gate runs `gh pr view --json state,mergeable,statusCheckRollup,reviewDecision,headRefOid`. If the PR is `MERGEABLE` and all required checks pass, the skill detects the project's lint script (matching non-`fix`, non-`watch` `lint*` entries in `package.json`) and runs it before asking for approval. Lint failure stops the run — the skill never auto-`--fix`es, because fixed files would change the PR head without being part of the reviewed commit. When no lint script is found, the skill skips with a one-line note.
 
