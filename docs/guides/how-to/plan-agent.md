@@ -37,7 +37,7 @@ Turns a vague idea into a decision-complete proposal that answers should-we.
 
 - **Command** — `/plan-agent:build-proposal <idea> [--dir <path>] [--tier 0|1|2]`
 - **Say it instead** — "should we adopt a DESIGN.md convention? think it through with me"
-- **What happens** — Runs a human-steered loop — frame, confirm, research, split facts from decisions, resolve them with you — converging on one living saved prompt at `<prompts-dir>/proposal-<slug>.md` that is copy-pasteable into the planning layer.
+- **What happens** — Runs a human-steered loop — frame, confirm, research, split facts from decisions, choose an approach from the candidate solutions it lays out, resolve the remaining decisions with you — converging on one living saved prompt at `<prompts-dir>/proposal-<slug>.md` that is copy-pasteable into the planning layer.
 - **Watch out** — Tier 0 ideas write no file by design (downstream `build` depends on that), and the skill stops at the proposal even when the request also asks to build: it never writes code or the implementation plan without your explicit go-ahead.
 
 ## deep-grill

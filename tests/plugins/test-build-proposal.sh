@@ -330,6 +330,41 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
+echo "16. Step 4b puts candidate solutions to the human before Step 5 and authors only the pick..."
+# The approach gate (9.18.0): once Step 4 says the open items are decisions,
+# the candidates from Step 3 go to the human in one recommendation-first
+# AskUserQuestion — the baseline "keep the current approach" always among them
+# so the menu never collapses to one — and the pick lands as the first Locked
+# decision. It is a lettered sub-step (like 1b) so check 6's count of eight
+# numbered steps holds.
+L4="$(grep -n '^### Step 4 —' "$SKILL" | cut -d: -f1 || true)"
+L4B="$(grep -n '^### Step 4b —' "$SKILL" | cut -d: -f1 || true)"
+L5="$(grep -n '^### Step 5 —' "$SKILL" | cut -d: -f1 || true)"
+STEP4B="$(sed -n '/^### Step 4b —/,/^### Step 5 —/p' "$SKILL" || true)"
+MISSING=""
+{ [ -n "$L4" ] && [ -n "$L4B" ] && [ -n "$L5" ] && [ "$L4" -lt "$L4B" ] && [ "$L4B" -lt "$L5" ]; } \
+  || MISSING="$MISSING step-4b-between-4-and-5"
+printf '%s' "$STEP4B" | grep -q 'AskUserQuestion' || MISSING="$MISSING one-question"
+printf '%s' "$STEP4B" | grep -qF '(Recommended)' || MISSING="$MISSING recommendation-first"
+printf '%s' "$STEP4B" | grep -qi 'keep the current approach' || MISSING="$MISSING baseline-candidate"
+printf '%s' "$STEP4B" | grep -qi 'Locked' || MISSING="$MISSING pick-recorded"
+# The pick must not erase the menu: rejected candidates stay in the Side-by-side.
+printf '%s' "$STEP4B" | grep -qi 'rejected candidates in the Side-by-side' || MISSING="$MISSING rejected-kept"
+# And Step 5 narrows to the locked approach rather than re-asking across candidates.
+STEP5="$(sed -n '/^### Step 5 —/,/^### Step 6 —/p' "$SKILL" || true)"
+printf '%s' "$STEP5" | grep -q 'approach locked at Step 4b' || MISSING="$MISSING step5-narrowed"
+grep -qi 'keep the current approach' "$REFS/artifact-shape.md" || MISSING="$MISSING shape-compares-candidates"
+grep -qi 'Choose the approach' "$REFS/operating-principles.md" || MISSING="$MISSING principle"
+# The two stamped exemplars predate the gate and cannot be edited (they are
+# trimmed real proposals), so SKILL.md must say they do not show its shape.
+grep -q 'predate Step 4b' "$SKILL" || MISSING="$MISSING exemplar-caveat"
+if [ -z "$MISSING" ]; then
+  echo "  PASS"
+else
+  echo "  FAIL: Step 4b approach gate incomplete:$MISSING"
+  FAILURES=$((FAILURES + 1))
+fi
+
 echo ""
 if [ "$FAILURES" -eq 0 ]; then
   echo "All build-proposal checks passed."

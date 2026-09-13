@@ -91,6 +91,11 @@ research reveals more surface, and **stop early** if a Tier 2 idea collapses to
 a clear answer. Name the tier out loud; it sets the human's expectations for
 depth and pace.
 
+**Both artifact-writing tiers pass the Step 4b approach gate.** Tier 1 puts two
+or three candidates in one short question; Tier 2 puts up to four with their
+tradeoffs. The baseline *keep the current approach* is always among them, so
+the menu never collapses to a single choice.
+
 ## Artifact resolution
 
 Two artifacts, one authoritative. Derive the `<slug>` once from the idea as a
@@ -221,6 +226,13 @@ to what already exists, as a side-by-side comparison. Surface the load-bearing
 realization, not a survey. This becomes the proposal's *Core finding* block
 quote and *Side-by-side* table.
 
+Then draft the **candidate solutions** the research supports — two to four
+distinct ways to act on the finding, the baseline *keep the current approach*
+always among them — and lay them out one column each in the Side-by-side
+(dimension × candidate). Each candidate is a few words of name plus a one-line
+tradeoff, grounded in what Step 2 found; never pad the menu with an option the
+research cannot back. These are what Step 4b puts to the human.
+
 ### Step 4 — Separate facts from decisions
 
 Maintain two lists: what is now **known** (facts resolved by research) vs. what
@@ -229,10 +241,39 @@ still *facts*, loop back to Step 2 ("keep gathering"). Only when the remaining
 unknowns are **decisions, not missing facts**, proceed. **Signal convergence
 explicitly** — say so when the open items are decisions, not facts.
 
+### Step 4b — Choose the approach (the second gate)
+
+**Tier 1 and 2 only, and only once Step 4 has signalled convergence.** Put the
+candidates drafted at Step 3 to the human in **one** `AskUserQuestion`: two to
+four options, each a distinct solution named in a few words with its one-line
+tradeoff, the best one labelled "(Recommended)" with its rationale, and
+*keep the current approach* always among them so the menu never collapses to
+a single choice. Ask which approach the proposal should be written around —
+not whether to proceed.
+
+Record the answer as the **first** entry in Locked & resolved decisions — the
+chosen approach, the candidates it was chosen over, and the one-line reason —
+and keep the rejected candidates in the Side-by-side table so the comparison
+survives into the artifact. At Tier 1, which omits both of those slots, the
+pick closes the Context section as one line: *Approach: <chosen>, over
+<rejected>.*
+
+Then narrow. Step 5 resolves only the decisions the chosen approach raises,
+and Step 6 authors that approach alone: Workstreams, Risks, and the Roadmap
+describe the pick, not a survey of every candidate. A proposal that describes
+three approaches is a comparison, and the planning layer cannot execute a
+comparison.
+
+If the human answers "Other" with an approach of their own, treat it as a new
+candidate: restate it in one line, add its column to the Side-by-side, and lock
+it. **Nothing in Step 5 or Step 6 may start before this gate is settled.**
+
 ### Step 5 — Resolve decisions with the human
 
 Use `AskUserQuestion`, **recommendation-first**: label the best option
-"(Recommended)" with its rationale — never a bare menu. After each answer,
+"(Recommended)" with its rationale — never a bare menu. Scope every question to
+the approach locked at Step 4b: a decision that only matters for a rejected
+candidate is dropped, not asked. After each answer,
 **record it in the artifact and propagate its consequences** to every section it
 touches (Locked decisions + each affected Workstream, Open question, Roadmap
 item). Decision drift is the main failure mode; the propagate-on-answer rule is
@@ -344,10 +385,11 @@ the seam: this skill decided *should-we + what*; planning owns *how*.
 
 ## Operating principles & relationship to existing capabilities
 
-The ten guardrails that make the loop converge (ground every claim, quantify,
-separate facts from decisions, recommendation-first questions, record &
-propagate, iterative deepening, parallel fan-out, surface incidental findings,
-commit each round, signal convergence) and how this skill composes with
+The eleven guardrails that make the loop converge (ground every claim,
+quantify, separate facts from decisions, recommendation-first questions,
+record & propagate, iterative deepening, parallel fan-out, surface incidental
+findings, commit each round, signal convergence, choose the approach before
+authoring) and how this skill composes with
 `deep-research`, `implementation-plan` / the `Plan` agent, and
 `AskUserQuestion` live in
 [references/operating-principles.md](references/operating-principles.md). Read
@@ -364,6 +406,9 @@ proposals ship flat under `references/`:
   — the **recursive** exemplar (a proposal proposing this very skill).
 
 If a generated proposal can't match these shapes, the loop ran too shallow.
+Both predate Step 4b, so neither leads its decisions with an *Approach:* entry
+or carries a candidate-per-column Side-by-side; take that shape from
+`references/artifact-shape.md`, not from them.
 
 ## Writing Style
 

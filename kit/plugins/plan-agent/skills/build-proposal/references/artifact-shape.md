@@ -6,6 +6,10 @@ The structure a decision-complete proposal converges on. Write
 full shape and deepens it over rounds. Never emit empty sections — add a section
 only when it carries grounded content.
 
+The approach chosen at Step 4b always has a home. Tier 2: the first Locked
+decision plus its own column in the Side-by-side. Tier 1, which omits both:
+the closing line of Context — *Approach: <chosen>, over <rejected>.*
+
 ## Section order
 
 1. **Front-matter** — YAML: `status` (lifecycle `proposal` → `plan` once it
@@ -24,10 +28,14 @@ only when it carries grounded content.
 5. **Core finding** — the **one** central insight, called out as a block quote.
    This is the load-bearing sentence: how the idea relates to what exists. Not a
    summary, not a survey.
-6. **Side-by-side / comparison** — the idea vs. the existing approach in a table
-   (dimension × idea × ours). This is where the core finding is made concrete.
-7. **Locked & resolved decisions** — what is settled, **dated**. Split "settled
-   before this draft" from "resolved in the `<date>` review". Every
+6. **Side-by-side / comparison** — the candidate solutions from Step 4b in a
+   table, one column per candidate, the baseline *keep the current approach*
+   always among them (dimension × candidate). This is where the core finding is
+   made concrete, and where the rejected candidates survive beside the chosen
+   one.
+7. **Locked & resolved decisions** — what is settled, **dated**. Lead with the
+   approach chosen at Step 4b, naming what it was chosen over; then split
+   "settled before this draft" from "resolved in the `<date>` review". Every
    `AskUserQuestion` answer lands here (and propagates to the sections it
    touches).
 8. **Workstreams / options** — the distinct strands of work, each self-contained.
@@ -74,16 +82,18 @@ follow-up needed.>
 > <The one central insight, as a block quote.>
 
 ## Side-by-side
-| Dimension | The idea | Our current approach |
-|---|---|---|
-| … | … | … |
+| Dimension | <Candidate A (chosen)> | <Candidate B> | Keep the current approach |
+|---|---|---|---|
+| … | … | … | … |
 
 ## Locked & resolved decisions
+1. **Approach: <chosen candidate>.** Chosen at Step 4b over <rejected candidates> because <reason>.
+
 Settled before this draft:
-1. **<decision>.** <consequence>
+2. **<decision>.** <consequence>
 
 Resolved in the <YYYY-MM-DD> review:
-2. **<decision>.** <rationale + what it propagates to>
+3. **<decision>.** <rationale + what it propagates to>
 
 ## Workstreams
 ### A — <name>
@@ -127,8 +137,8 @@ exactly one slot:
 | TL;DR | `{{TLDR}}` | Tier 2 only; omitted for Tier 1 |
 | Context | `{{CONTEXT}}` | inside `<context>` |
 | Core finding | `{{CORE_FINDING}}` | the single load-bearing sentence |
-| Side-by-side | `{{COMPARISON_TABLE}}` | markdown table passed through verbatim |
-| Locked & resolved decisions | `{{LOCKED_DECISIONS}}` | repeating |
+| Side-by-side | `{{COMPARISON_TABLE}}` | markdown table passed through verbatim — one column per Step 4b candidate |
+| Locked & resolved decisions | `{{LOCKED_DECISIONS}}` | repeating; leads with the Step 4b pick |
 | Workstreams | `{{WORKSTREAMS}}` | repeating |
 | Risks & tensions | `{{RISKS}}` | repeating |
 | Open questions | `{{OPEN_QUESTIONS}}` | decisions only |
@@ -142,7 +152,8 @@ being forced together.
 
 Tier 1 populates only `{{CONTEXT}}`, `{{CORE_FINDING}}`, `{{OPEN_QUESTIONS}}`,
 and `{{CORE_INSTRUCTION}}`, and omits the remaining slots — it does not emit
-them empty.
+them empty. The Step 4b pick therefore closes `{{CONTEXT}}` as one line at
+Tier 1.
 
 See [example-design-md-spec-alignment.md](example-design-md-spec-alignment.md)
 (Tier 2, multi-round) and

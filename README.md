@@ -431,7 +431,7 @@ Plan creation and review on demand or via ambient activation. Run `/plan-agent:i
 | `build` | Implement a plan that already exists via `/plan-agent:build [<plan>]` — walks its steps, ticks the spec, re-renders, and runs the acceptance-criteria, end-to-end-verification, and completion-checklist gates; also auto-activates on "implement the plan at …" intent |
 | `build-feature` | Turn a feature idea into a team feature doc that splits into sized, dependency-ordered sub-features, each of which becomes its own plan |
 | `build-fleet` | Ship a backlog of plans in parallel — one isolated worktree agent per plan, each building its plan, opening a PR, and watching CI |
-| `build-proposal` | Turn a vague idea into a decision-complete proposal, saved as a copy-pasteable prompt (`docs/prompts/proposal-<slug>.md`) authored by delegating to `prompt` — researches web + codebase, separates facts from decisions, then hands off to `implementation-plan`; also writes the deprecated `docs/proposals/<slug>.md` copy through 6.0.x; auto-activates on idea / "should-we" / compare-and-align intent |
+| `build-proposal` | Turn a vague idea into a decision-complete proposal, saved as a copy-pasteable prompt (`docs/prompts/proposal-<slug>.md`) authored by delegating to `prompt` — researches web + codebase, separates facts from decisions, presents candidate solutions for selection and authors the chosen one, then hands off to `implementation-plan`; also writes the deprecated `docs/proposals/<slug>.md` copy through 6.0.x; auto-activates on idea / "should-we" / compare-and-align intent |
 | `review-plan` | Run a ten-reviewer Workflow (architecture, completeness, testability, risk, conventions, product, security, + UI-conditional UX, accessibility, and frontend) to review a plan, adversarially verify the high-severity findings (`--deep` verifies all of them), and apply what survives in place — no experimental flag, and it finds artifact-published `.md` specs as well as local HTML, republishing to the plan's own `artifact-url:` |
 | `finalize-plan` | Review a plan for completion evidence with per-criterion verification and mark it completed, reconciling the spec against the commits that touched it so work that shipped unplanned or was built differently is written back into `## Steps` and `## Decisions` — manual invoke only |
 | `prompt` | Generate a copy-pasteable AI prompt grounded in Anthropic best practices (role, XML structure, CoT, examples) across five types (`system`, `task`, `creative`, `analytical`, `proposal`) — command only, with a `commands/prompt.md` wrapper so other skills can reach it |
@@ -796,7 +796,7 @@ Total: 66 skills across 11 plugins.
 | [git-agent](./kit/plugins/git-agent/README.md) | 4.20.3 | development | 5 commands, 8 skills, 5 agents, 3 hooks |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.2.0 | productivity | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.23.4 | productivity | 1 command, 17 skills |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 9.17.2 | productivity | 9 commands, 18 skills, 12 agents, 2 hooks |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 9.18.0 | productivity | 9 commands, 18 skills, 12 agents, 2 hooks |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.12.0 | development | 3 commands, 5 skills |
 | [content-tools](./kit/plugins/content-tools/README.md) | 1.1.1 | documentation | 1 skill |
 
