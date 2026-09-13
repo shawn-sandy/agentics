@@ -599,7 +599,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   // grant. Stated after the latitude, parallelism is a choice the outcome
   // licenses rather than a method chosen for the agent up front.
   const fanOut = wantsWorkflow ? ' Fan out across parallel subagents where that serves the outcome.' : '';
-  const goal = `Achieve this goal: ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome.${fanOut} ${verifyTail}`;
+  const goal = `Goal: ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome.${fanOut} ${verifyTail}`;
   const workflow = wantsWorkflow
     ? `Run a workflow to implement the plan at ${specPath} — ${s.title}. Brief subagents with the plan file at ${specPath}. Reserve a final verification phase for the lead agent, not a subagent. ${verifyTail}`
     : '';

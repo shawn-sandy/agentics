@@ -163,14 +163,17 @@ Run everything and confirm it passes.
 `;
 
 /** sha256 of renderUnphased() under the current renderer. Regenerate only for
- * a deliberate shell change. Re-derived 2026-09-04 for the header-link chips
+ * a deliberate shell change. Re-derived 2026-09-12 for the goal prompt lead-in
+ * (9.17.2): "Achieve this goal:" became "Goal:" in the plan-goal meta tag and
+ * the #goal-cmd row, which every rendered plan carries.
+ * Previously re-derived 2026-09-04 for the header-link chips
  * (9.13.1): the prototype / issue / design anchors gained one chip rule and an
  * `order` slot in `.plan-header-actions`, shifting Save as PDF and the theme
  * toggle to orders 4 and 5, and joined the coarse-pointer 44px hit-area list.
  * Previously re-derived 2026-09-02 for the plan-document polish (eyebrow
  * removed, browser-surface theming, tabular figures, compositor-driven scroll
  * rail, objective-card side-tab removed, 44px hit areas, square theme toggle). */
-const BASELINE_SHA256 = '6e3f557789423f6d829d16ffac19855efdfb7c38e106d7f5566bd74f810d93ab';
+const BASELINE_SHA256 = 'c090480964d5879363306e294089f8bc54533e91af9646199b63fe08c50a95cf';
 
 const render = (parsed, stem) =>
   renderPlanHtml(parsed, {

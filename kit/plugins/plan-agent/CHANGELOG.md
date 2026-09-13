@@ -1,5 +1,18 @@
 # Changelog
 
+## 9.17.2 — the goal prompt leads with `Goal:` (2026-09-12)
+
+### Changed
+
+- **"Pursue as goal" now opens with `Goal:` instead of `Achieve this goal:`.**
+  The rendered prompt and its `plan-goal` meta tag read `Goal: <objective>.
+  The plan at <path> describes one approach — …`. Everything after the
+  lead-in, including the fan-out license and the verification gate, is
+  unchanged. Plans already rendered keep the old wording until they are
+  re-rendered. `tests/plugins/test-plan-phases.mjs` re-derives its
+  `BASELINE_SHA256` for the new lead-in, since the goal prompt is part of
+  every rendered plan.
+
 ## 9.17.1 — the pilot's sequential comparison is measured (2026-09-09)
 
 ### Changed
