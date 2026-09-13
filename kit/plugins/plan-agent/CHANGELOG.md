@@ -1,5 +1,28 @@
 # Changelog
 
+## 9.18.0 — build-proposal chooses an approach before it authors (2026-09-13)
+
+### Added
+
+- **Step 4b — Choose the approach (the second gate).** Once Step 4 has said the
+  open items are decisions, `build-proposal` puts the candidate solutions its
+  research supports — two to four, the baseline *keep the current approach*
+  always among them — to the human in one recommendation-first
+  `AskUserQuestion`, and authors the proposal around the pick alone. The choice
+  lands as the first Locked decision, naming what it was chosen over; the
+  rejected candidates stay as columns of the Side-by-side table, which now
+  compares candidates rather than only idea-versus-ours; at Tier 1, which
+  omits both slots, the pick closes the Context section as one line. Step 3
+  now drafts the candidates beside the core finding, and Step 5 asks only the
+  questions the chosen approach raises. Before this, Step 3 synthesized a
+  single core finding and Step 5 went straight to per-decision questions, so a
+  proposal could be authored around an approach the human never picked. No
+  prompt slot was added — the gate is a lettered sub-step, so the eight
+  numbered steps and the slot list are unchanged. The eleventh operating
+  principle in `references/operating-principles.md` names the rule, and
+  `tests/plugins/test-build-proposal.sh` check 16 pins it. `build-feature` is
+  unchanged.
+
 ## 9.17.2 — the goal prompt leads with `Goal:` (2026-09-12)
 
 ### Changed

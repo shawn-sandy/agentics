@@ -1,6 +1,6 @@
 # Operating principles & relationship to existing capabilities
 
-## The ten operating principles
+## The eleven operating principles
 
 The guardrails that make the loop **converge** instead of gathering forever or
 sprawling into volume. Each is a rule the workflow steps enforce.
@@ -36,6 +36,12 @@ sprawling into volume. Each is a rule the workflow steps enforce.
 10. **Signal convergence explicitly.** State out loud when "the remaining
     unknowns are decisions, not missing facts." That sentence is the loop's stop
     condition.
+11. **Choose the approach before authoring.** Once the open items are decisions,
+    put two to four candidate solutions — the baseline *keep the current
+    approach* always among them — to the human in one recommendation-first
+    question, and author the proposal around the pick alone. A proposal that
+    describes every candidate is a comparison, and the planning layer cannot
+    execute a comparison.
 
 ## Relationship to existing capabilities
 
@@ -48,7 +54,7 @@ tools rather than replacing them.
 | **`deep-research` skill** | One-shot, web-centric, adversarially-verified cited report on a topic | **Optional delegate** for the web-research phase via `Skill(skill: "deep-research", …)`. **Not a hard dependency** — when it is unavailable or the idea needs only a quick check, fall back to `WebSearch` + `WebFetch` for the web and `Agent` (`Explore`) for codebase breadth. deep-research answers "what's true about X"; build-proposal answers "should we, and what exactly." |
 | **`implementation-plan` skill / `Plan` agent** | Produces an execution plan (steps, files, trade-offs) assuming the *what* is decided | **Downstream handoff.** build-proposal decides the *what / whether* and stops at the decision-complete proposal, then hands it to `/plan-agent:implementation-plan` for a **full planning pass** — passing the saved prompt behind `--from-prompt`, **never** as a positional token. A positional `.md` would trigger 1:1 conversion mode, which maps `Changes/Steps` → step cards; a proposal has only `Workstreams`/`Roadmap`, so conversion would yield a stepless plan. Leading with the objective is not sufficient protection — the scan takes the first positional `.md` anywhere — so the flag is what keeps the full workflow that drafts real steps. **The seam: build-proposal owns "should-we + what"; planning owns "how."** |
 | **Plan mode (`EnterPlanMode`)** | A harness gate for proposing a code change before acting | Different axis — that gates *edits*; build-proposal develops *ideas*. They co-exist: a proposal may run, then later implementation work enters plan mode. |
-| **`AskUserQuestion`** | Asks the user a structured question | A **tool build-proposal orchestrates** at Step 5 (recommendation-first), not a competitor. |
+| **`AskUserQuestion`** | Asks the user a structured question | A **tool build-proposal orchestrates** at Step 4b (the approach gate) and Step 5 (recommendation-first), not a competitor. |
 
 The unique value is the **combination**: codebase + web grounding, an explicit
 facts-vs-decisions discipline with the human in the loop, and a committed
