@@ -348,6 +348,11 @@ printf '%s' "$STEP4B" | grep -q 'AskUserQuestion' || MISSING="$MISSING one-quest
 printf '%s' "$STEP4B" | grep -qF '(Recommended)' || MISSING="$MISSING recommendation-first"
 printf '%s' "$STEP4B" | grep -qi 'keep the current approach' || MISSING="$MISSING baseline-candidate"
 printf '%s' "$STEP4B" | grep -qi 'Locked' || MISSING="$MISSING pick-recorded"
+# The pick must not erase the menu: rejected candidates stay in the Side-by-side.
+printf '%s' "$STEP4B" | grep -qi 'rejected candidates in the Side-by-side' || MISSING="$MISSING rejected-kept"
+# And Step 5 narrows to the locked approach rather than re-asking across candidates.
+STEP5="$(sed -n '/^### Step 5 —/,/^### Step 6 —/p' "$SKILL" || true)"
+printf '%s' "$STEP5" | grep -q 'approach locked at Step 4b' || MISSING="$MISSING step5-narrowed"
 grep -qi 'keep the current approach' "$REFS/artifact-shape.md" || MISSING="$MISSING shape-compares-candidates"
 grep -qi 'Choose the approach' "$REFS/operating-principles.md" || MISSING="$MISSING principle"
 # The two stamped exemplars predate the gate and cannot be edited (they are
