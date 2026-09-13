@@ -246,7 +246,7 @@ Echo the resolved objective and effective flags after Step 0.
   spec, run the plan's Verification and Tests end-to-end to confirm the
   objective actually works, set `status: completed`, then re-render the sibling HTML so it shows
   every step and criterion complete — never hand-edit the HTML.
-- **Goal prompt** — always present: `Achieve this goal: <objective>. The
+- **Goal prompt** — always present: `Goal: <objective>. The
   plan at <filepath> describes one approach — use it as reference, but
   optimize for the outcome.` plus the verification gate (same spec
   `<filepath>`). Emitted as the
@@ -256,7 +256,7 @@ Echo the resolved objective and effective flags after Step 0.
   outcome.` is appended after the latitude clause and the row label gains
   `, in parallel` — the two share one gate, so a plan too small for a
   workflow row never licenses fan-out the page does not offer. The lead-in
-  stays `Achieve this goal:` in both cases: fan-out is stated as a license
+  stays `Goal:` in both cases: fan-out is stated as a license
   the outcome grants, never as a leading directive, so the prompt does not
   fix a decomposition before the agent may judge the plan's own to be wrong.
 - **Workflow prompt** — `Run a workflow to implement the plan at <filepath>
