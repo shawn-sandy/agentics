@@ -52,8 +52,23 @@ MARKER=$(printf '%s\n' "$OUT" | head -n 1 | sed 's/`[^`]*`/`<check>`/')
 OPT_OUT=$(printf '%s\n' "$OUT" | sed -n 's/.*create \([^ ]*\) to disable it.*/\1/p' | head -n 1)
 
 check "hook message carries an opt-out path" test -n "$OPT_OUT"
+
+# The opt-out must be named as something not to create. A bare presence check
+# would still pass an instruction rewritten to tell the model to create it.
+# A path's only regex metacharacter is `.`.
+OPT_RE=$(printf '%s' "$OPT_OUT" | sed 's/\./\\./g')
+prohibits_opt_out() { grep -qiE "(not|n't|never) (create|touch|add)[^a-z]*${OPT_RE}" "$1"; }
+
+# A fix-loop retry stages only the files the fix edited. `git add -A` would also
+# sweep in anything saved after the first staging, such as an unrelated file
+# edited while the lint-gate question was open.
+stages_only_edits() { # <fix-loop text>
+  printf '%s' "$1" | grep -qF 'git add -- ' && ! printf '%s' "$1" | grep -qF 'git add -A'
+}
+
 check "skill quotes the hook's block line ($MARKER)" grep -qF -- "$MARKER" "$SKILL"
-check "skill names the opt-out file it must not create ($OPT_OUT)" grep -qF -- "$OPT_OUT" "$SKILL"
+check "skill forbids creating the opt-out file ($OPT_OUT)" prohibits_opt_out "$SKILL"
+check "skill fix loop stages only the files it edited" stages_only_edits "$(grep '^Fix loop:' "$SKILL")"
 # The fix path edits source; without these the skill prompts mid-run.
 check "allowed-tools grants Read" grep -qE '^allowed-tools:.*\bRead\b' "$SKILL"
 check "allowed-tools grants Edit" grep -qE '^allowed-tools:.*\bEdit\b' "$SKILL"
@@ -64,7 +79,7 @@ check "allowed-tools grants Edit" grep -qE '^allowed-tools:.*\bEdit\b' "$SKILL"
 for name in agent-commit agent-ship; do
   AGENT="$ROOT/kit/plugins/git-agent/agents/$name.md"
   check "$name quotes the hook's block line" grep -qF -- "$MARKER" "$AGENT"
-  check "$name names the opt-out file it must not create" grep -qF -- "$OPT_OUT" "$AGENT"
+  check "$name forbids creating the opt-out file" prohibits_opt_out "$AGENT"
   check "$name is still denied Edit" grep -qE '^disallowedTools:.*\bEdit\b' "$AGENT"
 done
 
@@ -76,7 +91,7 @@ for skill in ship ship-autonomous; do
   REF="$DIR/references/lint-gate-block.md"
   check "$skill core points to its lint-gate reference" grep -qF 'references/lint-gate-block.md' "$DIR/SKILL.md"
   check "$skill quotes the hook's block line" grep -qF -- "$MARKER" "$REF"
-  check "$skill names the opt-out file it must not create" grep -qF -- "$OPT_OUT" "$REF"
+  check "$skill forbids creating the opt-out file" prohibits_opt_out "$REF"
   check "$skill allowed-tools grants AskUserQuestion" grep -qE '^allowed-tools:.*\bAskUserQuestion\b' "$DIR/SKILL.md"
   check "$skill allowed-tools grants Edit" grep -qE '^allowed-tools:.*\bEdit\b' "$DIR/SKILL.md"
 done
@@ -108,6 +123,9 @@ print(" ".join(s for s in sorted(steps) if not re.search(r"\b" + re.escape(s) + 
 PY
 )
 check "ship-autonomous reference covers every commit-agent step (missing: ${UNCOVERED:-none})" test -z "$UNCOVERED"
+
+SHIP_LOOP=$(awk '/^## Fix loop/{f=1;next} /^## /{f=0} f' "$ROOT/kit/plugins/git-agent/skills/ship/references/lint-gate-block.md")
+check "ship fix loop stages only the files it edited" stages_only_edits "$SHIP_LOOP"
 
 echo ""
 if [ "$FAILURES" -eq 0 ]; then

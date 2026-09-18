@@ -11,9 +11,11 @@
   Step 4 now identifies the block by its first line. When the skill is invoked
   directly, it asks whether to fix and retry; when another skill invokes it,
   it reports the block and stops. The fix loop edits only files the commit
-  already touches, runs at most two rounds, and lists the files it edited. The
-  skill never creates `.claude/no-lint-gate` or edits `.claude/lint-gate.json`
-  to get past the gate. `allowed-tools` gains `Read` and `Edit`.
+  already touches, re-stages only the files it edited (`git add -- <file>`, not
+  `-A`, which would sweep in anything saved since Step 2), runs at most two
+  rounds, and lists the files it edited. The skill never creates
+  `.claude/no-lint-gate` or edits `.claude/lint-gate.json` to get past the
+  gate. `allowed-tools` gains `Read` and `Edit`.
 - **agent-commit and agent-ship take the stop-and-report branch.** They have
   no user to ask and are denied `Edit`, so on a block each reports that nothing
   was committed and the changes are still staged, quotes the block output, and
@@ -32,9 +34,10 @@
 
 Pinned by `tests/plugins/test-commit-agent-lint-gate.sh`, which triggers a real
 block and fails if the hook's message drifts from any quote of it in the skills
-or agents, if a ship skill's core stops pointing at its reference, if a
-ship-autonomous step that commits through commit-agent is missing from its
-reference, or if either agent regains `Edit`.
+or agents, if any of them stops forbidding the opt-out it names, if a fix loop
+re-stages with `git add -A`, if a ship skill's core stops pointing at its
+reference, if a ship-autonomous step that commits through commit-agent is
+missing from its reference, or if either agent regains `Edit`.
 
 ## v4.20.3 — 2026-09-11 — a completed plan's PR closes its ticket again
 

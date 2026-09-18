@@ -19,8 +19,9 @@ blocked this commit. Fix the reported failures and retry?", and two options:
 Fix only failures in files listed by `git diff --staged --name-only`, with the
 smallest edit that clears each one, changing nothing else. A reported failure in
 a file this commit does not touch is not this commit's to fix: report the block
-output verbatim and **STOP** without editing. Otherwise run `git add -A` and
-re-run the Step 4 commit with the same message.
+output verbatim and **STOP** without editing. Otherwise stage only the files the
+fix edited, with `git add -- <file>...` (not `-A`, which would sweep in anything
+saved since Step 2), and re-run the Step 4 commit with the same message.
 
 Ask once and fix at most twice; if the gate blocks a third time, report its
 latest output verbatim and **STOP**. Once the commit lands, list the files the

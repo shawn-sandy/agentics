@@ -75,7 +75,7 @@ Output the commit hash and message on success.
   - **Fix and retry**: follow the fix loop below.
   - **Stop**: output "Nothing committed. Changes are still staged." and **STOP**.
 
-Fix loop: fix only failures in files listed by `git diff --staged --name-only`, with the smallest edit that clears each one, changing nothing else. A reported failure in a file this commit does not touch is not this commit's to fix: report the block output verbatim and **STOP** without editing. Otherwise run `git add -A` and re-run the commit above with the same message. Ask once and fix at most twice; if the gate blocks a third time, report its latest output verbatim and **STOP**. Once the commit lands, list the files the fix edited.
+Fix loop: fix only failures in files listed by `git diff --staged --name-only`, with the smallest edit that clears each one, changing nothing else. A reported failure in a file this commit does not touch is not this commit's to fix: report the block output verbatim and **STOP** without editing. Otherwise stage only the files the fix edited, with `git add -- <file>...` (not `-A`, which would sweep in anything saved since Step 2), and re-run the commit above with the same message. Ask once and fix at most twice; if the gate blocks a third time, report its latest output verbatim and **STOP**. Once the commit lands, list the files the fix edited.
 
 After a successful commit, output one line:
 
