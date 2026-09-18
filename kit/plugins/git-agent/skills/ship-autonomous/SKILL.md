@@ -18,6 +18,8 @@ Hard stops.
 - **Any console or server error blocks the pipeline.**
 - Pre-commit hook failure: propagate it verbatim, **STOP**. Do not retry. Do not
   use `--no-verify`.
+- A lint-gate block is not a pre-commit hook failure: follow
+  `references/lint-gate-block.md` for every commit-agent commit.
 - Step 0 `clear` is a **hard STOP**: you cannot clear your own context.
 - After subscribing, **end your turn — no polling, sleeping, or `--watch`**;
   never re-poll.

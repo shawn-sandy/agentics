@@ -99,6 +99,8 @@ Report the commit hash and message on success.
 
 **If a pre-commit hook fails:** report the hook's output verbatim and **STOP**. Do not retry. Do not use `--no-verify`. Do not modify the staged files. Let the parent session surface the failure to the user.
 
+**If the lint gate blocks the commit** (the output starts with ``Blocked: `<check>` failed, so this commit was not created.``), git-agent's own lint hook stopped it, not a git hook. Nothing was committed and the changes are still staged. Report "Lint gate blocked the commit. Nothing committed; changes are still staged." followed by the block output verbatim, and **STOP**. Do not fix the failures: there is no user to ask, so fixing is the parent session's call. Never switch the gate off to get past it: do not create `.claude/no-lint-gate` or edit `.claude/lint-gate.json`, even though the block message offers the first.
+
 ### Step 4.5: Adversarial Self-Review Before Push
 
 Always runs. There is no user to prompt in a background ship, so there is no opt-out. This agent cannot spawn subagents (`tools` has no Agent), so the review is an inline re-read of the full diff — single pass, one re-read, never a second.
