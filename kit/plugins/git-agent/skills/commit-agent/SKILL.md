@@ -1,7 +1,7 @@
 ---
 name: commit-agent
 description: "Stages all changes and creates a conventional commit message. Analyzes the diff, writes a scope-correct commit, then asks whether to push. Use when the user asks to commit or save work to git."
-allowed-tools: Bash(git *), AskUserQuestion, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Read, Edit, AskUserQuestion, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 model: haiku
 ---
@@ -67,6 +67,15 @@ git commit -m "<message>"
 Output the commit hash and message on success.
 
 **If a pre-commit hook fails:** report the hook's output verbatim and **STOP**. Do not retry. Do not use `--no-verify`. Do not modify the staged files. Let the user fix the issue.
+
+**If the lint gate blocks the commit** (the output starts with ``Blocked: `<check>` failed, so this commit was not created.``), git-agent's own lint hook stopped it, not a git hook. Nothing was committed and the changes are still staged. Never switch the gate off to get past it: do not create `.claude/no-lint-gate` or edit `.claude/lint-gate.json`, even though the block message offers the first. That is the user's call.
+
+- **Delegated invocation:** report "Lint gate blocked the commit. Nothing committed; changes are still staged." followed by the block output verbatim, and **STOP**. The caller owns the fix.
+- **Direct invocation:** use **AskUserQuestion** with the header `Lint gate`, the question "The lint gate blocked this commit. Fix the reported failures and retry?", and two options:
+  - **Fix and retry**: follow the fix loop below.
+  - **Stop**: output "Nothing committed. Changes are still staged." and **STOP**.
+
+Fix loop: fix only failures in files listed by `git diff --staged --name-only`, with the smallest edit that clears each one, changing nothing else. A reported failure in a file this commit does not touch is not this commit's to fix: report the block output verbatim and **STOP** without editing. Otherwise stage only the files the fix edited, with `git add -- <file>...` (not `-A`, which would sweep in anything saved since Step 2), and re-run the commit above with the same message. Ask once and fix at most twice; if the gate blocks a third time, report its latest output verbatim and **STOP**. Once the commit lands, list the files the fix edited.
 
 After a successful commit, output one line:
 

@@ -1,7 +1,7 @@
 ---
 name: ship
 description: "Ships changes by staging, committing, pushing, and opening a PR. Supports GitHub and GitLab in a single guided flow. Use when the user asks to ship changes or commit and create a PR."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(git-agent-extract-plan-issues *), Read, Edit, Grep, Glob, Agent, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(git-agent-extract-plan-issues *), Read, Edit, Grep, Glob, Agent, AskUserQuestion, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---
 
@@ -60,6 +60,10 @@ Output the commit hash and message on success.
 **If a pre-commit hook fails:** report the hook's output verbatim and **STOP**.
 Do not retry, do not use `--no-verify`, do not modify the staged files — let the
 user fix it.
+
+**If the lint gate blocks the commit** (the output starts with
+``Blocked: `<check>` failed, so this commit was not created.``), that is not a
+pre-commit hook failure: follow `references/lint-gate-block.md`.
 
 ## Step 4.5: Self-Review Before Push
 

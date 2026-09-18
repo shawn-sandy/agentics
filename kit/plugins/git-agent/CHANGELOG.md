@@ -1,5 +1,44 @@
 # Changelog — git-agent
 
+## v4.21.0 — 2026-09-18 — commit and ship paths handle lint-gate blocks
+
+### Changed
+
+- **commit-agent recognises a lint-gate block and offers to fix it.** The
+  `PreToolUse` lint gate's block message says to fix and retry, while Step 4
+  said to stop on any pre-commit hook failure without touching staged files,
+  so what the skill did on a block depended on which instruction it followed.
+  Step 4 now identifies the block by its first line. When the skill is invoked
+  directly, it asks whether to fix and retry; when another skill invokes it,
+  it reports the block and stops. The fix loop edits only files the commit
+  already touches, re-stages only the files it edited (`git add -- <file>`, not
+  `-A`, which would sweep in anything saved since Step 2), runs at most two
+  rounds, and lists the files it edited. The skill never creates
+  `.claude/no-lint-gate` or edits `.claude/lint-gate.json` to get past the
+  gate. `allowed-tools` gains `Read` and `Edit`.
+- **agent-commit and agent-ship take the stop-and-report branch.** They have
+  no user to ask and are denied `Edit`, so on a block each reports that nothing
+  was committed and the changes are still staged, quotes the block output, and
+  stops. The parent session owns the fix. Neither agent switches the gate off.
+- **ship and ship-autonomous ask, then fix, like commit-agent run directly.**
+  ship's Step 4 and every commit ship-autonomous delegates to commit-agent
+  (Step 3, a 6c review fix, 6d) follow a new `references/lint-gate-block.md` in
+  each skill: ask, fix only files the commit touches, at most two rounds, never
+  switch the gate off. ship-autonomous uses `Edit`, never a `--fix` script, since
+  its guardrails forbid one before a commit. ship gains `AskUserQuestion`.
+  commit-agent's delegated report now opens with "Lint gate blocked the commit"
+  so its caller can tell the block from a pre-commit hook failure.
+- **The git/social skill-core word ceiling is 680, up from 650.** ship-autonomous
+  sat at 649 and needed a one-line guardrail pointing at its lint-gate
+  reference; the handling itself lives in the reference.
+
+Pinned by `tests/plugins/test-commit-agent-lint-gate.sh`, which triggers a real
+block and fails if the hook's message drifts from any quote of it in the skills
+or agents, if any of them stops forbidding the opt-out it names, if a fix loop
+re-stages with `git add -A`, if a ship skill's core stops pointing at its
+reference, if a ship-autonomous step that commits through commit-agent is
+missing from its reference, or if either agent regains `Edit`.
+
 ## v4.20.3 — 2026-09-11 — a completed plan's PR closes its ticket again
 
 ### Fixed

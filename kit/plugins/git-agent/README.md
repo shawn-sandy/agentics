@@ -117,7 +117,7 @@ The skill will:
 1. Check for a clean tree or detached HEAD (stops if either)
 2. Run `git add -A`
 3. Analyze `git diff --staged` and write a conventional commit message
-4. Run `git commit -m "<message>"` and output the hash
+4. Run `git commit -m "<message>"` and output the hash. If [the lint gate](#the-commit-lint-gate) blocks it, ask whether to fix the reported failures and retry (at most two fix rounds, only in files the commit touches); never switch the gate off
 5. Print an undo note: `git reset HEAD~1`
 6. Ask via `AskUserQuestion` whether to push, and push only if you approve
 
@@ -143,7 +143,7 @@ The skill will:
 The skill will:
 1. Pre-flight: run **all five** guards — clean tree, detached HEAD, default branch, CLI auth, worktree env parity — then print **one** PASS/BLOCKED table with a remediation command per blocker. It does not stop at the first failure, so three blockers cost one invocation instead of three. Any BLOCKED row halts before any mutation
 2. Run `git add -A` and analyze `git diff --staged`
-3. Write a conventional commit message and run `git commit`
+3. Write a conventional commit message and run `git commit`. If [the lint gate](#the-commit-lint-gate) blocks it, ask whether to fix the reported failures and retry, as `commit-agent` does; never switch the gate off
 4. Push the branch (with `-u` if no upstream)
 5. If a PR already exists, report the URL and stop
 6. Detect base branch, gather content, and run `gh pr create`
@@ -187,7 +187,7 @@ The skill will:
 3. Pre-flight: run **every** guard — clean tree, uncommitted plan files, detached HEAD, `gh` auth, worktree env parity, browser availability — and report them in one table (see [The pre-flight table](#the-pre-flight-table)). Headless, each gate takes its named default; the uncommitted-plan-files gate defaults to `abort`
 4. Branch: if on the default branch, auto-generate and create a feature branch via `branch-agent`; otherwise continue on current branch
 5. Verify (Step 2.5): run the project's `test*` script and **stop on failure** rather than committing a red tree; when the change is observable in a browser, preview it via `.claude/launch.json`, check console/server logs, and screenshot both light and dark themes. Skipped entirely when there's nothing a dev server could prove. When the browser MCP is unavailable the step is **not** silently skipped — it reports `UNVERIFIED — no browser`, which `pr-agent` reproduces verbatim in the PR body's Test Plan so a reviewer sees that the check did not happen
-6. Commit via `commit-agent` (stages, conventional message, commits)
+6. Commit via `commit-agent` (stages, conventional message, commits). If [the lint gate](#the-commit-lint-gate) blocks this commit or a later fix commit, ask whether to fix the reported failures and retry; never switch the gate off
 7. Open PR via `pr-agent` (pushes, checks for existing PR, creates one)
 8. Subscribe to the PR's activity events via `subscribe_pr_activity`, post an initial status update, and **end the turn** — CI failures and review comments then arrive as events that wake the session
 9. On each event: refresh a live TodoWrite status checklist and post a concise update, then
@@ -419,6 +419,10 @@ Mirrors `ship`: guards → stage → commit → push → check for existing PR/M
 Dispatched via `/git-agent:merge-bg [pr]` or directly by an orchestrator. The optional argument names the PR to act on and wins over the checked-out branch; only without it is the PR resolved from the current branch.
 
 Mirrors `merge` Steps 0.5–3: guards → find the PR → readiness gate (`--required` checks, `mergeable`, `mergeStateStatus`, `reviewDecision`) → re-check → `gh pr merge --squash --match-head-commit`. The skill's `AskUserQuestion` approval has no background equivalent, so the dispatch itself authorizes exactly one squash merge of a fully green PR; every other branch is a stop-and-report. Never passes `--delete-branch`.
+
+### Lint gate blocks
+
+Neither `agent-commit` nor `agent-ship` fixes a [lint gate](#the-commit-lint-gate) block. With no user to ask and no `Edit` tool, each reports the block and stops with the changes still staged, and never switches the gate off. The parent session owns the fix.
 
 ### Caveat: working-tree snapshot
 

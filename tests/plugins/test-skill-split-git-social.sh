@@ -50,7 +50,10 @@ cd "$ROOT"
 # The ceiling exists to keep these bodies thin with detail in references/, not
 # to freeze them: the guard ships its own references/context-guard.md and keeps
 # only a pointer in the core.
-CEILING=650
+# 680, raised from 650 when ship-autonomous gained its lint-gate guardrail —
+# the same shape: a one-line pointer in the core, the handling in
+# references/lint-gate-block.md.
+CEILING=680
 
 FAILURES=0
 pass() { echo "  PASS${1:+ — $1}"; }
