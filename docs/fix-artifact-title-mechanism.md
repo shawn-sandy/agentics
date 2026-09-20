@@ -9,11 +9,11 @@
 
 ## What shipped
 
-- Replace the frontmatter claim in `titles.md` — with the truth: an HTML
-- Switch `session-artifact` to publish an HTML render. — Rewrite the Overview
-- Correct the republish note — to require `url` on every republish, not only
-- **Add `tests/plugins/test-artifact-titles.mjs` and wire it into
-- **Bump `artifact-tools` to 1.2.1 and add the CHANGELOG entry.**
+- Replace the frontmatter claim in `titles.md` — with the truth: an HTML `<title>` is the only mechanism; a Markdown source cannot set its own title and falls back to its filename; a `title:` key is a value to carry into a `<title>`. -
+- Switch `session-artifact` to publish an HTML render. — Rewrite the Overview premise ("publishes the Markdown directly ... at the lowest token cost"), add a render step producing one self-contained HTML file with `<title>` taken from the frontmatter `title:` and the frontmatter block dropped, and point the publish step at the HTML path. -
+- Correct the republish note — to require `url` on every republish, not only across sessions. -
+- Add `tests/plugins/test-artifact-titles.mjs` and wire it into `publish-dist.yml`. —
+- Bump `artifact-tools` to 1.2.1 and add the CHANGELOG entry. —
 
 ## Files changed
 

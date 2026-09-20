@@ -9,13 +9,13 @@
 
 ## What shipped
 
-- git-agent 4.19.2 — canonical worked PR body in
-- social-media-tools 2.23.3 — one worked post per platform in
-- code-testing-agent 3.5.2 — filled `parseDuration` suggestion with a
-- content-tools 1.1.1 — worked finished-MDX-post example in
-- plan-agent 9.4.4 — markdown-to-html Step 5b parser gate (+
-- memory-tools 4.1.1 — `bin/memory-verify-write` +
-- team-defaults 0.2.2 — sync-rules post-copy `diff -q` verification and
+- git-agent 4.19.2 — canonical worked PR body in `ship/references/pr-body.md` (pr-agent points; background agents embed); filled bug-issue example in `create-issue/references/bug-report.md`; create-issue fallback carries the approved draft and gains the "no issue exists until you submit it" outcome.
+- social-media-tools 2.23.3 — one worked post per platform in `references/platforms.md` (all measured within character limits); save-artifact verifies the published copy exists and the gallery index checksum changed before reporting success.
+- code-testing-agent 3.5.2 — filled `parseDuration` suggestion with a runnable Vitest snippet in `references/output-guide.md`, referenced from Step 5.
+- content-tools 1.1.1 — worked finished-MDX-post example in `references/post-assembly.md` Phase 8.
+- plan-agent 9.4.4 — markdown-to-html Step 5b parser gate (+ `Bash(python3 *)` grant); build-fleet verifies subagent-reported PRs via `gh pr view`; prototype asserts console + DOM state instead of a screenshot (read-only browser tools added); plan-status executes the spec's objective `Run:` command and drops the invalid `draft` status.
+- memory-tools 4.1.1 — `bin/memory-verify-write` + `scripts/verify_write.py` replace the unrunnable inline gate (Bash-tool expansion refusal); ledger entries deleted; guard test mutation-tests the shipped wrapper both directions; allowed-tools narrowed to the wrapper.
+- team-defaults 0.2.2 — sync-rules post-copy `diff -q` verification and the resolve-plugin-root-first instruction.
 - Changelogs + marketplace bumps — for all seven plugins.
 
 ## Files changed

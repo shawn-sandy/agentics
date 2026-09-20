@@ -9,11 +9,11 @@
 
 ## What shipped
 
-- **Add Phase 1d — Security Scrub to `share-code`** (the one code-sharing skill with no scrub, and the generic "share)
-- Fix the `sk-` pattern and extend the table — in
-- Replace `share-project` Phase 4 — with the standard `GATE RESULT` block. (branching on `SCRUB RESULT` alone ignores the user's Cancel at the)
-- Run the `settings-backup` secret scan on every backup — over every (the scan was gated on "no prior commits". *Verify:* Step 4 heading)
-- Bump versions and changelogs — : social-media-tools 2.23.0 → 2.23.2
+- Add Phase 1d — Security Scrub to `share-code` — (`kit/plugins/social-media-tools/skills/share-code/SKILL.md`), mirroring `share-selection` Phase 2, and add `Skill` to `allowed-tools`.
+- Fix the `sk-` pattern and extend the table — in `security-scrub/references/scrub-rules.md` and the Step 2 mirror list in `security-scrub/SKILL.md`: `sk-[A-Za-z0-9-]{20,}` plus new HIGH rows (`gho_`, `github_pat_`, `glpat-`, `sk_live_`, `AIza`, Slack webhooks) and a LOW email-PII row.
+- Replace `share-project` Phase 4 — with the standard `GATE RESULT` block.
+- Run the `settings-backup` secret scan on every backup — over every Step 3 source, extend its prefix list, and log matched pattern + file to `.sync-log` in routine mode (`kit/plugins/settings-sync/skills/settings-backup/SKILL.md`).
+- Bump versions and changelogs — : social-media-tools 2.23.0 → 2.23.2 (2.23.1 is on a separate in-flight branch), settings-sync 1.1.1 → 1.1.2.
 
 ## Files changed
 

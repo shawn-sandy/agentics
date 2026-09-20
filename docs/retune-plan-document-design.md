@@ -9,15 +9,15 @@
 
 ## What shipped
 
-- Fix the palette values against the contrast gate *before* editing any
-- Retune the three token blocks in `scripts/lib/plan-shell.mjs` — the
-- Demote `--mono` to code and data: sans for the title and the section
-- Retune the components the palette change exposes — the objective slab to
-- Fix the three defects the screenshots surfaced: `word-break: break-all`
-- Re-copy the edited shell to
-- Apply the same token values to
-- Re-render every committed plan with `scripts/rerender-plans.mjs` and
-- Bump plan-agent to 9.1.0 in `.claude-plugin/marketplace.json` and write
+- Fix the palette values against the contrast gate *before* editing any CSS, by scripting the same WCAG maths `test-plan-redesign.mjs` uses over the proposed light and dark token sets.
+- Retune the three token blocks in `scripts/lib/plan-shell.mjs` — the light `:root`, the `[data-theme="dark"]` block, and the `prefers-color-scheme` block — keeping the two dark blocks in sync.
+- Demote `--mono` to code and data: sans for the title and the section headings, `--prose` redefined to `var(--ui)`, and `code.md` reduced to a tint with no border.
+- Retune the components the palette change exposes — the objective slab to a lead statement, the Implement row off moss and onto a neutral surface, header state before controls via CSS `order`, step actions to emphasised body weight.
+- Fix the three defects the screenshots surfaced: `word-break: break-all` splitting words mid-token in four prompt rows, nested file-tree entries inheriting `font-weight: 600` from their directory row, and six hardcoded copies of the mono stack that could resolve to a different face than `var(--mono)`.
+- Re-copy the edited shell to `kit/plugins/plan-agent/scripts/lib/plan-shell.mjs`.
+- Apply the same token values to `kit/plugins/plan-agent/templates/plans-gallery.html` and `prototypes-gallery.html`, and correct the stale contrast comment on the current-tab chip.
+- Re-render every committed plan with `scripts/rerender-plans.mjs` and rebuild the gallery index.
+- Bump plan-agent to 9.1.0 in `.claude-plugin/marketplace.json` and write the CHANGELOG entry.
 
 ## Files changed
 

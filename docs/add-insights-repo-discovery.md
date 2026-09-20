@@ -9,9 +9,9 @@
 
 ## What shipped
 
-- Rewrite Step 3's resolution paragraph in `SKILL.md` — as a three-step sequence: (`~/.claude/projects/` exists on every install and is the same usage data the)
-- Add the plugin-layer fallback — to Step 3's workflow-shaped bullet: no personal (generic plugin users have no plugin repo; without the fallback those items stall.)
-- Bump memory-tools to 4.3.0 — in `.claude-plugin/marketplace.json`, add the (MINOR behavior addition per the marketplace versioning rule.)
+- Rewrite Step 3's resolution paragraph in `SKILL.md` — as a three-step sequence: inventory from `~/.claude/projects/` slugs (worktree slugs filtered, non-alphanumeric characters encoded as `-` so it holds on Windows), name-suffix matching verified against a real git checkout, then ask-for-directory fallback scanned one level deep.
+- Add the plugin-layer fallback — to Step 3's workflow-shaped bullet: no personal plugin repo → route to `~/.claude/` as the next-best fit.
+- Bump memory-tools to 4.3.0 — in `.claude-plugin/marketplace.json`, add the CHANGELOG entry, and sync the plugin README (version line + step list).
 
 ## Files changed
 

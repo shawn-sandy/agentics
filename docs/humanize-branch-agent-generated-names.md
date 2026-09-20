@@ -9,9 +9,9 @@
 
 ## What shipped
 
-- Rewrite Step 2a description inference — replace "extract 2–5 keywords"
-- Raise length budgets — pre-suffix name 49 → 60 chars; final
-- Sync docs and version — update README branch-agent bullet, add
+- Rewrite Step 2a description inference — replace "extract 2–5 keywords" with a verb-led 3–7 word phrase rule (imperative verb + what changed), add explicit readability rules (whole dictionary words only, no abbreviations, drop trailing words to fit rather than shortening words), and a good/bad examples table.
+- Raise length budgets — pre-suffix name 49 → 60 chars; final date-suffixed name 60 → 72 chars (Step 2b); Case B slug 30 → 60 chars with word-boundary dropping instead of hard truncation.
+- Sync docs and version — update README branch-agent bullet, add CHANGELOG v3.11.1 entry, bump `marketplace.json` to 3.11.1 (PATCH: refines an existing rule, no component added/removed).
 
 ## Files changed
 

@@ -9,10 +9,10 @@
 
 ## What shipped
 
-- Add sweep mode to `kit/plugins/plan-agent/skills/finalize-plan/SKILL.md` — a `--all` routing clause in Step 1 plus a `## Sweep mode (--all)` section (S1 discover via `grep -l` for a `plan-status` meta tag valued `todo`/`in-progress`, S2 cheap non-interactive scoring reusing Steps 2/3a token checks, S3 batch confirm via one two-question `AskUserQuestion` with `multiSelect`, S4 finalize selected plans via Steps 3b/3c/5, S5 single `SendUserFile` delivery). Update `argument-hint` and `description` frontmatter. — *
-- Document the flag in `kit/plugins/plan-agent/README.md` — feature table row, usage example, sweep-mode paragraph in both finalize-plan sections. — *
-- Add a `2.13.0` CHANGELOG entry and bump `plan-agent` to `2.13.0` in `.claude-plugin/marketplace.json` (new behavior = minor), extending the marketplace description with the sweep clause. — *
-- Add `tests/plugins/test-finalize-all-flag.sh` pinning the flag to the SKILL.md contract, README docs, and marketplace version. — *
+- Add sweep mode to `kit/plugins/plan-agent/skills/finalize-plan/SKILL.md` — a `--all` routing clause in Step 1 plus a `## Sweep mode (--all)` section (S1 discover via `grep -l` for a `plan-status` meta tag valued `todo`/`in-progress`, S2 cheap non-interactive scoring reusing Steps 2/3a token checks, S3 batch confirm via one two-question `AskUserQuestion` with `multiSelect`, S4 finalize selected plans via Steps 3b/3c/5, S5 single `SendUserFile` delivery). Update `argument-hint` and `description` frontmatter. —
+- Document the flag in `kit/plugins/plan-agent/README.md` — feature table row, usage example, sweep-mode paragraph in both finalize-plan sections. —
+- Add a `2.13.0` CHANGELOG entry and bump `plan-agent` to `2.13.0` in `.claude-plugin/marketplace.json` (new behavior = minor), extending the marketplace description with the sweep clause. —
+- Add `tests/plugins/test-finalize-all-flag.sh` pinning the flag to the SKILL.md contract, README docs, and marketplace version. —
 
 ## Files changed
 

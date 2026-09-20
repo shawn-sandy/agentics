@@ -9,11 +9,11 @@
 
 ## What shipped
 
-- Copy agents and rules from `~/.claude/` into `kit/plugins/team-defaults/`, excluding project-specific content (`ticket-creator.md` is astro-basics-only) and vendored skills. — *
-- Rewrite the hook reference in the bundled `plan-mode.md` (the `validate-plan-filename` hook ships with `plan-agent`, not at a home path). — *
-- Write `.claude-plugin/plugin.json` (name only, no version), `skills/sync-rules/SKILL.md` with `allowed-tools`, `README.md`, `CHANGELOG.md`. — *
-- Register `team-defaults` v0.1.0 in `.claude-plugin/marketplace.json` (category `productivity`). — *
-- Update `tests/publish/smoke-clean-dist.sh` plugin list and the CLAUDE.md plugin table. — *
+- Copy agents and rules from `~/.claude/` into `kit/plugins/team-defaults/`, excluding project-specific content (`ticket-creator.md` is astro-basics-only) and vendored skills. —
+- Rewrite the hook reference in the bundled `plan-mode.md` (the `validate-plan-filename` hook ships with `plan-agent`, not at a home path). —
+- Write `.claude-plugin/plugin.json` (name only, no version), `skills/sync-rules/SKILL.md` with `allowed-tools`, `README.md`, `CHANGELOG.md`. —
+- Register `team-defaults` v0.1.0 in `.claude-plugin/marketplace.json` (category `productivity`). —
+- Update `tests/publish/smoke-clean-dist.sh` plugin list and the CLAUDE.md plugin table. —
 
 ## Files changed
 

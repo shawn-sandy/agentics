@@ -9,11 +9,11 @@
 
 ## What shipped
 
-- Move `~/.claude/skills/implementing-insights/` to
-- Rewrite `SKILL.md` frontmatter and body to repo conventions: three-part description
-- Bump `memory-tools` to `4.2.0` in `.claude-plugin/marketplace.json` only (MINOR — new
-- Add a `v4.2.0` entry to `kit/plugins/memory-tools/CHANGELOG.md` and document the skill
-- Run the full suite and open one PR with all changes plus this plan file — *
+- Move `~/.claude/skills/implementing-insights/` to `kit/plugins/memory-tools/skills/implementing-insights/` —
+- Rewrite `SKILL.md` frontmatter and body to repo conventions: three-part description ≤200 chars, `allowed-tools` including `ToolSearch` + `ExitPlanMode`, the verbatim plan-mode guard as the first step, a verification-gate line in the reporting step, and personal absolute paths generalized —
+- Bump `memory-tools` to `4.2.0` in `.claude-plugin/marketplace.json` only (MINOR — new skill), extend its description and tags, mirror description/keywords in the plugin's `plugin.json` without adding a `version` there —
+- Add a `v4.2.0` entry to `kit/plugins/memory-tools/CHANGELOG.md` and document the skill in the plugin README (skills table, section, structure tree, current version) —
+- Run the full suite and open one PR with all changes plus this plan file —
 
 ## Files changed
 

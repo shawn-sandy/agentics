@@ -9,12 +9,12 @@
 
 ## What shipped
 
-- **Switch to delimiter-based frontmatter reading in plan-documenter agent**
-- **Add explicit frontmatter-boundary and casing rules to plan-documenter agent**
-- **Add edge cases to plan-documenter agent**
-- **Add frontmatter-boundary clarification to documenting-plans skill**
-- **Clean up `--overwrite` flag mismatch in plan-documenter agent**
-- **Manual verification**
+- Switch to delimiter-based frontmatter reading in plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Step 2 - Replace "Read the first 10 lines" with "Read until the closing `---` delimiter" -
+- Add explicit frontmatter-boundary and casing rules to plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Step 2 - Add: parse between `---` delimiters only; require lowercase `status: completed`; skip files without frontmatter delimiters -
+- Add edge cases to plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Edge Cases section - Add: no YAML frontmatter (skip), non-standard casing (skip), status in body not frontmatter (ignore) -
+- Add frontmatter-boundary clarification to documenting-plans skill — File: `kit/plugins/plan-interview/skills/documenting-plans/SKILL.md`, Step 2 - Add: "Extract the YAML block between `---` delimiters. If no frontmatter delimiters, treat status as absent." -
+- Clean up `--overwrite` flag mismatch in plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Step 5 - Remove `--overwrite` from the skill invocation args since the skill has no such argument -
+- Manual verification — Run plan-documenter and confirm the sweep summary correctly counts completed vs non-completed plans - Verify plans with `status: draft`, `todo`, `in-progress`, and no frontmatter are all skipped - Run documenting-plans on a non-completed plan (e.g., `fix-code-review-agent-skill-audit.md` with `status: draft`) and confirm it stops
 
 ## Files changed
 

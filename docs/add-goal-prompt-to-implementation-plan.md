@@ -9,9 +9,9 @@
 
 ## What shipped
 
-- Add the goal prompt to `reference/SKELETON.html`. — Insert `<meta name="plan-goal" content="{goal-prompt}">` in `<head>`, a collapsible `.plan-goal` `<details>` block (purple `--purple*` tokens) between the implement row and the workflow block, and a `copyGoal()` clipboard helper mirroring `copyWorkflow()`.
-- Update the `implementation-plan` SKILL.md contract. — Step 2 computes `{goal-prompt}` (always — no flag, no heuristic); Step 3 always emits the `plan-goal` meta tag; HTML Output Requirements list `plan-goal` among the always-present meta tags and document the `.plan-goal` element; re-anchor the workflow bullet below it.
-- Document and version the change. — Add a "Goal prompt" bullet to the plugin README, bump `plan-agent` `2.5.1 → 2.6.0` in `marketplace.json` with a description mention, and add a `2.6.0` CHANGELOG entry.
+- Add the goal prompt to `reference/SKELETON.html`. — Insert `<meta name="plan-goal" content="{goal-prompt}">` in `<head>`, a collapsible `.plan-goal` `<details>` block (purple `--purple*` tokens) between the implement row and the workflow block, and a `copyGoal()` clipboard helper mirroring `copyWorkflow()`. -
+- Update the `implementation-plan` SKILL.md contract. — Step 2 computes `{goal-prompt}` (always — no flag, no heuristic); Step 3 always emits the `plan-goal` meta tag; HTML Output Requirements list `plan-goal` among the always-present meta tags and document the `.plan-goal` element; re-anchor the workflow bullet below it. -
+- Document and version the change. — Add a "Goal prompt" bullet to the plugin README, bump `plan-agent` `2.5.1 → 2.6.0` in `marketplace.json` with a description mention, and add a `2.6.0` CHANGELOG entry. -
 
 ## Files changed
 

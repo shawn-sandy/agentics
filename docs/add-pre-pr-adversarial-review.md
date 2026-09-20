@@ -9,11 +9,11 @@
 
 ## What shipped
 
-- `skills/pr-agent/SKILL.md` — new Step 4.7 spawning the review subagent
-- `skills/ship/SKILL.md` + `references/self-review.md` — Step 4.5
-- `skills/ship-autonomous/SKILL.md` — opens its PR by invoking
-- `agents/agent-pr.md`, `agents/agent-ship.md` — inline report-only
-- Housekeeping — marketplace.json 4.19.2 → 4.19.3, CHANGELOG v4.19.3
+- `skills/pr-agent/SKILL.md` — new Step 4.7 spawning the review subagent (`code-review:agent-code-reviewer`, else `general-purpose`); confirmed findings become a `fix:` commit + re-push (post-push, so never amend); unconfirmed ones go in the body's `## Review Notes`; `Agent` added to `allowed-tools`.
+- `skills/ship/SKILL.md` + `references/self-review.md` — Step 4.5 upgraded from the four-check inline list to the subagent dispatch and six-point checklist; amend-before-push procedure kept; `--no-review` opt-out kept.
+- `skills/ship-autonomous/SKILL.md` — opens its PR by invoking `pr-agent`, so it inherits Step 4.7; Step 4 names the review instead of duplicating it (the core sits at the split test's 600-word ceiling, and one review per PR is the point).
+- `agents/agent-pr.md`, `agents/agent-ship.md` — inline report-only variant (no Agent tool, `disallowedTools` denies edits): cold re-read with the same checklist, findings in `## Review Notes` and the final report; a proven secret stops the flow and is never named in a PR body.
+- Housekeeping — marketplace.json 4.19.2 → 4.19.3, CHANGELOG v4.19.3 entry, this plan file.
 
 ## Files changed
 

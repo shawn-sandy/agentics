@@ -9,12 +9,12 @@
 
 ## What shipped
 
-- Authoring rule — (`.claude/rules/plugin-patterns.md`): new "The
-- Rubric — (`skill-reviewer/.../references/audit-steps.md` Dimension 3 +
-- Retention test — (`tests/plugins/test-verification-gate-rule.sh`): holds
-- Test runner — (`tests/run-all.sh` + `check-plugin-versions.yml` + (49 of 77 test files ran in no workflow. *Verify:* `bash)
-- Fix the stale render baseline — (`tests/plugins/test-plan-phases.mjs`):
-- Dist builder — (`scripts/build-dist.mjs`): a manifest-registered plugin
+- Authoring rule — (`.claude/rules/plugin-patterns.md`): new "The verification gate" section — mutating skills define done as artifact + check, structured output ships one worked example; names memory-tools, completion-gates.md, and settings-restore Step 7 as canonical.
+- Rubric — (`skill-reviewer/.../references/audit-steps.md` Dimension 3 + `best-practices.md`): Warning-level Verification gate check; absence in a mutating/measuring skill caps Dimension 3 at 1 pt; best-practices gains the gate-per-mutation-type table.
+- Retention test — (`tests/plugins/test-verification-gate-rule.sh`): holds the rule text, the rubric row, and the best-practices section together, with a positive canary — same pattern as `test-exitplanmode-guard.sh`.
+- Test runner — (`tests/run-all.sh` + `check-plugin-versions.yml` + `.claude/rules/testing.md`): globs every `test-*.{sh,mjs}` / `*.test.mjs` under `tests/`, four documented skips (claude-CLI harness ×2, deployed-URL smoke, needs-built-dist); CI's 20 hand-enumerated steps replaced by the runner plus one explicit claude-CLI-gated step.
+- Fix the stale render baseline — (`tests/plugins/test-plan-phases.mjs`): re-derive `BASELINE_SHA256` for the deliberate 9.1.0 design retune (#537), which changed the shared CSS without updating the 8.5.1-era baseline — the check had been failing on main since.
+- Dist builder — (`scripts/build-dist.mjs`): a manifest-registered plugin whose source directory is missing now sets `process.exitCode = 1` instead of printing an ERROR row and exiting 0; header documents `--publish` as implemented.
 - Bump skill-reviewer — 2.5.1 → 2.5.2 with a changelog entry.
 
 ## Files changed

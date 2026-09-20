@@ -9,9 +9,9 @@
 
 ## What shipped
 
-- Create `kit/plugins/social-media-tools/skills/export-session/` (SKILL.md + `scripts/export_session.py`). — *
-- The script parses the JSONL, keeps user/assistant turns, skips sidechains, tool results, and harness-injected messages (`<system-reminder>`, `<local-command-*>`, `<command-*>`), and writes `<date>-<slug>.md` with YAML frontmatter. — *
-- Bump `social-media-tools` to `2.14.0` in `.claude-plugin/marketplace.json` (new skill = minor), add a CHANGELOG entry, and list the skill in the plugin README and root CLAUDE.md table. — *
+- Create `kit/plugins/social-media-tools/skills/export-session/` (SKILL.md + `scripts/export_session.py`). —
+- The script parses the JSONL, keeps user/assistant turns, skips sidechains, tool results, and harness-injected messages (`<system-reminder>`, `<local-command-*>`, `<command-*>`), and writes `<date>-<slug>.md` with YAML frontmatter. —
+- Bump `social-media-tools` to `2.14.0` in `.claude-plugin/marketplace.json` (new skill = minor), add a CHANGELOG entry, and list the skill in the plugin README and root CLAUDE.md table. —
 
 ## Files changed
 

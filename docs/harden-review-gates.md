@@ -9,12 +9,12 @@
 
 ## What shipped
 
-- Add checks (g)–(k) to the adversarial review checklist — in both live (the gate exists but is aimed away from the observed leak.)
-- Mirror the same five classes into the code-review checklist — at (`agent-code-reviewer` is the subagent Step 4.7 dispatches to; the)
-- Add a dispatch check to `git-agent/skills/merge/SKILL.md` Step 2 — when (removes eight-plus sessions of repeated re-diagnosis.)
-- Add a stale-checkout guard to the `plan-agent:build` pre-flight — , in (implementation is where a stale checkout turns into a false premise.)
-- Sync `team-defaults/skills/sync-rules/rules/review-bot-loops.md` — forward (the shipped copy is a stale subset; the missing Triage section is)
-- Bump `git-agent`, `code-review`, `plan-agent`, and `team-defaults` — in (a CI guard fails the PR if a touched plugin's version does not exceed)
+- Add checks (g)–(k) to the adversarial review checklist — in both live copies — `git-agent/skills/pr-agent/SKILL.md` Step 4.7 and `git-agent/skills/ship/references/self-review.md`.
+- Mirror the same five classes into the code-review checklist — at `code-review/skills/code-review-agent/references/review-checklist.md`, section 2.
+- Add a dispatch check to `git-agent/skills/merge/SKILL.md` Step 2 — when the workflow list is empty or every job produced no log, report the block and never call it green.
+- Add a stale-checkout guard to the `plan-agent:build` pre-flight — , in `skills/build/references/resolve-plan.md` beside the existing dirty-tree guard.
+- Sync `team-defaults/skills/sync-rules/rules/review-bot-loops.md` — forward to the maintainer's current version.
+- Bump `git-agent`, `code-review`, `plan-agent`, and `team-defaults` — in `.claude-plugin/marketplace.json` and add a CHANGELOG entry to each.
 
 ## Files changed
 
