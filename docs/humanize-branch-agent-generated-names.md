@@ -26,9 +26,9 @@
 
 Generated and slugified branch names should read like short commit subjects a human would write — verb-led, whole words, no abbreviations — with enough length budget to stay readable.
 
-The `branch-agent` skill (git-agent plugin) auto-generates branch names from working-tree changes using the format `<type>/<scope>-<description>`. The description rule asked for "2–5 extracted keywords" under a tight 49-char pre-suffix budget, which produced terse, abbreviated names like `feat/src-login-form-valid` — hard to read in branch lists and PR pages.
+The `branch-agent` skill (git-agent plugin) auto-generates branch names from working-tree changes using the format `<type>/<scope>-<description>`. The description rule asked for "2–5 extracted keywords" under a tight 49-char pre-suffix budget, which produced terse, abbreviated names like `feat/src-login-form-valid` — hard to read in branch lists and PR pages. The Case B slug path (descriptive phrase argument) also hard-truncated at 30 characters, chopping user-supplied phrases mid-thought.
 
-The implementation proceeded through the following steps: Rewrite Step 2a description inference: replace "extract 2–5 keywords"; Raise length budgets: pre-suffix name 49 → 60 chars; final; Sync docs and version: update README branch-agent bullet, add.
+The implementation proceeded through the following steps: Rewrite Step 2a description inference — replace "extract 2–5 keywords" with a verb-led 3–7 word phrase rule (imperative verb + what changed), add explicit readability rules (whole dictionary words only, no abbreviations, drop trailing words to fit rather than shortening words), and a good/bad examples table.; Raise length budgets — pre-suffix name 49 → 60 chars; final date-suffixed name 60 → 72 chars (Step 2b); Case B slug 30 → 60 chars with word-boundary dropping instead of hard truncation.; Sync docs and version — update README branch-agent bullet, add CHANGELOG v3.11.1 entry, bump `marketplace.json` to 3.11.1 (PATCH: refines an existing rule, no component added/removed)..
 
 ## Commit history
 
