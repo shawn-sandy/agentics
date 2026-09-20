@@ -37,7 +37,7 @@ The implementation proceeded through the following steps: Replace the frontmatte
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
-| `f6b0bdd` | 2026-08-17 | docs(plans): mark settings-sync guard next-step done in add-verification-gates (#573) |
+| — | — | implementing commit not in plan file history |
 
 <!-- generated:end -->
 
