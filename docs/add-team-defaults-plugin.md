@@ -19,12 +19,13 @@
 
 | Path | Role | Status |
 | ---- | ---- | ------ |
-| `ticket-creator.md` | Documentation | Modified |
-| `reference/SKELETON.md` | Documentation | Modified |
-| `plan-mode.md` | Documentation | Modified |
-| `skills/sync-rules/SKILL.md` | Skill instructions | Modified |
-| `README.md` | Plugin documentation | Modified |
-| `CHANGELOG.md` | Changelog | Modified |
+| `kit/plugins/team-defaults/` | plugin directory (agents, rules) | Created |
+| `kit/plugins/team-defaults/skills/sync-rules/SKILL.md` | Skill instructions | Created |
+| `kit/plugins/team-defaults/README.md` | Plugin documentation | Created |
+| `kit/plugins/team-defaults/CHANGELOG.md` | Changelog | Created |
+| `kit/plugins/team-defaults/.claude-plugin/plugin.json` | Plugin metadata | Created |
+| `.claude-plugin/marketplace.json` | Marketplace entry | Modified |
+| `CLAUDE.md` | Plugin table | Modified |
 | `tests/publish/smoke-clean-dist.sh` | Test suite | Modified |
 
 ## How it works

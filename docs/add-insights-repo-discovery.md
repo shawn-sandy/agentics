@@ -17,7 +17,10 @@
 
 | Path | Role | Status |
 | ---- | ---- | ------ |
-| `SKILL.md` | Skill instructions | Modified |
+| `kit/plugins/memory-tools/skills/implementing-insights/SKILL.md` | Skill instructions | Modified |
+| `kit/plugins/memory-tools/README.md` | Plugin documentation | Modified |
+| `kit/plugins/memory-tools/CHANGELOG.md` | Changelog | Modified |
+| `.claude-plugin/marketplace.json` | Marketplace entry | Modified |
 
 ## How it works
 

@@ -20,7 +20,9 @@
 | ---- | ---- | ------ |
 | `kit/plugins/plan-agent/skills/finalize-plan/SKILL.md` | Skill instructions | Modified |
 | `kit/plugins/plan-agent/README.md` | Plugin documentation | Modified |
-| `tests/plugins/test-finalize-all-flag.sh` | Test suite | Modified |
+| `kit/plugins/plan-agent/CHANGELOG.md` | Changelog | Modified |
+| `.claude-plugin/marketplace.json` | Marketplace entry | Modified |
+| `tests/plugins/test-finalize-all-flag.sh` | Test suite | Created |
 
 ## How it works
 

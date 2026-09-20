@@ -26,6 +26,8 @@
 | `test-skill-split-git-social.sh` | Shell script | Modified |
 | `agents/agent-pr.md` | Documentation | Modified |
 | `agents/agent-ship.md` | Documentation | Modified |
+| `kit/plugins/git-agent/CHANGELOG.md` | Changelog | Modified |
+| `.claude-plugin/marketplace.json` | Marketplace entry | Modified |
 
 ## How it works
 

@@ -34,6 +34,14 @@
 | `test-artifact-to-post.sh` | Shell script | Modified |
 | `test-build-fleet.sh` | Shell script | Modified |
 | `test-plan-phases.mjs` | Implementation (JavaScript) | Modified |
+| `kit/plugins/git-agent/CHANGELOG.md` | Changelog | Modified |
+| `kit/plugins/social-media-tools/CHANGELOG.md` | Changelog | Modified |
+| `kit/plugins/code-testing-agent/CHANGELOG.md` | Changelog | Modified |
+| `kit/plugins/content-tools/CHANGELOG.md` | Changelog | Modified |
+| `kit/plugins/plan-agent/CHANGELOG.md` | Changelog | Modified |
+| `kit/plugins/memory-tools/CHANGELOG.md` | Changelog | Modified |
+| `kit/plugins/team-defaults/CHANGELOG.md` | Changelog | Modified |
+| `.claude-plugin/marketplace.json` | Marketplace entry (7 plugin bumps) | Modified |
 
 ## How it works
 

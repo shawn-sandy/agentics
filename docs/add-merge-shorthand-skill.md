@@ -26,6 +26,7 @@
 | `.claude-plugin/marketplace.json` | git-agent 4.3.0 → 4.4.0 | Modified |
 | `kit/plugins/git-agent/CHANGELOG.md` | v4.4.0 entry | Modified |
 | `kit/plugins/git-agent/README.md` | document the merge skill and shorthand | Modified |
+| `CLAUDE.md` | plugin table row for merge skill | Modified |
 
 ## How it works
 

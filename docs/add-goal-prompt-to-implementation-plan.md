@@ -17,8 +17,11 @@
 
 | Path | Role | Status |
 | ---- | ---- | ------ |
-| `reference/SKELETON.html` | Source file | Modified |
-| `marketplace.json` | Marketplace entry | Modified |
+| `kit/plugins/plan-agent/skills/implementation-plan/references/SKELETON.html` | HTML skeleton | Modified |
+| `kit/plugins/plan-agent/skills/implementation-plan/SKILL.md` | Skill instructions | Modified |
+| `kit/plugins/plan-agent/README.md` | Plugin documentation | Modified |
+| `kit/plugins/plan-agent/CHANGELOG.md` | Changelog | Modified |
+| `.claude-plugin/marketplace.json` | Marketplace entry | Modified |
 
 ## How it works
 

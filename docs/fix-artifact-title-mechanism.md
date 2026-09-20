@@ -19,7 +19,11 @@
 
 | Path | Role | Status |
 | ---- | ---- | ------ |
-| `[.claude` | plugin/marketplace.json](../../.claude-plugin/marketplace.json) — bump `artifact-tools` to 1.2.1. | Modified |
+| `kit/plugins/artifact-tools/skills/session-artifact/SKILL.md` | Skill instructions | Modified |
+| `kit/plugins/artifact-tools/references/titles.md` | Reference documentation | Modified |
+| `kit/plugins/artifact-tools/CHANGELOG.md` | Changelog | Modified |
+| `.claude-plugin/marketplace.json` | Marketplace entry | Modified |
+| `tests/plugins/test-artifact-titles.mjs` | Test suite | Created |
 
 ## How it works
 

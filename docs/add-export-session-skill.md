@@ -17,7 +17,12 @@
 
 | Path | Role | Status |
 | ---- | ---- | ------ |
-| `scripts/export_session.py` | Implementation (Python) | Modified |
+| `kit/plugins/social-media-tools/skills/export-session/SKILL.md` | Skill instructions | Created |
+| `kit/plugins/social-media-tools/skills/export-session/scripts/export_session.py` | Implementation (Python) | Created |
+| `kit/plugins/social-media-tools/README.md` | Plugin documentation | Modified |
+| `kit/plugins/social-media-tools/CHANGELOG.md` | Changelog | Modified |
+| `.claude-plugin/marketplace.json` | Marketplace entry | Modified |
+| `CLAUDE.md` | Plugin table | Modified |
 
 ## How it works
 
