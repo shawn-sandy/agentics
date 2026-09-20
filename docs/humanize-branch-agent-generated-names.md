@@ -9,9 +9,9 @@
 
 ## What shipped
 
-- Rewrite Step 2a description inference — — replace "extract 2–5 keywords"
-- Raise length budgets — — pre-suffix name 49 → 60 chars; final
-- Sync docs and version — — update README branch-agent bullet, add
+- Rewrite Step 2a description inference — replace "extract 2–5 keywords"
+- Raise length budgets — pre-suffix name 49 → 60 chars; final
+- Sync docs and version — update README branch-agent bullet, add
 
 ## Files changed
 
@@ -26,15 +26,15 @@
 
 Generated and slugified branch names should read like short commit subjects a human would write — verb-led, whole words, no abbreviations — with enough length budget to stay readable.
 
-The `branch-agent` skill (git-agent plugin) auto-generates branch names from working-tree changes using the format `<type>/<scope>-<description>`. The description rule asked for "2–5 extracted keywords" under a tight 49-char pre-suffix budget, which produced terse, abbreviated names like
+The `branch-agent` skill (git-agent plugin) auto-generates branch names from working-tree changes using the format `<type>/<scope>-<description>`. The description rule asked for "2–5 extracted keywords" under a tight 49-char pre-suffix budget, which produced terse, abbreviated names like `feat/src-login-form-valid` — hard to read in branch lists and PR pages.
 
-The implementation proceeded through these steps: Rewrite Step 2a description inference: replace "extract 2–5 keywords"; Raise length budgets: pre-suffix name 49 → 60 chars; final; Sync docs and version: update README branch-agent bullet, add.
+The implementation proceeded through the following steps: Rewrite Step 2a description inference: replace "extract 2–5 keywords"; Raise length budgets: pre-suffix name 49 → 60 chars; final; Sync docs and version: update README branch-agent bullet, add.
 
 ## Commit history
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
-| `f6b0bdd` | 2026-08-17 | docs(plans): mark settings-sync guard next-step done in add-verification-gates ( |
+| `f6b0bdd` | 2026-08-17 | docs(plans): mark settings-sync guard next-step done in add-verification-gates (#573) |
 
 <!-- generated:end -->
 
