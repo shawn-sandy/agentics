@@ -76,7 +76,7 @@ fi
 echo "6. implementation-plan SKILL.md documents the goal prompt contract..."
 # Since the markdown-spec pipeline (plan-agent 2.19.0) the renderer derives
 # the goal prompt; SKILL.md documents the contract, not a fill-in placeholder.
-if grep -q '`Goal:' "$PLAN_SKILL" \
+if grep -q '`/goal ' "$PLAN_SKILL" \
    && grep -q 'plan-goal' "$PLAN_SKILL" \
    && grep -q 'copyGoal(this)' "$PLAN_SKILL"; then
   echo "  PASS"
