@@ -1,5 +1,19 @@
 # Changelog
 
+## 9.18.1 — the goal prompt leads with `/goal` (2026-09-20)
+
+### Changed
+
+- **"Pursue as goal" now opens with `/goal` instead of `Goal:`.** The rendered
+  prompt and its `plan-goal` meta tag read `/goal <objective>. The plan at
+  <path> describes one approach — …`, so pasting the prompt invokes the
+  `/goal` slash command directly instead of reading as prose. Everything after
+  the lead-in, including the fan-out license and the verification gate, is
+  unchanged. Plans already rendered keep the old wording until they are
+  re-rendered. `tests/plugins/test-plan-phases.mjs` re-derives its
+  `BASELINE_SHA256` for the new lead-in, since the goal prompt is part of
+  every rendered plan.
+
 ## 9.18.0 — build-proposal chooses an approach before it authors (2026-09-13)
 
 ### Added

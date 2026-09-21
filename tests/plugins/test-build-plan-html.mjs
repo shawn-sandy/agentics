@@ -465,7 +465,7 @@ ok('implement and goal meta tags reference the markdown spec path, not the HTML'
   );
   assert.ok(
     sampleHtml.includes(
-      '<meta name="plan-goal" content="Goal: Ship a sample feature. The plan at docs/plans/sample.md describes one approach — use it as reference, but optimize for the outcome.'
+      '<meta name="plan-goal" content="/goal Ship a sample feature. The plan at docs/plans/sample.md describes one approach — use it as reference, but optimize for the outcome.'
     )
   );
   assert.ok(sampleHtml.includes('<meta name="plan-md" content="docs/plans/sample.md">'), 'plan-md meta carries the spec path');

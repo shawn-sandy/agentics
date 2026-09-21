@@ -173,7 +173,7 @@ Run everything and confirm it passes.
  * Previously re-derived 2026-09-02 for the plan-document polish (eyebrow
  * removed, browser-surface theming, tabular figures, compositor-driven scroll
  * rail, objective-card side-tab removed, 44px hit areas, square theme toggle). */
-const BASELINE_SHA256 = 'c090480964d5879363306e294089f8bc54533e91af9646199b63fe08c50a95cf';
+const BASELINE_SHA256 = '5025e4f668d22f9e52976a4fd7819f23a3576fe02b8afcde9f7ea4b0fae324ba';
 
 const render = (parsed, stem) =>
   renderPlanHtml(parsed, {
