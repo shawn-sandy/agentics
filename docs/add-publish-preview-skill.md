@@ -1,0 +1,48 @@
+# Give a work-in-progress plan a public link before the pull request merges
+
+> A plan living on an open branch is invisible to everyone outside Claude, because GitHub Pages only publishes from the main branch — so stakeholders wait for...
+
+<!-- generated:start -->
+
+**Status:** Shipped 2026-08-17  **Plan:** [add-publish-preview-skill.md](plans/add-publish-preview-skill.md)
+**Type:** feature
+
+## What shipped
+
+- Author `kit/plugins/plan-agent/skills/publish-preview/SKILL.md` with `name`, a description under 200 characters, and `allowed-tools: Bash, Read, Glob, AskUserQuestion, ToolSearch, ExitPlanMode`, carrying the plan-mode guard line verbatim as its first step.
+- Write the skill body as six steps — preflight (GitHub `origin`, `gh auth status`, and `gh api repos/{owner}/{repo}/pages` to confirm Pages is enabled, deriving the apex URL for an `<owner>.github.io` repository and the `/<repo>/` prefix for every other repository the way `setup-sites` Step 1 does), resolve the plan HTML by argument or `Glob` plus `AskUserQuestion` and re-render it from the sibling markdown spec, a per-run `AskUserQuestion` confirmation, `gh api` GET for the existing blob `sha` then `PUT` to `docs/previews/<slug>.html` on `main`, a bounded poll of the deployed URL for the plan title, and a report that names the URL and calls it a preview on `main`.
+- Add the `--unpublish` path to the same file — a `gh api -X DELETE` with the blob `sha`, offered automatically when the resolved plan's spec frontmatter reads `status: completed`.
+- Document the skill in `kit/plugins/plan-agent/README.md` — one row in the component table and one section matching the shape of the existing `setup-sites` section.
+- Bump `plan-agent` from 7.2.0 to 7.3.0 in `.claude-plugin/marketplace.json`, add a matching 7.3.0 entry to `kit/plugins/plan-agent/CHANGELOG.md`, then regenerate the root README table with `node scripts/build-readme-table.mjs`.
+- Add `tests/plugins/test-publish-preview.sh`, modelled on `tests/plugins/test-setup-sites.sh`, asserting the skill file exists with correct frontmatter, that the body names `docs/previews/` and never writes to `docs/plans/`, that the confirmation and `--unpublish` paths are documented, and that the marketplace version is above the value on `main`.
+
+## Files changed
+
+| Path | Role | Status |
+| ---- | ---- | ------ |
+| `kit/plugins/plan-agent/skills/publish-preview/SKILL.md` | the skill: preflight, resolve, confirm, publish, verify, report, plus `--unpublish` | Created |
+| `kit/plugins/plan-agent/README.md` | component table row and reference section | Modified |
+| `kit/plugins/plan-agent/CHANGELOG.md` | 7.3.0 entry | Modified |
+| `.claude-plugin/marketplace.json` | plan-agent 7.2.0 to 7.3.0 | Modified |
+| `README.md` | regenerated plugin reference table | Modified |
+| `tests/plugins/test-publish-preview.sh` | structural smoke test | Created |
+
+## How it works
+
+Ship `plan-agent:publish-preview` — a skill that pushes the plan you are currently working on to a preview path on the `main` branch through the GitHub Contents API, so anyone holding the link watches the plan progress at `https://<owner>.github.io/<repo>/previews/<slug>.html` — or at `https://<owner>.github.io/previews/<slug>.html` in a root Pages repository named `<owner>.github.io` — while the branch is still open.
+
+Two publishing routes already exist in this repo and neither covers mid-work sharing to a public site. `artifact-tools:plan-artifact` records an `artifact-url:` in the plan spec and republishes the same claude.ai page across sessions, which is the right tool whenever a claude.ai link is acceptable. `plan-agent:setup-sites` scaffolds GitHub Pages so everything under `docs/` deploys, and `.github/workflows/deploy-pages.yml` publishes on every push to `main` touching `docs/**`. The gap sits between them: Pages only deploys from `main`, so a plan on a feature branch has no public URL until the pull request merges. This skill closes that gap for the case where the audience cannot use a claude.ai link — an external stakeholder, a public roadmap, anyone who needs a plain `github.io` address. Three decisions shaped the design and are settled, not open. **Previews live at `docs/previews/<slug>.html`, outside the plans directory.** The gallery builder walks only the plans directory — `kit/plugins/plan-agent/hooks/build-index.sh:87-88` is the `os.walk(plans_dir)` call and the exclusion list applied to it — so a preview outside that directory cannot produce a duplicate gallery card and needs no change to that hook; `.github/workflows/regen-plans.yml` filters on `docs/plans/**`, so it never fires either. Publishing to the plan's real path on `main` was rejected outright: the branch and `main` would both carry edited copies of the same generated HTML, guaranteeing a merge conflict on a file nobody should hand-resolve. **Previews stay link-only** — they are not listed in any gallery, because a public index of stale mid-work previews is worse than no index. **The write uses the GitHub Contents API, not a local checkout of `main`** — a `gh api -X PUT` needs no second working copy, survives a dirty working tree, and its `sha` precondition makes two sessions publishing the same plan fail loudly instead of silently clobbering one another. Known risks, each with its mitigation. Writing to `main` outside the pull-request flow skips review and CI, so the skill asks for confirmation on every single run and every write it makes to `main` lands under `docs/previews/` — never source, never the plan's real path. A repository that never enabled Pages would otherwise take that write and never deploy it, leaving an orphan commit on `main`, so the preflight confirms Pages is on and sends the user to `plan-agent:setup-sites` before anything is written. A repository with branch protection rejects the write, so a 403 or 409 is reported plainly with `artifact-tools:plan-artifact` offered as the fallback rather than being worked around. Previews would otherwise accumulate on `main` forever, so the skill offers to remove one as soon as the plan's `status:` reads `completed`.
+
+The implementation proceeded through the following steps: Author `kit/plugins/plan-agent/skills/publish-preview/SKILL.md` with `name`, a description under 200 characters, and `allowed-tools: Bash, Read, Glob, AskUserQuestion, ToolSearch, ExitPlanMode`, carrying the plan-mode guard line verbatim as its first step.; Write the skill body as six steps — preflight (GitHub `origin`, `gh auth status`, and `gh api repos/{owner}/{repo}/pages` to confirm Pages is enabled, deriving the apex URL for an `<owner>.github.io` repository and the `/<repo>/` prefix for every other repository the way `setup-sites` Step 1 does), resolve the plan HTML by argument or `Glob` plus `AskUserQuestion` and re-render it from the sibling markdown spec, a per-run `AskUserQuestion` confirmation, `gh api` GET for the existing blob `sha` then `PUT` to `docs/previews/<slug>.html` on `main`, a bounded poll of the deployed URL for the plan title, and a report that names the URL and calls it a preview on `main`.; Add the `--unpublish` path to the same file — a `gh api -X DELETE` with the blob `sha`, offered automatically when the resolved plan's spec frontmatter reads `status: completed`.; Document the skill in `kit/plugins/plan-agent/README.md` — one row in the component table and one section matching the shape of the existing `setup-sites` section.; Bump `plan-agent` from 7.2.0 to 7.3.0 in `.claude-plugin/marketplace.json`, add a matching 7.3.0 entry to `kit/plugins/plan-agent/CHANGELOG.md`, then regenerate the root README table with `node scripts/build-readme-table.mjs`.; Add `tests/plugins/test-publish-preview.sh`, modelled on `tests/plugins/test-setup-sites.sh`, asserting the skill file exists with correct frontmatter, that the body names `docs/previews/` and never writes to `docs/plans/`, that the confirmation and `--unpublish` paths are documented, and that the marketplace version is above the value on `main`..
+
+## Commit history
+
+| SHA | Date | Subject |
+| --- | ---- | ------- |
+| `f6b0bdd` | 2026-08-17 | docs(plans): mark settings-sync guard next-step done in add-verification-gates (#573) |
+
+<!-- generated:end -->
+
+## References
+
+- Plan: [add-publish-preview-skill.md](plans/add-publish-preview-skill.md)
