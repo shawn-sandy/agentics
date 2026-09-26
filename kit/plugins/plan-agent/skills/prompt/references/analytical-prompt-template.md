@@ -2,7 +2,7 @@
 
 Used by `prompt` for **analytical** prompt type.
 
-Techniques applied: Long-context patterns (document grounding) · Thinking/CoT · Self-check · Output format
+Techniques applied: Long-context patterns (document grounding) · Reasoning checks · Self-check · Output format
 
 ---
 
@@ -15,12 +15,12 @@ Techniques applied: Long-context patterns (document grounding) · Thinking/CoT �
 </content>
 </document>
 
-<thinking>
-Before answering, work through this analysis step by step:
+<checks>
+Settle these before you answer:
 1. {{ANALYSIS_STEP_1}}
 2. {{ANALYSIS_STEP_2}}
 3. {{ANALYSIS_STEP_3}}
-</thinking>
+</checks>
 
 {{CORE_ANALYSIS_INSTRUCTION}}
 
@@ -63,12 +63,12 @@ Output requirements:
 </content>
 </document>
 
-<thinking>
-Before answering, work through this analysis step by step:
+<checks>
+Settle these before you answer:
 1. Identify the central claim or thesis of the document — what is the author arguing or asserting?
 2. Find the three strongest pieces of evidence the author uses to support that claim, noting where each appears
 3. Identify any significant assumptions the argument relies on that are not explicitly proven in the document
-</thinking>
+</checks>
 
 Analyze this research paper and identify: (1) its central claim, (2) the three strongest pieces of supporting evidence, and (3) one significant assumption the argument relies on.
 

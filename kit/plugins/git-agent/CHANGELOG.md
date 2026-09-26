@@ -1,5 +1,18 @@
 # Changelog — git-agent
 
+## v4.21.1 — 2026-09-26 — progress updates and agent descriptions
+
+### Changed
+
+- **ship-autonomous says when to post an update instead of forbidding
+  narration.** `SKILL.md` and `references/pr-events.md` now ask for a short
+  status update on each meaningful change (fix pushed, escalation, all-green).
+  The bare "do not narrate" rule made current models go quiet during long runs.
+- **Background agent descriptions drop their example trigger phrases.**
+  `agent-commit`, `agent-pr`, `agent-ship`, `agent-ship-ci`, and `agent-merge`
+  state their intent once; the quoted near-synonyms added tokens to every
+  session. The `*-bg` commands still dispatch each agent directly.
+
 ## v4.21.0 — 2026-09-18 — commit and ship paths handle lint-gate blocks
 
 ### Changed

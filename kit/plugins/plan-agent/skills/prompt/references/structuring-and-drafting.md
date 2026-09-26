@@ -19,8 +19,8 @@ any layer whose type is not in that matrix.
   `<context>...</context>`
 - **Examples** (task): prepare an `<example>...</example>` slot with a
   placeholder from the interview answer
-- **Thinking/CoT** (task + analytical): add a `<thinking>...</thinking>`
-  scaffold before the main instruction
+- **Reasoning checks** (task + analytical): add a `<checks>...</checks>`
+  block before the main instruction
 - **Document grounding** (analytical): add a
   `<document>{{DOCUMENT_CONTENT}}</document>` wrapper and a quote-extraction
   instruction
@@ -36,7 +36,7 @@ If `${CLAUDE_PLUGIN_ROOT}` is unavailable, fall back to a Glob search:
 Substitute every `{{PLACEHOLDER}}` with the structured content from Phase 3, the
 interview answers from Phase 2, and the intent from Phase 1. Remove placeholder
 lines whose technique the matrix did not select — for example, drop the
-`<thinking>` block from a creative prompt rather than leaving it empty.
+`<checks>` block from a creative prompt rather than leaving it empty.
 
 ## Phase 4 — writing rules
 
@@ -57,7 +57,7 @@ the whole draft exists, so check them last:
   `<instructions>` and `<constraints>`, or in a layer and again in the output
   requirements, delete all but the one whose section owns it. Near-duplicates
   that disagree cost more than either version alone.
-- **Drop scaffolding the answers never asked for.** A `<thinking>` block with
+- **Drop scaffolding the answers never asked for.** A `<checks>` block with
   invented reasoning steps, a `<constraints>` line guarding a case the user
   never raised, a second example that repeats the first — each is padding the
   reader must reconcile. Remove the layer rather than substitute a filler

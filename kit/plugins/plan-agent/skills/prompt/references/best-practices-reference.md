@@ -74,7 +74,7 @@ Source: [The new rules of context engineering for Claude 5 generation models](ht
 - `<constraints>...</constraints>` — rules and guardrails
 - `<role>...</role>` — persona or identity assignment
 - `<document>...</document>` — long-context document grounding
-- `<thinking>...</thinking>` — internal reasoning scaffold
+- `<checks>...</checks>` — the checks an answer must settle
 
 **Applied in:** system and task prompts — Phase 3 Structure
 
@@ -110,17 +110,14 @@ Source: [The new rules of context engineering for Claude 5 generation models](ht
 
 ---
 
-## 6. Thinking / Chain-of-Thought Scaffolding
+## 6. Reasoning Checks
 
-**Principle:** Prompting Claude to reason before answering improves accuracy on complex tasks. Extended thinking externalizes the reasoning process.
+**Principle:** Claude 5 generation models reason before answering without being told; how deeply is set by the caller's thinking and effort settings, not by prompt prose. What a prompt adds is the *shape* of the reasoning — the checks that must happen, in order when order matters.
 
 **Implementation:**
-- Add a `<thinking>` block before the main instruction for complex tasks
-- Instruct: "Before answering, work through the problem step by step in `<thinking>` tags."
-- For multi-step tasks, enumerate the reasoning steps explicitly
-- Use "think carefully" only when you want visible step-by-step work
-
-**Section 0 calibration:** scaffold the reasoning when its *shape* matters — a required order of checks, a step whose output the reader needs to see. A generic "think step by step" against a model that already reasons before answering adds tokens and an extra thing to reconcile. Prefer naming the checks that must happen over instructing the model to think.
+- Add a `<checks>` block before the main instruction when a required order of checks or a specific failure mode must be ruled out
+- Name the checks themselves ("Identify each distinct responsibility before splitting the function"), not an instruction to think
+- Omit the block when the interview surfaced no such check (section 0)
 
 **Applied in:** task and analytical prompts — Phase 3 Structure
 
@@ -132,7 +129,7 @@ Source: [The new rules of context engineering for Claude 5 generation models](ht
 
 **Implementation:**
 - State the format: markdown, JSON, plain text, numbered list, table
-- State the length: "in 3 bullet points", "under 200 words", "a full paragraph"
+- State the length the reader needs: "a one-paragraph answer", "three bullets", "as long as the steps require". Use a number only for a hard external limit — a 280-character post, a form field"
 - Specify tone: "formal", "concise", "conversational"
 - Add output constraints: "do not include preamble", "end with a summary"
 - Use positive framing: "Respond with X" not "Don't include Y"

@@ -46,7 +46,7 @@ instructions carry more behavior than a long `Never` list.
 |-------------|--------|---------|
 | ROLE_DESCRIPTION | Interview: persona/role answer | "You are a helpful customer support specialist for Acme Corp with 10+ years of experience in software troubleshooting." |
 | CORE_INSTRUCTIONS | Interview: task purpose + behavior | "Help users resolve technical issues with Acme's platform. Diagnose the root cause before suggesting solutions." |
-| OUTPUT_FORMAT_RULE_1 | Interview: tone/format answer | "Keep responses under 150 words unless a step-by-step guide is necessary." |
+| OUTPUT_FORMAT_RULE_1 | Interview: tone/format answer | "Keep replies short enough to scan on a phone; answer only what was asked." |
 | OUTPUT_FORMAT_RULE_2 | Interview: tone/format answer | "Use numbered steps for multi-step instructions." |
 | POSITIVE_BEHAVIOR | Interview: desired behavior | "ask a clarifying question if the issue is unclear before suggesting a fix" |
 | GUARDRAIL_1 | Interview: boundaries answer | "discuss pricing, billing, or contract terms — direct those to the sales team" |
@@ -67,7 +67,7 @@ You are a helpful customer support specialist for Acme Corp with deep experience
 Help users resolve technical issues with Acme's platform. Always diagnose the root cause by asking one clarifying question before suggesting fixes.
 
 When responding:
-- Keep responses under 150 words unless a step-by-step guide is needed
+- Keep replies short enough to scan on a phone; answer only what was asked
 - Use numbered steps for multi-step instructions
 - Always confirm the user's issue is resolved before closing
 </instructions>

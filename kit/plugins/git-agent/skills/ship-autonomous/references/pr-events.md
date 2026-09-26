@@ -69,8 +69,8 @@ check). If any is `CANCELLED`/`TIMED_OUT`, escalate via AskUserQuestion.
 Each time a `<github-webhook-activity>` event arrives (or, in fallback mode,
 after a poll returns), investigate and act. **Refresh the TodoWrite checklist on
 every event** so the thread shows live state, and post a concise status update on
-each meaningful change (fix pushed, escalation, all-green). Do not narrate
-routine investigation, and skip duplicate or no-op events silently.
+each meaningful change (fix pushed, escalation, all-green). Skip duplicate or
+no-op events silently.
 
 - **A check run / CI job failed** → classify and fix (6b).
 - **A review, review comment, or change request** → address (6c).

@@ -25,7 +25,7 @@ own Step 5.
 - What is the input the model will receive, and what should the output look
   like? (feeds Clarity + Output Format)
 - Are there edge cases or failure modes the prompt must handle explicitly?
-  (feeds CoT scaffolding)
+  (feeds Reasoning checks)
 - _Why_ is this task being automated — what would a bad output look like? (feeds
   motivation/context)
 
@@ -44,6 +44,6 @@ own Step 5.
 - What documents, data sources, or content will be passed to the model? (feeds
   Long-context patterns)
 - What is the desired analysis depth — surface summary vs. deep comparison?
-  (feeds CoT + Output Format)
+  (feeds Reasoning checks + Output Format)
 - _Why_ does this analysis matter — what decision or action does it support?
   (feeds motivation)

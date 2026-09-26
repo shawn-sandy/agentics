@@ -64,9 +64,9 @@ best-practice layers that apply to this type:
 | Prompt type | Applicable techniques                                                                                 |
 | ----------- | ----------------------------------------------------------------------------------------------------- |
 | system      | Role assignment, XML structure (`<instructions>`, `<constraints>`), output format, guardrails         |
-| task        | Clarity/directness, XML structure (`<context>`, `<example>`), thinking/CoT scaffolding, output format |
+| task        | Clarity/directness, XML structure (`<context>`, `<example>`), reasoning checks, output format         |
 | creative    | Role assignment, tone/voice instructions, context/motivation, output format, positive framing         |
-| analytical  | Long-context patterns (`<document>`, `<quote>`), thinking/CoT, self-check, output format              |
+| analytical  | Long-context patterns (`<document>`, `<quote>`), reasoning checks, self-check, output format          |
 | proposal    | Long-context grounding (`<context>`, `<finding>`, `<decisions>`), comparison tables, positive framing, output format |
 
 ### Confirm the type before Phase 2
@@ -118,8 +118,8 @@ This is the documented degradation, not a workaround — never set
 Announce the settled type and selected technique matrix to the user in one
 short sentence:
 
-> "Classified as **task** prompt — I'll apply: clarity, XML context tags, CoT
-> scaffolding, and output format."
+> "Classified as **task** prompt — I'll apply: clarity, XML context tags,
+> reasoning checks, and output format."
 
 ---
 
@@ -168,7 +168,7 @@ Apply the XML structural techniques selected by the technique matrix from Phase
 
 Map interview answers to XML layers. The seven layers for the four
 author-facing types — role, instructions/constraints, context, examples,
-thinking/CoT, document grounding, self-check — are in
+reasoning checks, document grounding, self-check — are in
 [references/structuring-and-drafting.md](references/structuring-and-drafting.md).
 
 The `proposal` layer stays here, because it is the one that carries evidence
@@ -243,7 +243,7 @@ directly. Include:
 Format:
 
 ````
-**Prompt type:** task — techniques applied: Clarity, XML structure, CoT scaffolding, Output format
+**Prompt type:** task — techniques applied: Clarity, XML structure, Reasoning checks, Output format
 
 ```text
 [assembled prompt here]

@@ -1,5 +1,22 @@
 # Changelog
 
+## 9.18.2 — the prompt skill names checks instead of scaffolding thought (2026-09-26)
+
+### Changed
+
+- **`prompt` templates ship a `<checks>` block in place of `<thinking>`.** The
+  task and analytical templates, the technique matrix, and the drafting guide
+  now name the checks an answer must settle instead of telling the model to
+  "work through this step by step" in thinking tags. Claude 5 generation models
+  reason without being told, and asking for reasoning in visible tags can be
+  declined as reasoning extraction on the newest models. Section 6 of
+  `best-practices-reference.md` is rewritten to match its own section 0.
+- **Length guidance stops teaching word caps.** `best-practices-reference.md`
+  and the system-prompt template describe length by what the reader needs; a
+  number is reserved for a hard external limit such as a character-limited post.
+- **`agent-review-plan` description drops its example trigger phrases.** The
+  intent is stated once; the quoted near-synonyms added tokens to every session.
+
 ## 9.18.1 — the goal prompt leads with `/goal` (2026-09-20)
 
 ### Changed
