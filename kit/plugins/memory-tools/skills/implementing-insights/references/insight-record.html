@@ -1,0 +1,185 @@
+<title>Pre-PR adversarial review</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper: #f5f7f9;
+    --surface: #ffffff;
+    --ink: #17202a;
+    --muted: #535f6c;
+    --rule: #d8dfe6;
+    --accent: #1b5c8a;
+    --progress: #7a4f00;
+    --progress-bg: #fbefd5;
+    --review: #1d4c94;
+    --review-bg: #e2ebf9;
+    --merged: #146239;
+    --merged-bg: #dcf1e4;
+    --closed: #4f5864;
+    --closed-bg: #e8ecf0;
+    --st: var(--muted);
+    --st-bg: var(--rule);
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #10151c;
+      --surface: #171e27;
+      --ink: #e4e9ef;
+      --muted: #9aa6b3;
+      --rule: #2b3542;
+      --accent: #7db4df;
+      --progress: #f0c46b;
+      --progress-bg: #3a2c0c;
+      --review: #9dbdf2;
+      --review-bg: #1c2b45;
+      --merged: #7fd3a2;
+      --merged-bg: #16301f;
+      --closed: #b1bac5;
+      --closed-bg: #262d36;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #10151c;
+    --surface: #171e27;
+    --ink: #e4e9ef;
+    --muted: #9aa6b3;
+    --rule: #2b3542;
+    --accent: #7db4df;
+    --progress: #f0c46b;
+    --progress-bg: #3a2c0c;
+    --review: #9dbdf2;
+    --review-bg: #1c2b45;
+    --merged: #7fd3a2;
+    --merged-bg: #16301f;
+    --closed: #b1bac5;
+    --closed-bg: #262d36;
+  }
+
+  [data-status="in-progress"] { --st: var(--progress); --st-bg: var(--progress-bg); }
+  [data-status="pr-open"] { --st: var(--review); --st-bg: var(--review-bg); }
+  [data-status="merged"], [data-status="done"] { --st: var(--merged); --st-bg: var(--merged-bg); }
+  [data-status="closed"] { --st: var(--closed); --st-bg: var(--closed-bg); }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 1rem/1.6 var(--sans);
+    padding-inline: 16px;
+    padding-block: 40px 56px;
+  }
+  .record { max-width: 44rem; margin-inline: auto; display: grid; gap: 2.25rem; }
+  header { display: grid; gap: 0.75rem; }
+  .kicker { margin: 0; color: var(--muted); font-size: 0.875rem; }
+  h1 { margin: 0; font-size: clamp(1.75rem, 5vw, 2.25rem); line-height: 1.2; font-weight: 600; text-wrap: balance; }
+  h2 { margin: 0 0 0.75rem; font-size: 1.125rem; font-weight: 600; }
+  p { margin: 0; max-width: 65ch; }
+  a { color: var(--accent); text-underline-offset: 0.15em; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  code { font-family: var(--mono); font-size: 0.875em; overflow-wrap: anywhere; }
+
+  .status-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; color: var(--muted); font-size: 0.875rem; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    background: var(--st-bg);
+    color: var(--st);
+    font-weight: 600;
+    font-size: 0.8125rem;
+  }
+  .pill::before { content: ""; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentColor; }
+  time { font-variant-numeric: tabular-nums; }
+
+  .facts {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .facts div { background: var(--surface); padding: 0.75rem 1rem; display: grid; gap: 0.2rem; align-content: start; }
+  .facts dt { color: var(--muted); font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  .facts dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+
+  section { display: grid; gap: 0.75rem; }
+  section h2 { margin: 0; }
+  blockquote { margin: 0; padding-inline-start: 1rem; border-inline-start: 3px solid var(--rule); max-width: 65ch; }
+  ul { margin: 0; padding-inline-start: 1.25rem; display: grid; gap: 0.35rem; max-width: 65ch; }
+
+  .timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .timeline li { position: relative; display: grid; grid-template-columns: 6.5rem 1fr; gap: 0.25rem 1rem; padding: 0 0 1rem 1.25rem; }
+  .timeline li::before { content: ""; position: absolute; left: 0; top: 0.5rem; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--st); }
+  .timeline li:not(:last-child)::after { content: ""; position: absolute; left: calc(0.25rem - 0.5px); top: 1.25rem; bottom: 0.25rem; width: 1px; background: var(--rule); }
+  .timeline time { color: var(--muted); font-size: 0.875rem; padding-top: 0.1rem; }
+  .timeline strong { font-weight: 600; }
+  @media (max-width: 30rem) {
+    .timeline li { grid-template-columns: 1fr; }
+  }
+
+  footer { color: var(--muted); font-size: 0.8125rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
+</style>
+
+<main class="record">
+  <header>
+    <p class="kicker">Usage-insights recommendation 1 of 3</p>
+    <h1>Pre-PR adversarial review</h1>
+    <div class="status-line">
+      <span class="pill" data-status="merged">Merged</span>
+      <span>Updated <time datetime="2026-08-21">2026-08-21</time></span>
+    </div>
+  </header>
+
+  <dl class="facts">
+    <div><dt>Triage</dt><dd>Open</dd></div>
+    <div><dt>Layer</dt><dd>Plugin (workflow-shaped)</dd></div>
+    <div><dt>Target</dt><dd><code>acme/dev-plugins</code></dd></div>
+    <div><dt>Change</dt><dd><a href="https://github.com/acme/dev-plugins/pull/585">acme/dev-plugins#585</a></dd></div>
+  </dl>
+
+  <section>
+    <h2>Recommendation</h2>
+    <blockquote><p>Run a fresh-context adversarial review of the branch diff before opening a PR, so review bots stop finding defects the author could have caught.</p></blockquote>
+    <ul>
+      <li>Report evidence: review bots flagged defects on 9 of 14 PRs in the period.</li>
+      <li>Report evidence: 4 PRs needed three or more fix-up pushes after review.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Triage</h2>
+    <p>Open. Nothing already covered it:</p>
+    <ul>
+      <li><code>~/.claude/CLAUDE.md</code> asks for a review but names no step that runs one.</li>
+      <li>The <code>ship</code> skill on <code>origin/main</code> opens the PR straight after the push.</li>
+      <li>No hook or rule in the target repo runs a reviewer.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Change</h2>
+    <p>Added a pre-PR review step to the <code>ship</code> skill that dispatches a fresh-context reviewer on <code>git diff main...HEAD</code> and fixes confirmed defects before the PR opens.</p>
+    <ul>
+      <li>Files: <code>skills/ship/SKILL.md</code>, <code>CHANGELOG.md</code>, <code>marketplace.json</code></li>
+      <li>Verified: the plugin test suite passed locally, and a dry run of the skill dispatched the reviewer before <code>gh pr create</code>.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Timeline</h2>
+    <ol class="timeline">
+      <li data-status="in-progress"><time datetime="2026-08-19">2026-08-19</time><span><strong>In progress.</strong> Approved in scope review and implementation started.</span></li>
+      <li data-status="pr-open"><time datetime="2026-08-19">2026-08-19</time><span><strong>PR open.</strong> <a href="https://github.com/acme/dev-plugins/pull/585">acme/dev-plugins#585</a> opened with this record linked in its body.</span></li>
+      <li data-status="merged"><time datetime="2026-08-21">2026-08-21</time><span><strong>Merged.</strong> Merged after approval. The review bot raised no findings.</span></li>
+    </ol>
+  </section>
+
+  <footer>Kept by the implementing-insights skill and republished to this link at each status change: In progress, PR open, then Merged or Closed. Direct config edits go straight to Done.</footer>
+</main>

@@ -26,7 +26,7 @@ This plugin provides three auto-activated skills. Invoke them by describing what
 |-------|-----------|---------------|
 | `memory-tools:agentic-memory-management` | Auto — triggers when user asks to "audit", "optimize", "review", "clean up", or "diagnose" a CLAUDE.md or project memory file; also activates when user reports Claude ignoring instructions | `AskUserQuestion`, `Glob`, `Grep`, `Read`, `Write` |
 | `memory-tools:path-rules-advisor` | Auto — triggers when user wants to create path-specific rules, add rules for file types or directories, or organize `.claude/rules/` | `AskUserQuestion`, `Edit`, `Glob`, `Read`, `Write` |
-| `memory-tools:implementing-insights` | Auto — triggers when user asks to implement or act on a usage-insights report's findings | `Read`, `Grep`, `Glob`, `Bash`, `Edit`, `Write`, `WebFetch`, `Agent`, `AskUserQuestion`, `ToolSearch`, `ExitPlanMode` |
+| `memory-tools:implementing-insights` | Auto — triggers when user asks to implement or act on a usage-insights report's findings | `Read`, `Grep`, `Glob`, `Bash`, `Edit`, `Write`, `WebFetch`, `Agent`, `AskUserQuestion`, `Artifact`, `ToolSearch`, `ExitPlanMode` |
 
 All skills are auto-activated — there is no manual slash command. Just describe your intent.
 
@@ -102,7 +102,8 @@ Which of these insights recommendations are already covered by my config?
 2. Triages every item against existing config (`~/.claude/`, installed plugins, each target repo) into three buckets: already implemented (cited), conflicts with an existing rule (rejected, cited), or genuinely open
 3. Places each open item at the right config layer — plugin (workflow-shaped; falls back to `~/.claude/` when the user has no plugin repo), `~/.claude/` (machine-wide), or the target repo (repo-specific), resolving repos discover-first from `~/.claude/projects/` and asking for a projects directory only when discovery fails
 4. Confirms scope, then implements one item per change — one PR per repo change, worktree isolation when parallel agents share a repo
-5. Cleans up worktrees and merged branches, then reports a verified outcome ledger
+5. Publishes a live record page for each implemented item — a claude.ai artifact built from `references/insight-record.html`, published when work starts and republished to the same URL at each status change (in progress, PR open, merged or closed; direct edits end at done). The URL rides in the PR body so a later session updates the same page. Records start private; share each one with your team from the page's Share menu
+6. Cleans up worktrees and merged branches, then reports a verified outcome ledger that links every record
 
 **Does not cover:** Generating the insights report itself; never merges a PR without explicit approval.
 
@@ -134,7 +135,9 @@ kit/plugins/memory-tools/
 │   │       ├── rule-file-format.md
 │   │       └── write-verification.md
 │   └── implementing-insights/
-│       └── SKILL.md
+│       ├── SKILL.md
+│       └── references/
+│           └── insight-record.html
 ├── CHANGELOG.md
 └── README.md
 ```
@@ -143,7 +146,7 @@ This is a skills-only plugin — no commands or agents.
 
 ## Version History
 
-Current version: **4.3.0**
+Current version: **4.4.0**
 
 ### Breaking Changes
 
