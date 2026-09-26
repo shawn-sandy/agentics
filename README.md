@@ -652,7 +652,7 @@ Audit and reshape Claude Code project memory — CLAUDE.md files, path-scoped ru
 |-------|------------------------------|
 | `agentic-memory-management` | Audit, optimize, or diagnose a CLAUDE.md or project memory file — also activates when Claude appears to be ignoring project instructions |
 | `path-rules-advisor` | Create path-specific rules, add rules for file types or directories, or organize Claude rules in `.claude/rules/` |
-| `implementing-insights` | Implement the findings from a usage-insights report — triages every recommendation against existing config, discovers target repos from `~/.claude/projects/`, and implements only the genuinely open items, one PR per repo change |
+| `implementing-insights` | Implement the findings from a usage-insights report — triages every recommendation against existing config, discovers target repos from `~/.claude/projects/`, and implements only the genuinely open items, one PR per repo change, each with a live record page the team can follow |
 
 ```bash
 claude --plugin-dir ./kit/plugins/memory-tools
@@ -788,15 +788,15 @@ Total: 66 skills across 11 plugins.
 
 | Plugin | Version | Category | Components |
 |--------|---------|----------|------------|
-| [memory-tools](./kit/plugins/memory-tools/README.md) | 4.3.1 | development | 3 skills |
+| [memory-tools](./kit/plugins/memory-tools/README.md) | 4.4.0 | development | 3 skills |
 | [code-review](./kit/plugins/code-review/README.md) | 3.3.6 | development | 1 command, 1 skill, 1 agent |
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.5.2 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.5.2 | development | 1 command, 4 skills, 1 hook |
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.6.0 | testing | 6 skills |
-| [git-agent](./kit/plugins/git-agent/README.md) | 4.21.1 | development | 5 commands, 8 skills, 5 agents, 3 hooks |
+| [git-agent](./kit/plugins/git-agent/README.md) | 4.22.1 | development | 5 commands, 8 skills, 5 agents, 3 hooks |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.2.0 | productivity | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.23.4 | productivity | 1 command, 17 skills |
-| [plan-agent](./kit/plugins/plan-agent/README.md) | 9.18.2 | productivity | 9 commands, 18 skills, 12 agents, 2 hooks |
+| [plan-agent](./kit/plugins/plan-agent/README.md) | 9.19.1 | productivity | 9 commands, 18 skills, 12 agents, 2 hooks |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.12.0 | development | 3 commands, 5 skills |
 | [content-tools](./kit/plugins/content-tools/README.md) | 1.1.1 | documentation | 1 skill |
 
