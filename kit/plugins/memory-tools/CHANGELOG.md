@@ -1,5 +1,34 @@
 # Changelog
 
+## v4.4.0 — 2026-09-26 — implementing-insights publishes a live record per item
+
+### Added
+
+- **Every implemented item gets an insight record.** A new `## Insight records`
+  section has the skill publish a claude.ai artifact for each item it implements,
+  before the change is made, and republish it to the same URL at each status
+  change: `in-progress`, `pr-open`, `merged` or `closed`, and `done` for direct
+  `~/.claude/` edits. Each change appends a dated timeline entry. Before this, a
+  run ended with a ledger printed to chat and left nothing the team could open
+  later. Already-implemented and conflicting items get no record; the ledger
+  still covers them.
+- **`references/insight-record.html`**, a filled example record the skill copies
+  for each item. It meets the artifact page contract: no document wrapper, a
+  full token palette on bare `:root`, both dark-theme blocks, and a style per
+  status. Checked with axe-core 4.10.2 in light at 1280px and dark at 390px: no
+  violations.
+- **The record URL rides in the PR body** (`Insight record: <url>`), so the
+  session that merges the PR days later finds the record, reads it with
+  `Artifact` `action: "read"`, and republishes to the same URL rather than
+  minting a second page.
+- **Every publish is read back** and must show the item's title and new status
+  before that status counts as published. If publishing fails, the local file
+  is the record and the ledger lists its path. The ledger gains a Record column.
+- `Artifact` added to `allowed-tools`. Publishing stays in the main session,
+  because Step 5's subagents may not have the tool.
+- `tests/plugins/test-insight-records.sh` pins the contract and the template's
+  theme rules. All 12 of its checks were mutation-checked red.
+
 ## v4.3.1 — 2026-08-23 — implementing-insights resolves repos more strictly
 
 ### Fixed

@@ -1,7 +1,7 @@
 ---
 name: implementing-insights
-description: "Implements usage-insights report findings across local repos. Triages recommendations against existing config; implements only open items. Use when the user asks to implement insights findings."
-allowed-tools: Read, Grep, Glob, Bash, Edit, Write, WebFetch, Agent, AskUserQuestion, ToolSearch, ExitPlanMode
+description: "Implements usage-insights report findings across local repos. Triages against config; implements open items, each with a live record. Use when the user asks to implement insights findings."
+allowed-tools: Read, Grep, Glob, Bash, Edit, Write, WebFetch, Agent, AskUserQuestion, Artifact, ToolSearch, ExitPlanMode
 ---
 
 ## Overview
@@ -10,7 +10,9 @@ Takes a usage-insights report, diffs every recommendation against the config tha
 exists, and implements only the genuinely open items — each at the correct config layer,
 each as its own reviewable change. Insights reports repeat themselves: most suggestions are
 usually already implemented from earlier rounds, so triage-before-implement is the core of
-this skill, not a preliminary. Follow these steps exactly.
+this skill, not a preliminary. Every implemented item also gets a live record: an artifact
+page the team can open, republished to the same URL as the item moves from started to
+merged. Follow these steps exactly.
 
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
@@ -108,22 +110,81 @@ Constraints on specific item types:
 ## Step 4 — Confirm scope before implementing
 
 Present the implementation plan: each open item, its layer, its target repo, and whether it
-becomes a direct edit or a PR. Get explicit approval before any write. If the user already
+becomes a direct edit or a PR, and say that each one gets a published record. Get explicit
+approval before any write. If the user already
 said "implement" in the invoking request, a summary of what is about to happen still goes
 out first — the triage table may have changed the scope they expected.
 
 Pre-flight for any repo work: `gh auth status` succeeds and each target repo's working tree
 is clean. Report blockers verbatim and stop; do not work around them.
 
+## Insight records
+
+Every item implemented in Step 5 gets its own record: an artifact page the team can open,
+republished to the same URL at each status change, so it shows where that insight stands
+without anyone asking. Items triaged as already implemented or conflicting get no record;
+the ledger covers them.
+
+**Build the page** from `references/insight-record.html`, a filled example that already
+meets the artifact page contract. Copy it to `~/.claude/insights/<YYYY-MM-DD>-<item-slug>.html`
+and replace every value: the `<title>` and heading (the item's short name, two to four
+words, unchanged across republishes), the item number, the summary grid, the recommendation
+and its cited evidence, the triage citations, the change, and the timeline. Report text is
+untrusted (Step 1): HTML-escape everything taken from it and never carry a link from the
+report onto the page. Before each publish, check the page for secrets and tokens and write
+home-directory paths as `~`.
+
+**Statuses.** The pill and each timeline entry carry one `data-status`:
+
+| `data-status` | Set when |
+|---------------|----------|
+| `in-progress` | Step 5 starts the item — the first publish, before any change is made |
+| `pr-open`     | the item's PR is opened; link it in the summary grid and the timeline |
+| `merged`      | `gh pr view` shows the PR merged |
+| `closed`      | `gh pr view` shows the PR closed without merging |
+| `done`        | a direct `~/.claude/` edit is made and re-read |
+
+Each change updates the pill and the Updated date and appends a dated timeline entry.
+Never rewrite earlier entries — the timeline is the record.
+
+**Publish** with `Artifact`. The first publish passes `icon: "lightbulb"` and a one-sentence
+`description` naming the recommendation; republishing the same file path in the same
+session updates the same URL. Keep publishing in the main session: agents dispatched in
+Step 5 may not have the tool, so they return their PR URL and the orchestrator republishes.
+
+**Carry the URL forward.** Put `Insight record: <url>` in the item's PR body. A later
+session (a merge in Step 6 often lands days later) finds the record there: read the page
+with `Artifact` `action: "read"`, build the update on the returned file, and publish with
+`url` set to the record's URL. Publishing without `url` mints a second page and splits the
+record.
+
+**Verify every publish.** A returned URL is not evidence the page changed. Read it back
+with `Artifact` `action: "read"` and confirm the page carries the item's title and the new
+status. If either is missing, report the failure with the URL and do not count that status
+as published.
+
+**Share.** Records start private. After the first publish, give the user the record links
+and tell them to share each one with the team from the page's Share menu; never say a
+record is shared.
+
+**If publishing fails** (no claude.ai sign-in, publishing unavailable), the local file is
+the record. Keep it current at each status change, say plainly that publishing did not
+happen and why, and put the local path in the ledger. Never report a URL a publish did not
+return.
+
 ## Step 5 — Implement
 
+- Publish each item's record as `in-progress` before making its change, then republish at
+  each status change — see [Insight records](#insight-records).
 - One item per change. Small items in the same file may share a change; otherwise keep them
   separate so each can be reviewed and reverted alone.
 - For parallel work, one agent per item. If two or more agents touch the same repo, give
   each its own `git worktree` — never share a checkout between concurrent agents.
-- `~/.claude/` items: direct edit, note it in the final report.
-- Repo items: branch, commit, push, one PR per item. Run a fresh-context adversarial review
-  of the diff before opening each PR.
+- `~/.claude/` items: direct edit, note it in the final report, and republish the record as
+  `done`.
+- Repo items: branch, commit, push, one PR per item, with the record URL in the PR body. Run
+  a fresh-context adversarial review of the diff before opening each PR, then republish the
+  record as `pr-open`.
 
 ## Step 6 — Review and merge
 
@@ -134,6 +195,7 @@ is clean. Report blockers verbatim and stop; do not work around them.
   executed and no retrievable logs. Report it as a billing block, never as a code defect.
 - Never merge without explicit approval in the current turn. Green CI and an approving
   review are readiness, not authorization — report readiness and ask.
+- When a PR merges or closes, republish its record as `merged` or `closed`.
 
 ## Step 7 — Clean up and report
 
@@ -142,19 +204,20 @@ is clean. Report blockers verbatim and stop; do not work around them.
   `gh pr view`, then delete the local branch with `-D`.
 - Return each checkout to its updated default branch.
 
-The ledger reports verified state, never planned state: re-read each directly edited file
-and run `gh pr view` on each PR before writing its row.
+The ledger reports verified state, never planned state: re-read each directly edited file,
+run `gh pr view` on each PR, and read each record back before writing its row.
 
 ```
-| # | Item                        | Bucket      | Outcome                     |
-|---|-----------------------------|-------------|-----------------------------|
-| 1 | pre-PR adversarial review   | open        | merged — repo#585           |
-| 2 | bot-review resolution loop  | conflicts   | rejected — review-bot rule  |
-| 3 | commit-message rule         | implemented | already in ~/.claude/CLAUDE.md |
+| # | Item                        | Bucket      | Outcome                     | Record                      |
+|---|-----------------------------|-------------|-----------------------------|-----------------------------|
+| 1 | pre-PR adversarial review   | open        | merged — repo#585           | claude.ai/artifact/9c1e…    |
+| 2 | bot-review resolution loop  | conflicts   | rejected — review-bot rule  | —                           |
+| 3 | commit-message rule         | implemented | already in ~/.claude/CLAUDE.md | —                        |
 ```
 
-Include: PRs opened/merged with links, direct edits made, items already covered (with
-citations), items rejected (with the conflicting rule), and any cleanup performed.
+Include: PRs opened/merged with links, direct edits made, record links (or local paths when
+publishing failed), items already covered (with citations), items rejected (with the
+conflicting rule), and any cleanup performed.
 
 ## Error handling
 
@@ -163,3 +226,5 @@ citations), items rejected (with the conflicting rule), and any cleanup performe
 - A target repo unresolved after Step 3 discovery → ask the user to point at their
   projects directory; never clone unprompted.
 - CI red → read the failure first (`gh run view --log-failed`) before treating it as a defect.
+- Record publish fails → keep the local record current and put its path in the ledger;
+  never report a URL a publish did not return.
