@@ -131,7 +131,7 @@ The skill will:
 1. Guard: check for detached HEAD, default branch, `gh` auth
 2. Detect base branch via `git symbolic-ref`, fall back to `main`/`master`
 3. Check for existing PR (stops if one exists)
-4. Sync with the base branch if behind — rebase an unpushed branch, merge a pushed one (never force-push). Resolves `CHANGELOG.md`-only conflicts by keeping both entries, newest on top; any other conflict aborts and stops
+4. Sync with the base branch if behind — rebase an unpushed branch, merge a pushed one (never force-push); skipped when tracked changes are uncommitted. Resolves `CHANGELOG.md`-only conflicts by keeping both entries, newest on top; any other conflict aborts and stops
 5. Push branch if no upstream tracking ref
 6. Run `gh pr create` and output the PR URL — if the invoking skill reported a verification marker (such as `UNVERIFIED — no browser`), it is reproduced verbatim in the body's Test Plan; with no marker reported the template is unchanged
 

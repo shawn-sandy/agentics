@@ -66,21 +66,26 @@ exists, and its CHANGELOG entry conflicts at merge time. Settle both before
 pushing. `ship` carries the same procedure in its
 `references/sync-with-base.md`; change both together.
 
+This skill never commits the working tree, so first run
+`git status --porcelain --untracked-files=no`. Non-empty → say the branch was
+not synced because of uncommitted changes and proceed to Step 4. Never merge or
+rebase over them: `git merge --abort` cannot always restore uncommitted
+changes, and this skill never stashes.
+
 Run:
 ```
 git fetch origin <base>
 git rev-list --count HEAD..origin/<base>
 ```
 
-`0` → already current; proceed to Step 4. Otherwise pick by the upstream check
-Step 4 uses (`git rev-parse --abbrev-ref --symbolic-full-name @{u}`):
+`0` → already current; proceed to Step 4. Otherwise pick by whether this branch
+was ever pushed: `git rev-parse --verify --quiet refs/remotes/origin/<branch>`,
+with `<branch>` from `git branch --show-current`. Not `@{u}`: a worktree branch
+cut from `origin/<base>` tracks it, so `@{u}` succeeds on a branch never pushed.
 
-- **Non-zero exit (no upstream)** → `git rebase origin/<base>`.
-- **Zero exit (upstream exists)** → `git merge --no-edit origin/<base>`.
+- **Non-zero exit (never pushed)** → `git rebase origin/<base>`.
+- **Zero exit (pushed)** → `git merge --no-edit origin/<base>`.
   Rebasing a pushed branch needs a force-push, which this skill never runs.
-
-If git refuses to start because of uncommitted changes, say so and proceed to
-Step 4 unsynced — this skill never stashes.
 
 **On conflict**, list the files with `git diff --name-only --diff-filter=U`:
 

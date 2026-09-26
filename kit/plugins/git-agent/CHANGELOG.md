@@ -9,7 +9,11 @@
   its CHANGELOG entry conflicted at merge time. Usage insights flagged both
   more than once. pr-agent's new Step 3.5 and ship's new Step 4.7 fetch the
   base branch. When the branch is behind, they rebase it if it is unpushed and
-  merge if it is already pushed, so neither ever needs a force-push. A conflict
+  merge if it is already pushed, so neither ever needs a force-push. Whether it
+  was pushed is read from `refs/remotes/origin/<branch>`, not `@{u}`. A
+  worktree branch cut from `origin/<base>` tracks it, so `@{u}` succeeds on a
+  branch that was never pushed. pr-agent skips the sync when tracked changes
+  are uncommitted, because `git merge --abort` cannot always restore them. A conflict
   confined to `CHANGELOG.md` files is resolved by keeping both entries, with
   this branch's on top. Any other conflict aborts and stops. ship syncs after
   Step 4.5 because the self-review amends the Step 4 commit, and after a merge
@@ -22,8 +26,10 @@
   (agent-pr 12 → 14, agent-ship 20 → 22) to cover the fetch and the
   rebase or merge.
 - `tests/plugins/test-sync-with-base.sh` checks all four files. Each needs the
-  step before its push, the fetch, both the rebase and merge paths, an abort
-  path and no force-push. The two skills also need CHANGELOG handling.
+  step before its push, the fetch, both the rebase and merge paths, the
+  remote-ref push check, an abort path and no force-push. The two skills also
+  need CHANGELOG handling, and the two PR paths need the uncommitted-changes
+  skip.
 
 ## v4.21.0 — 2026-09-18 — commit and ship paths handle lint-gate blocks
 

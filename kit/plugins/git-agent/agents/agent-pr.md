@@ -77,9 +77,11 @@ If the result contains `"state":"MERGED"` or `"state":"CLOSED"`, or if the comma
 
 A branch cut before other PRs merged can describe behavior that no longer exists, and its CHANGELOG entry conflicts at merge time. Sync before pushing.
 
-Run `git fetch origin <base>`, then `git rev-list --count HEAD..origin/<base>`. `0` → already current; proceed to Step 4. Otherwise, with no upstream (`git rev-parse --abbrev-ref --symbolic-full-name @{u}` exits non-zero) run `git rebase origin/<base>`; with one, run `git merge --no-edit origin/<base>`. Rebasing a pushed branch needs a force-push, which you never run.
+You never commit the working tree, so first run `git status --porcelain --untracked-files=no`. Non-empty → note "Not synced: uncommitted changes." in the final report and proceed to Step 4. Never merge or rebase over them: `git merge --abort` cannot always restore uncommitted changes.
 
-**Any conflict, CHANGELOG included:** capture `git diff --name-only --diff-filter=U`, run `git rebase --abort` or `git merge --abort`, report the conflicted files verbatim, and **STOP**. You are denied `Edit`, so resolving is the parent session's call; the foreground pr-agent skill resolves CHANGELOG-only conflicts because a user is present. If git refuses to start because of uncommitted changes, note it in the final report and proceed to Step 4 unsynced.
+Run `git fetch origin <base>`, then `git rev-list --count HEAD..origin/<base>`. `0` → already current; proceed to Step 4. Otherwise check whether this branch was ever pushed with `git rev-parse --verify --quiet refs/remotes/origin/<branch>` (`<branch>` from Step 1's `git branch --show-current`). Not `@{u}`: a worktree branch cut from `origin/<base>` tracks it, so `@{u}` succeeds on a branch never pushed. Non-zero exit (never pushed) → `git rebase origin/<base>`; zero exit (pushed) → `git merge --no-edit origin/<base>`. Rebasing a pushed branch needs a force-push, which you never run.
+
+**Any conflict, CHANGELOG included:** capture `git diff --name-only --diff-filter=U`, run `git rebase --abort` or `git merge --abort`, report the conflicted files verbatim, and **STOP**. You are denied `Edit`, so resolving is the parent session's call; the foreground pr-agent skill resolves CHANGELOG-only conflicts because a user is present.
 
 ### Step 4: Push if Needed
 

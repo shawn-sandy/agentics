@@ -53,8 +53,21 @@ for rel in skills/ship/SKILL.md skills/pr-agent/SKILL.md agents/agent-ship.md ag
   done
   printf '%s\n' "$body" | grep -q -- "--force" && fail "section must never force-push" || pass
 
+  # "Pushed" is decided by the remote branch ref, not @{u}: a worktree branch
+  # cut with `git worktree add -b <b> origin/<base>` tracks origin/<base>, so
+  # @{u} exits 0 on a branch that was never pushed.
+  printf '%s\n' "$body" | grep -qF "refs/remotes/origin/" && pass ||
+    fail "pushed-or-not must check refs/remotes/origin/<branch>, not @{u}"
+
   case "$rel" in
     skills/*) printf '%s\n' "$body" | grep -q "CHANGELOG" && pass || fail "skill must resolve CHANGELOG-only conflicts" ;;
+  esac
+
+  # pr-agent never commits the working tree, so it can start dirty — and
+  # `git merge --abort` cannot always restore uncommitted changes.
+  case "$rel" in
+    *pr-agent*|*agent-pr*) printf '%s\n' "$body" | grep -qF -- "--untracked-files=no" && pass ||
+      fail "must skip the sync when tracked changes are uncommitted" ;;
   esac
 done
 

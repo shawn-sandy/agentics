@@ -17,11 +17,13 @@ git rev-list --count HEAD..origin/<base>
 
 `0` → already current; continue to Step 5.
 
-Otherwise pick by whether the branch has been pushed
-(`git rev-parse --abbrev-ref --symbolic-full-name @{u}`):
+Otherwise pick by whether this branch was ever pushed:
+`git rev-parse --verify --quiet refs/remotes/origin/<branch>`, with `<branch>`
+from `git branch --show-current`. Not `@{u}`: a worktree branch cut from
+`origin/<base>` tracks it, so `@{u}` succeeds on a branch never pushed.
 
-- **Non-zero exit (no upstream)** → `git rebase origin/<base>`.
-- **Zero exit (upstream exists)** → `git merge --no-edit origin/<base>`.
+- **Non-zero exit (never pushed)** → `git rebase origin/<base>`.
+- **Zero exit (pushed)** → `git merge --no-edit origin/<base>`.
   Rebasing a pushed branch needs a force-push, which this skill never runs.
 
 ## On conflict
