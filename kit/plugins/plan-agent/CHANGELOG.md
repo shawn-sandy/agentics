@@ -1,5 +1,22 @@
 # Changelog
 
+## 9.19.0 — Step 8 can build the prototype and the design canvas together (2026-09-26)
+
+### Added
+
+- **"Want to see it before building?" gains a fourth option,
+  `Prototype and design canvas`.** Until now the see-it-first question in
+  `implementation-plan` Step 8 offered one or the other, so getting both meant
+  picking one and invoking the other skill by hand. The new option runs
+  `/plan-agent:prototype` and then `/plan-agent:design` on the same plan, one
+  after the other — never in parallel, because both edit the spec's
+  frontmatter (`prototype:` / `proto-model:`, then `design:` / `design-dir:`)
+  and re-render the plan. A failure in the first still runs the second. The
+  question now sits at the 4-option `AskUserQuestion` cap, and it still
+  appears only on plans with UI signals.
+  `tests/plugins/test-step8-see-it-first.sh` pins the option, the cap, and the
+  prototype-then-design order.
+
 ## 9.18.1 — the goal prompt leads with `/goal` (2026-09-20)
 
 ### Changed

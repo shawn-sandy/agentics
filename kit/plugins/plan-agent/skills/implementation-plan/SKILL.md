@@ -619,15 +619,16 @@ EOF
    - Options:
      - `Prototype` — Generate a clickable static-HTML prototype under docs/prototypes/.
      - `Design canvas` — Publish an editable design canvas with one artboard per user-facing step.
+     - `Prototype and design canvas` — Generate the prototype, then publish the design canvas.
      - `No` — Go straight to the next step.
 
    **Ask the see-it-first question only when the plan carries UI signals.**
    Reuse the `ui_signals_present` rule already defined in
    `skills/review-plan/SKILL.md`, "Step 3b — Detect UI signals" — that file
    owns the keyword list, and a second definition here would drift from it.
-   On a plan with no UI signals, omit the question entirely: neither
-   `Prototype` nor `Design canvas` is offered, because there is no surface
-   for either to draw.
+   On a plan with no UI signals, omit the question entirely: none of
+   `Prototype`, `Design canvas`, or `Prototype and design canvas` is offered,
+   because there is no surface for any of them to draw.
 
    For the next-step question, **when a workflow prompt was generated**
    (frontmatter `workflow: always` or the renderer's heuristic fired — check
@@ -669,6 +670,16 @@ EOF
    per user-facing step, delegates authoring to the built-in design skill,
    and writes `design:` / `design-dir:` back into the spec; when it
    finishes, return here and act on the next-step choice.
+
+   **If the user answered `Prototype and design canvas`:** before acting on
+   the next-step choice, run both handlers above in order —
+   `Skill(skill: "plan-agent:prototype", args: "<plan path>")` first, then
+   `Skill(skill: "plan-agent:design", args: "<plan path>")` — each with the
+   rendered plan's relative path. Never run them in parallel: both edit the
+   same spec frontmatter (`prototype:` / `proto-model:`, then `design:` /
+   `design-dir:`) and re-render the plan, so concurrent runs would clobber
+   each other's keys. If the first fails, report it and still run the
+   second; when both finish, return here and act on the next-step choice.
 
    **If the user answered `No` to the see-it-first question:** continue
    straight to the next-step choice.
