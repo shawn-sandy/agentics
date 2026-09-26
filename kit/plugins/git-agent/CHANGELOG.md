@@ -1,5 +1,42 @@
 # Changelog — git-agent
 
+## v4.22.0 — 2026-09-26 — sync with the base branch before pushing
+
+### Added
+
+- **ship and pr-agent sync with the base branch before pushing.** A branch cut
+  before other PRs merged could describe behavior that no longer existed, and
+  its CHANGELOG entry conflicted at merge time. Usage insights flagged both
+  more than once. pr-agent's new Step 3.5 and ship's new Step 4.7 fetch the
+  base branch. When the branch is behind, they rebase it if it is unpushed and
+  merge if it is already pushed, so neither ever needs a force-push. Whether it
+  was pushed is read from `refs/remotes/origin/<branch>`, not `@{u}`. A
+  worktree branch cut from `origin/<base>` tracks it, so `@{u}` succeeds on a
+  branch that was never pushed. pr-agent skips the sync when tracked changes
+  are uncommitted, because `git merge --abort` cannot always restore them. A conflict
+  confined to `CHANGELOG.md` files is resolved by keeping both entries, with
+  this branch's on top. Any other conflict aborts and stops. ship syncs after
+  Step 4.5 because the self-review amends the Step 4 commit, and after a merge
+  that amend would land on the merge commit. ship-autonomous delegates to
+  pr-agent, so it syncs too. pr-agent's `allowed-tools` gains `Edit` for the
+  CHANGELOG resolution.
+- **agent-ship and agent-pr sync too, but abort on any conflict.** They are
+  denied `Edit`, so they report the conflicted files and stop, leaving the
+  resolution to the parent session. `maxTurns` goes up by one per command on
+  the worst (conflict) path, so a background agent never hits its cap
+  mid-rebase. That path is fetch, count, remote-ref check, rebase or merge,
+  list conflicts, abort, plus the uncommitted-changes check in agent-pr:
+  agent-pr 12 → 19, agent-ship 20 → 26.
+- **ship's Step 4.5 now hands off to Step 4.7.** Both of its exits, the
+  confirmed-findings amend in `references/self-review.md` and the
+  no-base fallback, used to say "continue to Step 5". That skipped the sync on
+  exactly the path that amends.
+- `tests/plugins/test-sync-with-base.sh` checks all four files. Each needs the
+  step before its push, the fetch, both the rebase and merge paths, the
+  remote-ref push check, an abort path and no force-push. The two skills also
+  need CHANGELOG handling, and the two PR paths need the uncommitted-changes
+  skip.
+
 ## v4.21.0 — 2026-09-18 — commit and ship paths handle lint-gate blocks
 
 ### Changed

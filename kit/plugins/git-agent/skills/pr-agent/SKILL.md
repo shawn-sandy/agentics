@@ -1,12 +1,12 @@
 ---
 name: pr-agent
 description: "Pushes the branch and creates a pull request. Supports GitHub and GitLab via gh and glab with auto-filled title and body. Use when the user asks to create a PR or open a pull request."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(git-agent-extract-plan-issues *), Read, Grep, Glob, Agent, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(git-agent-extract-plan-issues *), Read, Edit, Grep, Glob, Agent, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 model: sonnet
 ---
 
-Push the current branch if needed and create a GitHub pull request. This skill does not commit your working-tree changes or run tests (the sole commit it ever makes is Step 4.7's review-fix commit). Follow these steps in strict order. **STOP immediately after step 5.**
+Push the current branch if needed and create a GitHub pull request. This skill does not commit your working-tree changes or run tests (the only commits it makes are Step 3.5's sync with the base branch and Step 4.7's review-fix commit). Follow these steps in strict order. **STOP immediately after step 5.**
 
 ## When not to use
 
@@ -57,7 +57,45 @@ gh pr view --json state,url
 
 If the result contains `"state":"OPEN"`, output: "A pull request already exists: <url>" and **STOP**. Do not create a duplicate.
 
-If the result contains `"state":"MERGED"` or `"state":"CLOSED"`, or if the command exits non-zero (no PR found), proceed to Step 4.
+If the result contains `"state":"MERGED"` or `"state":"CLOSED"`, or if the command exits non-zero (no PR found), proceed to Step 3.5.
+
+## Step 3.5: Sync With Base
+
+A branch cut before other PRs merged can describe behavior that no longer
+exists, and its CHANGELOG entry conflicts at merge time. Settle both before
+pushing. `ship` carries the same procedure in its
+`references/sync-with-base.md`; change both together.
+
+This skill never commits the working tree, so first run
+`git status --porcelain --untracked-files=no`. Non-empty → say the branch was
+not synced because of uncommitted changes and proceed to Step 4. Never merge or
+rebase over them: `git merge --abort` cannot always restore uncommitted
+changes, and this skill never stashes.
+
+Run:
+```
+git fetch origin <base>
+git rev-list --count HEAD..origin/<base>
+```
+
+`0` → already current; proceed to Step 4. Otherwise pick by whether this branch
+was ever pushed: `git rev-parse --verify --quiet refs/remotes/origin/<branch>`,
+with `<branch>` from `git branch --show-current`. Not `@{u}`: a worktree branch
+cut from `origin/<base>` tracks it, so `@{u}` succeeds on a branch never pushed.
+
+- **Non-zero exit (never pushed)** → `git rebase origin/<base>`.
+- **Zero exit (pushed)** → `git merge --no-edit origin/<base>`.
+  Rebasing a pushed branch needs a force-push, which this skill never runs.
+
+**On conflict**, list the files with `git diff --name-only --diff-filter=U`:
+
+- **Every conflicted file is a `CHANGELOG.md`** → keep both sides' entries,
+  this branch's on top as the newest, and remove the markers. `git add` those
+  files, then `git -c core.editor=true rebase --continue` (rebase) or
+  `git commit --no-edit` (merge). A rebase can stop again on a later commit;
+  repeat for each stop.
+- **Anything else** → `git rebase --abort` or `git merge --abort`, report the
+  conflicted files verbatim, and **STOP**. Code conflicts are the user's call.
 
 ## Step 4: Push if Needed
 
