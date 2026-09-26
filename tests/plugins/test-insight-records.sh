@@ -96,6 +96,21 @@ else
   fail "no instruction hands the record URL to the agent that opens the PR — the PR body would ship without it"
 fi
 
+echo "6d. record paths are unique per item and never empty"
+if grep -qE 'insights/<[^>]+>-<[^>]*number[^>]*>-<item-slug>\.html' "$SKILL" \
+  && units | grep -i 'slug' | grep -qi 'empty'; then
+  pass
+else
+  fail "the record path must carry the item number (two same-named items collide) and name a fallback for an empty slug"
+fi
+
+echo "6e. a failed publish leaves the PR body without a record line"
+if units | grep -iE 'publish(ing)? fail' | grep -qE 'Insight record:|PR body'; then
+  pass
+else
+  fail "no instruction says what the PR body and agent hand-off do when the first publish failed and there is no URL"
+fi
+
 echo "7. the template meets the artifact page contract"
 if [ ! -f "$TEMPLATE" ]; then
   fail "template missing — nothing to check"

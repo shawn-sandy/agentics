@@ -30,6 +30,11 @@
 - **The record's file name cannot come from report text.** `<item-slug>` is
   built from the item's short name and reduced to `[a-z0-9-]`, so a crafted
   recommendation title cannot write outside `~/.claude/insights/`.
+  The path also carries the item number, so two same-named items never share a
+  file, and an empty slug falls back to `item`.
+- **A failed publish hands nothing over.** With no URL, the agent gets no
+  record URL and the PR body omits the `Insight record:` line; the main
+  session keeps the local file current.
 - `tests/plugins/test-insight-records.sh` pins the contract and the template's
   theme rules. Twelve deliberate breaks of the skill and template each turned
   it red, and the slug and agent-handoff checks failed before their fixes
