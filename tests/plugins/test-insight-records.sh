@@ -70,6 +70,32 @@ else
   fail "SKILL.md does not name status(es):$missing"
 fi
 
+# Prose units: each paragraph and each bullet, with wrapped lines joined, so a
+# check that two ideas share one instruction survives rewrapping.
+units() {
+  python3 - "$SKILL" <<'PYEOF'
+import re, sys
+text = open(sys.argv[1], encoding="utf-8").read()
+for block in re.split(r"\n\s*\n", text):
+    for unit in re.split(r"\n(?=\s*[-*] |\s*\d+\. )", block):
+        print(" ".join(unit.split()))
+PYEOF
+}
+
+echo "6b. the record slug is restricted before it becomes a file path"
+if units | grep -i 'slug' | grep -qF '[a-z0-9-]'; then
+  pass
+else
+  fail "no instruction reduces <item-slug> to [a-z0-9-] — untrusted report text could traverse out of ~/.claude/insights/"
+fi
+
+echo "6c. dispatched agents receive the record URL for the PR body"
+if units | grep -i 'agent' | grep -qi 'record URL'; then
+  pass
+else
+  fail "no instruction hands the record URL to the agent that opens the PR — the PR body would ship without it"
+fi
+
 echo "7. the template meets the artifact page contract"
 if [ ! -f "$TEMPLATE" ]; then
   fail "template missing — nothing to check"

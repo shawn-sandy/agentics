@@ -15,8 +15,8 @@
 - **`references/insight-record.html`**, a filled example record the skill copies
   for each item. It meets the artifact page contract: no document wrapper, a
   full token palette on bare `:root`, both dark-theme blocks, and a style per
-  status. Checked with axe-core 4.10.2 in light at 1280px and dark at 390px: no
-  violations.
+  status. A one-time manual browser check with axe-core 4.10.2 found no
+  violations in light at 1280px or dark at 390px. No test reruns it.
 - **The record URL rides in the PR body** (`Insight record: <url>`), so the
   session that merges the PR days later finds the record, reads it with
   `Artifact` `action: "read"`, and republishes to the same URL rather than
@@ -25,9 +25,15 @@
   before that status counts as published. If publishing fails, the local file
   is the record and the ledger lists its path. The ledger gains a Record column.
 - `Artifact` added to `allowed-tools`. Publishing stays in the main session,
-  because Step 5's subagents may not have the tool.
+  because Step 5's subagents may not have the tool. Each dispatched agent gets
+  its item's record URL in its task so the PR it opens carries it.
+- **The record's file name cannot come from report text.** `<item-slug>` is
+  built from the item's short name and reduced to `[a-z0-9-]`, so a crafted
+  recommendation title cannot write outside `~/.claude/insights/`.
 - `tests/plugins/test-insight-records.sh` pins the contract and the template's
-  theme rules. All 12 of its checks were mutation-checked red.
+  theme rules. Twelve deliberate breaks of the skill and template each turned
+  it red, and the slug and agent-handoff checks failed before their fixes
+  landed.
 
 ## v4.3.1 — 2026-08-23 — implementing-insights resolves repos more strictly
 
