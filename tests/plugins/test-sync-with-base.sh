@@ -71,4 +71,15 @@ for rel in skills/ship/SKILL.md skills/pr-agent/SKILL.md agents/agent-ship.md ag
   esac
 done
 
+echo "ship: no earlier step jumps past Step 4.7"
+# Inserting a step leaves stale "continue to Step 5" pointers in files the step
+# never touched — self-review.md's confirmed-findings branch skipped the sync.
+# sync-with-base.md is Step 4.7 itself, so it is the one file allowed to say it.
+STALE=$(grep -rlF "continue to Step 5" "$GA/skills/ship" | grep -v "/sync-with-base.md$" || true)
+[ -z "$STALE" ] && pass || fail "stale 'continue to Step 5' in: $STALE"
+
+echo "ship: Step 4.7 skips when no base resolves"
+grep -qF "cannot resolve a base branch" "$GA/skills/ship/references/sync-with-base.md" && pass ||
+  fail "sync-with-base.md has no unresolvable-base fallback"
+
 if [ "$FAILURES" -eq 0 ]; then echo "All checks passed."; else echo "$FAILURES check(s) failed."; exit 1; fi

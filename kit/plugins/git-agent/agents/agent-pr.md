@@ -12,7 +12,7 @@ description: >
 tools: Bash, Read, Grep, Glob
 disallowedTools: Write, Edit, NotebookEdit
 model: sonnet
-maxTurns: 14
+maxTurns: 19
 background: true
 ---
 

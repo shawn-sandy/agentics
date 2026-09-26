@@ -57,7 +57,7 @@ git add -A && git commit --amend --no-edit
 
 The Step 4 commit is not yet pushed, so amending is safe.
 **Single pass — never dispatch a second review of the amended diff.**
-Re-read your own fixes, then continue to Step 5.
+Re-read your own fixes, then continue to Step 4.7.
 
 **Unconfirmed findings:** never block the ship on them. Carry each into the PR
 body (Step 8) as a `## Review Notes` section, one line per finding: the claim

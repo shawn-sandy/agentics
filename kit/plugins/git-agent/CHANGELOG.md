@@ -22,9 +22,15 @@
   CHANGELOG resolution.
 - **agent-ship and agent-pr sync too, but abort on any conflict.** They are
   denied `Edit`, so they report the conflicted files and stop, leaving the
-  resolution to the parent session. `maxTurns` goes up by two for each agent
-  (agent-pr 12 → 14, agent-ship 20 → 22) to cover the fetch and the
-  rebase or merge.
+  resolution to the parent session. `maxTurns` goes up by one per command on
+  the worst (conflict) path, so a background agent never hits its cap
+  mid-rebase. That path is fetch, count, remote-ref check, rebase or merge,
+  list conflicts, abort, plus the uncommitted-changes check in agent-pr:
+  agent-pr 12 → 19, agent-ship 20 → 26.
+- **ship's Step 4.5 now hands off to Step 4.7.** Both of its exits, the
+  confirmed-findings amend in `references/self-review.md` and the
+  no-base fallback, used to say "continue to Step 5". That skipped the sync on
+  exactly the path that amends.
 - `tests/plugins/test-sync-with-base.sh` checks all four files. Each needs the
   step before its push, the fetch, both the rebase and merge paths, the
   remote-ref push check, an abort path and no force-push. The two skills also

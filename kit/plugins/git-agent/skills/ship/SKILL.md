@@ -71,7 +71,7 @@ Runs by default; `--no-review` skips it entirely.
 
 Resolve `<base>` via **Step 7: Detect Base Branch**, then reuse it there
 rather than detecting twice. If none resolves, output "Skipping self-review:
-cannot resolve a base branch." and continue to Step 5.
+cannot resolve a base branch." and continue to Step 4.7.
 
 Read `references/self-review.md` — the fresh-context subagent dispatch, the
 six adversarial checks, and the amend procedure.

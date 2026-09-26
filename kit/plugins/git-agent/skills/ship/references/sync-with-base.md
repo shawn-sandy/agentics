@@ -10,6 +10,9 @@ settles both while the branch is still local.
 It runs after Step 4.5, not before: the self-review amends the Step 4 commit,
 and after a merge that amend would land on the merge commit instead.
 
+No `<base>` resolves → output "Skipping sync: cannot resolve a base branch."
+and continue to Step 5. Otherwise run:
+
 ```
 git fetch origin <base>
 git rev-list --count HEAD..origin/<base>
