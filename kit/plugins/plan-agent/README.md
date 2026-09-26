@@ -167,7 +167,7 @@ If the Workflow tool is unavailable in the session, selecting `Review the plan` 
 
 **Step 8 — "Want to see it before building?" (conditional):**
 
-When the plan carries UI signals — the same `ui_signals_present` rule `review-plan` Step 3b applies — Step 8 adds a **third question** to its existing batched `AskUserQuestion` call, offering `Prototype` / `Design canvas` / `No`. A third *question*, never two more options: both existing option lists already sit at the 4-option cap, so there is no room to graft the choice onto either. `Prototype` runs `/plan-agent:prototype`, `Design canvas` runs `/plan-agent:design`. This is also the first time `prototype` is offered anywhere in the planning chain — until now it was reachable only by knowing the command existed.
+When the plan carries UI signals — the same `ui_signals_present` rule `review-plan` Step 3b applies — Step 8 adds a **third question** to its existing batched `AskUserQuestion` call, offering `Prototype` / `Design canvas` / `Prototype and design canvas` / `No`. A third *question*, never two more options: both existing option lists already sit at the 4-option cap, so there is no room to graft the choice onto either. `Prototype` runs `/plan-agent:prototype`, `Design canvas` runs `/plan-agent:design`, and `Prototype and design canvas` runs both, prototype first, one after the other — both write the spec's frontmatter (`prototype:` / `proto-model:`, then `design:` / `design-dir:`), so they never run in parallel. This is also the first time `prototype` is offered anywhere in the planning chain — until now it was reachable only by knowing the command existed.
 
 ### HTML plan output
 
