@@ -1,5 +1,30 @@
 # Changelog — git-agent
 
+## v4.22.0 — 2026-09-26 — sync with the base branch before pushing
+
+### Added
+
+- **ship and pr-agent sync with the base branch before pushing.** A branch cut
+  before other PRs merged could describe behavior that no longer existed, and
+  its CHANGELOG entry conflicted at merge time. Usage insights flagged both
+  more than once. pr-agent's new Step 3.5 and ship's new Step 4.7 fetch the
+  base branch. When the branch is behind, they rebase it if it is unpushed and
+  merge if it is already pushed, so neither ever needs a force-push. A conflict
+  confined to `CHANGELOG.md` files is resolved by keeping both entries, with
+  this branch's on top. Any other conflict aborts and stops. ship syncs after
+  Step 4.5 because the self-review amends the Step 4 commit, and after a merge
+  that amend would land on the merge commit. ship-autonomous delegates to
+  pr-agent, so it syncs too. pr-agent's `allowed-tools` gains `Edit` for the
+  CHANGELOG resolution.
+- **agent-ship and agent-pr sync too, but abort on any conflict.** They are
+  denied `Edit`, so they report the conflicted files and stop, leaving the
+  resolution to the parent session. `maxTurns` goes up by two for each agent
+  (agent-pr 12 → 14, agent-ship 20 → 22) to cover the fetch and the
+  rebase or merge.
+- `tests/plugins/test-sync-with-base.sh` checks all four files. Each needs the
+  step before its push, the fetch, both the rebase and merge paths, an abort
+  path and no force-push. The two skills also need CHANGELOG handling.
+
 ## v4.21.0 — 2026-09-18 — commit and ship paths handle lint-gate blocks
 
 ### Changed

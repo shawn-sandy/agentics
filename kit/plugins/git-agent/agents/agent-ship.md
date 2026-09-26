@@ -12,7 +12,7 @@ description: >
 tools: Bash, Read, Grep, Glob, ToolSearch, ExitPlanMode
 disallowedTools: Write, Edit, NotebookEdit
 model: sonnet
-maxTurns: 20
+maxTurns: 22
 background: true
 ---
 
@@ -131,6 +131,14 @@ Other than the check-5 secret stop, this step never blocks the ship. It reports;
 **Report every finding in the final summary**, each with file, line, and what breaks. The parent session cannot see this step's reasoning, so an unreported finding is a silently shipped regression. If there are none, report "Self-review: no findings."
 
 The foreground `ship` skill does fix findings before pushing, because a user is present to see the edits. That asymmetry is deliberate — do not mirror the skill's amend step here.
+
+### Step 4.7: Sync With Base
+
+A branch cut before other PRs merged can describe behavior that no longer exists, and its CHANGELOG entry conflicts at merge time. Sync before pushing.
+
+Reuse the `<base>` Step 4.5 resolved (none → note "Skipping sync: cannot resolve a base branch." and continue to Step 5). Run `git fetch origin <base>`, then `git rev-list --count HEAD..origin/<base>`. `0` → already current; continue to Step 5. Otherwise, with no upstream (`git rev-parse --abbrev-ref --symbolic-full-name @{u}` exits non-zero) run `git rebase origin/<base>`; with one, run `git merge --no-edit origin/<base>`. Rebasing a pushed branch needs a force-push, which you never run.
+
+**Any conflict, CHANGELOG included:** capture `git diff --name-only --diff-filter=U`, run `git rebase --abort` or `git merge --abort`, report the conflicted files verbatim, and **STOP** — the commit stays local and unpushed. You are denied `Edit`, so resolving is the parent session's call; the foreground ship skill resolves CHANGELOG-only conflicts because a user is present.
 
 ### Step 5: Push
 

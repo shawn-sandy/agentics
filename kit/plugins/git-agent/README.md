@@ -131,8 +131,9 @@ The skill will:
 1. Guard: check for detached HEAD, default branch, `gh` auth
 2. Detect base branch via `git symbolic-ref`, fall back to `main`/`master`
 3. Check for existing PR (stops if one exists)
-4. Push branch if no upstream tracking ref
-5. Run `gh pr create` and output the PR URL — if the invoking skill reported a verification marker (such as `UNVERIFIED — no browser`), it is reproduced verbatim in the body's Test Plan; with no marker reported the template is unchanged
+4. Sync with the base branch if behind — rebase an unpushed branch, merge a pushed one (never force-push). Resolves `CHANGELOG.md`-only conflicts by keeping both entries, newest on top; any other conflict aborts and stops
+5. Push branch if no upstream tracking ref
+6. Run `gh pr create` and output the PR URL — if the invoking skill reported a verification marker (such as `UNVERIFIED — no browser`), it is reproduced verbatim in the body's Test Plan; with no marker reported the template is unchanged
 
 **STOPS after PR creation. Does not analyze code, run tests, or take further action.**
 
@@ -144,9 +145,10 @@ The skill will:
 1. Pre-flight: run **all five** guards — clean tree, detached HEAD, default branch, CLI auth, worktree env parity — then print **one** PASS/BLOCKED table with a remediation command per blocker. It does not stop at the first failure, so three blockers cost one invocation instead of three. Any BLOCKED row halts before any mutation
 2. Run `git add -A` and analyze `git diff --staged`
 3. Write a conventional commit message and run `git commit`. If [the lint gate](#the-commit-lint-gate) blocks it, ask whether to fix the reported failures and retry, as `commit-agent` does; never switch the gate off
-4. Push the branch (with `-u` if no upstream)
-5. If a PR already exists, report the URL and stop
-6. Detect base branch, gather content, and run `gh pr create`
+4. Sync with the base branch if behind, the same way `pr-agent` does
+5. Push the branch (with `-u` if no upstream)
+6. If a PR already exists, report the URL and stop
+7. Detect base branch, gather content, and run `gh pr create`
 
 **STOPS after PR creation (or after pushing to an existing PR). Does not analyze code, run tests, or take further action.**
 

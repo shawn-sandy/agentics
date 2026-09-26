@@ -79,6 +79,12 @@ six adversarial checks, and the amend procedure.
 This step never blocks the ship — sole exception, a confirmed secret
 (reference). It fixes what it confirms and reports the rest.
 
+## Step 4.7: Sync With Base
+
+Reuse Step 4.5's `<base>` (or resolve it via Step 7). If behind, rebase
+(unpushed) or merge (pushed); resolve CHANGELOG-only conflicts, **STOP** on
+any other. Procedure: `references/sync-with-base.md`.
+
 ## Step 5: Push
 
 Run:

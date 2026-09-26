@@ -12,7 +12,7 @@ description: >
 tools: Bash, Read, Grep, Glob
 disallowedTools: Write, Edit, NotebookEdit
 model: sonnet
-maxTurns: 12
+maxTurns: 14
 background: true
 ---
 
@@ -71,7 +71,15 @@ gh pr view --json state,url
 
 If the result contains `"state":"OPEN"`, report "A pull request already exists: <url>" and **STOP**. Do not create a duplicate.
 
-If the result contains `"state":"MERGED"` or `"state":"CLOSED"`, or if the command exits non-zero (no PR found), proceed to Step 4.
+If the result contains `"state":"MERGED"` or `"state":"CLOSED"`, or if the command exits non-zero (no PR found), proceed to Step 3.5.
+
+### Step 3.5: Sync With Base
+
+A branch cut before other PRs merged can describe behavior that no longer exists, and its CHANGELOG entry conflicts at merge time. Sync before pushing.
+
+Run `git fetch origin <base>`, then `git rev-list --count HEAD..origin/<base>`. `0` → already current; proceed to Step 4. Otherwise, with no upstream (`git rev-parse --abbrev-ref --symbolic-full-name @{u}` exits non-zero) run `git rebase origin/<base>`; with one, run `git merge --no-edit origin/<base>`. Rebasing a pushed branch needs a force-push, which you never run.
+
+**Any conflict, CHANGELOG included:** capture `git diff --name-only --diff-filter=U`, run `git rebase --abort` or `git merge --abort`, report the conflicted files verbatim, and **STOP**. You are denied `Edit`, so resolving is the parent session's call; the foreground pr-agent skill resolves CHANGELOG-only conflicts because a user is present. If git refuses to start because of uncommitted changes, note it in the final report and proceed to Step 4 unsynced.
 
 ### Step 4: Push if Needed
 
