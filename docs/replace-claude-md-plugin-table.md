@@ -14,7 +14,7 @@
 - Bumped marketplace versions and added CHANGELOG entries for every plugin whose README was modified
 - Rewrote CLAUDE.md's plugin table to `| Plugin | Type | Purpose |` with one purpose line under 15 words per plugin
 - Added a single-sentence pointer to README.md's generated Plugin Reference Table and to individual plugin READMEs
-- Wrote `tests/plugins/test-claude-md-budget.sh` asserting word count under 800, all plugin names present, and no row over 25 words
+- Wrote `tests/plugins/test-claude-md-budget.sh` asserting word count under 800 (the plugin-name and table-row checks were later removed when the CLAUDE.md table itself was retired)
 - Wired the new test into `.github/workflows/check-plugin-versions.yml`
 
 ## Files changed
@@ -38,7 +38,7 @@ With no orphans remaining, the plugin table was rewritten to a tightly constrain
 
 The final `wc -w CLAUDE.md` dropped from 1,656 words to under 800, meeting the plan's stated objective. The generated README table serves as the maintained canonical catalog; CLAUDE.md's role is now navigation cue, not documentation.
 
-To prevent future drift, `tests/plugins/test-claude-md-budget.sh` enforces three invariants: the word count stays under 800, every plugin name in `marketplace.json` appears in CLAUDE.md, and no table row exceeds 25 words. A table row padded past 25 words makes the test exit non-zero, so the constraint is self-enforcing rather than advisory.
+To prevent future drift, `tests/plugins/test-claude-md-budget.sh` enforces one invariant: `CLAUDE.md` stays under 800 words. The plugin-name coverage and table-row-length checks that the plan described were removed alongside the verbose plugin table they policed.
 
 ## How to use it
 

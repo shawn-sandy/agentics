@@ -13,7 +13,7 @@
 - `SKILL.md` resolves the output directory from `plansDirectory` in `.claude/settings.json` (falls back to `docs/plans`)
 - Skill auto-discovers the most recent session transcript for the current project from `~/.claude/projects/`
 - Bundled `social-export-session` bin wrapper invokes the Python script so large transcripts never enter Claude's context
-- Script extracts user/Claude turns, skips tool results, sidechains, and system-injected messages, writes `<date>-<slug>.md` with YAML frontmatter (`session-id`, `date`, `source`, `type: session-export`)
+- Script extracts user/Claude turns, skips tool results, sidechains, and system-injected messages, writes `<date>-<slug>-<session_id[:8]>.md` (using the transcript stem when no session ID is present) with YAML frontmatter (`session-id`, `date`, `source`, `type: session-export`)
 - `social-media-tools` bumped to `2.14.0` in marketplace with CHANGELOG entry and README updates
 - No standalone `session-tools` plugin remains in `kit/plugins/` or `marketplace.json`
 
@@ -33,7 +33,7 @@ Session transcripts are stored as JSONL files at `~/.claude/projects/<project-sl
 
 The skill resolves the output directory by reading `plansDirectory` from `.claude/settings.json`, falling back to `docs/plans`. The target directory is always `<plansDirectory>/sessions`. If no transcript path is provided, the skill discovers the most recent transcript for the current project by running `ls -t` on `~/.claude/projects/<project-slug>/`. For worktree sessions where the directory name doesn't match, the skill lists `~/.claude/projects/` and matches by the main repo path.
 
-The conversion is delegated entirely to the `social-export-session` bin wrapper (backed by `scripts/export_session.py`) — the JSONL file is never loaded into Claude's context. The Python script reads the JSONL line by line, keeps only `user` and `assistant` role turns, and strips harness-injected content. The output file is named `<date>-<slug>.md` and carries YAML frontmatter with `session-id`, `date`, `source`, and `type: session-export`.
+The conversion is delegated entirely to the `social-export-session` bin wrapper (backed by `scripts/export_session.py`) — the JSONL file is never loaded into Claude's context. The Python script reads the JSONL line by line, keeps only `user` and `assistant` role turns, and strips harness-injected content. The output file is named `<date>-<slug>-<session_id[:8]>.md` (using the transcript filename stem in place of the session ID when none is found) and carries YAML frontmatter with `session-id`, `date`, `source`, and `type: session-export`.
 
 The `type: session-export` frontmatter tag makes these files indexable as a distinct category — the Next Steps in the plan describe a future enhancement to surface them in the plans gallery.
 
@@ -50,7 +50,7 @@ The `type: session-export` frontmatter tag makes these files indexable as a dist
 /social-media-tools:export-session abc123
 ```
 
-Exports are written to `<plansDirectory>/sessions/<date>-<slug>.md` and are plain Markdown with frontmatter, ready to read or convert further.
+Exports are written to `<plansDirectory>/sessions/<date>-<slug>-<session_id[:8]>.md` and are plain Markdown with frontmatter, ready to read or convert further.
 
 ## Commit history
 
