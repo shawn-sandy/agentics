@@ -9,7 +9,7 @@
 
 ## What shipped
 
-- Rewrote Step 3's resolution paragraph with a three-step sequence: inventory from `~/.claude/projects/` slugs → name-suffix matching against a real git checkout → ask-for-directory fallback scanned one level deep.
+- Rewrote Step 3's resolution paragraph with a three-step sequence: inventory from `~/.claude/projects/` slugs → exact-basename matching against a real git checkout → ask-for-directory fallback scanned one level deep.
 - Added a plugin-layer fallback for workflow-shaped items: users with no personal plugin repo have their items routed to `~/.claude/` instead of stalling.
 - Bumped memory-tools from 4.2.0 to 4.3.0 in `.claude-plugin/marketplace.json` with CHANGELOG entry and synced plugin README.
 
