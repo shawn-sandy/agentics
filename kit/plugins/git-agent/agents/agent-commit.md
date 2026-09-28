@@ -3,10 +3,8 @@ name: agent-commit
 description: >
   Background git commit agent. Stages all working-tree changes and creates a
   conventional commit message without user interaction. Use when delegating
-  commit creation to a subagent so the main session can keep working — for
-  example when the user asks to "commit in the background", "commit and keep
-  going", "fire off a commit while I work", or when an orchestration agent
-  needs to checkpoint progress between tasks. Mirrors the commit-agent skill
+  commit creation to a subagent so the main session can keep working, or when
+  an orchestration agent needs to checkpoint progress between tasks. Mirrors the commit-agent skill
   but runs as a background subagent. Does not push or create PRs — use
   agent-pr or agent-ship for those.
 tools: Bash, Read, Grep, Glob

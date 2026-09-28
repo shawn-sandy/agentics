@@ -29,7 +29,8 @@ Hard stops.
   and never loosen a type.
 - Never guess: unrecognized failures and ambiguous comments →
   **AskUserQuestion**.
-- Do not narrate routine investigation; skip duplicate or no-op events.
+- Post a short status update on each meaningful change (fix pushed,
+  escalation, all-green); skip duplicate or no-op events.
 - A finding that is wrong, non-blocking (nit, style), or re-fired: one reply,
   resolve, **no commit** — no no-op fixes, no batching into a blocking one, no
   follow-on polishing.

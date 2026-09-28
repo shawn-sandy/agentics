@@ -4,9 +4,7 @@ description: >
   Background end-to-end ship agent. Stages, commits, pushes, and opens a
   pull/merge request in one autonomous flow (GitHub via gh, GitLab via glab).
   Use when delegating the full ship pipeline to a subagent so the main session
-  can keep working — for example when the user asks to "ship it in the
-  background", "ship and keep working", "land my work without blocking me",
-  or "fire off a ship". Mirrors the ship skill but runs as a background
+  can keep working. Mirrors the ship skill but runs as a background
   subagent. Skip if the user wants step-by-step control — dispatch
   agent-commit and agent-pr individually instead.
 tools: Bash, Read, Grep, Glob, ToolSearch, ExitPlanMode

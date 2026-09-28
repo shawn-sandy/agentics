@@ -4,9 +4,7 @@ description: >
   Background CI watcher for an existing pull request. Polls the PR's checks
   until they settle, applies the two deterministic autofixes (lint --fix,
   lockfile reinstall), and reports. Use when delegating CI watching to a
-  subagent so the main session can keep working — for example when the user
-  asks to "watch CI in the background", "poll the PR checks and fix lint",
-  or "tell me when CI settles". Requires a PR to already exist — dispatch
+  subagent so the main session can keep working. Requires a PR to already exist — dispatch
   agent-ship first if there is none. Never merges, never replies to reviews,
   never edits source; use the ship-autonomous skill in the foreground for
   those.

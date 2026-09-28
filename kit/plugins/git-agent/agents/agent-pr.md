@@ -3,10 +3,8 @@ name: agent-pr
 description: >
   Background pull-request creation agent. Pushes the current branch if needed
   and opens a GitHub pull request with an auto-generated summary. Use when
-  delegating PR creation to a subagent so the main session can keep working —
-  for example when the user asks to "open a PR in the background", "create an
-  MR summary while I work", "fire off a PR", or when an orchestration agent
-  finishes a feature and needs review. Mirrors the pr-agent skill but runs as
+  delegating PR creation to a subagent so the main session can keep working,
+  or when an orchestration agent finishes a feature and needs review. Mirrors the pr-agent skill but runs as
   a background subagent. Does not commit changes — dispatch agent-commit
   first if there are uncommitted changes.
 tools: Bash, Read, Grep, Glob

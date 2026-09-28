@@ -2,7 +2,7 @@
 
 Used by `prompt` for **task** prompt type.
 
-Techniques applied: Clarity/directness · XML context + example tags · Thinking/CoT scaffolding · Output format
+Techniques applied: Clarity/directness · XML context + example tags · Reasoning checks · Output format
 
 ---
 
@@ -18,12 +18,12 @@ Techniques applied: Clarity/directness · XML context + example tags · Thinking
 <output>{{EXAMPLE_OUTPUT}}</output>
 </example>
 
-<thinking>
-Before writing your response, work through this step by step:
+<checks>
+Settle these before you answer:
 1. {{REASONING_STEP_1}}
 2. {{REASONING_STEP_2}}
-3. Check: {{SELF_CHECK_QUESTION}}
-</thinking>
+3. {{SELF_CHECK_QUESTION}}
+</checks>
 
 {{CORE_INSTRUCTION}}
 
@@ -33,9 +33,9 @@ Output requirements:
 - Tone: {{OUTPUT_TONE}}
 ```
 
-**The `<example>` and `<thinking>` blocks are optional.** Include the example
+**The `<example>` and `<checks>` blocks are optional.** Include the example
 only when the output requirements cannot express what it shows — a tone, a
-layout, an edge-case judgment; one pair is usually enough. Include the thinking
+layout, an edge-case judgment; one pair is usually enough. Include the checks
 block only when the *shape* of the reasoning matters, such as a required order
 of checks. Delete the block rather than fill it with invented reasoning steps:
 per section 0 of `best-practices-reference.md`, scaffolding the model did not
@@ -105,12 +105,12 @@ def login(username: str, password: str, db) -> Optional[str]:
 </output>
 </example>
 
-<thinking>
-Before writing your response, work through this step by step:
+<checks>
+Settle these before you answer:
 1. Identify the distinct responsibilities in the provided code (credential check, session creation, audit logging)
 2. Determine the minimal parameters each responsibility needs — avoid threading the full db object through everything
-3. Check: would someone unfamiliar with this codebase understand what each function does from its name alone?
-</thinking>
+3. Would someone unfamiliar with this codebase understand what each function does from its name alone?
+</checks>
 
 Refactor the provided Python function(s) into well-named, single-responsibility functions following the patterns shown in the example. Do not change observable behavior or public API signatures.
 

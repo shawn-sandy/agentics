@@ -5,9 +5,7 @@ description: >
   branch's pull request and squash-merges it only when everything is
   unambiguously green; anything pending, failing, conflicting, or unclear is
   reported instead. Use when delegating the merge check to a subagent so the
-  main session can keep working — for example when the user asks to "merge in
-  the background", "check if the PR is ready while I work", or "fire off a
-  merge". Operates on the PR supplied by the dispatch prompt when there is one,
+  main session can keep working. Operates on the PR supplied by the dispatch prompt when there is one,
   otherwise on the current branch's PR. Mirrors the merge skill but runs as a
   background subagent, with the dispatch itself standing in for the skill's
   approval prompt. Never deletes a branch, never edits source.
