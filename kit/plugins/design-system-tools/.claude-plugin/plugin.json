@@ -1,0 +1,18 @@
+{
+  "name": "design-system-tools",
+  "description": "Turn a repository's DESIGN.md and the stylesheets behind it into a claude.ai Design System artifact — tokens in every theme, a brand book of usage rules, static component previews and a cover — with every contrast ratio measured, not estimated",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "design-system",
+    "design-tokens",
+    "design-md",
+    "brand-guidelines",
+    "wcag-contrast",
+    "claude-ai"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/design-system-tools",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}

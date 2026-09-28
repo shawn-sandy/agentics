@@ -4,7 +4,7 @@
 
 A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
 
-**Marketplace:** `agentics-kit` v4.0.0 · **11 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
+**Marketplace:** `agentics-kit` v4.0.0 · **12 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
 
 > **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories have been removed from the repository and are recoverable from git history at the commit preceding their deletion. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
@@ -131,11 +131,12 @@ agentics/
 │   ├── rules/                    # Scoped authoring rules (plugin patterns, marketplace, testing)
 │   └── settings.json             # Project-level Claude Code settings and hooks
 ├── kit/
-│   └── plugins/                  # 11 plugins in marketplace
+│   └── plugins/                  # 12 plugins in marketplace
 │       ├── artifact-tools/
 │       ├── code-review/
 │       ├── code-testing-agent/
 │       ├── content-tools/
+│       ├── design-system-tools/
 │       ├── git-agent/
 │       ├── memory-tools/
 │       ├── plan-agent/
@@ -184,6 +185,7 @@ The marketplace approach uses sparse cloning — only the plugin you install is 
 /plugin install social-media-tools@agentics-kit
 /plugin install artifact-tools@agentics-kit
 /plugin install content-tools@agentics-kit
+/plugin install design-system-tools@agentics-kit
 ```
 
 **Or install all at once** — paste the full block above into your Claude Code session.
@@ -212,7 +214,8 @@ This repo ships these keys in **project scope** (`.claude/settings.json`). On fi
     "social-media-tools@agentics-kit": true,
     "plan-agent@agentics-kit": true,
     "artifact-tools@agentics-kit": true,
-    "content-tools@agentics-kit": true
+    "content-tools@agentics-kit": true,
+    "design-system-tools@agentics-kit": true
   }
 }
 ```
@@ -760,6 +763,25 @@ claude --plugin-dir ./kit/plugins/content-tools
 
 ---
 
+#### `design-system-tools`
+
+Publish a repository's `DESIGN.md` and the stylesheets behind it as a claude.ai Design System artifact that later agents can build on. The stylesheet wins where the two disagree, and every contrast ratio is measured by a bundled script.
+
+**Skills:**
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `from-design-md` | Turn a `DESIGN.md` into a design system — tokens in every theme, a brand book of usage rules that name tokens, static component previews and a cover — or re-sync an existing system from it. The publish is checked against the remote file listing before it is reported |
+
+```bash
+claude --plugin-dir ./kit/plugins/design-system-tools
+# "Turn this repo's DESIGN.md into a design system"
+```
+
+[View Documentation](./kit/plugins/design-system-tools/README.md)
+
+---
+
 ## How-To Guides
 
 One brief "How do I" entry per skill: the slash command to type, the plain-English phrasing that triggers it, what it actually does, and the gotcha worth knowing. Skills marked command-only cannot be triggered by natural language. The folder carries its own index at [docs/guides/how-to/README.md](./docs/guides/how-to/README.md).
@@ -770,6 +792,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | code-review | [How do I... code-review](./docs/guides/how-to/code-review.md) | 1 |
 | code-testing-agent | [How do I... code-testing-agent](./docs/guides/how-to/code-testing-agent.md) | 6 |
 | content-tools | [How do I... content-tools](./docs/guides/how-to/content-tools.md) | 1 |
+| design-system-tools | [How do I... design-system-tools](./docs/guides/how-to/design-system-tools.md) | 1 |
 | git-agent | [How do I... git-agent](./docs/guides/how-to/git-agent.md) | 8 |
 | memory-tools | [How do I... memory-tools](./docs/guides/how-to/memory-tools.md) | 3 |
 | plan-agent | [How do I... plan-agent](./docs/guides/how-to/plan-agent.md) | 18 |
@@ -778,7 +801,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | social-media-tools | [How do I... social-media-tools](./docs/guides/how-to/social-media-tools.md) | 17 |
 | wcag-compliance-reviewer | [How do I... wcag-compliance-reviewer](./docs/guides/how-to/wcag-compliance-reviewer.md) | 1 |
 
-Total: 66 skills across 11 plugins.
+Total: 67 skills across 12 plugins.
 
 ---
 
@@ -799,6 +822,7 @@ Total: 66 skills across 11 plugins.
 | [plan-agent](./kit/plugins/plan-agent/README.md) | 9.19.1 | productivity | 9 commands, 18 skills, 12 agents, 2 hooks |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.12.0 | development | 3 commands, 5 skills |
 | [content-tools](./kit/plugins/content-tools/README.md) | 1.1.1 | documentation | 1 skill |
+| [design-system-tools](./kit/plugins/design-system-tools/README.md) | 0.1.0 | development | 1 skill |
 
 ---
 
