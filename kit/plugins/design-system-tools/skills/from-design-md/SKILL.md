@@ -162,10 +162,12 @@ The publish reply is not proof. Check the remote:
 
 1. Run `Artifact list` with `url` = the target and `scope: "files"`. Every path you sent must be
    listed.
-2. `read` `project/design-system.json` and `project/tokens.json` back. Both must parse as JSON,
-   and the index must carry your `lastChange.at`.
-3. Re-run step 5 against the saved copy of `tokens.json`. Every ratio in a usage note must match
-   the script's output.
+2. `read` `project/design-system.json` and `project/tokens.json` back. Each read saves the
+   remote file locally and names that path. Both must parse as JSON, and the index must carry
+   your `lastChange.at`.
+3. The remote `tokens.json` must be the one you sent: `cmp <dir>/project/tokens.json <read-back path>`
+   prints nothing. Then run `design-system-contrast` on the read-back path, never on your own copy.
+   Every ratio in a usage note must match its output.
 4. If you have a browser tool, open the system in light and dark and look at the cover and every
    preview. A block or text that vanishes in one theme gets fixed.
 
