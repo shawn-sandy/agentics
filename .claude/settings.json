@@ -28,7 +28,8 @@
     "social-media-tools@agentics-kit": true,
     "plan-agent@agentics-kit": true,
     "artifact-tools@agentics-kit": true,
-    "content-tools@agentics-kit": true
+    "content-tools@agentics-kit": true,
+    "design-system-tools@agentics-kit": true
   },
   "hooks": {
     "SessionStart": [

@@ -285,6 +285,25 @@
         "artifact-conversion",
         "blog-drafting"
       ]
+    },
+    {
+      "name": "design-system-tools",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/design-system-tools"
+      },
+      "version": "0.1.0",
+      "description": "Turn a repository's DESIGN.md and the stylesheets behind it into a claude.ai Design System artifact — the from-design-md skill maps tokens into every theme, condenses the prose into a brand book of usage rules that name tokens, hand-writes static component previews and a cover, measures every contrast ratio with a bundled script, and checks the publish against the remote file listing before reporting",
+      "category": "development",
+      "tags": [
+        "design-system",
+        "design-tokens",
+        "design-md",
+        "brand-guidelines",
+        "wcag-contrast",
+        "claude-ai-artifacts"
+      ]
     }
   ],
   "removed": [

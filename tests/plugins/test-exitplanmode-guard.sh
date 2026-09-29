@@ -44,6 +44,7 @@ WRITE_HEAVY=(
   code-testing-agent/skills/tdd-loop/SKILL.md
   code-testing-agent/skills/verified-change/SKILL.md
   content-tools/skills/artifact-to-post/SKILL.md
+  design-system-tools/skills/from-design-md/SKILL.md
   git-agent/agents/agent-merge.md
   git-agent/agents/agent-ship-ci.md
   git-agent/agents/agent-ship.md
