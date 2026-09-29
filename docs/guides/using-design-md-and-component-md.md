@@ -247,5 +247,6 @@ The two-file split makes each command's job clear:
 - Read the real `COMPONENT.md` spec inside the `style-agent` plugin (`docs/component-md/spec.md`).
 - Read a fully worked example: the `acss-kit` plugin's `component-button/button.component.md`.
 - For a wider lens on the runtime-portable vs source-portable trade-off, see the framework-agnostic design systems review in the `acss-plugins` docs.
+- Publish your `DESIGN.md` as a claude.ai Design System artifact with `/design-system-tools:from-design-md`. It builds tokens in every theme, a brand book, static component previews and a cover, and it takes the stylesheet's value wherever the stylesheet and `DESIGN.md` disagree. See [How do I... design-system-tools](./how-to/design-system-tools.md).
 
 Pin a commit SHA when you depend on this format — `version: alpha` means it will change.
