@@ -1,0 +1,44 @@
+# Harden plan-documenter completion guard
+
+> Ensure the plan-documenter agent and documenting-plans skill reject non-completed plans in all edge cases, with no behavioral regressions.
+
+<!-- generated:start -->
+
+**Status:** Shipped 2026-08-17  **Plan:** [harden-plan-documenter-completion-guard.md](plans/harden-plan-documenter-completion-guard.md)
+**Type:** feature
+
+## What shipped
+
+- Switch to delimiter-based frontmatter reading in plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Step 2 - Replace "Read the first 10 lines" with "Read until the closing `---` delimiter" -
+- Add explicit frontmatter-boundary and casing rules to plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Step 2 - Add: parse between `---` delimiters only; require lowercase `status: completed`; skip files without frontmatter delimiters -
+- Add edge cases to plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Edge Cases section - Add: no YAML frontmatter (skip), non-standard casing (skip), status in body not frontmatter (ignore) -
+- Add frontmatter-boundary clarification to documenting-plans skill — File: `kit/plugins/plan-interview/skills/documenting-plans/SKILL.md`, Step 2 - Add: "Extract the YAML block between `---` delimiters. If no frontmatter delimiters, treat status as absent." -
+- Clean up `--overwrite` flag mismatch in plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Step 5 - Remove `--overwrite` from the skill invocation args since the skill has no such argument -
+- Manual verification — Run plan-documenter and confirm the sweep summary correctly counts completed vs non-completed plans - Verify plans with `status: draft`, `todo`, `in-progress`, and no frontmatter are all skipped - Run documenting-plans on a non-completed plan (e.g., `fix-code-review-agent-skill-audit.md` with `status: draft`) and confirm it stops
+
+## Files changed
+
+| Path | Role | Status |
+| ---- | ---- | ------ |
+| `kit/plugins/plan-interview/agents/plan-documenter.md` | Steps 1-3 | Modified |
+| `kit/plugins/plan-interview/skills/documenting-plans/SKILL.md` | Step 4 | Modified |
+
+## How it works
+
+Ensure the plan-documenter agent and documenting-plans skill reject non-completed plans in all edge cases, with no behavioral regressions.
+
+The plan-documenter agent and documenting-plans skill should only process completed plans. Both components already have status-checking gates, but the instructions have minor ambiguities around frontmatter parsing, casing, and read window size that should be tightened.
+
+The implementation proceeded through the following steps: Switch to delimiter-based frontmatter reading in plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Step 2 - Replace "Read the first 10 lines" with "Read until the closing `---` delimiter" -; Add explicit frontmatter-boundary and casing rules to plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Step 2 - Add: parse between `---` delimiters only; require lowercase `status: completed`; skip files without frontmatter delimiters -; Add edge cases to plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Edge Cases section - Add: no YAML frontmatter (skip), non-standard casing (skip), status in body not frontmatter (ignore) -; Add frontmatter-boundary clarification to documenting-plans skill — File: `kit/plugins/plan-interview/skills/documenting-plans/SKILL.md`, Step 2 - Add: "Extract the YAML block between `---` delimiters. If no frontmatter delimiters, treat status as absent." -; Clean up `--overwrite` flag mismatch in plan-documenter agent — File: `kit/plugins/plan-interview/agents/plan-documenter.md`, Step 5 - Remove `--overwrite` from the skill invocation args since the skill has no such argument -; Manual verification — Run plan-documenter and confirm the sweep summary correctly counts completed vs non-completed plans - Verify plans with `status: draft`, `todo`, `in-progress`, and no frontmatter are all skipped - Run documenting-plans on a non-completed plan (e.g., `fix-code-review-agent-skill-audit.md` with `status: draft`) and confirm it stops.
+
+## Commit history
+
+| SHA | Date | Subject |
+| --- | ---- | ------- |
+| `f6b0bdd` | 2026-08-17 | docs(plans): mark settings-sync guard next-step done in add-verification-gates (#573) |
+
+<!-- generated:end -->
+
+## References
+
+- Plan: [harden-plan-documenter-completion-guard.md](plans/harden-plan-documenter-completion-guard.md)
