@@ -116,7 +116,7 @@ def main():
         "---",
         f"session-id: {json.dumps(session_id)}",
         f"date: {date}",
-        f"source: {json.dumps(str(src))}",
+        f"source: {json.dumps(src.name)}",
         "type: session-export",
         "---",
         "",
