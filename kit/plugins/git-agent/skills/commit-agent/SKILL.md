@@ -6,15 +6,15 @@ disable-model-invocation: true
 model: haiku
 ---
 
-Stage all changes, create a conventional commit message, then push. Follow these steps in strict order. **STOP immediately after step 6.**
+Stage all changes, create a conventional commit message, then push. Follow these steps in strict order. **STOP immediately after step 5.**
 
 ## When not to use
 
-Does not create PRs — use pr-agent for that. Never pushes `main` or `master`.
+Does not create PRs — use pr-agent for that. Never pushes the default branch.
 
 ## Delegated invocation
 
-Steps 5 and 6 exist for a user who invoked this skill directly. **When another skill or agent invokes this skill as a sub-step, stop after Step 4** — skip the probe and the push entirely.
+Step 5 exists for a user who invoked this skill directly. **When another skill or agent invokes this skill as a sub-step, stop after Step 4** — never push.
 
 The caller owns the push in that case (`ship-autonomous` Step 4 delegates to `pr-agent`; its Step 6d pushes directly). Pushing here would get ahead of the caller: `pr-agent` rebases an unpushed branch onto its base before pushing, and an early push would force that rebase into a merge.
 
@@ -81,25 +81,18 @@ After a successful commit, output one line:
 
 > To undo: `git reset HEAD~1`
 
-## Step 5: Resolve the Push Command
-
-Determine which push the next step runs. This step only reads state — it pushes nothing.
-
-Run:
-```
-git rev-parse --abbrev-ref --symbolic-full-name @{u}
-```
-
-- Exits non-zero (no upstream tracking ref) → the push command is `git push -u origin <current-branch>`
-- Exits zero (upstream exists) → the push command is `git push`
-
-## Step 6: Push
+## Step 5: Push
 
 Do not ask — push as soon as the commit lands.
 
-**If the current branch is `main` or `master`**, output "On `<current-branch>` — commit left local. Push it yourself if you meant to." and **STOP**. Nobody approves this push, so it never lands on the default branch.
+**If the current branch is the default branch**, output "On `<current-branch>`, the default branch — commit left local. Push it yourself if you meant to." and **STOP**. The default branch is the one `git symbolic-ref --short refs/remotes/origin/HEAD` names, minus `origin/`; `main` and `master` always count, even when that ref is missing. Nobody approves this push, so it never targets the default branch.
 
-Otherwise run the push command resolved in Step 5 and report the result.
+Otherwise run:
+```
+git push -u origin <current-branch>
+```
+
+Always name the branch; never push without arguments. A branch cut from `origin/main` tracks `origin/main`, so an argument-less push would either fail (`push.default=simple`) or land on the base branch (`push.default=upstream`). Naming the branch pushes it to its own name and sets its upstream either way. Report the result.
 
 **If the push fails** (rejected, no remote, auth failure, pre-push hook), report the error verbatim and **STOP**. Do not retry. Do not force. Do not pull, fetch, rebase, or merge to make the push succeed — a rejected push means the branch diverged, and reconciling it is the user's call.
 

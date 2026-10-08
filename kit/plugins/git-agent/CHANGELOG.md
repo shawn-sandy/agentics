@@ -4,19 +4,29 @@
 
 ### Changed
 
-- **commit-agent Step 6 pushes instead of asking.** A direct-invocation commit
-  now runs the push command Step 5 resolves (`git push -u origin <branch>` with
-  no upstream, `git push` otherwise) without the `AskUserQuestion` "Push / Don't
-  push" prompt. With no approval left in front of it, Step 6 never pushes `main`
-  or `master`: on either it reports "commit left local" and stops. A failed
-  push is still reported verbatim with no retry, no force, and no pull, fetch,
-  rebase, or merge.
+- **commit-agent pushes instead of asking.** A direct-invocation commit now
+  pushes with no `AskUserQuestion` "Push / Don't push" prompt. The old Step 5
+  upstream probe and Step 6 question merge into one Step 5 that always runs
+  `git push -u origin <current-branch>`. The probe chose a bare `git push`
+  whenever `@{u}` resolved, but a branch cut with
+  `git checkout -b <branch> origin/main` tracks `origin/main`: a bare push
+  fails under `push.default=simple` and lands on the base branch under
+  `push.default=upstream`. Naming the branch pushes it to its own name and
+  re-points its upstream either way.
+- **The push never targets the default branch.** With no approval left in
+  front of it, Step 5 skips the push and leaves the commit local when the
+  current branch is the one `refs/remotes/origin/HEAD` names, or `main` or
+  `master`. A failed push is still reported verbatim with no retry, no force,
+  and no pull, fetch, rebase, or merge.
 - **Delegated invocation still stops after Step 4.** The rationale changed: the
   caller owns the push, and an early push would turn `pr-agent`'s base-sync
-  rebase of an unpushed branch into a merge.
-- `tests/plugins/test-commit-agent-auto-push.sh` pins the contract: a Step 6
-  push heading after the commit, no prompt, the `main`/`master` guard, no force
-  or reconciliation, and the delegated stop.
+  rebase of an unpushed branch into a merge. ship-autonomous's
+  `references/pr-events.md` drops its two mentions of the removed push prompt.
+- `tests/plugins/test-commit-agent-auto-push.sh` pins the contract: a push step
+  after the commit that does not ask, the explicit refspec and no bare push,
+  the default-branch guard ahead of the push command, no force or
+  reconciliation, the delegated stop, and that every `Invoke ... commit-agent`
+  line in any plugin says it is delegating.
 
 ### Unchanged
 
