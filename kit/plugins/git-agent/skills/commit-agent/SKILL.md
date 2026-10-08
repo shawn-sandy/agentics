@@ -85,7 +85,7 @@ After a successful commit, output one line:
 
 Do not ask — push as soon as the commit lands.
 
-**If the current branch is the default branch**, output "On `<current-branch>`, the default branch — commit left local. Push it yourself if you meant to." and **STOP**. The default branch is the one `git symbolic-ref --short refs/remotes/origin/HEAD` names, minus `origin/`; `main` and `master` always count, even when that ref is missing. Nobody approves this push, so it never targets the default branch.
+**If the current branch is the default branch**, output "On `<current-branch>`, the default branch — commit left local. Push it yourself if you meant to." and **STOP**. Read the default live with `git ls-remote --symref origin HEAD`: it is the `refs/heads/<name>` on the `ref:` line. Not the cached `origin/HEAD`, which `git fetch` never updates, so it goes stale when the remote renames its default. `main` and `master` always count too. **If the default cannot be determined** (the command fails or prints no `ref:` line), output "Could not read origin's default branch — commit left local." and **STOP**. Nobody approves this push, so it never targets the default branch.
 
 Otherwise run:
 ```

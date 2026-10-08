@@ -119,7 +119,7 @@ The skill will:
 3. Analyze `git diff --staged` and write a conventional commit message
 4. Run `git commit -m "<message>"` and output the hash. If [the lint gate](#the-commit-lint-gate) blocks it, ask whether to fix the reported failures and retry (at most two fix rounds, only in files the commit touches); never switch the gate off
 5. Print an undo note: `git reset HEAD~1`
-6. Push without asking, always as `git push -u origin <branch>`. On the default branch (`main`, `master`, or whatever `origin/HEAD` names) it skips the push and leaves the commit local. A rejected push is reported and never forced or reconciled
+6. Push without asking, always as `git push -u origin <branch>`. On the default branch (`main`, `master`, or whatever `git ls-remote --symref origin HEAD` reports) it skips the push and leaves the commit local, and it does the same when that lookup fails. A rejected push is reported and never forced or reconciled
 
 **STOPS after the push. Does not test or create PRs.**
 

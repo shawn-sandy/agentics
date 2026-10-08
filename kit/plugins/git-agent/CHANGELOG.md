@@ -15,8 +15,11 @@
   re-points its upstream either way.
 - **The push never targets the default branch.** With no approval left in
   front of it, Step 5 skips the push and leaves the commit local when the
-  current branch is the one `refs/remotes/origin/HEAD` names, or `main` or
-  `master`. A failed push is still reported verbatim with no retry, no force,
+  current branch is `main`, `master`, or the default that
+  `git ls-remote --symref origin HEAD` reports, and also when that lookup
+  fails. It reads the remote live because the cached `origin/HEAD` is set at
+  clone time and `git fetch` never updates it: after the remote renames its
+  default, the cache still names the old one. A failed push is still reported verbatim with no retry, no force,
   and no pull, fetch, rebase, or merge.
 - **Delegated invocation still stops after Step 4.** The rationale changed: the
   caller owns the push, and an early push would turn `pr-agent`'s base-sync
@@ -24,7 +27,8 @@
   `references/pr-events.md` drops its two mentions of the removed push prompt.
 - `tests/plugins/test-commit-agent-auto-push.sh` pins the contract: a push step
   after the commit that does not ask, the explicit refspec and no bare push,
-  the default-branch guard ahead of the push command, no force or
+  the default-branch guard ahead of the push command, its live lookup and
+  stop-when-unknown path, no force or
   reconciliation, the delegated stop, and that every `Invoke ... commit-agent`
   line in any plugin says it is delegating.
 

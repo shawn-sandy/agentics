@@ -3,9 +3,11 @@ set -euo pipefail
 
 # commit-agent pushes after a direct-invocation commit without asking. The old
 # push prompt was the only gate on that push, so its replacement carries the
-# guards: never push the default branch, always name the branch in the push
-# (a branch cut from origin/main tracks origin/main, so a bare `git push` would
-# target the base or fail), never force, never reconcile a rejected push.
+# guards: never push the default branch (read live from the remote, since a
+# cached origin/HEAD goes stale when the default is renamed), always name the
+# branch in the push (a branch cut from origin/main tracks origin/main, so a
+# bare `git push` would target the base or fail), never force, never reconcile
+# a rejected push.
 # Delegated invocation still stops after Step 4 — the caller owns the push —
 # and every skill that invokes commit-agent says it is delegating, so a WIP or
 # failing-test commit is never pushed by accident.
@@ -47,7 +49,9 @@ check "push names the branch explicitly" test -n "$cmd_line"
 check "push step never runs a bare git push" bash -c '! grep -qE "\`git push\`" <<<"$1"' _ "$push_body"
 check "default-branch guard stops the push" test -n "$guard_line"
 check "guard comes before the push command" test "${guard_line:-999999}" -lt "${cmd_line:-0}"
-check "guard resolves the remote default branch" bash -c 'grep -q "refs/remotes/origin/HEAD" <<<"$1"' _ "$push_body"
+check "guard asks the remote for its live default" bash -c 'grep -q "git ls-remote --symref origin HEAD" <<<"$1"' _ "$push_body"
+check "guard never trusts the cached origin/HEAD" bash -c '! grep -q "refs/remotes/origin/HEAD" <<<"$1"' _ "$push_body"
+check "guard stops when the default is unknown" bash -c 'grep -qiE "cannot be determined.*STOP" <<<"$1"' _ "$push_body"
 check "guard always covers main" bash -c 'grep -q "\`main\`" <<<"$1"' _ "$push_body"
 check "guard always covers master" bash -c 'grep -q "\`master\`" <<<"$1"' _ "$push_body"
 check "push never forces" bash -c 'grep -qiE "do not force|never force" <<<"$1"' _ "$push_body"
