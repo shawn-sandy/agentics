@@ -1,22 +1,22 @@
 ---
 name: commit-agent
-description: "Stages all changes and creates a conventional commit message. Analyzes the diff, writes a scope-correct commit, then asks whether to push. Use when the user asks to commit or save work to git."
+description: "Stages all changes and creates a conventional commit message. Analyzes the diff, writes a scope-correct commit, then pushes it. Use when the user asks to commit or save work to git."
 allowed-tools: Bash(git *), Read, Edit, AskUserQuestion, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 model: haiku
 ---
 
-Stage all changes, create a conventional commit message, then ask whether to push. Follow these steps in strict order. **STOP immediately after step 6.**
+Stage all changes, create a conventional commit message, then push. Follow these steps in strict order. **STOP immediately after step 6.**
 
 ## When not to use
 
-Does not create PRs — use pr-agent for that. Never pushes without the Step 6 approval.
+Does not create PRs — use pr-agent for that. Never pushes `main` or `master`.
 
 ## Delegated invocation
 
-Steps 5 and 6 exist for a user who invoked this skill directly. **When another skill or agent invokes this skill as a sub-step, stop after Step 4** — skip the probe and the push question entirely.
+Steps 5 and 6 exist for a user who invoked this skill directly. **When another skill or agent invokes this skill as a sub-step, stop after Step 4** — skip the probe and the push entirely.
 
-The caller owns the push in that case (`ship-autonomous` Step 4 delegates to `pr-agent`; its Step 6d pushes directly), so asking would stall an unattended run, and a "Don't push" answer would not stop the caller from pushing anyway. A prompt that cannot honor its own answer is worse than no prompt.
+The caller owns the push in that case (`ship-autonomous` Step 4 delegates to `pr-agent`; its Step 6d pushes directly). Pushing here would get ahead of the caller: `pr-agent` rebases an unpushed branch onto its base before pushing, and an early push would force that rebase into a merge.
 
 ## Step 0: Exit Plan Mode
 
@@ -83,7 +83,7 @@ After a successful commit, output one line:
 
 ## Step 5: Resolve the Push Command
 
-Determine which push the next step would run, so the question can name it. This step only reads state — it pushes nothing.
+Determine which push the next step runs. This step only reads state — it pushes nothing.
 
 Run:
 ```
@@ -93,18 +93,13 @@ git rev-parse --abbrev-ref --symbolic-full-name @{u}
 - Exits non-zero (no upstream tracking ref) → the push command is `git push -u origin <current-branch>`
 - Exits zero (upstream exists) → the push command is `git push`
 
-## Step 6: Ask Whether to Push
+## Step 6: Push
 
-Always ask — never push on your own initiative, and never skip the question because the commit looked routine.
+Do not ask — push as soon as the commit lands.
 
-Use **AskUserQuestion** with the header `Push`, the question "Commit created. Push `<current-branch>` to the remote?", and two options:
+**If the current branch is `main` or `master`**, output "On `<current-branch>` — commit left local. Push it yourself if you meant to." and **STOP**. Nobody approves this push, so it never lands on the default branch.
 
-- **Push** — run `<push command from Step 5>`
-- **Don't push** — leave the commit local
-
-**If the answer is "Don't push"** (or the question is dismissed), output "Commit left local." and **STOP**.
-
-**If the answer is "Push"**, run the command resolved in Step 5 and report the result.
+Otherwise run the push command resolved in Step 5 and report the result.
 
 **If the push fails** (rejected, no remote, auth failure, pre-push hook), report the error verbatim and **STOP**. Do not retry. Do not force. Do not pull, fetch, rebase, or merge to make the push succeed — a rejected push means the branch diverged, and reconciling it is the user's call.
 

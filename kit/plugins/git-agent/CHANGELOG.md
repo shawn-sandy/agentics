@@ -1,5 +1,28 @@
 # Changelog — git-agent
 
+## v4.23.0 — 2026-10-08 — commit-agent pushes without asking
+
+### Changed
+
+- **commit-agent Step 6 pushes instead of asking.** A direct-invocation commit
+  now runs the push command Step 5 resolves (`git push -u origin <branch>` with
+  no upstream, `git push` otherwise) without the `AskUserQuestion` "Push / Don't
+  push" prompt. With no approval left in front of it, Step 6 never pushes `main`
+  or `master`: on either it reports "commit left local" and stops. A failed
+  push is still reported verbatim with no retry, no force, and no pull, fetch,
+  rebase, or merge.
+- **Delegated invocation still stops after Step 4.** The rationale changed: the
+  caller owns the push, and an early push would turn `pr-agent`'s base-sync
+  rebase of an unpushed branch into a merge.
+- `tests/plugins/test-commit-agent-auto-push.sh` pins the contract: a Step 6
+  push heading after the commit, no prompt, the `main`/`master` guard, no force
+  or reconciliation, and the delegated stop.
+
+### Unchanged
+
+- **agent-commit still never pushes.** Orchestrators dispatch it to checkpoint
+  between tasks, and that dispatch authorizes a commit, not a remote write.
+
 ## v4.22.1 — 2026-09-26 — progress updates and agent descriptions
 
 ### Changed
