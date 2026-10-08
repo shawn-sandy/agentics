@@ -136,7 +136,7 @@ Run the scoped test suite (`Bash`):
 
 ## Step 3: Commit the Tests
 
-Invoke the `commit-agent` skill. When it drafts the commit message, ensure:
+Invoke the `commit-agent` skill as a delegated sub-step, so it commits and does not push. When it drafts the commit message, ensure:
 
 - Type is `test`
 - Description summarizes the feature in imperative mood
@@ -263,7 +263,7 @@ Gate failure details: [last output of each failing gate]
 
 ## Step 6: Commit the Implementation
 
-Invoke the `commit-agent` skill. When it drafts the commit message, ensure:
+Invoke the `commit-agent` skill as a delegated sub-step, so it commits and does not push. When it drafts the commit message, ensure:
 
 - Type is `feat`
 - Scope and description match the feature name from Step 1

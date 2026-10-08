@@ -1,5 +1,16 @@
 # Changelog
 
+## v3.6.1 — 2026-10-08 — commit-agent calls are delegated
+
+### Changed
+
+- **tdd-loop and tdd-fix invoke commit-agent as a delegated sub-step.**
+  git-agent 4.23.0 makes a direct commit-agent run push without asking, and
+  only a delegated run stops after the commit. tdd-loop Steps 3 and 6 and
+  tdd-fix Step 7 (with `references/handoff.md`) now say so, so tdd-loop's
+  failing-test commit is never pushed by accident and tdd-fix leaves the push
+  to Step 8's pr-agent.
+
 ## v3.6.0 — 2026-08-22 — a merge gate that runs on your machine
 
 ### Added

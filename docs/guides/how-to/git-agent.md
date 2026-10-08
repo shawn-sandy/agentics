@@ -19,8 +19,8 @@ Stages everything and writes a conventional commit message from the staged diff.
 
 - **Command** — `/git-agent:commit-agent` — background variant `/git-agent:commit-bg [optional commit hint, e.g. 'fix typo in readme']`
 - **Say it instead** — Not available; this skill is command-only (`disable-model-invocation: true`).
-- **What happens** — Runs `git add -A`, analyzes `git diff --staged`, commits a `<type>(<scope>): <description>` message of 72 characters or less, prints the hash plus a `git reset HEAD~1` undo line, then asks whether to push.
-- **Watch out** — The push only happens on an explicit approval prompt; a failing pre-commit hook is reported verbatim and stops the run — no retry, no `--no-verify`, no push reconciliation via pull, rebase, or force. A block from git-agent's own lint gate (output starting ``Blocked: `<check>` failed``) is not a hook failure: run directly, the skill asks whether to fix and retry, edits only files the commit already touches, and gives up after two rounds; `commit-bg` reports the block and stops with the changes still staged. Neither ever switches the gate off.
+- **What happens** — Runs `git add -A`, analyzes `git diff --staged`, commits a `<type>(<scope>): <description>` message of 72 characters or less, prints the hash plus a `git reset HEAD~1` undo line, then pushes without asking.
+- **Watch out** — The push is automatic, always as `git push -u origin <branch>`, except on the default branch (`main`, `master`, or whatever the remote reports live), or when the remote's default cannot be read, where the commit stays local; a rejected push is reported, never forced or reconciled. A failing pre-commit hook is reported verbatim and stops the run — no retry, no `--no-verify`. A block from git-agent's own lint gate (output starting ``Blocked: `<check>` failed``) is not a hook failure: run directly, the skill asks whether to fix and retry, edits only files the commit already touches, and gives up after two rounds; `commit-bg` reports the block and stops with the changes still staged. Neither ever switches the gate off.
 
 ## create-issue
 

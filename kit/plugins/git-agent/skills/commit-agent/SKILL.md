@@ -1,22 +1,22 @@
 ---
 name: commit-agent
-description: "Stages all changes and creates a conventional commit message. Analyzes the diff, writes a scope-correct commit, then asks whether to push. Use when the user asks to commit or save work to git."
+description: "Stages all changes and creates a conventional commit message. Analyzes the diff, writes a scope-correct commit, then pushes it. Use when the user asks to commit or save work to git."
 allowed-tools: Bash(git *), Read, Edit, AskUserQuestion, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 model: haiku
 ---
 
-Stage all changes, create a conventional commit message, then ask whether to push. Follow these steps in strict order. **STOP immediately after step 6.**
+Stage all changes, create a conventional commit message, then push. Follow these steps in strict order. **STOP immediately after step 5.**
 
 ## When not to use
 
-Does not create PRs — use pr-agent for that. Never pushes without the Step 6 approval.
+Does not create PRs — use pr-agent for that. Never pushes the default branch.
 
 ## Delegated invocation
 
-Steps 5 and 6 exist for a user who invoked this skill directly. **When another skill or agent invokes this skill as a sub-step, stop after Step 4** — skip the probe and the push question entirely.
+Step 5 exists for a user who invoked this skill directly. **When another skill or agent invokes this skill as a sub-step, stop after Step 4** — never push.
 
-The caller owns the push in that case (`ship-autonomous` Step 4 delegates to `pr-agent`; its Step 6d pushes directly), so asking would stall an unattended run, and a "Don't push" answer would not stop the caller from pushing anyway. A prompt that cannot honor its own answer is worse than no prompt.
+The caller owns the push in that case (`ship-autonomous` Step 4 delegates to `pr-agent`; its Step 6d pushes directly). Pushing here would get ahead of the caller: `pr-agent` rebases an unpushed branch onto its base before pushing, and an early push would force that rebase into a merge.
 
 ## Step 0: Exit Plan Mode
 
@@ -81,30 +81,18 @@ After a successful commit, output one line:
 
 > To undo: `git reset HEAD~1`
 
-## Step 5: Resolve the Push Command
+## Step 5: Push
 
-Determine which push the next step would run, so the question can name it. This step only reads state — it pushes nothing.
+Do not ask — push as soon as the commit lands.
 
-Run:
+**If the current branch is the default branch**, output "On `<current-branch>`, the default branch — commit left local. Push it yourself if you meant to." and **STOP**. Read the default live with `git ls-remote --symref origin HEAD`: it is the `refs/heads/<name>` on the `ref:` line. Not the cached `origin/HEAD`, which `git fetch` never updates, so it goes stale when the remote renames its default. `main` and `master` always count too. **If the default cannot be determined** (the command fails or prints no `ref:` line), output "Could not read origin's default branch — commit left local." and **STOP**. Nobody approves this push, so it never targets the default branch.
+
+Otherwise run:
 ```
-git rev-parse --abbrev-ref --symbolic-full-name @{u}
+git push -u origin <current-branch>
 ```
 
-- Exits non-zero (no upstream tracking ref) → the push command is `git push -u origin <current-branch>`
-- Exits zero (upstream exists) → the push command is `git push`
-
-## Step 6: Ask Whether to Push
-
-Always ask — never push on your own initiative, and never skip the question because the commit looked routine.
-
-Use **AskUserQuestion** with the header `Push`, the question "Commit created. Push `<current-branch>` to the remote?", and two options:
-
-- **Push** — run `<push command from Step 5>`
-- **Don't push** — leave the commit local
-
-**If the answer is "Don't push"** (or the question is dismissed), output "Commit left local." and **STOP**.
-
-**If the answer is "Push"**, run the command resolved in Step 5 and report the result.
+Always name the branch; never push without arguments. A branch cut from `origin/main` tracks `origin/main`, so an argument-less push would either fail (`push.default=simple`) or land on the base branch (`push.default=upstream`). Naming the branch pushes it to its own name and sets its upstream either way. Report the result.
 
 **If the push fails** (rejected, no remote, auth failure, pre-push hook), report the error verbatim and **STOP**. Do not retry. Do not force. Do not pull, fetch, rebase, or merge to make the push succeed — a rejected push means the branch diverged, and reconciling it is the user's call.
 

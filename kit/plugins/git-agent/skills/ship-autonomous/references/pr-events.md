@@ -8,8 +8,7 @@ SKILL.md; this file carries the mechanics.
 
 **`git-agent:commit-agent`** stages all changes, analyzes the diff, writes a
 conventional commit message, and commits. Every invocation from this skill is a
-delegated one, so it stops there and never raises its push prompt — the caller
-pushes.
+delegated one, so it stops there and never pushes — the caller pushes.
 
 **`git-agent:pr-agent`**:
 
@@ -104,8 +103,8 @@ Resolve only threads you replied to, and never one carried by a
 it does not clear the review decision (see below).
 
 If a blocking finding is clear, safe, and in scope: **reproduce it first**, then
-apply it with `Edit`, commit via **`git-agent:commit-agent`** (delegated — no
-push prompt), `git push`, then reply to the comment via `gh` noting the commit
+apply it with `Edit`, commit via **`git-agent:commit-agent`** (delegated — it does not
+push), `git push`, then reply to the comment via `gh` noting the commit
 that addresses it and the reproduction.
 
 Reproducing means running the failing input, the test, or the query the finding

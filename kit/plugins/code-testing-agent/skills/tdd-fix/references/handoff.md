@@ -49,7 +49,8 @@ Full suite: PASS
 
 ## Step 7: Commit via commit-agent
 
-Invoke the `commit-agent` skill. When it drafts the commit message, ensure:
+Invoke the `commit-agent` skill as a delegated sub-step, so it commits and does not
+push — Step 8's pr-agent pushes. When it drafts the commit message, ensure:
 
 - Type is `fix`
 - Scope is the most-changed top-level directory

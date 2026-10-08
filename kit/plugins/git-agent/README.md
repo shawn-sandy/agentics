@@ -7,7 +7,7 @@ Automated git workflow for Claude Code — branch creation, commits, PRs, ship p
 ### Skills (foreground)
 
 - **branch-agent** — Fetches latest from origin, creates a branch from the default branch with no upstream tracking, and switches to it. Accepts a branch name or a descriptive phrase — descriptive names are auto-slugified into readable, whole-word slugs (e.g. `"add login page"` → `add-login-page`, max 60 chars; long names drop trailing words rather than abbreviating). Auto-generated names read like commit subjects (e.g. `feat/add-login-form-validation`). Always appends a `-YYYY-MM-DD` date suffix to the final branch name (e.g. `feat/login-fix-2026-04-17`). Stops immediately after. Auto-activates on intent match.
-- **commit-agent** — Stages all changes, writes a conventional commit message, commits, then asks whether to push. Manual invoke only — does not auto-activate on intent match.
+- **commit-agent** — Stages all changes, writes a conventional commit message, commits, then pushes. Manual invoke only — does not auto-activate on intent match.
 - **pr-agent** — Detects the base branch, pushes if needed, checks for an existing PR, and creates one via `gh`. Stops immediately after. Manual invoke only — does not auto-activate on intent match.
 - **ship** — Stages, commits, pushes, and creates a PR in one flow. Manual invoke only — does not auto-activate on intent match. Use commit-agent or pr-agent for individual steps.
 - **ship-autonomous** — Supervised full pipeline: branches (if on default), runs the tests and previews both themes before committing, opens a PR, then subscribes to the PR's activity events to autofix CI failures (lint/typecheck/peer-deps, ≤3 attempts per check) and respond to review comments, posting regular status updates. Asks before any fix outside the safe allowlist, before merging, and again before deleting the branch. Falls back to CI polling when run locally without the GitHub MCP server. Auto-activates on intent match. Use when you want to ship and walk away.
@@ -119,9 +119,9 @@ The skill will:
 3. Analyze `git diff --staged` and write a conventional commit message
 4. Run `git commit -m "<message>"` and output the hash. If [the lint gate](#the-commit-lint-gate) blocks it, ask whether to fix the reported failures and retry (at most two fix rounds, only in files the commit touches); never switch the gate off
 5. Print an undo note: `git reset HEAD~1`
-6. Ask via `AskUserQuestion` whether to push, and push only if you approve
+6. Push without asking, always as `git push -u origin <branch>`. On the default branch (`main`, `master`, or whatever `git ls-remote --symref origin HEAD` reports) it skips the push and leaves the commit local, and it does the same when that lookup fails. A rejected push is reported and never forced or reconciled
 
-**STOPS after the push prompt. Does not test or create PRs.**
+**STOPS after the push. Does not test or create PRs.**
 
 ### pr-agent
 
@@ -402,7 +402,7 @@ The skills above run synchronously in the foreground — your session waits for 
 
 Dispatched via `/git-agent:commit-bg [hint]` or directly by an orchestrator.
 
-Mirrors `commit-agent`: guards → `git add -A` → conventional commit message → `git commit`. Reports the commit hash on completion. The skill's `AskUserQuestion` push prompt has no background equivalent — a subagent has no user to ask — so `agent-commit` never pushes. Use `agent-pr` or `agent-ship` when the background flow should reach the remote.
+Mirrors `commit-agent`: guards → `git add -A` → conventional commit message → `git commit`. Reports the commit hash on completion. Unlike the skill, `agent-commit` never pushes: orchestrators dispatch it to checkpoint between tasks, and that dispatch authorizes a commit, not a remote write. Use `agent-pr` or `agent-ship` when the background flow should reach the remote.
 
 #### agent-pr
 

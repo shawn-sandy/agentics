@@ -88,7 +88,7 @@ Print the summary block defined in `references/handoff.md` before committing.
 
 ## Step 7: Commit via commit-agent
 
-Invoke `commit-agent` per `references/handoff.md`: type `fix`, scope from the
+Invoke `commit-agent` as a delegated sub-step per `references/handoff.md`: type `fix`, scope from the
 most-changed top-level directory. Do not duplicate its staging or hook logic.
 
 ---

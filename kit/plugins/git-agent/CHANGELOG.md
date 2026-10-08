@@ -1,5 +1,42 @@
 # Changelog — git-agent
 
+## v4.23.0 — 2026-10-08 — commit-agent pushes without asking
+
+### Changed
+
+- **commit-agent pushes instead of asking.** A direct-invocation commit now
+  pushes with no `AskUserQuestion` "Push / Don't push" prompt. The old Step 5
+  upstream probe and Step 6 question merge into one Step 5 that always runs
+  `git push -u origin <current-branch>`. The probe chose a bare `git push`
+  whenever `@{u}` resolved, but a branch cut with
+  `git checkout -b <branch> origin/main` tracks `origin/main`: a bare push
+  fails under `push.default=simple` and lands on the base branch under
+  `push.default=upstream`. Naming the branch pushes it to its own name and
+  re-points its upstream either way.
+- **The push never targets the default branch.** With no approval left in
+  front of it, Step 5 skips the push and leaves the commit local when the
+  current branch is `main`, `master`, or the default that
+  `git ls-remote --symref origin HEAD` reports, and also when that lookup
+  fails. It reads the remote live because the cached `origin/HEAD` is set at
+  clone time and `git fetch` never updates it: after the remote renames its
+  default, the cache still names the old one. A failed push is still reported verbatim with no retry, no force,
+  and no pull, fetch, rebase, or merge.
+- **Delegated invocation still stops after Step 4.** The rationale changed: the
+  caller owns the push, and an early push would turn `pr-agent`'s base-sync
+  rebase of an unpushed branch into a merge. ship-autonomous's
+  `references/pr-events.md` drops its two mentions of the removed push prompt.
+- `tests/plugins/test-commit-agent-auto-push.sh` pins the contract: a push step
+  after the commit that does not ask, the explicit refspec and no bare push,
+  the default-branch guard ahead of the push command, its live lookup and
+  stop-when-unknown path, no force or
+  reconciliation, the delegated stop, and that every `Invoke ... commit-agent`
+  line in any plugin says it is delegating.
+
+### Unchanged
+
+- **agent-commit still never pushes.** Orchestrators dispatch it to checkpoint
+  between tasks, and that dispatch authorizes a commit, not a remote write.
+
 ## v4.22.1 — 2026-09-26 — progress updates and agent descriptions
 
 ### Changed
