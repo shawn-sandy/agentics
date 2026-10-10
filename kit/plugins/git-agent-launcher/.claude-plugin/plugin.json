@@ -1,0 +1,17 @@
+{
+  "name": "git-agent-launcher",
+  "description": "A Claude Code mod that opens a pane of every git-agent skill and command; pressing one stages /git-agent:<name> in the prompt for you to run, so a misclick never commits or pushes",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mod",
+    "launcher",
+    "pane",
+    "git-agent",
+    "slash-commands"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/git-agent-launcher",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}

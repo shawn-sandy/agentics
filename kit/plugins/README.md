@@ -73,6 +73,15 @@ The four-component plugin — commands, skills, agents, and a hook in one packag
 
 **Use case:** Streamlined git workflows; the reference for hook-based deterministic routing when intent matching is too fuzzy for a one-word prompt
 
+### git-agent-launcher
+The kit's first mod: a plugin whose `hooks/hooks.json` names a hooks module (`register.tsx`) instead of settings hooks. Needs Claude Code 2.1.287+.
+
+**Components:**
+- Mod: `hooks/register.tsx` - Registers `/git-agent-launcher`, draws a pane of git-agent's entries, and stages the pressed one in the prompt without running it
+- Tests: `hooks/register.test.ts` - `claude plugin test` cases run on the terminal and desktop surfaces; `tests/plugins/test-mod-plugins.sh` runs them and `claude plugin validate` for every mod
+
+**Use case:** The reference for writing a mod — a pane opened by a registered command, a call surface small enough to audit from the `claude plugin validate` report, and surface-looped UI tests
+
 ## Testing Plugins Locally
 
 ### Prerequisites Check

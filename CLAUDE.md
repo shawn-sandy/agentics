@@ -23,7 +23,8 @@ marketplace **references** them by relative path — it does not embed them.
 - **Plugin homepage URLs point at the plugin directory,** not the repo root:
   `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/<name>`
 - `.claude/settings.json` validates `marketplace.json` after every Write/Edit.
-- Requires Claude Code 1.0.33+.
+- Requires Claude Code 1.0.33+; mod plugins (a `hooks/hooks.json` naming
+  `modules`) need 2.1.287+.
 
 ## Merge gate
 

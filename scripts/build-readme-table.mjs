@@ -18,7 +18,8 @@ const HEADING = '## Plugin Reference Table';
 // Count rules mirror how the table has always been hand-maintained:
 // commands/agents = .md files in that directory; skills = subdirectories
 // holding a SKILL.md; hooks = wired command entries in hooks.json (NOT files
-// in hooks/, which may include helper scripts a hook never invokes).
+// in hooks/, which may include helper scripts a hook never invokes); mods =
+// hooks modules listed in hooks/hooks.json.
 function countComponents(dir) {
   const mdFiles = (sub) => {
     const p = join(dir, sub);
@@ -39,7 +40,12 @@ function countComponents(dir) {
     }
   }
 
-  return { command: mdFiles('commands'), skill: skills, agent: mdFiles('agents'), hook: hooks };
+  // A mod is a hooks module named under `modules` in hooks/hooks.json, a file
+  // separate from the root hooks.json counted above.
+  const modsJson = join(dir, 'hooks', 'hooks.json');
+  const mods = existsSync(modsJson) ? (JSON.parse(readFileSync(modsJson, 'utf8')).modules ?? []).length : 0;
+
+  return { command: mdFiles('commands'), skill: skills, agent: mdFiles('agents'), hook: hooks, mod: mods };
 }
 
 function formatComponents(counts) {

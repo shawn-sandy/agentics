@@ -19,11 +19,14 @@ set -euo pipefail
 # Allowed: artifact classes generated at arbitrary depth that are never
 # publishable content. Their .gitignore rules stay unanchored on purpose —
 # python hooks run inside kit/plugins/ and drop __pycache__ next to themselves.
+# A mod's .claude-plugin/types/ is the engine's API types, laid beside a mod
+# loaded with `claude --plugin-dir` under its own `*` .gitignore; build-dist
+# drops it too, so the two publish paths agree.
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
-ALLOWED='(^|/)(__pycache__/|node_modules/)|\.pyc$|(^|/)\.DS_Store$'
+ALLOWED='(^|/)(__pycache__/|node_modules/)|\.pyc$|(^|/)\.DS_Store$|/\.claude-plugin/types/'
 
 echo "=== No Ignored Plugin Files ==="
 

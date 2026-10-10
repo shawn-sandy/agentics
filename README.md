@@ -4,7 +4,7 @@
 
 A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
 
-**Marketplace:** `agentics-kit` v4.0.0 · **12 plugins** · Requires Claude Code 1.0.33+ · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
+**Marketplace:** `agentics-kit` v4.0.0 · **13 plugins** · Requires Claude Code 1.0.33+ (mod plugins: 2.1.287+) · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
 
 > **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories have been removed from the repository and are recoverable from git history at the commit preceding their deletion. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
@@ -95,7 +95,7 @@ Every plugin in this repo is a working, production-quality tool you can install 
 
 ### Required
 
-- **Claude Code CLI** version 1.0.33 or later
+- **Claude Code CLI** version 1.0.33 or later; mod plugins (`git-agent-launcher`) need 2.1.287 or later
 
 ```bash
 # Verify version
@@ -131,7 +131,7 @@ agentics/
 │   ├── rules/                    # Scoped authoring rules (plugin patterns, marketplace, testing)
 │   └── settings.json             # Project-level Claude Code settings and hooks
 ├── kit/
-│   └── plugins/                  # 12 plugins in marketplace
+│   └── plugins/                  # 13 plugins in marketplace
 │       ├── artifact-tools/
 │       ├── code-review/
 │       ├── code-testing-agent/
@@ -253,7 +253,7 @@ claude --plugin-dir ./kit/plugins/code-review "Review this file for bugs"
 Claude Code CLI is not installed or not in your `PATH`.
 
 - Install from: https://code.claude.com/docs/en/installation
-- Verify: `claude --version` — need 1.0.33+
+- Verify: `claude --version` — need 1.0.33+, or 2.1.287+ for mod plugins
 - macOS/Linux: ensure `~/.local/bin` is in your `PATH`
 - Windows: use WSL2 and follow the Linux steps
 
@@ -555,6 +555,25 @@ claude --plugin-dir ./kit/plugins/git-agent
 
 ---
 
+#### `git-agent-launcher`
+
+A mod that gives git-agent a clickable surface. `/git-agent-launcher` opens a pane listing every git-agent skill and command with its description. Pressing an entry stages `/git-agent:<name> ` in the prompt and keeps anything you had typed as its arguments. It never runs the command; Enter does. That keeps a misclick on `commit-agent` or `pr-agent`, both of which push, harmless. Surfaces that draw no pane (the VS Code chat panel, `claude -p`) get the list as text. Needs Claude Code 2.1.287+ and git-agent installed.
+
+**Mod command:**
+
+| Command | Description |
+|---------|-------------|
+| `/git-agent-launcher` | Open a pane of git-agent skills and commands; digits `1`–`9` press the first nine entries |
+
+```bash
+claude --plugin-dir ./kit/plugins/git-agent --plugin-dir ./kit/plugins/git-agent-launcher
+# /git-agent-launcher
+```
+
+[View Documentation](./kit/plugins/git-agent-launcher/README.md)
+
+---
+
 #### `settings-sync`
 
 Back up and restore Claude Code user settings to a dedicated git repo. Routine-compatible for automated backups.
@@ -794,6 +813,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | content-tools | [How do I... content-tools](./docs/guides/how-to/content-tools.md) | 1 |
 | design-system-tools | [How do I... design-system-tools](./docs/guides/how-to/design-system-tools.md) | 1 |
 | git-agent | [How do I... git-agent](./docs/guides/how-to/git-agent.md) | 8 |
+| git-agent-launcher | [How do I... git-agent-launcher](./docs/guides/how-to/git-agent-launcher.md) | 0 |
 | memory-tools | [How do I... memory-tools](./docs/guides/how-to/memory-tools.md) | 3 |
 | plan-agent | [How do I... plan-agent](./docs/guides/how-to/plan-agent.md) | 18 |
 | settings-sync | [How do I... settings-sync](./docs/guides/how-to/settings-sync.md) | 2 |
@@ -801,7 +821,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | social-media-tools | [How do I... social-media-tools](./docs/guides/how-to/social-media-tools.md) | 17 |
 | wcag-compliance-reviewer | [How do I... wcag-compliance-reviewer](./docs/guides/how-to/wcag-compliance-reviewer.md) | 1 |
 
-Total: 67 skills across 12 plugins.
+Total: 67 skills across 13 plugins.
 
 ---
 
@@ -823,6 +843,7 @@ Total: 67 skills across 12 plugins.
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.12.0 | development | 3 commands, 5 skills |
 | [content-tools](./kit/plugins/content-tools/README.md) | 1.1.1 | documentation | 1 skill |
 | [design-system-tools](./kit/plugins/design-system-tools/README.md) | 0.1.0 | development | 1 skill |
+| [git-agent-launcher](./kit/plugins/git-agent-launcher/README.md) | 0.1.0 | development | 1 mod |
 
 ---
 
