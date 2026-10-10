@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Step 2 — Fill and focus spike</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#7aa2f7}a:hover{color:#a8c0fb}
+</style>
+</helmet>
+<div style="width: 880px; height: 560px; box-sizing: border-box; background: #14151a; color: #e8e9ed; font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; gap: 14px; padding: 36px 40px">
+  <div>
+    <h1 style="margin: 0; font-size: 22px">Step 2 — Fill and focus spike</h1>
+    <p style="margin: 4px 0 0; font-size: 13.5px; color: #9aa0ae">Terminal checked by the agent; the Desktop Code tab press is user-assisted. Three findings gate Phase 1.</p>
+  </div>
+  <div style="display: flex; gap: 20px; align-items: stretch">
+    <div style="flex: 1; background: #1e2027; border: 1px solid #3a3f4e; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa0ae">Pane (focus: true)</div>
+      <button type="button" style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; text-align: left; padding: 8px 12px; background: #14151a; color: #e8e9ed; border: 1px solid #7aa2f7; border-radius: 6px; cursor: pointer">commit-agent</button>
+      <div style="font-size: 12.5px; color: #9aa0ae">press calls $.prompt.read() then $.prompt.fill</div>
+    </div>
+    <div style="display: flex; align-items: center; font-size: 22px; color: #9aa0ae" aria-hidden="true">&#8594;</div>
+    <div style="flex: 1.3; display: flex; flex-direction: column; gap: 10px">
+      <div style="background: #0d0e12; border: 1px solid #3a3f4e; border-radius: 10px; padding: 14px 16px">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa0ae; margin-bottom: 8px">Prompt box after the press</div>
+        <div style="font-family: ui-monospace, Menlo, monospace; font-size: 13.5px; color: #e8e9ed; border: 1px solid #3a3f4e; border-radius: 6px; padding: 9px 12px">/git-agent:commit-agent <span style="color: #7aa2f7">&#9612;</span></div>
+      </div>
+      <div style="display: flex; gap: 10px; font-size: 12.5px">
+        <div style="flex: 1; background: #1e2027; border: 1px solid #3a3f4e; border-radius: 8px; padding: 10px 12px"><span style="color: #9aa0ae">Record:</span> isFilled on terminal</div>
+        <div style="flex: 1; background: #1e2027; border: 1px solid #3a3f4e; border-radius: 8px; padding: 10px 12px"><span style="color: #9aa0ae">Record:</span> isFilled on Desktop</div>
+        <div style="flex: 1; background: #1e2027; border: 1px solid #3a3f4e; border-radius: 8px; padding: 10px 12px"><span style="color: #9aa0ae">Record:</span> focus after fill</div>
+      </div>
+    </div>
+  </div>
+  <div style="background: #2a1f23; border: 1px solid #5a3a40; border-radius: 6px; padding: 12px 16px; font-size: 13px; color: #e8c7cb">Stop condition (verbatim): "fill fails on Desktop and the copy fallback is rejected, then reopen decision 6."</div>
+  <div style="font-size: 12.5px; color: #9aa0ae">Fallback if Desktop fill fails: $.ui.copy(&#123; text, surface &#125;) plus a toast, on that surface only.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":560}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

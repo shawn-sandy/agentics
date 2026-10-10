@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Step 5 — Launcher pane</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#7aa2f7}a:hover{color:#a8c0fb}
+</style>
+</helmet>
+<div style="width: 880px; height: 820px; box-sizing: border-box; background: #14151a; color: #e8e9ed; font-family: ui-monospace, Menlo, monospace; display: flex; flex-direction: column; gap: 12px; padding: 28px 32px">
+  <div style="display: flex; align-items: baseline; gap: 12px">
+    <h1 style="margin: 0; font-size: 17px; font-family: system-ui, -apple-system, sans-serif">git-agent launcher</h1>
+    <span style="font-size: 12px; color: #9aa0ae">press an entry to stage it &middot; Esc closes</span>
+  </div>
+  <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #9aa0ae">draft already in the prompt (kept on press)
+    <input value="{{draft}}" onChange="{{setDraft}}" style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; padding: 7px 10px; background: #0d0e12; color: #e8e9ed; border: 1px solid #3a3f4e; border-radius: 6px">
+  </label>
+  <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1">
+    <sc-for list="{{entries}}" as="entry" hint-placeholder-count="13">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span style="width: 14px; color: {{accent}}; font-size: 12.5px">{{entry.hotkey}}</span>
+        <button type="button" onClick="{{entry.pick}}" style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; text-align: left; min-width: 180px; padding: 5px 10px; background: transparent; color: #e8e9ed; border: 1px solid #3a3f4e; border-radius: 6px; cursor: pointer">{{entry.name}}</button>
+        <span style="flex: 1; font-size: 12px; color: #9aa0ae">{{entry.desc}}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background: #0d0e12; border: 1px solid #3a3f4e; border-radius: 8px; padding: 12px 14px">
+    <div style="font-size: 12px; color: #9aa0ae; margin-bottom: 6px; font-family: system-ui, -apple-system, sans-serif"><span style="text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px">Prompt box</span> — Enter runs it, nothing runs on press</div>
+    <div style="font-size: 13.5px; border: 1px solid {{accent}}; border-radius: 6px; padding: 9px 12px; min-height: 20px">{{staged}}</div>
+  </div>
+  <div style="font-size: 12.5px; color: #9aa0ae">Empty list: one line naming /plugin install git-agent@agentics-kit &middot; isFilled false: toast "Type /git-agent:&lt;name&gt; in the prompt"</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7aa2f7"},"$preview":{"width":880,"height":820}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { staged: '', draft: '' };
+  }
+  renderVals() {
+    var self = this;
+    var defs = [
+      { name: 'branch-agent', desc: 'Creates a branch from origin, no upstream' },
+      { name: 'commit-agent', desc: 'Commits and pushes, no ask' },
+      { name: 'create-issue', desc: 'Opens an issue after confirming' },
+      { name: 'merge', desc: 'Merges after a readiness gate and approval' },
+      { name: 'post-merge-cleanup', desc: 'Deletes merged branches and worktrees' },
+      { name: 'pr-agent', desc: 'Pushes and opens a PR' },
+      { name: 'ship', desc: 'Stages, commits, pushes, opens a PR' },
+      { name: 'ship-autonomous', desc: 'Full pipeline with CI poll and gated merge' },
+      { name: 'commit-bg', desc: 'Background commit' },
+      { name: 'merge-bg', desc: 'Background merge gate' },
+      { name: 'pr-bg', desc: 'Background push and PR' },
+      { name: 'ship-bg', desc: 'Background ship' },
+      { name: 'ship-ci-bg', desc: 'Background CI watch' }
+    ];
+    var entries = defs.map(function (d, i) {
+      return {
+        name: d.name,
+        desc: d.desc,
+        hotkey: i < 9 ? String(i + 1) : '',
+        pick: function () {
+          var draft = self.state.draft || '';
+          self.setState({ staged: '/git-agent:' + d.name + (draft ? ' ' + draft : ' ') });
+        }
+      };
+    });
+    return {
+      entries: entries,
+      staged: this.state.staged || '(empty — press an entry above)',
+      draft: this.state.draft,
+      setDraft: function (e) { self.setState({ draft: e.target.value }); },
+      accent: this.props.accent ?? '#7aa2f7'
+    };
+  }
+}
+</script>
+</body>
+</html>

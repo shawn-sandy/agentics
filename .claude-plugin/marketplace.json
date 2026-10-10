@@ -304,6 +304,24 @@
         "wcag-contrast",
         "claude-ai-artifacts"
       ]
+    },
+    {
+      "name": "git-agent-launcher",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/git-agent-launcher"
+      },
+      "version": "0.1.0",
+      "description": "A Claude Code mod (2.1.287+) that opens a pane of every git-agent skill and command from /git-agent-launcher; pressing an entry stages /git-agent:<name> in the prompt, keeping any typed draft as its arguments, and never runs it, so a misclick cannot commit or push; surfaces that draw no pane get the list as text",
+      "category": "development",
+      "tags": [
+        "mod",
+        "launcher",
+        "pane",
+        "git-agent",
+        "slash-commands"
+      ]
     }
   ],
   "removed": [

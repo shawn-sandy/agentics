@@ -52,6 +52,10 @@ const DROP_PATTERNS = [
   // hooks drop __pycache__ at arbitrary depth inside a plugin.
   { test: (rel) => rel.split('/').includes('__pycache__'), label: '__pycache__/' },
   { test: (rel) => rel.endsWith('.pyc'), label: '*.pyc' },
+  // The API types the engine lays beside a mod loaded from a working copy
+  // (`claude --plugin-dir`); they name this machine's MCP tools. KEEP takes
+  // `.claude-plugin`, so only this stops a local build from shipping them.
+  { test: (rel) => rel.startsWith('.claude-plugin/types/'), label: '.claude-plugin/types/' },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────

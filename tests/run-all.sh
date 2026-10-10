@@ -54,7 +54,13 @@ run_one() {
   fi
   out=$("$runner" "$t" 2>&1)
   rc=$?
-  if [ "$rc" -eq 0 ]; then
+  # A test that cannot run here (test-mod-plugins.sh without a new enough
+  # claude CLI) exits 0 with a first line of `SKIP (<reason>)`: a skip, not a pass.
+  if [ "$rc" -eq 0 ] && [ "${out#SKIP (}" != "$out" ]; then
+    out="${out%%$'\n'*}"
+    echo "SKIP $t ${out#SKIP }"
+    SKIPPED=$((SKIPPED + 1))
+  elif [ "$rc" -eq 0 ]; then
     echo "PASS $t"
     PASS=$((PASS + 1))
   else
