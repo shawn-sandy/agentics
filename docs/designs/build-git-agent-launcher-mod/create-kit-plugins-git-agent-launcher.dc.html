@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Step 3 — Plugin manifest</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#7aa2f7}a:hover{color:#a8c0fb}
+</style>
+</helmet>
+<div style="width: 880px; height: 560px; box-sizing: border-box; background: #14151a; color: #e8e9ed; font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; gap: 16px; padding: 36px 40px">
+  <div>
+    <h1 style="margin: 0; font-size: 22px">Step 3 — Plugin manifest</h1>
+    <p style="margin: 4px 0 0; font-size: 13.5px; color: #9aa0ae">Every mod file lives under hooks/ — build-dist.mjs drops any other top-level directory.</p>
+  </div>
+  <div style="display: flex; gap: 20px; flex-grow: 1; min-height: 0">
+    <div style="flex: 1; background: #1e2027; border: 1px solid #3a3f4e; border-radius: 10px; padding: 16px 18px; font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; line-height: 1.9">
+      <div style="color: #9aa0ae; margin-bottom: 6px">.claude-plugin/plugin.json</div>
+      <div>&#123;</div>
+      <div style="padding-left: 16px">"name": <span style="color: #a3d9a5">"git-agent-launcher"</span>,</div>
+      <div style="padding-left: 16px">"description": <span style="color: #a3d9a5">"..."</span>,</div>
+      <div style="padding-left: 16px">"author", "license", "keywords",</div>
+      <div style="padding-left: 16px">"homepage", "repository"</div>
+      <div>&#125;</div>
+      <div style="margin-top: 10px; padding: 8px 10px; background: #2a1f23; border-radius: 6px; color: #e8c7cb; font-size: 12px">no "version" key — it would silently override the marketplace value</div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 16px">
+      <div style="background: #1e2027; border: 1px solid #3a3f4e; border-radius: 10px; padding: 16px 18px; font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; line-height: 1.9">
+        <div style="color: #9aa0ae; margin-bottom: 6px">hooks/hooks.json</div>
+        <div>&#123; "modules": [<span style="color: #a3d9a5">"./register.tsx"</span>] &#125;</div>
+      </div>
+      <div style="background: #1e2027; border: 1px solid #3a3f4e; border-radius: 10px; padding: 16px 18px; font-size: 12.5px; line-height: 1.8; color: #c2c6d1">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa0ae; margin-bottom: 6px">Verify</div>
+        <div style="font-family: ui-monospace, Menlo, monospace">claude plugin validate --strict kit/plugins/git-agent-launcher</div>
+        <div style="color: #9aa0ae; margin-top: 4px">parses the manifest, reports no version key</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":560}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

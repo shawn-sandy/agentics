@@ -1,0 +1,28 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-09T20:30:00Z" },
+  "title": "Git Agent Launcher Mod",
+  "launch": { "view": "canvas" },
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 880, "h": 560, "title": "Cover" },
+    "scaffold-a-throwaway-launcher-plugin-in.dc.html": { "x": 960, "y": 0, "w": 880, "h": 560, "title": "Step 1 — Spike scaffold" },
+    "extend-the-spike-with-a-focus.dc.html": { "x": 1920, "y": 0, "w": 880, "h": 560, "title": "Step 2 — Fill and focus spike" },
+    "create-kit-plugins-git-agent-launcher.dc.html": { "x": 0, "y": 680, "w": 880, "h": 560, "title": "Step 3 — Plugin manifest" },
+    "write-the-registration-and-command-plumbing.dc.html": { "x": 960, "y": 680, "w": 880, "h": 560, "title": "Step 4 — Command plumbing" },
+    "write-the-pane-body-and-press.dc.html": { "x": 1920, "y": 680, "w": 880, "h": 820, "title": "Step 5 — Launcher pane", "is_interactive": true },
+    "teach-countcomponents-in-scripts-build-readme.dc.html": { "x": 0, "y": 1620, "w": 880, "h": 360, "title": "Step 8 — README mod count" }
+  },
+  "order": [
+    "Main.dc.html",
+    "scaffold-a-throwaway-launcher-plugin-in.dc.html",
+    "extend-the-spike-with-a-focus.dc.html",
+    "create-kit-plugins-git-agent-launcher.dc.html",
+    "write-the-registration-and-command-plumbing.dc.html",
+    "write-the-pane-body-and-press.dc.html",
+    "teach-countcomponents-in-scripts-build-readme.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -280, "text": "Git Agent Launcher Mod — plan artboards", "kind": "title1", "maxW": 2800 }
+  },
+  "designSystems": []
+}

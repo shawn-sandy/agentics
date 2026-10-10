@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Step 8 — README mod count</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#7aa2f7}a:hover{color:#a8c0fb}
+</style>
+</helmet>
+<div style="width: 880px; height: 360px; box-sizing: border-box; background: #14151a; color: #e8e9ed; font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; gap: 14px; padding: 32px 40px">
+  <div>
+    <h1 style="margin: 0; font-size: 22px">Step 8 — README mod count</h1>
+    <p style="margin: 4px 0 0; font-size: 13.5px; color: #9aa0ae">countComponents() in scripts/build-readme-table.mjs counts each hooks/hooks.json modules entry as a mod.</p>
+  </div>
+  <div style="background: #1e2027; border: 1px solid #3a3f4e; border-radius: 10px; padding: 6px 18px 10px; font-size: 13px">
+    <table style="width: 100%; border-collapse: collapse">
+      <caption style="text-align: left; font-size: 11px; color: #9aa0ae; padding: 8px 0">README.md — Plugin Reference Table (generated)</caption>
+      <thead>
+        <tr>
+          <th scope="col" style="text-align: left; padding: 6px 10px; color: #9aa0ae; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #3a3f4e">Plugin</th>
+          <th scope="col" style="text-align: left; padding: 6px 10px; color: #9aa0ae; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #3a3f4e">Version</th>
+          <th scope="col" style="text-align: left; padding: 6px 10px; color: #9aa0ae; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #3a3f4e">Category</th>
+          <th scope="col" style="text-align: left; padding: 6px 10px; color: #9aa0ae; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #3a3f4e">Components</th>
+        </tr>
+      </thead>
+      <tbody style="font-family: ui-monospace, Menlo, monospace; font-size: 12.5px">
+        <tr>
+          <td style="padding: 7px 10px; border-bottom: 1px solid #2a2d36">git-agent</td>
+          <td style="padding: 7px 10px; border-bottom: 1px solid #2a2d36">4.23.0</td>
+          <td style="padding: 7px 10px; border-bottom: 1px solid #2a2d36">development</td>
+          <td style="padding: 7px 10px; border-bottom: 1px solid #2a2d36; color: #c2c6d1">5 commands, 8 skills, 2 agents, 3 hooks</td>
+        </tr>
+        <tr style="background: #23283a">
+          <td style="padding: 7px 10px; border-bottom: 1px solid #2a2d36; color: #a8c0fb">git-agent-launcher</td>
+          <td style="padding: 7px 10px; border-bottom: 1px solid #2a2d36">0.1.0</td>
+          <td style="padding: 7px 10px; border-bottom: 1px solid #2a2d36">development</td>
+          <td style="padding: 7px 10px; border-bottom: 1px solid #2a2d36; color: #a8c0fb">1 mod</td>
+        </tr>
+        <tr>
+          <td style="padding: 7px 10px">plan-agent</td>
+          <td style="padding: 7px 10px">9.19.1</td>
+          <td style="padding: 7px 10px">development</td>
+          <td style="padding: 7px 10px; color: #c2c6d1">14 commands, 18 skills, 12 agents</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="font-size: 12.5px; color: #9aa0ae">Without the change the launcher row would read "none" — its only component is its mod.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":360}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

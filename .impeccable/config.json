@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "docs/prototypes/launch-git-agent-commands.html"
+        ],
+        "createdAt": "2026-10-10T00:17:03.923Z",
+        "reason": "generated verbatim from plan-agent prototype skeleton (reference/PROTOTYPE-SKELETON.html); palette fixes belong upstream in the skeleton, not in generated output"
+      }
+    ]
+  }
+}
