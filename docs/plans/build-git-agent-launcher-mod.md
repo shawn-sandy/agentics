@@ -43,12 +43,12 @@ One correction to the proposal discovered during planning: its Workstream C adde
 - Interview-confirmed UI choices (2026-10-09): digit hotkeys 1–9 only (entries 10–13 reachable by focus and press), one flat list in `$.command.list()` order, descriptions wrapped in full to `bodyColumns`, and the pane close after a successful fill stays conditional on the Phase 0 focus finding.
 - Phase 0 findings (2026-10-09, Claude Code 2.1.296; a throwaway spike in the session scratchpad, driven through a real `claude --plugin-dir` terminal session under `expect`, logging to a scratch file):
   - Name format: `$.command.list()` returns all 13 git-agent entries as `git-agent:<name>` with `source: 'plugin'` and `plugin: 'git-agent'` set on every one, in the order commit-bg, merge-bg, pr-bg, ship-bg, ship-ci-bg, then the eight skills alphabetically. The pane filters on `plugin === 'git-agent'` alone; the name-prefix fallback is dropped.
-  - Fill: in the terminal, in both the fullscreen (docked) and main-screen (inline) layouts, a press in a `focus: true` pane calls `$.prompt.fill` and gets `isFilled: true` with the text staged. Desktop: the 2.1.293 types document `refusal: 'no_composer'` for "a surface that draws its own composer", and say `$.ui.copy` has no path on a remote surface yet, so the Desktop fallback is the toast alone and `ui.copy` is not adopted. A Desktop observation was pending at the time of this entry; see the Desktop probe entry below.
+  - Fill: in the terminal, in both the fullscreen (docked) and main-screen (inline) layouts, a press in a `focus: true` pane calls `$.prompt.fill` and gets `isFilled: true` with the text staged. Desktop: the 2.1.293 types document `refusal: 'no_composer'` for "a surface that draws its own composer", and say `$.ui.copy` has no path on a remote surface yet, so the Desktop fallback is the toast alone and `ui.copy` is not adopted. The Desktop observation came later; see the Desktop observation entry below.
   - Focus after fill: in both terminal layouts `$.ui.panes()` reads `isFocused: true` before the fill and `false` right after it, and the next Enter reached `prompt.submit` with the staged text. The fill hands the keyboard back by itself, so the pane does not close itself after a fill (`ui.close` not adopted); it stays open for another press.
   - Headless: under `claude -p`, `session.start` carries `surface: null`, `$.ui.open` answers `isPlaced: true` (the types say a bare `-p` run never answers false), and nothing draws, so an `isPlaced`-only fallback leaves `-p` silent. The text listing is returned when `isPlaced` is false or when no drawing surface has been seen: `session.start` carried no surface and no `session.attach` has fired. That adds an observe-only `session.attach` hook and no `session.*` call.
   - Validation: `claude plugin validate --strict` fails every relative-path plugin in this repo, git-agent included, on the `version: No version specified` warning, which the repo's no-version rule makes permanent. The gate therefore runs `claude plugin validate --json` and fails on any error, or on any warning other than that one. The module may pass `$` only to functions declared at its top level, or validate refuses it.
   - Draft stacking: pressing a second entry right after a fill would put the new command in front of the first one's staged text. The press drops a leading `/git-agent:<name> ` from the draft before adding its own, and a regression case pins this.
-- Desktop deferred (with the user, 2026-10-09): the Desktop Code tab observation and dogfood (the Desktop halves of steps 2 and 12, and of criteria 6 and 7) moved to a Next Step. A probe mod was staged in this session's hot-reload folder (`~/.claude/dev-mods/<session-id>/launcher-probe`) and never committed, but it could not load. A mod there loads only when a turn ends, and the session's goal stop hook kept the turn from ending until the plan passed. Until it is observed, Desktop rests on the 2.1.293 types: `refusal: 'no_composer'` for a surface that draws its own composer, after which the press raises the toast. The terminal spike lives in the session scratchpad, uncommitted. It was not deleted, because this environment does not allow `rm`.
+- Desktop observation (user-assisted, 2026-10-09): the user loaded the launcher in a new Desktop Code tab session through `CLAUDE_CODE_PLUGIN_DIRS` and pressed commit-agent. `/git-agent:commit-agent ` was staged in the prompt box, and typing went to the prompt, so Enter runs it. The Desktop composer therefore accepts `$.prompt.fill`, despite the types' `no_composer` note, and hands the keyboard back as the terminal does. No `ui.close` after a fill and no `ui.copy` fallback are needed, and the stop condition does not apply. The toast stays for any surface that refuses the fill. Timing: the terminal findings gated Phase 1. The Desktop finding was recorded with the documented expectation and confirmed after the mod was built, and it needed no code change. A hot-reload probe in this session's dev-mods folder could not load while the goal stop hook held the turn open, so the user ran the check. The terminal spike stays uncommitted in the session scratchpad; it was not deleted, because this environment does not allow `rm`.
 - Engine-laid types (found at step 12): loading the mod with `claude --plugin-dir` makes the engine write its API types into `kit/plugins/git-agent-launcher/.claude-plugin/types/`, under that folder's own `*` .gitignore. `claude-code-mcp/index.d.ts` there names this machine's connected MCP tools. Two things followed, and both are fixed:
   - `tests/publish/test-no-ignored-plugin-files.sh` failed the merge gate. It now allows the folder as generated output, as it already allows `__pycache__`.
   - A local `node scripts/build-dist.mjs` copied the folder into `dist/`, because `.claude-plugin` is KEEP-listed. A DROP pattern now stops it, pinned by `tests/publish/test-dist-drops-mod-types.mjs`, which failed before the fix.
@@ -116,8 +116,8 @@ Tier 1 — This plan changes application code
 - [x] `bash tests/plugins/test-mod-plugins.sh` exits 0 — printing real validate/test results with a current CLI, and `SKIP (claude < 2.1.287)` without one.
 - [x] The README Plugin Reference Table shows git-agent-launcher at 0.1.0 with a `1 mod` component count, and `node scripts/build-readme-table.mjs --check` exits 0.
 - [x] `bash scripts/verify.sh` exits 0 while `git diff --name-only origin/main` lists neither `scripts/verify.sh` nor `kit/plugins/code-testing-agent/skills/verified-change/assets/verify.sh`.
-- [x] Phase 0's findings (name format, fill, and focus after fill, observed in the terminal and under `claude -p`) are recorded in this spec's Decisions section before any Phase 1 file exists. The Desktop Code tab observation was deferred to a Next Step with the user on 2026-10-09.
-- [x] A dogfood pass is recorded: in a terminal session the pane opens and a press stages the command in the prompt, Enter runs it from there, and a non-drawing surface (`claude -p`) gets the text listing. The Desktop Code tab pass was deferred to a Next Step with the user on 2026-10-09.
+- [x] Phase 0's three findings (name format, fill on Desktop, focus after fill) are recorded in this spec's Decisions section before any Phase 1 file exists.
+- [x] A dogfood pass is recorded: the pane opens and a press stages the command in the prompt in both the terminal and the Desktop Code tab (or the documented Desktop fallback fires, per Phase 0), and a non-drawing surface gets the text listing.
 
 ## Verification
 
@@ -137,24 +137,6 @@ Then walk the launcher as a user: in a terminal session in this repo, type `/git
   build buttons). Ground it in kit/plugins/git-agent-launcher as the shipped
   reference mod, and verify the chosen draft converges before handing off to
   an implementation plan.
-  ```
-
-- Observe the launcher in the Desktop Code tab
-  Criteria 6 and 7 were narrowed to the terminal and `claude -p`. The Desktop fill and focus behaviour has not been observed, and only the 2.1.293 types document it.
-  ```text
-  In the agentics repo, observe kit/plugins/git-agent-launcher in a Claude
-  Code Desktop Code tab session. Load it (hot reloading, or the plugin folder
-  in CLAUDE_CODE_PLUGIN_DIRS), run /git-agent-launcher, press commit-agent
-  over an empty prompt and commit-bg over the draft "fix typo in readme",
-  and record:
-  - whether $.prompt.fill staged the text or the
-    "Type /git-agent:<name> in the prompt" toast appeared;
-  - where keyboard focus landed after the press;
-  - whether Escape closed the pane.
-  Do not press Enter on a staged git-agent command; it commits and pushes.
-  If the fill works but focus stays in the pane, add a $.ui.close after a
-  successful fill and a regression case for it. Record the result in
-  docs/plans/build-git-agent-launcher-mod.md Decisions.
   ```
 
 ## Unresolved Questions
