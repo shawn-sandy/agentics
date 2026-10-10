@@ -5,8 +5,10 @@ const PREFIX = 'git-agent:'
 const INSTALL = 'git-agent is not installed. Run /plugin install git-agent@agentics-kit'
 
 // A `claude -p` run has no surface, yet `ui.open` still answers isPlaced there,
-// so the text listing keys on whether any drawing surface has been seen.
-let canDraw = false
+// so the text listing keys on whether a drawing surface is present: the one the
+// session started on, or a remote client still attached.
+let startedOnSurface = false
+const attached = new Set<string>()
 
 /** git-agent's skills and commands, in the order the typeahead lists them. */
 async function gitAgentEntries($: EngineInterface): Promise<CommandInfo[]> {
@@ -34,19 +36,24 @@ async function stage($: EngineInterface, name: string): Promise<void> {
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
-    canDraw ||= e.surface !== null
+    startedOnSurface ||= e.surface !== null
     await $.command.register({ name: 'git-agent-launcher', description: 'Open a pane of git-agent skills and commands' })
     return next(e)
   })
 
   on('session.attach', ($, e, next) => {
-    canDraw = true
+    attached.add(e.clientId)
+    return next(e)
+  })
+
+  on('session.detach', ($, e, next) => {
+    attached.delete(e.clientId)
     return next(e)
   })
 
   on('command.run', { command: 'git-agent-launcher' }, async $ => {
     const opened = await $.ui.open({ id: PANE, title: 'git-agent', focus: true, closeOnEscape: true })
-    if (opened.isPlaced && canDraw) return {}
+    if (opened.isPlaced && (startedOnSurface || attached.size > 0)) return {}
     return { text: listing(await gitAgentEntries($)) }
   })
 

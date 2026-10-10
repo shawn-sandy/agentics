@@ -61,14 +61,15 @@ prompt box. It writes only the prompt box, its own pane, and a toast. `claude pl
 following, and anything else is a defect:
 
 ```text
-./register.tsx hooks: session.start, session.attach, command.run{command=git-agent-launcher}, ui.render{component=Pane, requestId=git-agent-launcher}
+./register.tsx hooks: session.start, session.attach, session.detach, command.run{command=git-agent-launcher}, ui.render{component=Pane, requestId=git-agent-launcher}
 ./register.tsx answers its own command: command.run{command=git-agent-launcher}
 ./register.tsx calls: $.command.list (via gitAgentEntries), $.command.register, $.prompt.fill (via stage), $.prompt.read (via stage), $.ui.open, $.ui.resolve, $.ui.toast (via stage)
 ```
 
 - **Not in that report:** `$.fs`, `$.process`, `$.http`, `$.model`, `$.session`, or `$.env`.
-- **`session.attach`:** this hook only observes. It records that a drawing surface joined, so a
-  `claude -p` run gets the text list instead of a pane nobody can see.
+- **`session.attach` and `session.detach`:** these hooks only observe. They track which drawing
+  surfaces are attached, so a `claude -p` run, or a session whose last client has left, gets
+  the text list instead of a pane nobody can see.
 - **The one warning:** the manifest's `version: No version specified` warning is expected. This
   repo keeps versions in `marketplace.json` only.
 

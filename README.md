@@ -138,6 +138,7 @@ agentics/
 │       ├── content-tools/
 │       ├── design-system-tools/
 │       ├── git-agent/
+│       ├── git-agent-launcher/
 │       ├── memory-tools/
 │       ├── plan-agent/
 │       ├── settings-sync/
@@ -178,6 +179,7 @@ The marketplace approach uses sparse cloning — only the plugin you install is 
 /plugin install plan-agent@agentics-kit
 /plugin install memory-tools@agentics-kit
 /plugin install git-agent@agentics-kit
+/plugin install git-agent-launcher@agentics-kit
 /plugin install skill-reviewer@agentics-kit
 /plugin install code-testing-agent@agentics-kit
 /plugin install wcag-compliance-reviewer@agentics-kit

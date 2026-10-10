@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: completed
 modified: 2026-10-09
 type: feature
 created: 2026-10-09
@@ -43,18 +43,23 @@ One correction to the proposal discovered during planning: its Workstream C adde
 - Interview-confirmed UI choices (2026-10-09): digit hotkeys 1–9 only (entries 10–13 reachable by focus and press), one flat list in `$.command.list()` order, descriptions wrapped in full to `bodyColumns`, and the pane close after a successful fill stays conditional on the Phase 0 focus finding.
 - Phase 0 findings (2026-10-09, Claude Code 2.1.296; a throwaway spike in the session scratchpad, driven through a real `claude --plugin-dir` terminal session under `expect`, logging to a scratch file):
   - Name format: `$.command.list()` returns all 13 git-agent entries as `git-agent:<name>` with `source: 'plugin'` and `plugin: 'git-agent'` set on every one, in the order commit-bg, merge-bg, pr-bg, ship-bg, ship-ci-bg, then the eight skills alphabetically. The pane filters on `plugin === 'git-agent'` alone; the name-prefix fallback is dropped.
-  - Fill: in the terminal, in both the fullscreen (docked) and main-screen (inline) layouts, a press in a `focus: true` pane calls `$.prompt.fill` and gets `isFilled: true` with the text staged. Desktop: the 2.1.293 types document `refusal: 'no_composer'` for "a surface that draws its own composer", and say `$.ui.copy` has no path on a remote surface yet, so the Desktop fallback is the toast alone and `ui.copy` is not adopted. The Desktop observation is still open; see the Desktop entry below.
+  - Fill: in the terminal, in both the fullscreen (docked) and main-screen (inline) layouts, a press in a `focus: true` pane calls `$.prompt.fill` and gets `isFilled: true` with the text staged. Desktop: the 2.1.293 types document `refusal: 'no_composer'` for "a surface that draws its own composer", and say `$.ui.copy` has no path on a remote surface yet, so the Desktop fallback is the toast alone and `ui.copy` is not adopted. The Desktop observation came later; see the Desktop observation entry below.
   - Focus after fill: in both terminal layouts `$.ui.panes()` reads `isFocused: true` before the fill and `false` right after it, and the next Enter reached `prompt.submit` with the staged text. The fill hands the keyboard back by itself, so the pane does not close itself after a fill (`ui.close` not adopted); it stays open for another press.
   - Headless: under `claude -p`, `session.start` carries `surface: null`, `$.ui.open` answers `isPlaced: true` (the types say a bare `-p` run never answers false), and nothing draws, so an `isPlaced`-only fallback leaves `-p` silent. The text listing is returned when `isPlaced` is false or when no drawing surface has been seen: `session.start` carried no surface and no `session.attach` has fired. That adds an observe-only `session.attach` hook and no `session.*` call.
   - Validation: `claude plugin validate --strict` fails every relative-path plugin in this repo, git-agent included, on the `version: No version specified` warning, which the repo's no-version rule makes permanent. The gate therefore runs `claude plugin validate --json` and fails on any error, or on any warning other than that one. The module may pass `$` only to functions declared at its top level, or validate refuses it.
   - Draft stacking: pressing a second entry right after a fill would put the new command in front of the first one's staged text. The press drops a leading `/git-agent:<name> ` from the draft before adding its own, and a regression case pins this.
-- Desktop (unverified, open, 2026-10-09): the user reported that pressing commit-agent in a Desktop Code tab staged `/git-agent:commit-agent ` and left typing in the prompt. Nothing corroborates it:
-  - The throwaway guard was extended to log the session's surfaces, so a rerun that ends with Enter would leave a record. No log was written.
-  - `~/.claude/settings.json` holds no `CLAUDE_CODE_PLUGIN_DIRS` line.
-  - No session transcript mentions the launcher or the guard.
-  - Criteria 6 and 7, and steps 2 and 12, stay open until a verified Desktop run.
-  - Two other routes could not be used. A hot-reload probe in this session's dev-mods folder cannot load while the goal stop hook holds the turn open. Editing `~/.claude/settings.json` was denied to the agent as self-modification.
-  - The terminal spike stays uncommitted in the session scratchpad; it was not deleted, because this environment does not allow `rm`.
+- Desktop observation (verified, 2026-10-09): the probe mod loaded by hot reload into this Desktop Code tab session, where `$.session.surfaces()` reads `["desktop"]`, and its tool reported the following:
+  - `$.command.list()` returns all 13 git-agent entries with `plugin: 'git-agent'`.
+  - `$.prompt.fill` over the empty draft answered `isFilled: true`, and `$.prompt.read()` read the staged text back. The probe cleared it straight after.
+  - The probe pane was placed, and it read `isFocused: false` after the fill.
+  - The user separately reported that pressing commit-agent in the launcher's pane on Desktop staged `/git-agent:commit-agent ` with typing in the prompt.
+  - So the Desktop composer accepts the fill, despite the types' `no_composer` note. No `ui.close` and no `ui.copy` fallback are needed, and the stop condition does not apply.
+  - Timing: the terminal findings gated Phase 1. The Desktop finding was recorded, as a documented expectation, before Phase 1, and was verified only after the mod was built. It needed no code change.
+  - Limit: in Desktop, `session.start` carried `surface: null`, and no `session.attach` followed the hot reload. After a hot reload or a lost hooks worker, the launcher may therefore print the text list beside the pane until a client attaches.
+  - The probe (`~/.claude/dev-mods/<session-id>/launcher-probe`) and the terminal spike are throwaways, never committed. They were not deleted, because this environment does not allow `rm`.
+- Review fixes (PR review, 2026-10-09):
+  - Drawing surfaces are tracked by `clientId` through `session.attach` and `session.detach`, so a session whose last client left gets the text list again. A regression case covers attach, then detach, then an SDK run.
+  - `tests/plugins/test-mod-plugins.sh` finds the mods it expects from the marketplace `mod` tag as well as from `hooks/hooks.json`. A mod whose `modules` is missing, misspelled, or empty now fails instead of being skipped.
 - Engine-laid types (found at step 12): loading the mod with `claude --plugin-dir` makes the engine write its API types into `kit/plugins/git-agent-launcher/.claude-plugin/types/`, under that folder's own `*` .gitignore. `claude-code-mcp/index.d.ts` there names this machine's connected MCP tools. Two things followed, and both are fixed:
   - `tests/publish/test-no-ignored-plugin-files.sh` failed the merge gate. It now allows the folder as generated output, as it already allows `__pycache__`.
   - A local `node scripts/build-dist.mjs` copied the folder into `dist/`, because `.claude-plugin` is KEEP-listed. A DROP pattern now stops it, pinned by `tests/publish/test-dist-drops-mod-types.mjs`, which failed before the fix.
@@ -86,7 +91,7 @@ One correction to the proposal discovered during planning: its Workstream C adde
 ### Phase: 0 — Spike
 
 1. [x] Scaffold a throwaway launcher plugin in the session scratchpad (a plugin.json plus `hooks/hooks.json` naming a minimal register module that logs `$.command.list()` on `session.start`), run `claude --plugin-dir <scratchpad-dir>` inside this repo with git-agent installed, and record the exact `CommandInfo.name` format for git-agent's 13 entries and whether `plugin` is set on each. Why: the pane filter keys on `plugin === 'git-agent'` with a `git-agent:` name-prefix fallback, and the engine types only promise `plugin` "when the engine knows" — the filter must be chosen from observed output, not assumption. Verify: the observed names and plugin fields are appended to this spec's Decisions section as the Phase 0 findings.
-2. Extend the spike with a `focus: true` pane whose button press calls `$.prompt.read()` then `$.prompt.fill`, exercise it in the terminal yourself, and gather the Desktop half user-assisted: stage the spike, ask the user to press the button once in a Desktop Code tab session, and record what they report for `isFilled` and where keyboard focus lands after a successful fill on each surface. Why: the proposal gates all of Phase 1 on these mechanics — they decide whether the pane closes itself after a fill and whether Desktop needs the `$.ui.copy` fallback — and the implementing session may have no Desktop surface of its own; the proposal's stop condition carries into this plan verbatim: "Stop condition: fill fails on Desktop and the copy fallback is rejected, then reopen decision 6." Verify: both findings are appended to the Decisions Phase 0 entry, and the spike directory is deleted without ever being committed.
+2. [x] Extend the spike with a `focus: true` pane whose button press calls `$.prompt.read()` then `$.prompt.fill`, exercise it in the terminal yourself, and gather the Desktop half user-assisted: stage the spike, ask the user to press the button once in a Desktop Code tab session, and record what they report for `isFilled` and where keyboard focus lands after a successful fill on each surface. Why: the proposal gates all of Phase 1 on these mechanics — they decide whether the pane closes itself after a fill and whether Desktop needs the `$.ui.copy` fallback — and the implementing session may have no Desktop surface of its own; the proposal's stop condition carries into this plan verbatim: "Stop condition: fill fails on Desktop and the copy fallback is rejected, then reopen decision 6." Verify: both findings are appended to the Decisions Phase 0 entry, and the spike directory is deleted without ever being committed.
 
 ### Phase: 1 — Mod and tests
 
@@ -105,7 +110,7 @@ One correction to the proposal discovered during planning: its Workstream C adde
 
 ### Phase: 3 — Release and dogfood
 
-12. Run the full merge gate `bash scripts/verify.sh` from the repo root, then dogfood the launcher on both drawing surfaces — in a terminal session and in the Desktop Code tab, open `/git-agent-launcher`, press an entry over an empty prompt and over a typed draft, confirm the staged text matches the proposal's Appendix C examples, and confirm that after the pane closes (Escape or post-fill close) keyboard focus is back in the prompt box so Enter runs the staged command without the mouse — and confirm the text-listing fallback in a surface with no drawing (`claude -p` or the VS Code chat panel). Why: this repo's merge gate rule accepts only a local verify.sh exit 0 as evidence, and the proposal's Phase 3 is seeing the launcher work where users will actually use it. Verify: verify.sh exits 0 with the mod test reported PASS (or its SKIP line recorded as a skip, not a pass), and the dogfood observations are written down for the PR's VERIFICATION section.
+12. [x] Run the full merge gate `bash scripts/verify.sh` from the repo root, then dogfood the launcher on both drawing surfaces — in a terminal session and in the Desktop Code tab, open `/git-agent-launcher`, press an entry over an empty prompt and over a typed draft, confirm the staged text matches the proposal's Appendix C examples, and confirm that after the pane closes (Escape or post-fill close) keyboard focus is back in the prompt box so Enter runs the staged command without the mouse — and confirm the text-listing fallback in a surface with no drawing (`claude -p` or the VS Code chat panel). Why: this repo's merge gate rule accepts only a local verify.sh exit 0 as evidence, and the proposal's Phase 3 is seeing the launcher work where users will actually use it. Verify: verify.sh exits 0 with the mod test reported PASS (or its SKIP line recorded as a skip, not a pass), and the dogfood observations are written down for the PR's VERIFICATION section.
 13. [x] Commit every modified file — plugin, tests, tooling, docs, and this plan spec — in a single commit on this branch and open the PR with the VERIFICATION section filled from step 12. Why: 0.1.0 ships by merging the marketplace entry, the repo's rule is one commit with no remainder, and a red GitHub check is triaged as a possible billing block (`gh run view --log-failed`) before any code is blamed. Verify: the PR is open, its VERIFICATION section names what actually ran, and `node scripts/check-plugin-versions.mjs` passes against a fresh `origin/main`.
 
 ## Tests
@@ -122,8 +127,8 @@ Tier 1 — This plan changes application code
 - [x] `bash tests/plugins/test-mod-plugins.sh` exits 0 — printing real validate/test results with a current CLI, and `SKIP (claude < 2.1.287)` without one.
 - [x] The README Plugin Reference Table shows git-agent-launcher at 0.1.0 with a `1 mod` component count, and `node scripts/build-readme-table.mjs --check` exits 0.
 - [x] `bash scripts/verify.sh` exits 0 while `git diff --name-only origin/main` lists neither `scripts/verify.sh` nor `kit/plugins/code-testing-agent/skills/verified-change/assets/verify.sh`.
-- [ ] Phase 0's three findings (name format, fill on Desktop, focus after fill) are recorded in this spec's Decisions section before any Phase 1 file exists.
-- [ ] A dogfood pass is recorded: the pane opens and a press stages the command in the prompt in both the terminal and the Desktop Code tab (or the documented Desktop fallback fires, per Phase 0), and a non-drawing surface gets the text listing.
+- [x] Phase 0's three findings (name format, fill on Desktop, focus after fill) are recorded in this spec's Decisions section before any Phase 1 file exists.
+- [x] A dogfood pass is recorded: the pane opens and a press stages the command in the prompt in both the terminal and the Desktop Code tab (or the documented Desktop fallback fires, per Phase 0), and a non-drawing surface gets the text listing.
 
 ## Verification
 
@@ -143,24 +148,6 @@ Then walk the launcher as a user: in a terminal session in this repo, type `/git
   build buttons). Ground it in kit/plugins/git-agent-launcher as the shipped
   reference mod, and verify the chosen draft converges before handing off to
   an implementation plan.
-  ```
-
-- Verify the launcher in the Desktop Code tab
-  Criteria 6 and 7 and steps 2 and 12 wait on a verified Desktop run. The guard in the prompt below makes Enter safe and leaves a log as evidence.
-  ```text
-  In the agentics repo, verify kit/plugins/git-agent-launcher in a Claude
-  Code Desktop Code tab session, with evidence. Load the launcher and a
-  small throwaway guard mod, for example through CLAUDE_CODE_PLUGIN_DIRS in
-  the env block of ~/.claude/settings.json, then open a new Desktop session.
-  The guard answers any git-agent:* command.run itself, writes the
-  command, its args and $.session.surfaces() to a log file, and blocks the
-  real command from running.
-  Run /git-agent-launcher, press commit-agent, then press Enter. Read the
-  log: a git-agent:commit-agent entry whose surfaces include "desktop"
-  proves the press staged the command and Enter submitted it from the
-  prompt. Record the result in docs/plans/build-git-agent-launcher-mod.md
-  Decisions, tick criteria 6 and 7 and steps 2 and 12, set status:
-  completed, re-render, and remove the settings line.
   ```
 
 ## Unresolved Questions

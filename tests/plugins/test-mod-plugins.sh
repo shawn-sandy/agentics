@@ -35,11 +35,35 @@ fi
 FAILURES=0
 MODS=0
 
-for hooks in "$ROOT"/kit/plugins/*/hooks/hooks.json; do
-  [ -f "$hooks" ] && grep -q '"modules"' "$hooks" || continue
-  dir="$(dirname "$(dirname "$hooks")")"
+# Expected mods come from two sources: marketplace entries tagged "mod", and
+# any hooks/hooks.json that names "modules". The tag is independent of the
+# field under test, so a mod whose hooks.json loses or misspells "modules"
+# still gets checked, and fails, instead of being skipped.
+EXPECTED="$(node -e '
+  const fs = require("fs"), path = require("path"), root = process.argv[1];
+  const names = new Set(JSON.parse(fs.readFileSync(path.join(root, ".claude-plugin/marketplace.json"), "utf8"))
+    .plugins.filter(p => (p.tags ?? []).includes("mod")).map(p => p.name));
+  for (const d of fs.readdirSync(path.join(root, "kit/plugins"))) {
+    try {
+      if ("modules" in JSON.parse(fs.readFileSync(path.join(root, "kit/plugins", d, "hooks/hooks.json"), "utf8"))) names.add(d);
+    } catch {}
+  }
+  console.log([...names].sort().join("\n"));
+' "$ROOT")"
+
+for name in $EXPECTED; do
+  dir="$ROOT/kit/plugins/$name"
   MODS=$((MODS + 1))
-  echo "=== $(basename "$dir") (claude $version) ==="
+  echo "=== $name (claude $version) ==="
+
+  echo "0. hooks/hooks.json names at least one module..."
+  if node -e 'const m = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).modules; process.exit(Array.isArray(m) && m.length > 0 ? 0 : 1)' "$dir/hooks/hooks.json" 2>/dev/null; then
+    echo "  PASS"
+  else
+    echo "  FAIL: $dir/hooks/hooks.json is missing, unreadable, or names no modules"
+    FAILURES=$((FAILURES + 1))
+    continue
+  fi
 
   echo "1. claude plugin validate: no errors, no warnings but the repo's missing version..."
   if claude plugin validate --json "$dir" 2>&1 | node -e '

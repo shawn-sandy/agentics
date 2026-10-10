@@ -32,6 +32,7 @@ function engine(on: On, list: CommandInfo[], draft: string, isFilled = true) {
   const registered: string[] = []
   on('session.start', (_$, e) => ({ cwd: e.cwd }))
   on('session.attach', (_$, e) => ({ clientId: e.clientId }))
+  on('session.detach', (_$, e) => ({ clientId: e.clientId }))
   on('command.register', (_$, e) => {
     registered.push(e.name)
     return { value: { command: e.name } }
@@ -158,4 +159,14 @@ test('a surface that attaches after start counts as drawing', async ($, on) => {
   await $.session.start({ cwd: '/repo', surface: null, isInteractive: false })
   await $.session.attach({ surface: 'desktop', clientId: 'desktop:default' })
   expect((await $.command.run({ ...RUN, origin: { kind: 'sdk' } })).text).toBeUndefined()
+})
+
+test('a surface that attached and then detached no longer counts as drawing', async ($, on) => {
+  engine(on, LIST, '')
+  on('ui.open', () => ({ value: { isPlaced: true } }))
+  await $.session.start({ cwd: '/repo', surface: null, isInteractive: false })
+  await $.session.attach({ surface: 'desktop', clientId: 'desktop:default' })
+  await $.session.detach({ surface: 'desktop', clientId: 'desktop:default', reason: 'detach' })
+  const { text } = await $.command.run({ ...RUN, origin: { kind: 'sdk' } })
+  expect(text).toContain('/git-agent:commit-agent — Runs commit-agent.')
 })

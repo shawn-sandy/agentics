@@ -11,9 +11,9 @@
   Enter. Where the prompt box refuses the fill, a toast names the command to type. Surfaces
   that draw no pane (the VS Code chat panel, `claude -p`) get the list as text. Requires Claude
   Code 2.1.287+.
-- **`hooks/register.test.ts`**: fourteen `claude plugin test` cases.
+- **`hooks/register.test.ts`**: fifteen `claude plugin test` cases.
   - The pane and press cases mount on both the terminal and desktop surfaces. They cover the
     filter, order, and hotkeys; the empty-draft and kept-draft fills; three replaced-command
     drafts; the refusal toast; and the install line.
   - Each surface also gets its own registration case, and its own pane-versus-text case.
-  - The headless and late-attach cases start with no surface.
+  - The headless, late-attach, and attach-then-detach cases start with no surface.
