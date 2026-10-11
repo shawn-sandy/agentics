@@ -84,7 +84,7 @@ The agentics project serves two purposes:
 
 | Purpose | What it contains |
 |---------|-----------------|
-| **Active Plugins** | 12 marketplace plugins in `kit/plugins/` — installable via `/plugin install`, covering code review, planning, testing, git workflows, accessibility, and more |
+| **Active Plugins** | 13 marketplace plugins in `kit/plugins/` — installable via `/plugin install`, covering code review, planning, testing, git workflows, accessibility, and more |
 | **Marketplace Infrastructure** | `agentics-kit` marketplace manifest (`marketplace.json`) that enables installation via `/plugin install` |
 
 Every plugin in this repo is a working, production-quality tool you can install and use immediately.
