@@ -410,6 +410,8 @@ function reportList(entries) {
  * swapped for `.md`. `progress` (optional) carries per-step/per-criterion
  * done state and completion-report entries; omitted state renders as not
  * done. `nextSteps` (optional) renders as the collapsible Next Steps cards.
+ * `previews` (optional) renders as isolated iframes after Steps, with a
+ * `preview` chip on every step an item tags.
  */
 /**
  * Enumerated frontmatter keys and their accepted values.
@@ -460,7 +462,7 @@ function enumValue(md, key, fallback) {
   return value;
 }
 
-export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps }, { fileName, planPath, mdPath, today, repo } = {}) {
+export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps, previews }, { fileName, planPath, mdPath, today, repo } = {}) {
   const md = metadata;
   const s = sections;
   const stepsDone = (progress && progress.steps) || [];
@@ -634,9 +636,27 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
     const lane = lanes.find((l) => n >= l.firstStep && n <= l.lastStep);
     return lane ? esc(lane.name) : '';
   };
+  // A title or aria-label reads the label as text, so markdown markers go.
+  const plain = (t) => esc(t.replace(/`|\*/g, ''));
+  const previewItems = previews ? previews.items : [];
+  const previewChips = (n) => previewItems
+    .map((p, i) => ({ id: `preview-${i + 1}`, label: plain(p.label), tagged: p.steps.includes(n) }))
+    .filter((p) => p.tagged);
   const stepCards = s.steps
-    .map((st, i) => shell.stepCard(i + 1, { action: inline(st.action), why: inline(st.why), verify: inline(st.verify), done: Boolean(stepsDone[i]), lane: laneOf(i + 1) }));
+    .map((st, i) => shell.stepCard(i + 1, { action: inline(st.action), why: inline(st.why), verify: inline(st.verify), done: Boolean(stepsDone[i]), lane: laneOf(i + 1), previews: previewChips(i + 1) }));
   main.push('', shell.sectionCard('steps', stepsBody(stepCards, s.phases)));
+  if (previews) {
+    main.push('', shell.sectionCard('previews', shell.previewsBlock(previewItems.map((p, i) => ({
+      id: `preview-${i + 1}`,
+      steps: p.steps.join(','),
+      label: inline(p.label),
+      title: plain(p.label),
+      desc: p.desc ? inline(p.desc) : '',
+      // encodeURIComponent leaves no `"`, `&`, or `<`, so the URL is already
+      // attribute-safe and extractPreviews() reverses it exactly.
+      src: `data:text/html;charset=utf-8,${encodeURIComponent(p.html)}`,
+    })))));
+  }
   if (s.tests) main.push('', shell.sectionCard('tests', testsBody(s.tests)));
   main.push('', shell.sectionCard('criteria', shell.criteriaListBlock(s.criteria.map((c, i) => ({ text: inline(c), done: Boolean(criteriaDone[i]) })))));
   main.push('', shell.sectionCard('verification', paragraphs(s.verification)));
@@ -669,6 +689,7 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
     if (id === 'lanes') return lanes.length > 0;
     if (id === 'tests') return Boolean(s.tests);
     if (id === 'next-steps') return Boolean(nextSteps);
+    if (id === 'previews') return Boolean(previews);
     return true;
   });
 
