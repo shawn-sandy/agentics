@@ -163,6 +163,83 @@ const fenceStep = (open, run) => {
 const longestFenceRun = (s) =>
   (String(s).match(/^\s*`{3,}/gm) || []).reduce((n, m) => Math.max(n, m.trim().length), 0);
 
+// blockTextOf-style normalization: single-line collapse for inline values,
+// trimmed lines + collapsed blank runs for block values.
+const inline = (s) => s.replace(/\s+/g, ' ').trim();
+const block = (s) =>
+  s
+    .split('\n')
+    .map((l) => l.replace(/[ \t]+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+/** Indent every non-empty line by two spaces — the nesting under a `- ` bullet. */
+const indentItem = (s) => s.split('\n').map((l) => (l ? `  ${l}` : ''));
+
+/**
+ * Split a bulleted section into items — the one grammar Next Steps and
+ * Previews share, so the two can never parse fences differently. Each
+ * top-level `- ` bullet is an item: its first line is the `head`, the FIRST
+ * fenced block inside it is the `block` (dedented, fences dropped, null when
+ * there is none), and every other line is `desc`. Fenced blocks are masked
+ * while splitting, so a block line that starts with "- " never starts a new
+ * item. `blocks` counts the item's fenced blocks; `loose` is the bullet-less
+ * text around the items.
+ */
+function bulletItems(text) {
+  const rawItems = [];
+  const loose = [];
+  let buf = null;
+  let splitFence = null;
+  for (const line of text.split('\n')) {
+    if (splitFence === null && /^- /.test(line)) {
+      buf = [line.slice(2)];
+      rawItems.push(buf);
+      continue;
+    }
+    const run = fenceRun(line);
+    if (run) splitFence = fenceStep(splitFence, run);
+    (buf || loose).push(line);
+  }
+  const items = rawItems.map((itemLines) => {
+    const descLines = [];
+    const blockLines = [];
+    let openFence = null;
+    let blockDone = false;
+    let blocks = 0;
+    for (const line of itemLines.slice(1)) {
+      const run = fenceRun(line);
+      if (run) {
+        const wasOpen = openFence !== null;
+        const next = fenceStep(openFence, run);
+        // A run too short to close the open fence is nested content (a
+        // ```yaml block inside a ````text prompt) — keep the marker.
+        if (wasOpen && next !== null) {
+          (blockDone ? descLines : blockLines).push(line);
+          continue;
+        }
+        if (!wasOpen) blocks += 1;
+        openFence = next;
+        if (wasOpen && next === null) blockDone = true;
+        continue;
+      }
+      // Only the first fenced block is the item's block; later blocks keep
+      // their text but lose the fence, as they always have.
+      if (openFence !== null && !blockDone) blockLines.push(line);
+      else descLines.push(line);
+    }
+    let body = null;
+    if (blockLines.length > 0) {
+      const indents = blockLines.filter((l) => l.trim()).map((l) => l.match(/^\s*/)[0].length);
+      const cut = indents.length ? Math.min(...indents) : 0;
+      body = blockLines.map((l) => l.slice(cut)).join('\n').replace(/\s+$/, '');
+    }
+    return { head: itemLines[0], desc: block(descLines.join('\n')), block: body, blocks };
+  });
+  return { items, loose: loose.join('\n') };
+}
+
 // Humanized skeletons (plan-agent >= 2.17.0) place a one-line
 // <p class="section-intro"> under each section heading. Intro copy is
 // presentation-only chrome — strip it so extracted spec text stays pure.
@@ -174,6 +251,19 @@ const stripIntro = (inner) =>
 const stripHeading = (inner) => inner.replace(/<h2\b[\s\S]*?<\/h2>/i, ' ');
 
 export class ParseError extends Error {}
+
+/**
+ * A preview document's own <html> tag: the first one after an optional
+ * doctype and comments, so a `<html` inside a comment, a style, or a script
+ * string never counts. The parser requires it and plan-shell's runtime script
+ * rewrites exactly this match (the data-theme bridge), so the two
+ * share one pattern. `-{2}` rather than a literal comment opener, because the
+ * pattern is also emitted inside a <script> element.
+ */
+// The comment body is tempered (it never steps over a `-->`), so a run of
+// comments with no <html> after it fails in linear time rather than trying
+// every way to split the run.
+export const PREVIEW_HTML_TAG = /^(\s*(?:<!doctype[^>]*>\s*|<!-{2}(?:(?!-{2}>)[\s\S])*-{2}>\s*)*)<html(?=[\s>])([^>]*)>/i;
 
 /**
  * Read an embedded #plan-digest block (legacy plans) and return its markdown
@@ -459,13 +549,50 @@ export function extractNextSteps(html) {
   return { items, prose: prose || null };
 }
 
+// One figure per preview, read with one anchored pattern. The document rides
+// in a percent-encoded data: URL, which holds no `"`, so [^"]* is exact.
+const PREVIEW_FIGURE_RE =
+  /<figure class="plan-preview" id="preview-\d+" data-steps="([^"]*)"[^>]*>\s*<figcaption[^>]*>([\s\S]*?)<\/figcaption>\s*(?:<p class="preview-desc"[^>]*>([\s\S]*?)<\/p>\s*)?<iframe\b[^>]*?\ssrc="data:text\/html;charset=utf-8,([^"]*)"/g;
+
+/**
+ * Extract the Previews figures from a plan's HTML — the read-side twin of
+ * plan-shell's previewsBlock(). Returns the shape parseSpecMarkdown() puts on
+ * `previews` ({ items: [{ label, steps, desc, html }] }), or null when the
+ * plan has none. Kept beside extractSections() for the same reason as
+ * extractNextSteps(). The document is the decoded data: URL — the exact
+ * inverse of the renderer's encodeURIComponent().
+ */
+export function extractPreviews(html) {
+  const items = [...html.matchAll(PREVIEW_FIGURE_RE)].map((m, i) => {
+    let doc;
+    try {
+      doc = decodeURIComponent(m[4]);
+    } catch {
+      throw new ParseError(`preview ${i + 1} has a malformed data: URL`);
+    }
+    return {
+      label: textOf(m[2]),
+      steps: m[1] ? m[1].split(',').map(Number) : [],
+      desc: m[3] === undefined ? '' : blockTextOf(m[3]),
+      html: doc,
+    };
+  });
+  // A figure the pattern cannot read must fail, not vanish: rerender-plans
+  // rebuilds a page from this result, so a skipped figure would be deleted.
+  // The marker cannot occur inside a preview (its document is percent-encoded)
+  // or in escaped prose, so the count is exact.
+  const figures = (html.match(/class="plan-preview"/g) || []).length;
+  if (figures !== items.length) throw new ParseError(`${figures} preview figures but ${items.length} readable — the markup does not match what the renderer emits`);
+  return items.length > 0 ? { items } : null;
+}
+
 /**
  * Parse a Markdown plan spec back into the sections object extractSections()
  * returns — the exact inverse of buildDigest(). Accepts an optional YAML-ish
  * frontmatter block (`key: value` lines only) whose fields are returned
  * separately as `metadata`; the digest's blockquote preamble is skipped.
  *
- * Returns { metadata, sections, progress, nextSteps }. Throws ParseError when a required
+ * Returns { metadata, sections, progress, nextSteps, previews }. Throws ParseError when a required
  * section (title, Objective, Steps, Acceptance Criteria, Verification) is
  * missing or malformed; optional sections (Context, Decisions, Files, Tests)
  * come back null when absent, matching extractSections(). `sections.phases` is
@@ -490,6 +617,13 @@ export function extractNextSteps(html) {
  * prose }` where each top-level `- ` bullet is an item (first line = summary,
  * first fenced code block = paste-ready prompt, other lines = desc) and
  * bullet-less content lands in `prose`. Null when the section is absent.
+ *
+ * `previews` carries an optional `## Previews` section, beside `sections` for
+ * the same reason: `{ items: [{ label, steps, desc, html }] }`, one per `- `
+ * bullet in the Next Steps grammar. The bullet line is the label with an
+ * optional trailing `(step N)` / `(steps N, M)` tag (`steps` is those numbers,
+ * empty when untagged), the first fenced block is the preview's full html
+ * document, and other lines are desc. Null when the section is absent.
  */
 export function parseSpecMarkdown(md) {
   const fail = (reason) => {
@@ -543,16 +677,6 @@ export function parseSpecMarkdown(md) {
     chunks[mark.name] = body.slice(mark.end, next);
   });
 
-  // blockTextOf-style normalization: single-line collapse for inline values,
-  // trimmed lines + collapsed blank runs for block values.
-  const inline = (s) => s.replace(/\s+/g, ' ').trim();
-  const block = (s) =>
-    s
-      .split('\n')
-      .map((l) => l.replace(/[ \t]+/g, ' ').trim())
-      .join('\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
   const listItems = (s) =>
     s
       .split(/\n(?=- )/)
@@ -718,59 +842,49 @@ export function parseSpecMarkdown(md) {
   if (nsKey !== undefined) {
     const text = chunks[nsKey].replace(/^\n+|\n+$/g, '');
     if (!text.trim()) fail('Next Steps section present but empty');
-    // Split into top-level bullets, masking fenced blocks so a prompt line
-    // that happens to start with "- " never starts a new item.
-    const rawItems = [];
-    const loose = [];
-    let buf = null;
-    let splitFence = null;
-    for (const line of text.split('\n')) {
-      if (splitFence === null && /^- /.test(line)) {
-        buf = [line.slice(2)];
-        rawItems.push(buf);
-        continue;
-      }
-      const run = fenceRun(line);
-      if (run) splitFence = fenceStep(splitFence, run);
-      (buf || loose).push(line);
-    }
-    const items = rawItems.map((itemLines, i) => {
-      const summary = inline(itemLines[0]);
+    const { items: raw, loose } = bulletItems(text);
+    const items = raw.map((it, i) => {
+      const summary = inline(it.head);
       if (!summary) fail(`Next Steps item ${i + 1} has no summary line`);
-      const descLines = [];
-      const promptLines = [];
-      let openFence = null;
-      let promptDone = false;
-      for (const line of itemLines.slice(1)) {
-        const run = fenceRun(line);
-        if (run) {
-          const wasOpen = openFence !== null;
-          const next = fenceStep(openFence, run);
-          // A run too short to close the open fence is nested content (a
-          // ```yaml block inside a ````text prompt) — keep the marker.
-          if (wasOpen && next !== null) {
-            (promptDone ? descLines : promptLines).push(line);
-            continue;
-          }
-          openFence = next;
-          if (wasOpen && next === null) promptDone = true;
-          continue;
-        }
-        // Only the first fenced block is the prompt; later blocks keep their
-        // text but lose the fence, as they always have.
-        if (openFence !== null && !promptDone) promptLines.push(line);
-        else descLines.push(line);
-      }
-      let prompt = null;
-      if (promptLines.length > 0) {
-        const indents = promptLines.filter((l) => l.trim()).map((l) => l.match(/^\s*/)[0].length);
-        const cut = indents.length ? Math.min(...indents) : 0;
-        prompt = promptLines.map((l) => l.slice(cut)).join('\n').replace(/\s+$/, '');
-      }
-      return { summary, desc: block(descLines.join('\n')), prompt };
+      return { summary, desc: it.desc, prompt: it.block };
     });
-    const prose = block(loose.join('\n'));
+    const prose = block(loose);
     nextSteps = { items, prose: prose || null };
+  }
+
+  // Optional `## Previews` — live UI previews, rendered as isolated iframes.
+  // Same bullet grammar as Next Steps (bulletItems above), but every part is
+  // required: a preview with no document, or a fragment with no <html> tag,
+  // fails here rather than rendering a frame that ignores the plan's theme
+  // toggle (theme sync works by rewriting that tag).
+  let previews = null;
+  const pvKey = Object.keys(chunks).find((k) => /^previews$/i.test(k));
+  if (pvKey !== undefined) {
+    const text = chunks[pvKey].replace(/^\n+|\n+$/g, '');
+    const { items: raw, loose } = bulletItems(text);
+    if (block(loose)) fail('Previews section has text outside a "- " item');
+    if (raw.length === 0) fail('Previews section present but no items');
+    const items = raw.map((it, i) => {
+      const tag = it.head.match(/\s*\(steps?\s+(\d+(?:\s*,\s*\d+)*)\)\s*$/i);
+      // Anything else shaped like a step tag — `(steps 1-2)`, `(step 1 and
+      // 2)`, or a valid tag with text after it — is a typo, not label text:
+      // left alone it would render in the caption and silently drop every chip.
+      const unread = tag ? null : it.head.match(/\s*\(\s*steps?\b[^)]*\)\s*$/i) || it.head.match(/\s*\(\s*steps?\s+\d[^)]*\)/i);
+      const cut = tag || unread;
+      const label = inline(cut ? it.head.slice(0, cut.index) : it.head);
+      if (!label) fail(`Previews item ${i + 1} has no label`);
+      const name = `Previews item ${i + 1} ("${label}")`;
+      if (unread) fail(`${name} has a step tag it cannot read: "${unread[0].trim()}" — want (step N) or (steps N, M)`);
+      if (it.block === null) fail(`${name} has no html block — want a fenced html document under the bullet`);
+      if (it.blocks > 1) fail(`${name} has ${it.blocks} fenced blocks — want one html block per item`);
+      if (!PREVIEW_HTML_TAG.test(it.block)) fail(`${name} has no <html> tag at the top — a preview is a full document, not a fragment`);
+      const tagged = tag ? tag[1].split(',').map((n) => Number(n.trim())) : [];
+      for (const n of tagged) {
+        if (n < 1 || n > steps.length) fail(`${name} tags step ${n}, but the plan has ${steps.length} steps`);
+      }
+      return { label, steps: tagged, desc: it.desc, html: it.block };
+    });
+    previews = { items };
   }
 
   const report = [];
@@ -789,6 +903,7 @@ export function parseSpecMarkdown(md) {
     sections: { title, objective, context, decisions, files, steps, phases, lanes, tests, criteria, verification },
     progress: { steps: stepsDone, criteria: criteriaDone, report },
     nextSteps,
+    previews,
   };
 }
 
@@ -834,7 +949,7 @@ export function nextStepsMarkdown(nextSteps) {
   if (!nextSteps || (nextSteps.items.length === 0 && !nextSteps.prose)) return [];
   const lines = ['', '## Next Steps'];
   if (nextSteps.prose) lines.push(nextSteps.prose);
-  const indent = (s) => s.split('\n').map((l) => (l ? `  ${l}` : ''));
+  const indent = indentItem;
   for (const it of nextSteps.items) {
     lines.push(`- ${it.summary}`);
     if (it.desc) lines.push(...indent(it.desc));
@@ -851,11 +966,41 @@ export function nextStepsMarkdown(nextSteps) {
 }
 
 /**
- * Render the spec sections as the digest's markdown body (guarded).
- * `nextSteps` is optional and takes the parse-result shape — pass it (from
- * extractNextSteps()) or the follow-up cards vanish on the HTML round trip.
+ * The `## Previews` block as an array of markdown lines, leading blank line
+ * included — `[]` when there is nothing to render. Each block is fenced one
+ * backtick longer than any fence inside it, so a preview quoting a code block
+ * re-parses whole.
  */
-export function buildDigest(sections, nextSteps = null) {
+export function previewsMarkdown(previews) {
+  if (!previews || previews.items.length === 0) return [];
+  const lines = ['', '## Previews'];
+  for (const it of previews.items) {
+    const tag = it.steps.length === 0 ? '' : ` (${it.steps.length === 1 ? 'step' : 'steps'} ${it.steps.join(', ')})`;
+    lines.push(`- ${it.label}${tag}`);
+    if (it.desc) lines.push(...indentItem(it.desc));
+    const fence = '`'.repeat(Math.max(3, longestFenceRun(it.html) + 1));
+    lines.push(`  ${fence}html`, ...indentItem(it.html), `  ${fence}`);
+  }
+  return lines;
+}
+
+/**
+ * The digest guarded for embedding in a <script> block (backfill). Guarding
+ * is deliberately non-injective — a preview that writes `<\/script>` inside its
+ * own script cannot survive guard → unguard — so a reader that wants clean
+ * markdown calls specMarkdown() instead of un-guarding this.
+ */
+export function buildDigest(sections, nextSteps = null, previews = null) {
+  return guardScriptClose(specMarkdown(sections, nextSteps, previews));
+}
+
+/**
+ * Render the spec sections as clean markdown — the exact inverse of
+ * parseSpecMarkdown(). `nextSteps` and `previews` are optional and take the
+ * parse-result shape — pass them (from extractNextSteps() / extractPreviews())
+ * or the follow-up cards and previews vanish on the HTML round trip.
+ */
+export function specMarkdown(sections, nextSteps = null, previews = null) {
   const lines = [];
   lines.push(`# Plan: ${sections.title}`);
   lines.push('');
@@ -920,6 +1065,7 @@ export function buildDigest(sections, nextSteps = null) {
   lines.push('');
   lines.push('## Verification');
   lines.push(sections.verification);
+  lines.push(...previewsMarkdown(previews));
   lines.push(...nextStepsMarkdown(nextSteps));
-  return guardScriptClose(lines.join('\n'));
+  return lines.join('\n');
 }

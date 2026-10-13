@@ -59,6 +59,9 @@ file when the step calls for it, not all up front):
   Step 2 detection says it applies or is close.
 - `writing-style.md` — tone, plain language, objective-vs-glance. Read when
   authoring.
+- `ui-previews.md` — when a plan gets `## Previews`, the item syntax, the
+  authoring contract and contrast check, and a worked example. Read when the
+  Step 2 previews sub-step applies.
 
 ## Invocation & Arguments
 
@@ -409,7 +412,17 @@ EOF
       Step 5c), `### Phase:` groupings inside Steps, Next Steps (rendered as
       collapsible follow-up cards), the frontmatter keys, and the
       markdown-only sections (Unresolved Questions, Resources).
-   3. Write it to `$PLANS_DIR/<verb-target>.md` — kebab-case `verb-target`
+   3. **Author previews** when the drafted spec carries UI signals — the
+      `ui_signals_present` rule in `skills/review-plan/SKILL.md`, "Step 3b —
+      Detect UI signals", applied to the spec; reference it, never restate
+      it. Read `guidelines/ui-previews.md`, then add a `## Previews` section
+      with one item per distinct component or surface that changes, tagged
+      with the steps that build it, each showing its states side by side in
+      the project's real tokens, with its contrast measured by a tool and
+      fixed before delivery. No UI signals, no section.
+      *(Skip entirely when `--quick`: Step 0b never ran, and a faithful
+      preview needs the tokens it finds.)*
+   4. Write it to `$PLANS_DIR/<verb-target>.md` — kebab-case `verb-target`
       filename (`add-dark-mode-toggle.md`, `fix-login-redirect.md`). The
       rendered plan will live at the same stem with `.html`.
 

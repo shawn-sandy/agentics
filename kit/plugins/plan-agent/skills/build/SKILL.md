@@ -80,7 +80,8 @@ plan's shape:
   permission mode alone.
 
 **Visual spec** (`design-dir:` in the frontmatter): follow
-`references/design-spec.md` before writing code.
+`references/design-spec.md` before writing code. **Previews** (a `## Previews`
+section): follow `references/ui-previews.md`.
 
 **Phased spec** (`### Phase: <name>` headings in `## Steps`): follow
 `references/phase-checkpoints.md`. It **stops at each boundary by default**;
