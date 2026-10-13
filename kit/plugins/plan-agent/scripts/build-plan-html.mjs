@@ -599,7 +599,13 @@ export function renderPlanHtml({ metadata = {}, sections, progress, nextSteps },
   // grant. Stated after the latitude, parallelism is a choice the outcome
   // licenses rather than a method chosen for the agent up front.
   const fanOut = wantsWorkflow ? ' Fan out across parallel subagents where that serves the outcome.' : '';
-  const goal = `/goal ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome.${fanOut} ${verifyTail}`;
+  // /goal re-prompts until a model judges the condition met. The verify tail's
+  // failure branch stops the agent at in-progress, so that stop must also count
+  // as met — otherwise a check only the user can unblock (a denied permission,
+  // a hosted migration) loops "not met" every turn until /goal clear. Limited
+  // to user-only blockers so a fixable failure still keeps the goal running.
+  const goalEnd = ' This goal is met in either of two end states: every check passed and the plan is marked completed, or the only checks left are blocked on something the user must do (a permission, a decision, an external system, a failure that predates this plan), the plan stays in-progress, and each blocker is named.';
+  const goal = `/goal ${s.title}. The plan at ${specPath} describes one approach — use it as reference, but optimize for the outcome.${fanOut} ${verifyTail}${goalEnd}`;
   const workflow = wantsWorkflow
     ? `Run a workflow to implement the plan at ${specPath} — ${s.title}. Brief subagents with the plan file at ${specPath}. Reserve a final verification phase for the lead agent, not a subagent. ${verifyTail}`
     : '';

@@ -249,7 +249,9 @@ Echo the resolved objective and effective flags after Step 0.
 - **Goal prompt** — always present: `/goal <objective>. The
   plan at <filepath> describes one approach — use it as reference, but
   optimize for the outcome.` plus the verification gate (same spec
-  `<filepath>`). Emitted as the
+  `<filepath>`), then a closing sentence that makes a user-blocked
+  `in-progress` stop count as met, so `/goal` ends instead of looping on a
+  check only the user can unblock. Emitted as the
   `plan-goal` meta tag and the "Pursue as goal" drawer row with its
   `copyGoal(this)` copy button. When the workflow prompt below is emitted,
   the sentence `Fan out across parallel subagents where that serves the
