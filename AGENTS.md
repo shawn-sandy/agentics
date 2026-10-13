@@ -1,0 +1,84 @@
+# AGENTS.md
+
+Marketplace of Claude Code plugins. Sources live in `kit/plugins/<name>/`; the
+marketplace **references** them by relative path — it does not embed them.
+
+## Gotchas
+
+- **`version` lives only in `.claude-plugin/marketplace.json`.** Adding a
+  `version` to a relative-path `plugin.json` silently overrides the marketplace
+  value. Bump it manually in the same PR that touches a plugin — a CI guard
+  fails the PR if it does not exceed the base branch. Check locally:
+  `git fetch origin && BASE_REF=main node scripts/check-plugin-versions.mjs`
+  (the script reads `origin/${BASE_REF}` directly, so a stale remote-tracking
+  ref compares against the wrong base)
+- **`docs/plans/archive/` is off-limits.** Never glob, grep, or read it unless
+  the user names the path.
+- **Two merge drivers auto-resolve conflicts** — `marketplace.json` keeps the
+  higher semver, gallery `index.html` files union their cards. A SessionStart
+  hook registers them automatically; run `scripts/setup-merge-driver.sh` by hand
+  whenever that hook did not run. Never hand-edit conflict markers
+  in a generated `index.html` — an unresolved conflict there means the driver
+  never registered.
+- **Plugin homepage URLs point at the plugin directory,** not the repo root:
+  `https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/<name>`
+- `.claude/settings.json` (Claude Code) and `.codex/hooks.json` (Codex) carry the
+  same hooks, including one that validates `marketplace.json` after every
+  Write/Edit.
+- The plugins require Claude Code 1.0.33+.
+
+## Merge gate
+
+Never propose a merge until `bash scripts/verify.sh` exits 0 on this machine
+and the PR body's VERIFICATION section is filled in with what was actually
+run. A `SKIP (not configured)` line is a skip, not a pass — record it as one.
+
+GitHub Actions is frequently billing-blocked on this account: a quota-blocked
+run fails every job in seconds with no test output, so red CI is not evidence
+of a defect and green CI is not evidence of correctness. Read
+`gh run view --log-failed` before treating any red check as real.
+
+This rule is honoured, not enforced — nothing blocks a push that skipped it.
+`/code-testing-agent:verified-change` is the skill that runs the loop.
+
+## Commands
+
+```bash
+claude --plugin-dir ./kit/plugins/<name>   # load one plugin in Claude Code
+node scripts/build-dist.mjs                # build dist/ (gitignored)
+gh workflow run publish-dist.yml --repo shawn-sandy/agentics
+```
+
+```text
+/plugin marketplace add shawn-sandy/agentics
+/plugin install <name>@agentics-kit
+```
+
+## Git
+
+Branch off `main` for every task — never extend a branch from a previous
+session:
+
+```bash
+git fetch origin && git checkout -b <verb-target-YYYY-MM-DD> origin/main
+```
+
+Commit the plan file alongside plugin changes, however minor.
+
+## Where things are
+
+- `.claude/rules/` — authoring rules. Claude Code auto-loads them by scope; under
+  Codex, read the matching rule before editing a path it covers:
+
+  | Rule | Loads on |
+  |------|----------|
+  | `plugin-patterns` | `kit/plugins/**` |
+  | `skill-authoring` | `kit/plugins/**/skills/**` |
+  | `marketplace` | `kit/plugins/**`, `.claude-plugin/**` |
+  | `testing` | `tests/**` |
+  | `plan-hygiene` | `**/plans/**` |
+  | `removed-plugins` | always (unscoped) |
+- Per-plugin detail: README.md's generated Plugin Reference Table, then
+  `kit/plugins/<name>/README.md`.
+- `tests/fixtures/valid-plugin/` — the validation reference.
+- Docs: <https://code.claude.com/docs/en/plugins-reference>

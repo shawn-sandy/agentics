@@ -1,0 +1,51 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq empty .claude-plugin/marketplace.json 2>&1 && echo 'OK: marketplace.json valid' || echo 'ERROR: marketplace.json has invalid JSON — fix before committing'"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -z \"$(git -C \"${PWD}\" ls-files --others --modified --exclude-standard docs/plans/ 2>/dev/null)\" || echo 'WARNING: Uncommitted plan files in docs/plans/ — commit alongside related changes (see .claude/rules/plan-hygiene.md)'"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git status --porcelain .claude-plugin/marketplace.json 2>/dev/null | grep -q . && node scripts/check-plugin-versions.mjs 2>&1 || true"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "TOPLEVEL=$(git rev-parse --show-toplevel 2>/dev/null) && test -n \"$TOPLEVEL\" && test -f \"$TOPLEVEL/scripts/setup-merge-driver.sh\" && bash \"$TOPLEVEL/scripts/setup-merge-driver.sh\" >/dev/null 2>&1 || true"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||') && test -n \"$DEFAULT_BRANCH\" && CURRENT=$(git branch --show-current 2>/dev/null) && if [ \"$CURRENT\" = \"$DEFAULT_BRANCH\" ]; then git pull --ff-only origin \"$DEFAULT_BRANCH\" 2>/dev/null; else git fetch origin \"$DEFAULT_BRANCH\":\"$DEFAULT_BRANCH\" 2>/dev/null; fi && echo \"OK: $DEFAULT_BRANCH is up to date with origin\" || true"
+          }
+        ]
+      }
+    ]
+  }
+}
