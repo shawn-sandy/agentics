@@ -520,6 +520,17 @@ ok('every prompt carries the verify-then-mark-completed gate', () => {
   }
 });
 
+ok('goal prompt counts a user-blocked stop as met, so /goal cannot loop on it', () => {
+  // /goal re-prompts until its evaluator judges the condition met. The verify
+  // tail tells the agent to stop at in-progress when a check fails; when only
+  // the user can unblock that check (a denied permission, a hosted migration),
+  // the evaluator read "mark completed" as the only success and returned "not
+  // met" every turn until the user ran /goal clear.
+  const goal = sampleHtml.match(/<meta name="plan-goal" content="([^"]*)"/)[1];
+  assert.match(goal, /\bmet\b[^.]*\bcompleted\b[^.]*\bin-progress\b/, 'one sentence names both end states as met');
+  assert.match(goal, /\bblocked on\b[^.]*\buser\b/, 'the in-progress end state is limited to user-only blockers');
+});
+
 /* ── Unit: Next Steps section ─────────────────────────────────────── */
 
 const NEXT_STEPS_SPEC = `${SAMPLE_SPEC}

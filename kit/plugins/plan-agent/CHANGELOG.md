@@ -1,5 +1,26 @@
 # Changelog
 
+## 9.20.1 — a blocked goal ends instead of looping (2026-10-14)
+
+### Fixed
+
+- **"Pursue as goal" no longer loops until `/goal clear` when a check is
+  blocked on the user.** The verification gate tells the agent to leave the
+  plan at `status: in-progress` and name the failing check, but `/goal`'s
+  evaluator only read "mark completed" as success. When a check needed the
+  user — a denied permission, a migration on a hosted database, failures that
+  predate the plan — the agent stopped correctly and the evaluator answered
+  "not met" every turn. The goal prompt now ends with a sentence naming both
+  end states as met: everything passed and the plan is completed, or the only
+  checks left are blocked on the user, the plan stays in-progress, and each
+  blocker is named. A failure the agent can fix still keeps the goal running.
+  The implement and workflow prompts are unchanged, since `/goal` does not
+  evaluate them. Plans already rendered keep the old wording until they are
+  re-rendered. `tests/plugins/test-build-plan-html.mjs` pins the end-state
+  sentence, `tests/plugins/test-plan-phases.mjs` re-derives its
+  `BASELINE_SHA256`, and `tests/fixtures/plan-previews/no-previews.html` is
+  re-rendered, since that golden carries the goal prompt too.
+
 ## 9.20.0 — plans that change UI carry live previews (2026-10-13)
 
 ### Added
