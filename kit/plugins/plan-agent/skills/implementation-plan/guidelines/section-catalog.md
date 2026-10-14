@@ -272,6 +272,44 @@ Markdown works everywhere, not a quirk of this parser.
   ```
 ```
 
+### `## Previews` *(optional)*
+
+Live, interactive previews of the UI the plan changes, each rendered on the
+plan page as an isolated iframe (an opaque-origin `data:` URL)
+and treated by `/plan-agent:build` as the structure target for the steps it
+tags. Earns its place when the plan carries UI signals — the
+`ui_signals_present` rule in `skills/review-plan/SKILL.md` Step 3b — with one
+preview per distinct component or surface that changes. Omit it on plans with
+nothing visible, and under `--quick`.
+
+The item syntax mirrors Next Steps: each top-level `- ` bullet is one preview;
+the bullet line is the label, with an optional trailing `(step N)` or
+`(steps N, M)` tag that puts a `preview` chip on each tagged step; indented
+lines are the description; the first fenced block is the preview document,
+opened as ` ```html `. The outer-fence rule above applies here too.
+
+````markdown
+## Previews
+
+- Save button states (steps 2, 3)
+  Tokens copied from src/styles/tokens.css; contrast measured, lowest 5.74:1.
+  ```html
+  <!doctype html>
+  <html lang="en">
+  …
+  </html>
+  ```
+````
+
+The render fails, naming the item, on a missing html block, a second fenced
+block, a block with no `<html` tag at the top, an empty label, an unreadable step tag such as
+`(steps 2-4)`, or a tag beyond the step count. Like Next Steps,
+the section travels beside the core sections rather than as one of them (the
+parser returns `previews` next to `nextSteps`), so it survives a re-render and
+a recovery from HTML unchanged. The authoring contract — full document, theme
+guards, states side by side, measured contrast, under about 4 KB — and a
+worked example live in `ui-previews.md`; read it before writing one.
+
 ### `## Completion Report`
 
 Lifecycle section — never authored at planning time. Written by

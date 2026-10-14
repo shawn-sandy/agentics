@@ -29,4 +29,7 @@ know it worked*. If the glance repeats the objective sentence, rewrite it.
 
 **No markup concerns.** Author plain markdown text. HTML escaping, styling,
 icons, copy buttons, and section intros are all owned by the renderer —
-never write HTML into the spec.
+never write HTML into the spec. The one exception is the fenced `html` block
+inside a `## Previews` item: a whole preview document the renderer isolates
+as-is, authored per `ui-previews.md`. HTML anywhere else in the spec is still
+wrong.

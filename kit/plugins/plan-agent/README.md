@@ -46,6 +46,8 @@ Installers get on-demand planning with argument support, issue ingestion, built-
 | `build-designs-index` | Child of `dispatch` | Regenerates the designs gallery for `docs/designs/` writes |
 | `check-design-drift` | Child of `dispatch` | Reports a user-facing plan step that no artboard covers |
 
+**Live UI previews:** a plan that changes UI carries a `## Previews` section of self-contained html documents, and the rendered plan shows each one as an isolated, interactive iframe after Steps, with a `preview` chip on every step it belongs to. `implementation-plan` authors them when the plan has UI signals (see `skills/implementation-plan/guidelines/ui-previews.md`), and `build` treats each one as the structure target for the steps it tags.
+
 **Built-in interview:** the planning workflow includes a structured interview step (Step 5b) that stress-tests your plan before committing. For deeper reviews, use the `review-plan` panel. Note: `plan-agent:plan-status` currently operates on `.md`/YAML plans only and does not support `.html` plans yet.
 
 ## Installation

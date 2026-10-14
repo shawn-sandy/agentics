@@ -13,6 +13,8 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import * as planSpec from '../../scripts/lib/plan-spec.mjs';
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const BUNDLER = join(ROOT, 'kit', 'plugins', 'plan-agent', 'scripts', 'build-plan-hub.mjs');
 const WRAPPER = join(ROOT, 'kit', 'plugins', 'plan-agent', 'bin', 'plan-agent-hub');
@@ -99,6 +101,33 @@ const decoded = srcdocs[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 check('quote-heavy prototype survives the srcdoc round trip', decoded === PROTO, 'decoded srcdoc differs from the source prototype');
 
 check('design: renders as an external-link tab, not an embed', hub.includes('tab-external" href="https://example.com/canvas"'));
+
+// --- a plan preview survives bundling -------------------------------------
+// The hub embeds the whole plan in its own srcdoc, so a preview's data: URL
+// rides inside a srcdoc. An escape applied in the wrong order (or twice)
+// breaks only here: decoding the Plan panel once must give back a page whose
+// preview extracts to the authored html byte for byte.
+
+const PREVIEW = '<!doctype html>\n<html><body><p title="a &quot;b&quot;">Fish &amp; chips</p>\n<script>var s = "<\\/script>";</script>\n</body></html>';
+const PREVIEW_SPEC = SPEC.replace('prototype: proto.html\n', '').replace('## Acceptance Criteria', `## Previews
+
+- Fixture card (step 1)
+  \`\`\`html
+${PREVIEW.split('\n').map((l) => `  ${l}`).join('\n')}
+  \`\`\`
+
+## Acceptance Criteria`);
+writeFileSync(join(TMP, 'spec-preview.md'), PREVIEW_SPEC);
+const withPreview = run(['spec-preview.md', '-o', 'hub-preview.html']);
+check('bundler exits 0 on a spec carrying a preview', withPreview.status === 0, withPreview.stderr);
+const planPanel = withPreview.status === 0
+  ? (readFileSync(join(TMP, 'hub-preview.html'), 'utf8').match(/srcdoc="([^"]*)"/) || [])[1]
+  : undefined;
+const nested = planPanel === undefined || typeof planSpec.extractPreviews !== 'function'
+  ? null
+  : planSpec.extractPreviews(planSpec.decodeEntities(planPanel));
+check('a preview survives bundling inside the hub srcdoc', Boolean(nested) && nested.items.length === 1 && nested.items[0].html === PREVIEW,
+  nested ? JSON.stringify(nested.items.map((it) => it.html)) : 'no previews extracted from the Plan panel');
 
 // --- --extra and --skip -----------------------------------------------------
 

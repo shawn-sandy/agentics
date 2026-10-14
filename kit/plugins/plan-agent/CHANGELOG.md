@@ -1,6 +1,6 @@
 # Changelog
 
-## 9.19.2 — a blocked goal ends instead of looping (2026-10-13)
+## 9.20.1 — a blocked goal ends instead of looping (2026-10-14)
 
 ### Fixed
 
@@ -17,8 +17,55 @@
   The implement and workflow prompts are unchanged, since `/goal` does not
   evaluate them. Plans already rendered keep the old wording until they are
   re-rendered. `tests/plugins/test-build-plan-html.mjs` pins the end-state
-  sentence, and `tests/plugins/test-plan-phases.mjs` re-derives its
-  `BASELINE_SHA256`.
+  sentence, `tests/plugins/test-plan-phases.mjs` re-derives its
+  `BASELINE_SHA256`, and `tests/fixtures/plan-previews/no-previews.html` is
+  re-rendered, since that golden carries the goal prompt too.
+
+## 9.20.0 — plans that change UI carry live previews (2026-10-13)
+
+### Added
+
+- **`## Previews` spec section.** Each `- ` item is a label with an optional
+  `(step N)` or `(steps N, M)` tag, a description, and a fenced html document.
+  The renderer turns every item into a `<figure class="plan-preview">` holding
+  an `<iframe>` that loads the document from a `data:` URL, so the preview's
+  script runs in an opaque origin: it cannot read the plan page, its storage,
+  or the artifact around it. There is no `sandbox` attribute: every sandboxed
+  frame ran but never painted inside the claude.ai artifact viewer in the
+  desktop app, while a `data:` frame paints. Frames are 320px tall,
+  vertically resizable, and load eagerly so Save as PDF prints them. Every
+  tagged step gets a `preview` chip linking to its figure, padded to a
+  24×24px target. A small script reloads each frame with the plan's
+  `data-theme` on the preview's `<html>`, so the theme toggle reaches the
+  preview. A missing html block, more than one fenced block, a block with no
+  `<html>` tag at the top (after an optional doctype and comments), an empty
+  label, a step tag the parser cannot read (`(steps 1-2)`, or a tag with
+  text after it), or an out-of-range step fails the render naming the item.
+  `extractPreviews()` fails on a figure it cannot read rather than dropping
+  it, so a re-render never deletes a preview.
+  Preview-less plans render byte-identical; a golden fixture pins it.
+- **`implementation-plan` authors previews when a plan carries UI signals**
+  (the `review-plan` Step 3b rule), one per component or surface that changes,
+  following the new `guidelines/ui-previews.md` contract: a full document,
+  the project's real tokens, both themes, every state side by side, and a
+  measured contrast check. Skipped under `--quick`.
+- **`build` treats a preview as the structure target** through
+  `references/ui-previews.md`: structure, states, and copy come from the
+  preview; the project's real tokens and components win on visual detail.
+
+### Changed
+
+- **Previews round-trip through every spec path.** `extractPreviews()` and
+  `previewsMarkdown()` join the spec library; `buildDigest()` takes previews
+  as its third argument; `extract-plan-spec`, `rerender-plans`, and
+  `backfill-plan-digests` carry them. Next Steps and Previews now share one
+  bullet-and-fence splitter.
+- **`extract-plan-spec` no longer un-guards a digest it built itself.** The
+  DOM-derive path reads the new unguarded `specMarkdown()`, because guarding
+  is non-injective: a literal `<\/script>` in a plan (an escaped tag inside a
+  preview's script, or prose quoting one) used to come back as a real
+  `</script>`. A page with previews always takes that path, even when it
+  carries a legacy embedded digest.
 
 ## 9.19.1 — the prompt skill names checks instead of scaffolding thought (2026-09-26)
 

@@ -20,13 +20,13 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 import {
-  buildDigest,
   extractNextSteps,
+  extractPreviews,
   extractSections,
   hasDigest,
   nextStepsMarkdown,
   readEmbeddedDigest,
-  unguardScriptClose,
+  specMarkdown,
 } from './lib/plan-spec.mjs';
 
 // Plans backfilled before Next Steps round-tripping (plan-agent < 7.4.3)
@@ -38,7 +38,10 @@ const DIGEST_HAS_NEXT_STEPS_RE = /^##\s*(?:next steps|out of scope)\b/im;
 
 /** Resolve a plan's spec markdown: embedded-first, DOM-derive fallback. */
 export function resolveSpec(html) {
-  if (hasDigest(html)) {
+  // A page with previews always derives from the DOM: an embedded digest is
+  // guarded, and the guard is non-injective, so a preview's <\/script> would
+  // come back as a real closing tag.
+  if (hasDigest(html) && !extractPreviews(html)) {
     const embedded = readEmbeddedDigest(html);
     if (embedded) {
       if (DIGEST_HAS_NEXT_STEPS_RE.test(embedded)) return embedded;
@@ -47,9 +50,10 @@ export function resolveSpec(html) {
       return embedded + nextStepsMarkdown(extractNextSteps(html)).join('\n');
     }
   }
-  // DOM-derive. buildDigest guards closing-script sequences for embedding; a
-  // read tool wants clean markdown, so un-guard before printing.
-  return unguardScriptClose(buildDigest(extractSections(html), extractNextSteps(html)));
+  // DOM-derive. specMarkdown, not an un-guarded buildDigest: guarding is
+  // non-injective, and a preview that writes <\/script> inside its own script
+  // would come back as a real closing tag.
+  return specMarkdown(extractSections(html), extractNextSteps(html), extractPreviews(html));
 }
 
 function main() {

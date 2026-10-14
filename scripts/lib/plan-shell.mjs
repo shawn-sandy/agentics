@@ -23,6 +23,8 @@
  * alongside SKELETON.html.
  */
 
+import { PREVIEW_HTML_TAG } from './plan-spec.mjs';
+
 /* ── UI strings ───────────────────────────────────────────────────── */
 const STEP_CHIP = '<span class="step-chip">todo</span>';
 const STEP_CHIP_DONE = '<span class="step-chip">done</span>';
@@ -2017,6 +2019,7 @@ export const SECTION_CHROME = {
   files: { icon: 'ic-folder', heading: 'Files that change', intro: 'Every file this plan touches, and what happens to each one.' },
   lanes: { icon: 'ic-code-bracket', heading: 'Lanes', intro: 'Independent groups of steps, each with the paths it owns — one worker per lane, merged back in dependency order.' },
   steps: { icon: 'ic-list-bullet', heading: 'Steps', intro: 'The step-by-step work, in order — each step says what to do, why it matters, and how to check it worked.' },
+  previews: { icon: 'ic-photo', heading: 'Previews', intro: 'Live previews of the UI this plan changes — click inside one to try it. Each runs isolated from this page.' },
   tests: { icon: 'ic-beaker', heading: 'Tests', intro: 'The tests that prove the change does what it promises.' },
   criteria: { icon: 'ic-check-circle', heading: 'Definition of done', intro: 'The plan counts as done when every statement below is true — check each one off as you verify it.' },
   verification: { icon: 'ic-magnifying-glass', heading: 'Final check', intro: 'One last pass to confirm the whole change works end to end.' },
@@ -2034,6 +2037,7 @@ export const NAV_ENTRIES = [
   { id: 'files', icon: 'ic-folder', label: 'Files that change' },
   { id: 'lanes', icon: 'ic-code-bracket', label: 'Lanes' },
   { id: 'steps', icon: 'ic-list-bullet', label: 'Steps' },
+  { id: 'previews', icon: 'ic-photo', label: 'Previews' },
   { id: 'tests', icon: 'ic-beaker', label: 'Tests' },
   { id: 'criteria', icon: 'ic-check-circle', label: 'Definition of done' },
   { id: 'verification', icon: 'ic-magnifying-glass', label: 'Final check' },
@@ -2356,16 +2360,22 @@ ${rows}
  * links to. The verify text is plain visible content inside
  * `<div class="verify-body">`, no longer wrapped in a <details>.
  */
-export function stepCard(n, { action, why, verify, done = false, lane = '' }) {
+export function stepCard(n, { action, why, verify, done = false, lane = '', previews = [] }) {
   // The lane chip reuses the done/todo chip's class and palette — text-labeled,
   // never color alone — and is absent on a lane-free plan so those bytes hold.
   const laneChip = lane ? `\n                <span class="step-chip lane-chip">lane ${lane}</span>` : '';
+  // One link per preview this step is tagged in, `previews` being
+  // [{ id, label }] pre-escaped. Inline styles for the phaseGroup() reason,
+  // and padded to the 24×24px WCAG 2.2 minimum target for a standalone link.
+  const previewChips = previews
+    .map((p) => `\n                <a class="step-chip preview-chip" href="#${p.id}" aria-label="Preview: ${p.label}" style="${PREVIEW_CHIP_STYLE}">preview</a>`)
+    .join('');
   return `        <div class="step-card${done ? ' completed' : ''}" id="step-${n}">
           <div class="step-card-header">
             <div class="step-number">${n}</div>
             <div class="step-body">
               <div class="step-action">
-                ${done ? STEP_CHIP_DONE : STEP_CHIP}${laneChip}
+                ${done ? STEP_CHIP_DONE : STEP_CHIP}${laneChip}${previewChips}
                 <span class="step-chip-text">${action}</span>
               </div>
               <div class="step-note step-why-note">
@@ -2399,6 +2409,68 @@ export function phaseGroup({ name, heading, body }) {
           <h3 class="phase-name" style="${PHASE_NAME_STYLE}">${heading}</h3>
 ${body}
         </div>`;
+}
+
+const PREVIEW_CHIP_STYLE = 'display:inline-flex;align-items:center;justify-content:center;min-height:24px;min-width:24px;box-sizing:border-box;text-decoration:none;color:var(--accent);background:var(--accent-soft);border-color:var(--accent-line);';
+const PREVIEW_DATA_URL = 'data:text/html;charset=utf-8,';
+const PREVIEW_FRAME_STYLE = 'display:block;width:100%;height:320px;resize:vertical;overflow:auto;border:1px solid var(--rule);border-radius:var(--radius);background:var(--panel);';
+
+/**
+ * The Previews section body: one figure per preview, each an isolated iframe.
+ * items: [{ id, steps, label, title, desc, src }], pre-escaped — `steps` is
+ * the comma-joined tagged step numbers, `src` the preview's data: URL.
+ *
+ * A data: URL document has an opaque origin: its script runs, but it cannot
+ * read this page, its storage, or the artifact around it, and `href="#x"`
+ * resolves against the document itself, so in-page links stay inside it.
+ * There is deliberately NO sandbox attribute. Chrome runs every sandboxed
+ * frame in its own process, and inside the claude.ai artifact viewer the
+ * desktop app never paints those: the preview ran (it posted heartbeats) but
+ * stayed blank. A data: frame stays in-process and paints. The cost is the
+ * sandbox's extra flags (forms, popups, top navigation on a click); the
+ * artifact viewer's own sandbox still blocks top navigation there.
+ * Eager loading (no `loading="lazy"`) is what lets Save as PDF print a frame
+ * that was never scrolled into view.
+ *
+ * The script is the theme bridge. The plan's toggle sets data-theme on this
+ * page's <html>, which a cross-origin frame cannot see, and its own
+ * prefers-color-scheme ignores the toggle. So each frame is reloaded with the
+ * same data-theme on the preview's <html> (the PREVIEW_HTML_TAG match the
+ * parser already required) whenever ours is set, and back to the markup URL
+ * when it is not — a page following the OS loads each preview once.
+ */
+export function previewsBlock(items) {
+  const figures = items
+    .map((p) => {
+      const desc = p.desc ? `\n        <p class="preview-desc" style="font-size:.85rem;color:var(--ink-2);margin:0 0 .6rem;">${p.desc}</p>` : '';
+      return `      <figure class="plan-preview" id="${p.id}" data-steps="${p.steps}" style="margin:0 0 1.75rem;scroll-margin-top:1.5rem;">
+        <figcaption style="font-weight:600;margin-bottom:.35rem;">${p.label}</figcaption>${desc}
+        <iframe title="Preview: ${p.title}" style="${PREVIEW_FRAME_STYLE}" src="${p.src}"></iframe>
+      </figure>`;
+    })
+    .join('\n');
+  return `${figures}
+      <script id="plan-preview-theme">
+(function () {
+  var root = document.documentElement;
+  var frames = document.querySelectorAll('figure.plan-preview iframe');
+  var prefix = '${PREVIEW_DATA_URL}';
+  var src = [];
+  for (var i = 0; i < frames.length; i++) src.push(frames[i].getAttribute('src'));
+  function sync() {
+    var t = root.getAttribute('data-theme');
+    var theme = t === 'dark' || t === 'light' ? ' data-theme="' + t + '"' : '';
+    for (var i = 0; i < frames.length; i++) {
+      var want = !theme ? src[i] : prefix + encodeURIComponent(decodeURIComponent(src[i].slice(prefix.length)).replace(${PREVIEW_HTML_TAG}, function (m, pre, attrs) {
+        return pre + '<html' + theme + attrs + '>';
+      }));
+      if (frames[i].getAttribute('src') !== want) frames[i].setAttribute('src', want);
+    }
+  }
+  sync();
+  if ('MutationObserver' in window) new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+})();
+      </script>`;
 }
 
 /**

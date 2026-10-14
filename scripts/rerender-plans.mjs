@@ -17,7 +17,7 @@
  *     committed HTML had drifted from its spec, the spec wins and the file is
  *     reported as a content change so it is never a silent one.
  *   - A plan with no `.md` is round-tripped through its own DOM:
- *     `extractSections` + `extractNextSteps` for the body, the `<head>` meta
+ *     `extractSections` + `extractNextSteps` + `extractPreviews` for the body, the `<head>` meta
  *     tags and the live DOM for everything the digest deliberately does not
  *     carry (status, dates, done markers — see the note in `buildDigest`).
  *     Guarded by `extractSections(new)` deep-equalling `extractSections(old)`
@@ -35,7 +35,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
 
-import { extractSections, extractNextSteps, parseSpecMarkdown } from './lib/plan-spec.mjs';
+import { extractSections, extractNextSteps, extractPreviews, parseSpecMarkdown } from './lib/plan-spec.mjs';
 import { renderPlanHtml } from './build-plan-html.mjs';
 
 const args = process.argv.slice(2);
@@ -113,7 +113,7 @@ for (const name of files) {
       );
       const glance = glanceOf(before);
       if (glance) metadata.glance = glance;
-      spec = { metadata, sections, progress: progressOf(before), nextSteps: extractNextSteps(before) };
+      spec = { metadata, sections, progress: progressOf(before), nextSteps: extractNextSteps(before), previews: extractPreviews(before) };
       expected = sections;
     }
   } catch (err) {
