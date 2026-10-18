@@ -10,7 +10,7 @@
 ## What shipped
 
 - Added `kit/plugins/social-media-tools/skills/export-session/SKILL.md` — a new skill that exports session transcripts as Markdown.
-- Bundled `scripts/export_session.py` inside the skill directory to parse JSONL transcripts, strip harness noise (`<system-reminder>`, `<local-command-*>`, `<command-*>`), and write `<date>-<slug>.md` with YAML frontmatter under `{plansDirectory}/sessions/`.
+- Bundled `scripts/export_session.py` inside the skill directory to parse JSONL transcripts, strip harness noise (`<system-reminder>`, `<local-command-*>`, `<command-*>`), and write `<date>-<slug>-<session_id[:8]>.md` with YAML frontmatter under `{plansDirectory}/sessions/`.
 - Bumped `social-media-tools` to `2.14.0` in `.claude-plugin/marketplace.json` with a CHANGELOG entry, README update, and root `CLAUDE.md` table row.
 
 ## Files changed
