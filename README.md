@@ -84,7 +84,7 @@ The agentics project serves two purposes:
 
 | Purpose | What it contains |
 |---------|-----------------|
-| **Active Plugins** | 12 marketplace plugins in `kit/plugins/` — installable via `/plugin install`, covering code review, planning, testing, git workflows, accessibility, and more |
+| **Active Plugins** | 13 marketplace plugins in `kit/plugins/` — installable via `/plugin install`, covering code review, planning, testing, git workflows, accessibility, and more |
 | **Marketplace Infrastructure** | `agentics-kit` marketplace manifest (`marketplace.json`) that enables installation via `/plugin install` |
 
 Every plugin in this repo is a working, production-quality tool you can install and use immediately.
@@ -412,7 +412,7 @@ claude --plugin-dir ./kit/plugins/code-testing-agent
 
 #### `plan-agent`
 
-Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with a built-in structured interview; it authors the plan and stops, never writing source files. Implement a plan that already exists with `/plan-agent:build [<plan>]`, which walks the steps, ticks the spec, re-renders, and owns all three completion gates — acceptance criteria, end-to-end verification, and completion checklist. Turn a vague idea into a decision-complete proposal — saved as a copy-pasteable prompt under `docs/prompts/` — with `/plan-agent:build-proposal`, run a ten-reviewer Workflow with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`, publish a multi-artboard design canvas for a plan with `/plan-agent:design`, or bundle a plan and its related HTML into one tabbed hub artifact with `/plan-agent:publish-hub`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans with copy-paste implement prompts and optional workflow prompts for complex plans, and publishes them to a claude.ai artifact by default — the repo keeps the `.md` spec, and `--file` also commits the rendered HTML beside it. PostToolUse hooks auto-regenerate the plans, prototypes, and designs gallery indexes and flag prototype/design drift; a filename hook enforces verb-target kebab-case.
+Plan creation and review on demand or via ambient activation. Run `/plan-agent:implementation-plan <objective>` for the full Steps 0–8 planning workflow with a built-in structured interview; it authors the plan and stops, never writing source files. Implement a plan that already exists with `/plan-agent:build [<plan>]`, which walks the steps, ticks the spec, re-renders, and owns all three completion gates — acceptance criteria, end-to-end verification, and completion checklist. Turn a vague idea into a decision-complete proposal — saved as a copy-pasteable prompt under `docs/prompts/` — with `/plan-agent:build-proposal`, run a ten-reviewer Workflow with `/plan-agent:review-plan`, finalize and mark plans completed with `/plan-agent:finalize-plan`, generate Anthropic-best-practice AI prompts with `/plan-agent:prompt`, scaffold GitHub Pages publishing with `/plan-agent:setup-sites`, turn a completed plan or one-line idea into a runnable, framework-free static-HTML prototype with `/plan-agent:prototype`, publish a multi-artboard design canvas for a plan with `/plan-agent:design`, or bundle a plan and its related HTML into one tabbed hub artifact with `/plan-agent:publish-hub`. Accepts GitHub/GitLab issue URLs and `#n` references to auto-seed plans. Generates self-contained interactive HTML plans (UI plans carry live `## Previews` iframes) with copy-paste implement prompts and optional workflow prompts for complex plans, and publishes them to a claude.ai artifact by default — the repo keeps the `.md` spec, and `--file` also commits the rendered HTML beside it. PostToolUse hooks auto-regenerate the plans, prototypes, and designs gallery indexes and flag prototype/design drift; a filename hook enforces verb-target kebab-case.
 
 **Commands:**
 
@@ -517,7 +517,7 @@ Automated git workflow — create branches, commit with conventional messages, c
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
 | `branch-agent` | Create or start a new branch — manual invoke only |
-| `commit-agent` | Commit or save work to git — manual invoke only |
+| `commit-agent` | Commit or save work to git, then push the branch (never the default branch) — manual invoke only |
 | `create-issue` | File, open, or create a GitHub or GitLab issue from any context — detects the host from the git remote and confirms before creating |
 | `pr-agent` | Create a PR or open a pull request — manual invoke only |
 | `merge` | Merge a PR — checks `MERGEABLE`, green checks, and the lint gate, then merges only with explicit approval; never passes `--delete-branch`. Classifies checks against the head commit's runs, so an undispatched run reads as a block rather than a pass and a started run with unreadable logs reads as a real failure. Typing `merge?` routes here deterministically |
