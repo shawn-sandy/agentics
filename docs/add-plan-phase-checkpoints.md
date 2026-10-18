@@ -57,7 +57,6 @@ The checkpoint contract in `build` and `finalize-plan` is guarded by a prose gre
 |-----|------|---------|
 | `c16fe83` | 2026-10-13 | feat(plan-agent): live UI previews inside plan pages (9.20.0) (#651) |
 | `f3be024` | 2026-09-09 | feat(plan-agent): make the plan the dispatch contract — lanes in the renderer, authoring, and build (9.14.0–9.17.0) (#628) |
-| `67ab9a1` | 2026-08-19 | docs: sync README plugin table with memory-tools 4.3.0 (#588) |
 
 <!-- generated:end -->
 

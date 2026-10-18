@@ -47,7 +47,6 @@ Confirmed findings always block the PR: the skill commits a `fix:` patch and re-
 | `56a2ea3` | 2026-09-11 | (post-ship commits) |
 | `eab3545` | 2026-09-03 | (post-ship commits) |
 | `3e849ec` | 2026-08-23 | fix(review-gates): close four gaps found in the usage-insights report (#598) |
-| `67ab9a1` | 2026-08-19 | docs: sync README plugin table with memory-tools 4.3.0 (#588) |
 
 <!-- generated:end -->
 

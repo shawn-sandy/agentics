@@ -41,7 +41,6 @@ The stash rule blocks `git stash pop` and `git stash apply` with no explicit `st
 
 | SHA | Date | Subject |
 |-----|------|---------|
-| `67ab9a1` | 2026-08-19 | docs: sync README plugin table with memory-tools 4.3.0 (#588) |
 
 <!-- generated:end -->
 

@@ -49,7 +49,6 @@ Or invoke with a PR URL to publish a teaching page about the changes in that PR.
 
 | SHA | Date | Subject |
 |-----|------|---------|
-| `67ab9a1` | 2026-08-19 | docs: sync README plugin table with memory-tools 4.3.0 (#588) |
 
 <!-- generated:end -->
 

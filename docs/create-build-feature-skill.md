@@ -49,7 +49,6 @@ Or just describe a feature idea in natural language — the skill recognizes "fe
 
 | SHA | Date | Subject |
 |-----|------|---------|
-| `67ab9a1` | 2026-08-19 | docs: sync README plugin table with memory-tools 4.3.0 (#588) |
 
 <!-- generated:end -->
 

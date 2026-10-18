@@ -42,7 +42,6 @@ A fix to the scrub gate or the diff-cap logic now lands in all three commands at
 
 | SHA | Date | Subject |
 |-----|------|---------|
-| `67ab9a1` | 2026-08-19 | docs: sync README plugin table with memory-tools 4.3.0 (#588) |
 
 <!-- generated:end -->
 

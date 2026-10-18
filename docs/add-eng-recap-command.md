@@ -45,7 +45,6 @@ Activate with `/artifact-tools:eng-recap`. Reads from the current session by def
 
 | SHA | Date | Subject |
 |-----|------|---------|
-| `67ab9a1` | 2026-08-19 | docs: sync README plugin table with memory-tools 4.3.0 (#588) |
 
 <!-- generated:end -->
 

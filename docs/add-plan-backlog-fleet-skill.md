@@ -43,7 +43,6 @@ Invoke as `/plan-agent:build-fleet` to open a picker over all `status: todo` pla
 | SHA | Date | Subject |
 |-----|------|---------|
 | `f3be024` | 2026-09-09 | feat(plan-agent): make the plan the dispatch contract — lanes in the renderer, authoring, and build (9.14.0–9.17.0) (#628) |
-| `67ab9a1` | 2026-08-19 | docs: sync README plugin table with memory-tools 4.3.0 (#588) |
 
 <!-- generated:end -->
 

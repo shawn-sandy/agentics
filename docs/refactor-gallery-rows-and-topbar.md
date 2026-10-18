@@ -58,7 +58,6 @@ The prototypes template's `--subtle: #9ca3af` was a live WCAG AA failure (2.5:1 
 
 | SHA | Date | Subject |
 |-----|------|---------|
-| `67ab9a1` | 2026-08-19 | docs: sync README plugin table with memory-tools 4.3.0 (#588) |
 
 <!-- generated:end -->
 

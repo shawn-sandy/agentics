@@ -34,7 +34,6 @@ When no match is found, the skill asks only for a projects directory path and sc
 |-----|------|---------|
 | `7a4214f` | 2026-09-26 | feat(memory-tools): implementing-insights publishes a live record per item (4.4.0) (#638) |
 | `19174f7` | 2026-08-23 | fix(memory-tools): stricter repo resolution in implementing-insights (4.3.1) (#597) |
-| `67ab9a1` | 2026-08-19 | docs: sync README plugin table with memory-tools 4.3.0 (#588) |
 
 <!-- generated:end -->
 

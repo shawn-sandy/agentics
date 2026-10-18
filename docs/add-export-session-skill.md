@@ -27,19 +27,18 @@
 
 Raw session transcripts (`~/.claude/projects/<slug>/<id>.jsonl`) contain useful engineering history but are unreadable as JSONL mixed with harness records. The `export-session` skill delegates the conversion to a bundled Python script, keeping large transcripts out of Claude's context window.
 
-`export_session.py` reads the JSONL file line by line, keeping only user and assistant turns and dropping sidechains, tool results, and harness-injected messages. The output file is named `<date>-<slug>.md` and written under `{plansDirectory}/sessions/` with YAML frontmatter including `type: session-export`.
+`export_session.py` reads the JSONL file line by line, keeping only user and assistant turns and dropping sidechains, tool results, and harness-injected messages. The output file is named `<date>-<slug>-<session_id[:8]>.md` and written under `{plansDirectory}/sessions/` with YAML frontmatter including `type: session-export`.
 
 The skill uses `${CLAUDE_PLUGIN_ROOT}` to resolve the bundled script path so it works regardless of where the plugin is installed.
 
 ## How to use it
 
-Activate with the `export-session` skill description trigger, or load the plugin with `claude --plugin-dir ./kit/plugins/social-media-tools` and invoke `/export-session`. The output file appears under `docs/plans/sessions/`.
+Activate with the `export-session` skill description trigger, or load the plugin with `claude --plugin-dir ./kit/plugins/social-media-tools` and invoke `/export-session`. The output file appears under `docs/plans/sessions/` by default (or `{plansDirectory}/sessions/` when `plansDirectory` is configured).
 
 ## Commit history
 
 | SHA | Date | Subject |
 |-----|------|---------|
-| `67ab9a1` | 2026-08-19 | docs: sync README plugin table with memory-tools 4.3.0 (#588) |
 
 <!-- generated:end -->
 
