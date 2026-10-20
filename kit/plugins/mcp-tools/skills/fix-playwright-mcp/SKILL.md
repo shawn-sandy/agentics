@@ -48,10 +48,13 @@ Collect all five signals before concluding anything. The browser cache is
 5. **System Chrome** — macOS: `/Applications/Google Chrome.app` exists; Linux:
    `which google-chrome google-chrome-stable chromium`.
 
-**Healthy exit:** the plugin key is absent or `false` in every settings file checked
-AND a `playwright` server exists whose command pins an exact version. Report that
-nothing is drifting; if the pin is behind the current release
-(`npm view @playwright/mcp version`), offer to repin via Steps 2–4, otherwise stop.
+**Healthy exit:** the plugin key is absent or `false` in every settings file checked,
+a `playwright` server exists whose command pins an exact version, AND the browser
+that command selects is ready — system Chrome present for `--browser chrome` (also
+the server's default), or the matching `chromium-*` build installed when the command
+selects a bundled browser. Report that nothing is drifting; if the pin is behind the
+current release (`npm view @playwright/mcp version`), offer to repin via Steps 2–4,
+otherwise stop.
 
 Report the findings in this format before proposing anything (a worked example):
 

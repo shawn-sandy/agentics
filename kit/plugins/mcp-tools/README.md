@@ -33,7 +33,9 @@ Run `/mcp-tools:fix-playwright-mcp` when:
 - `~/.npm/_npx` keeps accumulating copies of `@playwright/mcp`.
 
 The skill reports a five-signal diagnosis (plugin state, existing server, installed
-Chromium builds, npx cache drift, system Chrome), then asks which fix to apply:
+Chromium builds, npx cache drift, system Chrome). When the setup is already healthy —
+plugin off, server pinned, its selected browser ready — it reports that and stops
+without asking anything. Otherwise it asks which fix to apply:
 **pin + system Chrome** (recommended — disables the plugin, pins a user-scope server
 with `--browser chrome`, renames the permission rules), **disable the plugin only**,
 or **report only**, which changes nothing. Before applying either fix it backs up
