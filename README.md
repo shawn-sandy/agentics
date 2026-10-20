@@ -4,7 +4,7 @@
 
 A **marketplace system for Claude Code plugins** — enabling discovery, distribution, and installation of AI-powered plugins that extend Claude's capabilities across code review, planning, testing, git workflows, accessibility, and more.
 
-**Marketplace:** `agentics-kit` v4.0.0 · **13 plugins** · Requires Claude Code 1.0.33+ (mod plugins: 2.1.287+) · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
+**Marketplace:** `agentics-kit` v4.0.0 · **14 plugins** · Requires Claude Code 1.0.33+ (mod plugins: 2.1.287+) · [View all plugins](#plugin-reference-table) · [Browse docs](https://shawn-sandy.github.io/agentics/)
 
 > **Breaking change — v4.0.0:** Six plugins have been removed from the marketplace: `agent-creator`, `agent-reviewer`, `agentic-plugin-dev`, `code-simplifier`, `marketplace-builder`, and `react-perf-analyzer`. Their source directories have been removed from the repository and are recoverable from git history at the commit preceding their deletion. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
@@ -131,7 +131,7 @@ agentics/
 │   ├── rules/                    # Scoped authoring rules (plugin patterns, marketplace, testing)
 │   └── settings.json             # Project-level Claude Code settings and hooks
 ├── kit/
-│   └── plugins/                  # 13 plugins in marketplace
+│   └── plugins/                  # 14 plugins in marketplace
 │       ├── artifact-tools/
 │       ├── code-review/
 │       ├── code-testing-agent/
@@ -139,6 +139,7 @@ agentics/
 │       ├── design-system-tools/
 │       ├── git-agent/
 │       ├── git-agent-launcher/
+│       ├── mcp-tools/
 │       ├── memory-tools/
 │       ├── plan-agent/
 │       ├── settings-sync/
@@ -188,6 +189,7 @@ The marketplace approach uses sparse cloning — only the plugin you install is 
 /plugin install artifact-tools@agentics-kit
 /plugin install content-tools@agentics-kit
 /plugin install design-system-tools@agentics-kit
+/plugin install mcp-tools@agentics-kit
 ```
 
 **Or install all at once** — paste the full block above into your Claude Code session.
@@ -217,7 +219,8 @@ This repo ships these keys in **project scope** (`.claude/settings.json`). On fi
     "plan-agent@agentics-kit": true,
     "artifact-tools@agentics-kit": true,
     "content-tools@agentics-kit": true,
-    "design-system-tools@agentics-kit": true
+    "design-system-tools@agentics-kit": true,
+    "mcp-tools@agentics-kit": true
   }
 }
 ```
@@ -803,6 +806,25 @@ claude --plugin-dir ./kit/plugins/design-system-tools
 
 ---
 
+#### `mcp-tools`
+
+Diagnose and fix MCP server setup issues. The first skill ends the Playwright MCP "install Chromium" loop: the official plugin's unpinned `npx @playwright/mcp@latest` server wants a different Chromium build with every release, so it repins the server to one version driving the system Chrome, which updates itself.
+
+**Skills:**
+
+| Skill | Activates when you ask to... |
+|-------|------------------------------|
+| `fix-playwright-mcp` | Command-only (`/mcp-tools:fix-playwright-mcp`) — diagnoses five signals (plugin state, existing server, installed Chromium builds, npx cache drift, system Chrome), asks which fix to apply, then disables the plugin, pins a user-scope server with `--browser chrome`, and renames the permission rules, verifying every change by re-reading it |
+
+```bash
+claude --plugin-dir ./kit/plugins/mcp-tools
+# /mcp-tools:fix-playwright-mcp
+```
+
+[View Documentation](./kit/plugins/mcp-tools/README.md)
+
+---
+
 ## How-To Guides
 
 One brief "How do I" entry per skill: the slash command to type, the plain-English phrasing that triggers it, what it actually does, and the gotcha worth knowing. Skills marked command-only cannot be triggered by natural language. The folder carries its own index at [docs/guides/how-to/README.md](./docs/guides/how-to/README.md).
@@ -816,6 +838,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | design-system-tools | [How do I... design-system-tools](./docs/guides/how-to/design-system-tools.md) | 1 |
 | git-agent | [How do I... git-agent](./docs/guides/how-to/git-agent.md) | 8 |
 | git-agent-launcher | [How do I... git-agent-launcher](./docs/guides/how-to/git-agent-launcher.md) | 0 |
+| mcp-tools | [How do I... mcp-tools](./docs/guides/how-to/mcp-tools.md) | 1 |
 | memory-tools | [How do I... memory-tools](./docs/guides/how-to/memory-tools.md) | 3 |
 | plan-agent | [How do I... plan-agent](./docs/guides/how-to/plan-agent.md) | 18 |
 | settings-sync | [How do I... settings-sync](./docs/guides/how-to/settings-sync.md) | 2 |
@@ -823,7 +846,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | social-media-tools | [How do I... social-media-tools](./docs/guides/how-to/social-media-tools.md) | 17 |
 | wcag-compliance-reviewer | [How do I... wcag-compliance-reviewer](./docs/guides/how-to/wcag-compliance-reviewer.md) | 1 |
 
-Total: 67 skills across 13 plugins.
+Total: 68 skills across 14 plugins.
 
 ---
 
@@ -846,6 +869,7 @@ Total: 67 skills across 13 plugins.
 | [content-tools](./kit/plugins/content-tools/README.md) | 1.1.1 | documentation | 1 skill |
 | [design-system-tools](./kit/plugins/design-system-tools/README.md) | 0.1.0 | development | 1 skill |
 | [git-agent-launcher](./kit/plugins/git-agent-launcher/README.md) | 0.1.0 | development | 1 mod |
+| [mcp-tools](./kit/plugins/mcp-tools/README.md) | 0.1.0 | development | 1 skill |
 
 ---
 

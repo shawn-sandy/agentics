@@ -55,6 +55,7 @@ WRITE_HEAVY=(
   git-agent/skills/pr-agent/SKILL.md
   git-agent/skills/ship-autonomous/SKILL.md
   git-agent/skills/ship/SKILL.md
+  mcp-tools/skills/fix-playwright-mcp/SKILL.md
   plan-agent/skills/build-feature/SKILL.md
   plan-agent/skills/build-proposal/SKILL.md
   plan-agent/skills/build/SKILL.md
