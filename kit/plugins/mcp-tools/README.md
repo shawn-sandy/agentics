@@ -33,10 +33,13 @@ Run `/mcp-tools:fix-playwright-mcp` when:
 - `~/.npm/_npx` keeps accumulating copies of `@playwright/mcp`.
 
 The skill reports a five-signal diagnosis (plugin state, existing server, installed
-Chromium builds, npx cache drift, system Chrome), asks which fix to apply, backs up
-`~/.claude/settings.json`, applies the chosen fix, and verifies every change by
-re-reading it. It never edits the plugin's cached `.mcp.json`, which plugin updates
-overwrite.
+Chromium builds, npx cache drift, system Chrome), then asks which fix to apply:
+**pin + system Chrome** (recommended — disables the plugin, pins a user-scope server
+with `--browser chrome`, renames the permission rules), **disable the plugin only**,
+or **report only**, which changes nothing. Before applying either fix it backs up
+every settings file it will edit, and afterwards it verifies every change by
+re-reading it, restoring the backups on any failure. It never edits the plugin's
+cached `.mcp.json`, which plugin updates overwrite.
 
 ## Structure
 

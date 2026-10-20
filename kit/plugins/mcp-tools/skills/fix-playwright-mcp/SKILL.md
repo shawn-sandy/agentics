@@ -48,8 +48,10 @@ Collect all five signals before concluding anything. The browser cache is
 5. **System Chrome** — macOS: `/Applications/Google Chrome.app` exists; Linux:
    `which google-chrome google-chrome-stable chromium`.
 
-**Healthy exit:** the plugin key is absent or `false` AND a `playwright` server exists
-whose command pins an exact version. Report that nothing needs fixing and stop.
+**Healthy exit:** the plugin key is absent or `false` in every settings file checked
+AND a `playwright` server exists whose command pins an exact version. Report that
+nothing is drifting; if the pin is behind the current release
+(`npm view @playwright/mcp version`), offer to repin via Steps 2–4, otherwise stop.
 
 Report the findings in this format before proposing anything (a worked example):
 
@@ -75,18 +77,21 @@ Ask with `AskUserQuestion`, recommendation first:
 
 ### Step 3 — Apply
 
-Back up first:
-`cp ~/.claude/settings.json ~/.claude/settings.json.fix-playwright-backup`.
+Back up first — every settings file Step 1 found the plugin key or playwright rules
+in, user and project alike:
+`cp ~/.claude/settings.json ~/.claude/settings.json.fix-playwright-backup`
+(and the same `.fix-playwright-backup` suffix for a project `.claude/settings.json`).
 
 Both fixes:
 
-- Edit `~/.claude/settings.json`: set the plugin key found in Step 1 to `false`.
+- Edit each settings file where Step 1 found the plugin key: set it to `false`.
 - Never edit the plugin's cached `.mcp.json` — plugin updates overwrite it.
 
 Pin + system Chrome only:
 
-- If Step 1 found an existing unpinned `playwright` server, remove it first:
-  `claude mcp remove playwright -s user`.
+- If Step 1 found an existing `playwright` server at user scope — pinned or not —
+  remove it first: `claude mcp remove playwright -s user`. Adding over an existing
+  name fails with "already exists".
 - Resolve the current release: `npm view @playwright/mcp version`.
 - Add the server with the **literal resolved version** written into the command —
   never a shell variable, which the Bash tool rejects:
@@ -96,21 +101,26 @@ Pin + system Chrome only:
   in Step 1) with `mcp__playwright__`. The server added above is named `playwright`, so
   its tools are `mcp__playwright__browser_navigate` and so on.
 
+If any command in this step fails, go straight to the Step 4 restore path — never
+continue half-applied.
+
 ### Step 4 — Verify, then report
 
-1. `python3 -m json.tool ~/.claude/settings.json > /dev/null` parses.
-2. The plugin key reads `false` — re-read the file; do not trust the edit.
+1. `python3 -m json.tool <file> > /dev/null` parses, for every edited settings file.
+2. The plugin key reads `false` in each file where Step 1 found it — re-read the
+   files; do not trust the edits.
 3. Pin fix only: `claude mcp get playwright` shows the pinned version and
-   `--browser chrome`, and `grep -c mcp__plugin_playwright ~/.claude/settings.json`
-   reports 0.
-4. **If any check fails:** restore the backup
-   (`cp ~/.claude/settings.json.fix-playwright-backup ~/.claude/settings.json`),
-   report which check failed, and stop — do not retry blind.
+   `--browser chrome`, and `grep -c mcp__plugin_playwright <file>` reports 0 for
+   every edited settings file.
+4. **If any check fails, or any Step 3 command failed:** restore every backup
+   (`cp <file>.fix-playwright-backup <file>`), remove the server this run added
+   (`claude mcp remove playwright -s user`), report which step failed, and stop —
+   do not retry blind.
 
 On success, tell the user:
 
 - The new tools are named `mcp__playwright__*` and appear in **new** sessions only.
-- Where the settings backup lives, so they can delete it once satisfied.
+- Where the settings backups live, so they can delete them once satisfied.
 - The pin is deliberate: when they want a newer `@playwright/mcp`, re-running this
   skill repins to the then-current release.
 - Optionally, stale `~/.npm/_npx` copies of `@playwright/mcp` can be deleted to

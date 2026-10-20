@@ -814,7 +814,7 @@ Diagnose and fix MCP server setup issues. The first skill ends the Playwright MC
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
-| `fix-playwright-mcp` | Command-only (`/mcp-tools:fix-playwright-mcp`) — diagnoses five signals (plugin state, existing server, installed Chromium builds, npx cache drift, system Chrome), asks which fix to apply, then disables the plugin, pins a user-scope server with `--browser chrome`, and renames the permission rules, verifying every change by re-reading it |
+| `fix-playwright-mcp` | Command-only (`/mcp-tools:fix-playwright-mcp`) — diagnoses five signals (plugin state, existing server, installed Chromium builds, npx cache drift, system Chrome), then asks which fix to apply: pin + system Chrome (recommended — disables the plugin, pins a user-scope server with `--browser chrome`, renames the permission rules), disable-only, or report-only, verifying every change by re-reading it |
 
 ```bash
 claude --plugin-dir ./kit/plugins/mcp-tools
