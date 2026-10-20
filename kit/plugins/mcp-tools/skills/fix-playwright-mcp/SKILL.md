@@ -94,10 +94,10 @@ Both fixes:
 Pin + system Chrome only:
 
 - If Step 1 found an existing `playwright` server at user scope — pinned or not —
-  snapshot its record first (`claude mcp get playwright`; keep the full command,
-  args, and env — it is the only copy once removed), then remove it:
-  `claude mcp remove playwright -s user`. Adding over an existing name fails with
-  "already exists".
+  snapshot its full JSON record first: the `playwright` entry under `mcpServers` in
+  `~/.claude.json`, every field including `env` and transport (it is the only copy
+  once removed). Then remove it: `claude mcp remove playwright -s user`. Adding
+  over an existing name fails with "already exists".
 - Resolve the current release: `npm view @playwright/mcp version`.
 - Add the server with the **literal resolved version** written into the command —
   never a shell variable, which the Bash tool rejects:
@@ -121,9 +121,10 @@ continue half-applied.
 4. **If any check fails, or any Step 3 command failed:** restore every backup
    (`cp <file>.fix-playwright-backup <file>`), remove the server this run added
    (`claude mcp remove playwright -s user`), and if Step 3 removed an existing
-   server, re-add it from its snapshot (`claude mcp add playwright -s user -- <the
-   snapshotted command and args>`). Report which step failed and stop — do not
-   retry blind.
+   server, restore it exactly from its snapshot —
+   `claude mcp add-json playwright -s user '<the snapshotted JSON record>'`, every
+   field including `env` and transport, never rebuilt from command and args alone.
+   Report which step failed and stop — do not retry blind.
 
 On success, tell the user:
 
