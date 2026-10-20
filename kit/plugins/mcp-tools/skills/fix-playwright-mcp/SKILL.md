@@ -46,7 +46,8 @@ Collect all five signals before concluding anything. The browser cache is
    `ls -d ~/.npm/_npx/*/node_modules/@playwright/mcp 2>/dev/null | wc -l`.
    More than a couple means repeated `@latest` re-downloads.
 5. **System Chrome** — macOS: `/Applications/Google Chrome.app` exists; Linux:
-   `which google-chrome google-chrome-stable chromium`.
+   `which google-chrome google-chrome-stable`. Only branded Google Chrome counts —
+   Playwright's `chrome` channel will not launch a distro `chromium`.
 
 **Healthy exit:** the plugin key is absent or `false` in every settings file checked,
 a `playwright` server exists whose command pins an exact version, AND the browser
@@ -93,8 +94,10 @@ Both fixes:
 Pin + system Chrome only:
 
 - If Step 1 found an existing `playwright` server at user scope — pinned or not —
-  remove it first: `claude mcp remove playwright -s user`. Adding over an existing
-  name fails with "already exists".
+  snapshot its record first (`claude mcp get playwright`; keep the full command,
+  args, and env — it is the only copy once removed), then remove it:
+  `claude mcp remove playwright -s user`. Adding over an existing name fails with
+  "already exists".
 - Resolve the current release: `npm view @playwright/mcp version`.
 - Add the server with the **literal resolved version** written into the command —
   never a shell variable, which the Bash tool rejects:
@@ -117,8 +120,10 @@ continue half-applied.
    every edited settings file.
 4. **If any check fails, or any Step 3 command failed:** restore every backup
    (`cp <file>.fix-playwright-backup <file>`), remove the server this run added
-   (`claude mcp remove playwright -s user`), report which step failed, and stop —
-   do not retry blind.
+   (`claude mcp remove playwright -s user`), and if Step 3 removed an existing
+   server, re-add it from its snapshot (`claude mcp add playwright -s user -- <the
+   snapshotted command and args>`). Report which step failed and stop — do not
+   retry blind.
 
 On success, tell the user:
 
