@@ -1,0 +1,18 @@
+{
+  "name": "mcp-tools",
+  "description": "Diagnose and fix MCP server setup issues — starting with the Playwright MCP Chromium build mismatch caused by an unpinned @latest server.",
+  "author": {
+    "name": "Agentics Project"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "playwright",
+    "chromium",
+    "diagnostics",
+    "version-pinning",
+    "chrome"
+  ],
+  "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/mcp-tools",
+  "repository": "https://github.com/shawn-sandy/agentics"
+}

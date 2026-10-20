@@ -322,6 +322,24 @@
         "git-agent",
         "slash-commands"
       ]
+    },
+    {
+      "name": "mcp-tools",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/shawn-sandy/agentics.git",
+        "path": "kit/plugins/mcp-tools"
+      },
+      "version": "0.1.0",
+      "description": "Diagnose and fix MCP server setup issues — starting with the Playwright MCP Chromium build mismatch caused by an unpinned @latest server",
+      "category": "development",
+      "tags": [
+        "mcp",
+        "playwright",
+        "chromium",
+        "diagnostics",
+        "version-pinning"
+      ]
     }
   ],
   "removed": [
