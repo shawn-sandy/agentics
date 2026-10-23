@@ -1,5 +1,15 @@
 # Changelog — social-media-tools
 
+## v2.23.5 — 2026-09-13 — export-session writes only transcript basename to source field
+
+### Fixed
+
+- **`export-session` no longer embeds the full transcript path in YAML frontmatter.**
+  The `source` field previously stored the absolute path (`str(src)`), which could
+  expose local usernames and project directory names in exported Markdown files.
+  It now stores only the transcript filename (`src.name`) — enough to identify
+  the source file without leaking local filesystem structure.
+
 ## v2.23.4 — 2026-08-17 — screenshots verify themselves before delivery
 
 ### Fixed
