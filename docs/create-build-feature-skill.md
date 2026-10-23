@@ -1,0 +1,50 @@
+# Create the build-feature skill — feature docs that split into plans
+
+> Teams get a /plan-agent:build-feature command that turns a feature idea into a committed feature doc plus a recommended split into smaller, dependency-ordere...
+
+<!-- generated:start -->
+
+**Status:** Shipped 2026-08-17  **Plan:** [create-build-feature-skill.md](plans/create-build-feature-skill.md)
+**Type:** feature
+
+## What shipped
+
+- Scaffold kit/plugins/plan-agent/skills/build-feature/SKILL.md with the frontmatter contract: `name: build-feature`, `model: claude-fable-5`, a three-part description (≤200 chars total, first sentence ≤80) whose trigger — "feature doc", "break this feature into plans" — shares no phrase with build-proposal's should-we trigger, `allowed-tools` mirroring build-proposal (Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, WebSearch, WebFetch, Skill, Agent, Artifact), and `argument-hint: "<feature idea> [--dir <path>] [--tier 0|1|2]"`
+- Author the SKILL.md workflow body: the verbatim plan-mode guard as the first step, then a right-sizing triage with a Tier 0 scale-down gate — a single-surface, already-clear feature routes straight to `/plan-agent:implementation-plan` with no artifact written — then frame-and-confirm (restate the feature in one line, confirm via AskUserQuestion before research), tiered parallel research fan-out (codebase Agent in flight before the first web fetch, never blocking), facts-vs-decisions separation with recommendation-first questions, then convergence on the feature doc written to the resolved features directory (`planAgent.featuresDirectory` via settings precedence, falling back to `${PWD}/docs/features/`)
+- Specify the dual-deliverable convergence in the SKILL.md body: the feature doc ends with a Sub-feature breakdown section — each sub-feature carries a rationale, an S/M/L size, its dependency order, and a paste-ready `/plan-agent:implementation-plan` prompt — and, only once the breakdown is settled at convergence (never per round), each sub-feature also gets a saved prompt at `<prompts-dir>/feature-<slug>-<sub-slug>.md` authored by delegating to `plan-agent:prompt` through its standard authoring path with an explicit `--out` and `--answers-gathered` (no edits to the prompt skill; the `proposal` type stays exclusive to build-proposal); the skill never invokes implementation-plan itself on Tier 1/2 runs
+- Write references/feature-doc-shape.md: the canonical feature-doc section order (frontmatter, title and framing note, context, problem and users, goals and success metrics, scope in/out, UX and accessibility notes, risks, sub-feature breakdown, next step) with the breakdown-entry format and the paste-ready prompt template, scaled by tier
+- Register and document the skill: bump plan-agent to 9.2.0 in .claude-plugin/marketplace.json and add build-feature to the description's skill list; add a 9.2.0 CHANGELOG entry; add the components-table row and a build-feature section to README.md
+- Add tests/plugins/test-build-feature.sh mirroring test-build-proposal.sh — assert the SKILL.md frontmatter contract, the allowed-tools set, the three-part description budget, the references file, marketplace registration above origin/main, the dual-deliverable paths, and the Tier 0 routing line — and append the new SKILL.md path to the whitelist in tests/plugins/test-exitplanmode-guard.sh
+
+## Files changed
+
+| Path | Role | Status |
+| ---- | ---- | ------ |
+| `kit/plugins/plan-agent/skills/build-feature/SKILL.md` | the skill: frontmatter contract, workflow, dual-deliverable convergence | Created |
+| `kit/plugins/plan-agent/skills/build-feature/references/feature-doc-shape.md` | canonical feature-doc section order and the sub-feature breakdown format | Created |
+| `.claude-plugin/marketplace.json` | bump plan-agent 9.1.1 → 9.2.0; add build-feature to the description's skill list | Modified |
+| `kit/plugins/plan-agent/CHANGELOG.md` | 9.2.0 entry | Modified |
+| `kit/plugins/plan-agent/README.md` | components-table row and a build-feature section mirroring build-proposal's | Modified |
+| `tests/plugins/test-build-feature.sh` | structural smoke test mirroring test-build-proposal.sh | Created |
+| `tests/plugins/test-exitplanmode-guard.sh` | add the new SKILL.md to the guard whitelist | Modified |
+
+## How it works
+
+Add a new `build-feature` skill to the plan-agent plugin that turns a feature idea into a team-readable feature doc at `docs/features/<slug>.md` — covering context, users, goals, scope, and risks — ending in a recommended breakdown into smaller sub-feature plans, each with a paste-ready `/plan-agent:implementation-plan` prompt and a saved prompt for the planning layer.
+
+The request started as "refactor build-proposal to create a feature rather than a proposal," with the adapt-vs-new decision explicitly left open. Exploration settled it: `build-proposal` is load-bearing for three other skills — `build` Step 1b falls through to direct plan authoring only when the proposal stage writes nothing, `implementation-plan` ships a dedicated `--from-prompt` mode for its output, and `prompt` owns a caller-driven `proposal` type with sha-guarded in-place rewrites. Repurposing it would be a MAJOR bump and would break the should-we loop those skills depend on. Decisions resolved with the owner on 2026-08-12: create a new sibling skill named `build-feature` (MINOR bump to 9.2.0); deliver both a markdown feature doc (the team deliverable) and per-sub-feature saved prompts (the planning-layer input); the sub-plan breakdown is recommend-only — generating the actual plans stays a separate user-initiated step. The interview added four more: the skill is model-invocable with trigger phrases disjoint from both siblings; prompts go through the prompt skill's standard path (no prompt-skill edits — the `proposal` type stays exclusive to build-proposal); prompts are written only at convergence, never per round; and a Tier 0 scale-down gate routes small, already-clear features straight to `implementation-plan` with no artifact written. `build-proposal` ships unchanged. The new skill reuses build-proposal's proven loop shape — tier triage, frame-and-confirm gate, parallel research fan-out, facts-vs-decisions separation, recommendation-first questions — but converges on a different deliverable: a proposal answers "should we?"; a feature doc answers "what are we building, and how does it split into plans?"
+
+The implementation proceeded through the following steps: Scaffold kit/plugins/plan-agent/skills/build-feature/SKILL.md with the frontmatter contract: `name: build-feature`, `model: claude-fable-5`, a three-part description (≤200 chars total, first sentence ≤80) whose trigger — "feature doc", "break this feature into plans" — shares no phrase with build-proposal's should-we trigger, `allowed-tools` mirroring build-proposal (Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, WebSearch, WebFetch, Skill, Agent, Artifact), and `argument-hint: "<feature idea> [--dir <path>] [--tier 0|1|2]"`; Author the SKILL.md workflow body: the verbatim plan-mode guard as the first step, then a right-sizing triage with a Tier 0 scale-down gate — a single-surface, already-clear feature routes straight to `/plan-agent:implementation-plan` with no artifact written — then frame-and-confirm (restate the feature in one line, confirm via AskUserQuestion before research), tiered parallel research fan-out (codebase Agent in flight before the first web fetch, never blocking), facts-vs-decisions separation with recommendation-first questions, then convergence on the feature doc written to the resolved features directory (`planAgent.featuresDirectory` via settings precedence, falling back to `${PWD}/docs/features/`); Specify the dual-deliverable convergence in the SKILL.md body: the feature doc ends with a Sub-feature breakdown section — each sub-feature carries a rationale, an S/M/L size, its dependency order, and a paste-ready `/plan-agent:implementation-plan` prompt — and, only once the breakdown is settled at convergence (never per round), each sub-feature also gets a saved prompt at `<prompts-dir>/feature-<slug>-<sub-slug>.md` authored by delegating to `plan-agent:prompt` through its standard authoring path with an explicit `--out` and `--answers-gathered` (no edits to the prompt skill; the `proposal` type stays exclusive to build-proposal); the skill never invokes implementation-plan itself on Tier 1/2 runs; Write references/feature-doc-shape.md: the canonical feature-doc section order (frontmatter, title and framing note, context, problem and users, goals and success metrics, scope in/out, UX and accessibility notes, risks, sub-feature breakdown, next step) with the breakdown-entry format and the paste-ready prompt template, scaled by tier; Register and document the skill: bump plan-agent to 9.2.0 in .claude-plugin/marketplace.json and add build-feature to the description's skill list; add a 9.2.0 CHANGELOG entry; add the components-table row and a build-feature section to README.md; Add tests/plugins/test-build-feature.sh mirroring test-build-proposal.sh — assert the SKILL.md frontmatter contract, the allowed-tools set, the three-part description budget, the references file, marketplace registration above origin/main, the dual-deliverable paths, and the Tier 0 routing line — and append the new SKILL.md path to the whitelist in tests/plugins/test-exitplanmode-guard.sh.
+
+## Commit history
+
+| SHA | Date | Subject |
+| --- | ---- | ------- |
+| `f6b0bdd` | 2026-08-17 | docs(plans): mark settings-sync guard next-step done in add-verification-gates (#573) |
+
+<!-- generated:end -->
+
+## References
+
+- Plan: [create-build-feature-skill.md](plans/create-build-feature-skill.md)
+- Issue: https://github.com/shawn-sandy/agentics/issues/546
