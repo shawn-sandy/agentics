@@ -42,12 +42,13 @@ The stale-checkout guard belongs in `resolve-plan.md` beside the existing dirty-
 
 The `review-bot-loops.md` rule in `team-defaults` had drifted from the maintainer's current version — it was missing the Hard default, the Triage section (including "drop findings already fixed"), and the replies-are-for-humans rule. The sync brings the bundled copy current.
 
-`test-review-gates.test.mjs` fails if any edit is reverted: it asserts both adversarial-review prompts contain all five defect classes, both copies are identical, `merge` carries the never-dispatched rule, `resolve-plan.md` carries the freshness guard while the core does not, and the bundled `review-bot-loops.md` contains the Triage heading.
+`review-gates.test.mjs` fails if any edit is reverted: it asserts both adversarial-review prompts contain all five defect classes, both copies are identical, `merge` carries the never-dispatched rule, `resolve-plan.md` carries the freshness guard while the core does not, and the bundled `review-bot-loops.md` contains the Triage heading.
 
 ## Commit history
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
+| `3e849ec` | 2026-08-23 | feat(review-gates): close four gaps found in the usage-insights report (#598) |
 | `d1dfefb` | 2026-08-20 | docs: sync README and how-to guides with latest plugin changes (#589) |
 
 <!-- generated:end -->

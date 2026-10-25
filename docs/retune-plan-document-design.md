@@ -17,7 +17,7 @@
 - Fixed three defects: `word-break: break-all` splitting words mid-token in prompt rows; nested file-tree entries inheriting `font-weight: 600` from their directory row; six hardcoded mono stacks replaced with `var(--mono)`
 - Re-copied the edited shell to `kit/plugins/plan-agent/scripts/lib/plan-shell.mjs`
 - Applied the same token values to `plans-gallery.html` and `prototypes-gallery.html`
-- Re-rendered all committed plans via `scripts/rerender-plans.mjs` and rebuilt the gallery index
+- Re-rendered 87 committed plans via `scripts/rerender-plans.mjs` and rebuilt the gallery index (12 legacy review documents that predate the 7.5.0 DOM contract were left on the old shell)
 - Bumped plan-agent to 9.1.0
 
 ## Files changed

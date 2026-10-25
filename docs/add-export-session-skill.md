@@ -27,7 +27,7 @@
 
 ## How it works
 
-The `export-session` skill locates the current session's JSONL transcript under `~/.claude/projects/<slug>/`. It delegates conversion to the bundled `export_session.py` script, which parses the JSONL line-by-line and keeps only genuine conversational turns (user and assistant roles). The script filters out sidechains, tool results, and harness-injected system messages (matching `<system-reminder>`, `<local-command-*>`, and `<command-*>` patterns) that would clutter the exported document.
+The `export-session` skill locates the current session's JSONL transcript under `~/.claude/projects/<slug>/`. It delegates conversion to the bundled `export_session.py` script, which parses the JSONL line-by-line and keeps only genuine conversational turns (user and assistant roles). The script filters out sidechains, user records whose content consists entirely of `tool_result` blocks (mixed-content records may be retained), and harness-injected messages whose text starts with `<system-reminder>`, `<command-`, `<local-command-`, or `<task-notification` — all of which would clutter the exported document.
 
 The output is a Markdown file named `<date>-<slug>.md` placed in `{plansDirectory}/sessions/`. It includes YAML frontmatter with `type: session-export` plus the session metadata, followed by the cleaned conversation turns with speaker labels and timestamps.
 

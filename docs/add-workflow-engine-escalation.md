@@ -31,7 +31,7 @@ The `build` skill previously ran every step sequentially in a single context win
 
 The script receives the plan's lane map as its input. Each lane becomes one `agent()` call: a Sonnet worker that implements only that lane's steps in an isolated `isolation: "worktree"` environment. The `after:` dependency edges from the lane declarations become `pipeline()` ordering: lanes with no `after:` run in parallel in the first stage; lanes with `after: [lane-a]` run after stage 1 completes. The Workflow engine handles fault tolerance — a failed lane does not cancel independent parallel lanes.
 
-Escalation from `build` is controlled by three triggers: `workflow: always` in the plan frontmatter (author-specified), the `--workflow` CLI flag (user override), or automatic escalation when the plan has six or more lanes. Below the threshold, `build` continues sequential execution unchanged.
+Escalation from `build` to the Workflow engine is controlled by three triggers: `workflow: always` in the plan frontmatter (author-specified), the `--workflow` CLI flag (user override), or automatic escalation when the plan has six or more lanes. Plans with two to five lanes still use the lane dispatch path (`references/dispatch-lanes.md`) rather than the Workflow engine; only plans with fewer than two lanes continue truly sequential execution.
 
 ## How to use it
 

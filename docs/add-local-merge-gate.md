@@ -28,7 +28,7 @@
 
 GitHub Actions is frequently billing-blocked on this account. A quota-blocked run fails every job in seconds with no test output — red CI is not evidence of a defect and green CI is not evidence of correctness. Merge readiness has to be provable on the machine.
 
-`scripts/verify.sh` is the single local entry point. It runs `tests/run-all.sh` (which auto-discovers every `tests/**/test-*.sh`, `test-*.mjs`, and `*.test.mjs`), the marketplace JSON validation hook, the plugin version guard script, and the README table freshness check. All gates report individually; the script exits 0 only when all pass.
+`scripts/verify.sh` is the single local entry point. For the unit stage it runs `npm test` when a `package.json` npm test script exists, otherwise falls back to `tests/run-all.sh` (which auto-discovers every `tests/**/test-*.sh`, `test-*.mjs`, and `*.test.mjs`). It also runs the marketplace JSON validation hook, the plugin version guard script, and the README table freshness check. All gates report individually; the script exits 0 only when all pass.
 
 The `verified-change` skill adds a discipline layer on top: write the test first, implement until it passes, then deliberately break the implementation and verify the test goes red. A test that stays green through a deliberate mutation is not a test — this step is what proves the coverage is real rather than decorative. The skill requires a bounded fix loop (3 attempts max) and escalates rather than faking success.
 

@@ -31,7 +31,7 @@
 
 A plan today is something one agent reads top to bottom — steps are a flat list with no declared parallelism. After this change, a plan can declare `### Lane: <name>` sections that group independent steps. The renderer parses these sections and the build skill uses them as the dispatch contract.
 
-The lane dispatcher in `build` checks a plan for lane declarations and routes accordingly. For plans without lanes, or with fewer than six lanes when `workflow: always` or `--workflow` is not set, execution is sequential and unchanged. For laned plans meeting the threshold, `build` invokes `implement-workflow.mjs` via the Workflow tool.
+The lane dispatcher in `build` checks a plan for lane declarations and routes accordingly. Plans with fewer than two `### Lane:` headings (or with `workflow: never` / `--sequential`) run sequentially unchanged. Plans with two or more lanes use the lane dispatch path in `references/dispatch-lanes.md`. Among laned plans, `workflow: always`, `--workflow`, or six or more lanes escalates execution to `implement-workflow.mjs` via the Workflow tool.
 
 `implement-workflow.mjs` maps each lane to one worktree-isolated `agent()` call with `isolation: "worktree"`. The `after:` dependency edges are expressed as promise ordering: a pipeline stage blocks until all its upstream stages resolve. This lets independent lanes run concurrently while dependent ones wait, all within the Workflow engine's fault-tolerance model.
 

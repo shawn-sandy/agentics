@@ -50,6 +50,7 @@ The Workflow tool's opt-in rule explicitly accepts "a skill whose instructions t
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
+| `43a7fd9` | 2026-09-01 | feat(plan-agent): take review-plan off the experimental Agent Teams flag (#614) |
 | `d1dfefb` | 2026-08-20 | docs: sync README and how-to guides with latest plugin changes (#589) |
 
 <!-- generated:end -->

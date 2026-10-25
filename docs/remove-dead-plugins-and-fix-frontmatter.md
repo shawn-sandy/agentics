@@ -36,7 +36,7 @@ The six directories were already de-registered from `marketplace.json` and liste
 
 `fix-branch.md` in `code-review` was the only command across all active plugins that still delegated to `agent-reviewer`. The migration to `skill-reviewer` keeps the command functional while removing the last runtime reference to the deleted plugin.
 
-The description-budget fix targets the Claude Code UI: descriptions longer than 200 characters are truncated in the command picker, cutting off the end of the description. `skill-reviewer:optimizing-skill-frontmatter` trims each over-budget value to the most informative 200-character prefix, preserving the action verb and main object. `test-description-budget.sh` shells out to `yq` to extract each `description:` value and counts bytes, failing immediately on the first over-budget file.
+The description-budget fix targets the Claude Code UI: descriptions longer than 200 characters are truncated in the command picker, cutting off the end of the description. `skill-reviewer:optimizing-skill-frontmatter` trims each over-budget value to the most informative 200-character prefix, preserving the action verb and main object. `test-description-budget.sh` shells out to `yq` to extract each `description:` value and counts characters, failing immediately on the first over-budget file.
 
 The `CLAUDE.local.md` loader had been using `ls kit/plugins/` to enumerate plugins, which returned every directory including the now-deleted dead ones. Switching to the manifest read (`jq` over `marketplace.json`) ensures the loader sees only registered plugins and is robust to any future de-registrations that don't immediately delete the source.
 
