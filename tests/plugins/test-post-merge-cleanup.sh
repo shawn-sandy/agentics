@@ -242,6 +242,105 @@ else
   check "proposal present for gate-consistency check" 0
 fi
 
+# --- 11. Desktop app session: free the branch from inside its worktree -----
+# A Claude desktop app session stands in a worktree the app made and takes back
+# when the session is archived, so the skill deletes only the branch and then
+# archives the session. Before this, the skill refused and handed the user a
+# command to rerun elsewhere, every time. The block is extracted from SKILL.md
+# and run from inside a worktree: a paraphrase would test our belief about the
+# commands rather than the commands.
+APP_MARKER='**Standing inside it in a desktop app session**'
+APP_BLOCK="$(awk -v m="$APP_MARKER" '
+  index($0, m) { seen = 1; next }
+  seen && /^[[:space:]]*```/ { if (inside) exit; inside = 1; next }
+  inside { sub(/^[[:space:]]+/, ""); print }
+' "$SKILL_DIR/SKILL.md")"
+
+if [ -z "$APP_BLOCK" ]; then
+  check "SKILL has a bash block after '$APP_MARKER'" 0
+else
+  # The realistic case: the branch landed on origin/main, which has moved on
+  # past it, while the main checkout's local main is stale. `branch -d` judges
+  # against the HEAD of the checkout it runs in, so it must run where HEAD is
+  # origin/main, and the detach must land on origin/main, not the branch tip.
+  git -C "$REPO" worktree add -q "$WTROOT/app" -b app-branch
+  echo app > "$WTROOT/app/app.txt"
+  git -C "$WTROOT/app" add app.txt && git -C "$WTROOT/app" commit -qm "app work"
+  LANDED="$(git -C "$REPO" commit-tree -p app-branch -m "later work on main" "app-branch^{tree}")"
+  git -C "$REPO" update-ref refs/remotes/origin/main "$LANDED"
+  MAIN_HEAD_BEFORE="$(git -C "$REPO" rev-parse HEAD)"
+
+  git -C "$REPO" branch -D app-branch >/dev/null 2>&1 \
+    && check "a branch checked out in a worktree refuses deletion (why the block detaches)" 0 \
+    || check "a branch checked out in a worktree refuses deletion (why the block detaches)" 1
+
+  APP_CMDS="$(printf '%s\n' "$APP_BLOCK" | sed -e "s|<worktree>|$WTROOT/app|g" \
+    -e "s|<repo-root>|$REPO|g" -e 's|<default>|main|g' -e 's|<name>|app-branch|g')"
+  (cd "$WTROOT/app" && bash -e -c "$APP_CMDS") >/dev/null 2>&1 \
+    && check "the skill's block runs from inside the worktree" 1 \
+    || check "the skill's block runs from inside the worktree" 0
+
+  check "branch is deleted" \
+    "$(git -C "$REPO" show-ref --verify -q refs/heads/app-branch && echo 0 || echo 1)"
+  check "worktree is left on disk for the app to take back" \
+    "$([ -d "$WTROOT/app" ] && echo 1 || echo 0)"
+  check "worktree is left clean with a detached HEAD" \
+    "$([ -z "$(git -C "$WTROOT/app" status --porcelain)" ] \
+      && ! git -C "$WTROOT/app" symbolic-ref -q HEAD >/dev/null && echo 1 || echo 0)"
+  check "worktree is parked on origin/main, not the branch tip" \
+    "$([ "$(git -C "$WTROOT/app" rev-parse HEAD)" = "$LANDED" ] && echo 1 || echo 0)"
+  check "main checkout's HEAD and branch are untouched" \
+    "$([ "$(git -C "$REPO" rev-parse HEAD)" = "$MAIN_HEAD_BEFORE" ] \
+      && [ "$(git -C "$REPO" symbolic-ref --short HEAD)" = main ] && echo 1 || echo 0)"
+  printf '%s' "$APP_BLOCK" | grep -q 'worktree remove' \
+    && check "the app-session block never removes the worktree itself" 0 \
+    || check "the app-session block never removes the worktree itself" 1
+  # Section 7 only sees unindented fences, and this block sits in a list item.
+  printf '%s' "$APP_BLOCK" | grep -qE 'branch +-D\b|--force|(^| )-f\b' \
+    && check "the app-session block has no -D or --force" 0 \
+    || check "the app-session block has no -D or --force" 1
+fi
+
+# --- 12. Desktop app session contract --------------------------------------
+APP_SECTION="$(awk -v m="$APP_MARKER" 'index($0, m),/^## Step 4/' "$SKILL_DIR/SKILL.md")"
+printf '%s' "$APP_SECTION" | grep -q 'archive_session' \
+  && printf '%s' "$APP_SECTION" | grep -q '"self"' \
+  && check "app-session path archives this session" 1 \
+  || check "app-session path archives this session" 0
+awk '/Refuse self-deletion/,/^3\./' "$SKILL_DIR/SKILL.md" | grep -q 'worktreePath' \
+  && check "app sessions are recognised by get_session's worktreePath" 1 \
+  || check "app sessions are recognised by get_session's worktreePath" 0
+awk '/^4\. \*\*Ask before removing/,/^5\./' "$SKILL_DIR/SKILL.md" | grep -qi 'archive' \
+  && check "the yes/no question says the session will be archived" 1 \
+  || check "the yes/no question says the session will be archived" 0
+printf '%s' "$APP_SECTION" | grep -qiE 'refused.*(stop|do not archive)|do not archive' \
+  && check "a refused branch delete stops before the archive" 1 \
+  || check "a refused branch delete stops before the archive" 0
+grep -qE '^allowed-tools:.*\bmcp__ccd_session_mgmt__get_session\b' "$SKILL_DIR/SKILL.md" \
+  && check "allowed-tools lists get_session" 1 \
+  || check "allowed-tools lists get_session" 0
+# The app's own approval card is what lets it archive a session that is open
+# on screen. Pre-approving the tool could skip the card and get the call refused.
+grep -qE '^allowed-tools:.*\bmcp__ccd_session_mgmt__archive_session\b' "$SKILL_DIR/SKILL.md" \
+  && check "archive_session is left to the app's approval card" 0 \
+  || check "archive_session is left to the app's approval card" 1
+# A sweep must not archive mid-run: that would end the conversation with the
+# rest of the sweep and its failure report undone.
+awk '/^## Execution order/,/^## Failure handling/' "$SKILL_DIR/references/sweep.md" | grep -qi 'archiv' \
+  && check "sweep says an app session's own worktree is not archived mid-sweep" 1 \
+  || check "sweep says an app session's own worktree is not archived mid-sweep" 0
+
+# A slash command inside a shell block is unrunnable: zsh tries to execute
+# `/git-agent:...` as a path. The old refusal printed exactly that. Indented
+# fences count, since list items hold most of this skill's blocks.
+SLASH_HITS=0
+while IFS= read -r f; do
+  awk '/^[[:space:]]*```/{f=!f; next} f' "$f" \
+    | grep -qE '(^|&&|;)[[:space:]]*/[a-z0-9-]+:[a-z0-9-]+' && SLASH_HITS=$((SLASH_HITS + 1))
+done < <(find "$SKILL_DIR" -name '*.md')
+check "no fenced code block runs a slash command as a shell command" \
+  "$([ "$SLASH_HITS" -eq 0 ] && echo 1 || echo 0)"
+
 echo
 echo "passed: $PASS   failed: $FAIL"
 [ "$FAIL" -eq 0 ]

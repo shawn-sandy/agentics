@@ -1,7 +1,7 @@
 ---
 name: post-merge-cleanup
 description: "Removes merged branches and worktrees after checking for uncommitted work. Detects squash-merged branches and stale directories. Use when clearing up after a merge."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(du *), Bash(ls *), Bash(rm *), Read, Grep, Glob, AskUserQuestion, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(du *), Bash(ls *), Bash(rm *), Read, Grep, Glob, AskUserQuestion, ToolSearch, ExitPlanMode, mcp__ccd_session_mgmt__get_session
 model: sonnet
 ---
 
@@ -75,17 +75,23 @@ default will have more squash-merged branches than ancestry-merged ones.
 
 1. **Confirm it is cleanable** by either signal. Neither → say which checks ran
    and stop. Never delete a branch this step could not qualify.
-2. **Refuse self-deletion, and hand back a way to continue.** If the current
-   working directory is inside the target worktree, stop — removing the
-   directory you are standing in leaves the shell in a path that no longer
-   exists. Do not stop at "`cd` out first": once the user leaves, the current
-   branch is no longer the target, so a bare re-invocation would resolve to
-   something else entirely. Print the exact command to resume, naming the target
-   explicitly:
+2. **Refuse self-deletion.** If the current working directory is inside the
+   target worktree, never remove it from there: removing the directory you are
+   standing in leaves the shell in a path that no longer exists. Who finishes
+   the job depends on who made the worktree, so call
+   `mcp__ccd_session_mgmt__get_session` with `session_id: "self"`:
 
-   ```
-   cd <repo-root> && /git-agent:post-merge-cleanup <branch>
-   ```
+   - **It reports a `worktreePath` equal to the target.** This is a Claude
+     desktop app session in the worktree the app made for it, and the app takes
+     that worktree back when the session is archived. Carry on: step 5 deletes
+     only the branch, then archives this session. Nothing goes back to the user.
+   - **No `worktreePath`, a different one, or the tool does not load.** Stop.
+     Do not stop at "`cd` out first": once the user leaves, the current branch
+     is no longer the target, so a bare re-invocation would resolve to
+     something else entirely. Tell the user to open Claude Code in
+     `<repo-root>` and run `/git-agent:post-merge-cleanup <branch>`, naming the
+     target explicitly. It is a slash command, so never print it in a shell
+     code block, where zsh would try to run it as a path.
 
    A refusal that leaves the target unaddressable is a dead end, not a
    safeguard.
@@ -94,11 +100,35 @@ default will have more squash-merged branches than ancestry-merged ones.
    blocked, and stop. Do not offer to force, and do not offer to delete the
    files.
 4. **Ask before removing.** Show the worktree path and the branch, and get an
-   explicit yes.
+   explicit yes. When step 2 carried on inside an app session, the question
+   also says this session will be archived and the conversation ends there.
 5. **Remove, from outside the worktree:** `git worktree remove <path>`, then
    `git branch -d <name>` — or `git branch -D <name>` when a merged PR was the
    qualifying signal, since `-d` would refuse it. Print each command and its
    result.
+
+   **Standing inside it in a desktop app session**, delete only the branch and
+   leave the worktree to the app. git refuses to delete a branch that any
+   worktree has checked out, so detach first, onto the default branch, which is
+   where the app parks the worktrees it keeps for reuse:
+
+   ```bash
+   git -C <worktree> switch --detach origin/<default>
+   git -C <worktree> branch -d <name>
+   ```
+
+   Both run in the worktree: `-d` judges against the HEAD where it runs, and
+   only here is that `origin/<default>`, the ref detection used. The main
+   checkout's local default branch may be stale. Use `-D` on the same terms as
+   above. If git refuses the delete, stop and report it; do not archive.
+   Otherwise confirm `git show-ref --verify refs/heads/<name>` fails, write the
+   report described under Step 4 — Report, since archiving ends the
+   conversation, and call `mcp__ccd_session_mgmt__archive_session` with
+   `session_id: "self"`. It stays out of `allowed-tools` on purpose: the app's
+   own approval card is what lets it archive a session that is open on screen.
+   If the call is refused, report its reason. The branch is already gone, and
+   the app takes the worktree back whenever the session is archived, which the
+   user can do from the sidebar.
 
 ## Step 4 — Report
 
