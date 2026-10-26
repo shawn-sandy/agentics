@@ -68,7 +68,10 @@ about specific work.
 Work the ready list in order, and for each item follow the single-branch flow's
 removal steps exactly — including the self-deletion refusal, which still applies
 inside a sweep. If the user is standing in one of the worktrees being swept,
-that item is skipped with a note, and the rest of the sweep continues.
+that item is skipped with a note, and the rest of the sweep continues. That
+includes a desktop app session's own worktree: its cleanup ends by archiving
+the session, which would end the conversation mid-sweep. The note tells the
+user to finish it afterwards with `/git-agent:post-merge-cleanup <branch>`.
 
 Print each command and its result as it runs. A sweep that reports only a
 summary at the end gives no way to tell which item a failure belongs to.

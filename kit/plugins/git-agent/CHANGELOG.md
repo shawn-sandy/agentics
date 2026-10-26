@@ -1,5 +1,41 @@
 # Changelog — git-agent
 
+## v4.23.1 — 2026-10-26 — post-merge-cleanup finishes inside an app worktree
+
+### Fixed
+
+- **post-merge-cleanup no longer stops when the session stands in the worktree
+  it is asked to remove.** In a Claude desktop app session the worktree is the
+  app's: it takes a clean one back when the session is archived and keeps a
+  branch it never deletes. The skill treated it like a hand-made worktree,
+  refused to remove the directory it was standing in, and handed the user a
+  command to rerun from the main checkout; usage insights found that in at
+  least two `513` sessions. Now step 2 asks `get_session` for this session's
+  `worktreePath`; when it matches the target, step 5 detaches the worktree onto
+  `origin/<default>`, deletes the branch from inside the worktree (git refuses
+  while any worktree has it checked out, and `-d` there judges against
+  `origin/<default>` rather than a possibly stale local default), reports, and
+  archives the session. A refused delete stops before the archive. If the
+  archive is refused, the branch is already gone and the app takes the
+  worktree back on the next archive. `allowed-tools` gains
+  `mcp__ccd_session_mgmt__get_session`; `archive_session` is left out so the
+  app's own approval card stays in front of it.
+- **A sweep skips the session's own worktree** in an app session, since its
+  cleanup ends by archiving the session, and tells the user to finish it
+  afterwards with the single-branch run.
+- **The fallback handoff is runnable.** Outside an app session the skill still
+  stops, but it now tells the user to run `/git-agent:post-merge-cleanup
+  <branch>` from Claude Code in the repo root, instead of printing
+  `cd <repo-root> && /git-agent:...` in a code block that zsh cannot run.
+- `tests/plugins/test-post-merge-cleanup.sh` runs the skill's own detach and
+  delete block from inside a fixture worktree whose branch landed on an
+  `origin/main` that moved on, with local `main` stale. It asserts the branch
+  is gone, the worktree is left clean and parked on `origin/main`, and the
+  main checkout is untouched. It also pins the archive call, the stop on a
+  refused delete, the `worktreePath` check, the `allowed-tools` choice, the
+  sweep skip, no `-D` or `--force` in the block, and that no fenced block runs
+  a slash command as a shell command.
+
 ## v4.23.0 — 2026-10-08 — commit-agent pushes without asking
 
 ### Changed
