@@ -190,7 +190,7 @@ EXPECTED = {
  f"{GA}/ship-autonomous/SKILL.md":
   '"Runs the full ship pipeline with verification, CI polling, and bounded autofix. Chains tests, preview, commit, PR, CI poll, and gated merge. Use when asked to autonomously ship or watch CI."',
  f"{GA}/branch-agent/SKILL.md":
-  '"Creates a git branch from origin/<default> with no upstream tracking. Auto-names the branch from staged or unstaged changes in the working tree. Use when the user asks to create or start a new branch."',
+  '"Creates a git branch from the latest origin default branch. Auto-names it from uncommitted changes and sets no upstream tracking ref. Use when the user asks to create or start a new branch."',
  f"{GA}/ship/SKILL.md":
   '"Ships changes by staging, committing, pushing, and opening a PR. Supports GitHub and GitLab in a single guided flow. Use when the user asks to ship changes or commit and create a PR."',
  f"{SM}/share-explanation/SKILL.md":
