@@ -8,6 +8,9 @@
   rejects XML-tag-like text in skill descriptions and strips the angle brackets
   from what it stores; the description now says "the latest origin default
   branch" instead. Behavior is unchanged.
+- **branch-agent description tightened to the three-part budget format** — the
+  first sentence now fits the 80-char truncation budget, with the no-upstream
+  detail moved to the capability sentence.
 
 ## v4.24.0 — 2026-10-26 — drop the bin/ wrapper for claude.ai compatibility
 
