@@ -1,7 +1,7 @@
 ---
 name: ship
 description: "Ships changes by staging, committing, pushing, and opening a PR. Supports GitHub and GitLab in a single guided flow. Use when the user asks to ship changes or commit and create a PR."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh *), Read, Edit, Grep, Glob, Agent, AskUserQuestion, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" *), Read, Edit, Grep, Glob, Agent, AskUserQuestion, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 ---
 
@@ -99,7 +99,7 @@ Zero exit → `git push`.
 ## Step 6: Check for Existing PR/MR
 
 Read `references/pr-body.md` (bundled with this skill) — its Step 6 section.
-Its extractor command is `bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh <base>`
+Its extractor command is `bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" <base>`
 (substituted at load time; the reference is not placeholder-substituted).
 **STOP** only on an **open** PR/MR; merged or closed → Step 7.
 

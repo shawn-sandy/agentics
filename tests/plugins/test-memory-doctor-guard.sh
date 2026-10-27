@@ -55,9 +55,9 @@ grep -qF 'Verify the write' "$ADVISOR" 2>/dev/null || MISSING="$MISSING advisor:
 # The runnable check is the bundled verify_write.py, documented through the
 # load-time placeholders (${CLAUDE_SKILL_DIR} in the doctor, ${CLAUDE_PLUGIN_ROOT}
 # in the advisor), matched in command position so prose cannot satisfy it.
-grep -qE '^[[:space:]]*python3 \$\{CLAUDE_SKILL_DIR\}/scripts/verify_write\.py([[:space:]]|$)' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:command"
+grep -qE '^[[:space:]]*python3 "\$\{CLAUDE_SKILL_DIR\}/scripts/verify_write\.py"([[:space:]]|$)' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:command"
 bundle_file "$ADVISOR"
-grep -qE '^[[:space:]]*python3 \$\{CLAUDE_PLUGIN_ROOT\}/skills/agentic-memory-management/scripts/verify_write\.py([[:space:]]|$)' "$BUNDLE" || MISSING="$MISSING advisor:command"
+grep -qE '^[[:space:]]*python3 "\$\{CLAUDE_PLUGIN_ROOT\}/skills/agentic-memory-management/scripts/verify_write\.py"([[:space:]]|$)' "$BUNDLE" || MISSING="$MISSING advisor:command"
 grep -qF 'REPORT rather than write' "$DOCTOR" 2>/dev/null || MISSING="$MISSING doctor:gate"
 grep -qF 'REPORT rather than write' "$ADVISOR" 2>/dev/null || MISSING="$MISSING advisor:gate"
 if [ -z "$MISSING" ]; then pass; else fail "missing:$MISSING"; fi

@@ -1,7 +1,7 @@
 ---
 name: agentic-memory-management
 description: "Audits and optimizes CLAUDE.md project memory files. Checks adherence to Claude Code best practices and produces actionable fixes. Use when the user asks to audit, optimize, or diagnose a CLAUDE.md."
-allowed-tools: AskUserQuestion, Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/verify_write.py *), Glob, Grep, Read, Write
+allowed-tools: AskUserQuestion, Bash(python3 "${CLAUDE_SKILL_DIR}/scripts/verify_write.py" *), Glob, Grep, Read, Write
 ---
 
 Audit and optimize a CLAUDE.md / project memory file against Claude Code best practices.
@@ -176,6 +176,11 @@ paths:
 ```md
 @<plugin-dir>/skills/agentic-memory-management/SKILL.md
 ```
+
+An `@`-import loads this file as memory text, not as a skill, so
+`${CLAUDE_SKILL_DIR}` is **not** substituted there: when following the imported
+copy, replace it with `<plugin-dir>/skills/agentic-memory-management` in the
+verify command.
 ---
 
 If the user says no, stop here.
@@ -204,7 +209,7 @@ loads. The script shows the resulting diff, then asserts the file still parses a
 body.
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/verify_write.py <absolute-path-to-memory-file>
+python3 "${CLAUDE_SKILL_DIR}/scripts/verify_write.py" <absolute-path-to-memory-file>
 ```
 
 If the command exits non-zero, **STOP**. Report the failure with the file path and the printed

@@ -248,7 +248,7 @@ else
   #   claude.ai's top-level-bin/ ban removed the wrapper. Remove the entry
   #   once main carries it.
   DOCUMENTED_DRIFT="
-path-rules-advisor:0cbc42f42486e3bbead6d3e6ef910b478016d78ea18c20265e34a2395d444bcf
+path-rules-advisor:60ffe4bc81cf51012413454e71cfc10bc4d893e2458e944daae924c6c596601e
 "
   while IFS='|' read -r skill _; do
     [ -n "$skill" ] || continue

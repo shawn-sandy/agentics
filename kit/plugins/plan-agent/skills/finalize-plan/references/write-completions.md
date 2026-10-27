@@ -61,7 +61,7 @@ Where it goes depends on how the plan was delivered, and `<stem>.html`'s
 existence is the signal. **Sibling exists** — the plan is a file; overwrite it:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "<stem>.html"
 ```
 
 **No sibling** — the plan lives at a claude.ai artifact. Render to the
@@ -71,7 +71,7 @@ copy. Completion is exactly when the shared page most needs to be current — it
 is the state everyone else reads:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
 ```
 
 Never write `<stem>.html` in that case: it resurrects a file the author chose
@@ -87,7 +87,7 @@ Then verify the result with the same gate `build` Step 5.3 runs — the two are
 deliberately kept consistent:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "<stem>.html" --check
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "<stem>.html" --check
 ```
 
 For an artifact-delivered plan point `--check` at the scratchpad render

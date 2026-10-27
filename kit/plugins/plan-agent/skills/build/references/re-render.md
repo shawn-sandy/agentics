@@ -14,7 +14,7 @@ decides the output path.
 **Sibling exists** — the plan was delivered as a file. Overwrite it in place:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "<stem>.html"
 ```
 
 **No sibling** — the plan was published to a claude.ai artifact and its URL is
@@ -23,7 +23,7 @@ with that path and `url: <the artifact-url>` so the shared page updates instead
 of becoming a second copy:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
 ```
 
 Never write `<stem>.html` in this case. Doing so resurrects the file the author

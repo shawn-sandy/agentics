@@ -46,20 +46,20 @@ echo "2. The converted call sites invoke their script via a placeholder in comma
 # POSITION — line start, optional indent, interpreter, placeholder path — so
 # the prose sentences that also name each script cannot satisfy the check.
 declare -a SITES=(
-  'memory-tools/skills/agentic-memory-management/SKILL.md|python3 \$\{CLAUDE_SKILL_DIR\}/scripts/verify_write\.py'
-  'memory-tools/skills/path-rules-advisor/SKILL.md|python3 \$\{CLAUDE_PLUGIN_ROOT\}/skills/agentic-memory-management/scripts/verify_write\.py'
-  'skill-reviewer/skills/auditing-allowed-tools/SKILL.md|python3 \$\{CLAUDE_SKILL_DIR\}/scripts/session_tool_scan\.py'
-  'skill-reviewer/commands/check-description.md|bash \$\{CLAUDE_PLUGIN_ROOT\}/scripts/measure-description\.sh'
-  'wcag-compliance-reviewer/skills/wcag-compliance-reviewer/SKILL.md|python3 \$\{CLAUDE_SKILL_DIR\}/scripts/check_wcag\.py'
-  'social-media-tools/skills/export-session/SKILL.md|python3 \$\{CLAUDE_SKILL_DIR\}/scripts/export_session\.py'
-  'artifact-tools/skills/session-artifact/SKILL.md|python3 \$\{CLAUDE_SKILL_DIR\}/scripts/export_session\.py'
-  'git-agent/agents/agent-pr.md|bash \$\{CLAUDE_PLUGIN_ROOT\}/scripts/extract-plan-issues\.sh'
-  'git-agent/agents/agent-ship.md|bash \$\{CLAUDE_PLUGIN_ROOT\}/scripts/extract-plan-issues\.sh'
-  'git-agent/skills/pr-agent/SKILL.md|bash \$\{CLAUDE_PLUGIN_ROOT\}/scripts/extract-plan-issues\.sh'
-  'design-system-tools/skills/from-design-md/SKILL.md|node \$\{CLAUDE_SKILL_DIR\}/scripts/contrast\.mjs'
-  'code-testing-agent/skills/verified-change/SKILL.md|bash \$\{CLAUDE_SKILL_DIR\}/assets/install-verify-gate\.sh'
-  'plan-agent/skills/build/SKILL.md|node \$\{CLAUDE_PLUGIN_ROOT\}/scripts/build-plan-html\.mjs'
-  'plan-agent/skills/plans-library/SKILL.md|bash \$\{CLAUDE_PLUGIN_ROOT\}/hooks/build-index\.sh'
+  'memory-tools/skills/agentic-memory-management/SKILL.md|python3 "\$\{CLAUDE_SKILL_DIR\}/scripts/verify_write\.py"'
+  'memory-tools/skills/path-rules-advisor/SKILL.md|python3 "\$\{CLAUDE_PLUGIN_ROOT\}/skills/agentic-memory-management/scripts/verify_write\.py"'
+  'skill-reviewer/skills/auditing-allowed-tools/SKILL.md|python3 "\$\{CLAUDE_SKILL_DIR\}/scripts/session_tool_scan\.py"'
+  'skill-reviewer/commands/check-description.md|bash "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/measure-description\.sh"'
+  'wcag-compliance-reviewer/skills/wcag-compliance-reviewer/SKILL.md|python3 "\$\{CLAUDE_SKILL_DIR\}/scripts/check_wcag\.py"'
+  'social-media-tools/skills/export-session/SKILL.md|python3 "\$\{CLAUDE_SKILL_DIR\}/scripts/export_session\.py"'
+  'artifact-tools/skills/session-artifact/SKILL.md|python3 "\$\{CLAUDE_SKILL_DIR\}/scripts/export_session\.py"'
+  'git-agent/agents/agent-pr.md|bash "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/extract-plan-issues\.sh"'
+  'git-agent/agents/agent-ship.md|bash "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/extract-plan-issues\.sh"'
+  'git-agent/skills/pr-agent/SKILL.md|bash "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/extract-plan-issues\.sh"'
+  'design-system-tools/skills/from-design-md/SKILL.md|node "\$\{CLAUDE_SKILL_DIR\}/scripts/contrast\.mjs"'
+  'code-testing-agent/skills/verified-change/SKILL.md|bash "\$\{CLAUDE_SKILL_DIR\}/assets/install-verify-gate\.sh"'
+  'plan-agent/skills/build/SKILL.md|node "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/build-plan-html\.mjs"'
+  'plan-agent/skills/plans-library/SKILL.md|bash "\$\{CLAUDE_PLUGIN_ROOT\}/hooks/build-index\.sh"'
 )
 MISSING=""
 for entry in "${SITES[@]}"; do
@@ -131,7 +131,7 @@ while IFS= read -r f; do
   grep -qF 'not placeholder-substituted' "$f" \
     || UNNOTED="$UNNOTED\n    ${f#"$PLUGINS/"}"
 done <<EOF
-$(grep -rlE '^[[:space:]]*(node|python3|bash) \$\{CLAUDE_(PLUGIN_ROOT|SKILL_DIR)\}/' "$PLUGINS" --include='*.md' 2>/dev/null | grep -E '/(references|guidelines)/' | sort)
+$(grep -rlE '^[[:space:]]*(node|python3|bash) "\$\{CLAUDE_(PLUGIN_ROOT|SKILL_DIR)\}/' "$PLUGINS" --include='*.md' 2>/dev/null | grep -E '/(references|guidelines)/' | sort)
 EOF
 if [ -z "$UNNOTED" ]; then
   pass
@@ -145,7 +145,10 @@ echo "5. The scan machinery actually scanned something..."
 # asserts the corpus is real: the placeholder scan found sites (check 2 lists
 # 14, so fewer than 10 distinct tokens means the scan broke), and the markdown
 # corpus itself is present.
-CANARY_COUNT="$(grep -rlE --include='*.md' '^---$' "$PLUGINS" 2>/dev/null | sed '/^$/d' | wc -l | tr -d ' ')"
+# The grep is guarded: on an empty corpus it exits 1, and under set -e an
+# unguarded assignment pipeline would kill the script here — before the fail
+# message below, which exists precisely to report the empty corpus.
+CANARY_COUNT="$({ grep -rlE --include='*.md' '^---$' "$PLUGINS" 2>/dev/null || true; } | wc -l | tr -d ' ')"
 if [ "$SCANNED" -ge 10 ] && [ "$CANARY_COUNT" -ge 50 ]; then
   pass
 else

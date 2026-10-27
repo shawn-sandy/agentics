@@ -212,7 +212,7 @@ credential, token, key, email, or other PII.
 
 - The `PostToolUse` hook auto-rebuilds `docs/prototypes/index.html` on the
   write. If it did not run (e.g. hook disabled), run
-  `bash ${CLAUDE_PLUGIN_ROOT}/hooks/build-prototypes-index.sh "$PWD" </dev/null`
+  `bash "${CLAUDE_PLUGIN_ROOT}/hooks/build-prototypes-index.sh" "$PWD" </dev/null`
   — `${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path
   when this skill loads.
 - Open the prototype in the browser (`navigate` to its `file://` path), then

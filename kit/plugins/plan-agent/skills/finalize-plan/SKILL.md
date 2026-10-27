@@ -10,7 +10,7 @@ allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPl
 # finalize-plan
 
 Mark a plan as done: inspect the codebase for implementation evidence, confirm with the user, then write the completion state. The **Markdown spec is the source of truth**: when the plan has a sibling `<stem>.md` spec, all edits go to the spec — frontmatter `status`, `- [x]` criteria flips, `[x]` step markers, a `## Completion Report` section — and the HTML is re-rendered from it with
-`node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "<stem>.html"`
+`node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "<stem>.html"`
 (`${CLAUDE_PLUGIN_ROOT}` is substituted at load time — the references reuse this
 command). Only legacy plans without a spec are edited as HTML directly.
 

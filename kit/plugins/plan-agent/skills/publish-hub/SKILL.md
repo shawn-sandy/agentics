@@ -27,7 +27,7 @@ directory scanning.
 ## Step 2 — Bundle
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-hub.mjs <spec>.md -o "$SCRATCHPAD/<stem>-hub.html" [--extra <path>]...
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-hub.mjs" <spec>.md -o "$SCRATCHPAD/<stem>-hub.html" [--extra <path>]...
 ```
 
 `${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path when this skill loads.

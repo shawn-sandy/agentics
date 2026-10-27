@@ -94,7 +94,7 @@ python3 -c "import ast,sys; ast.parse(open(sys.argv[1]).read())" "$SCRIPT" \
 # refuses to install any plugin that ships one). The grep is structural, not
 # substring: matched in command position, so prose naming the script cannot
 # satisfy it while the runnable invocation is gone.
-grep -qE '^[[:space:]]*python3 \$\{CLAUDE_SKILL_DIR\}/scripts/export_session\.py([[:space:]]|$)' \
+grep -qE '^[[:space:]]*python3 "\$\{CLAUDE_SKILL_DIR\}/scripts/export_session\.py"([[:space:]]|$)' \
   "$PLUGIN/skills/session-artifact/SKILL.md" \
   || fail "session-artifact does not invoke its bundled script via \${CLAUDE_SKILL_DIR} in command position (prose naming it does not count)"
 ok

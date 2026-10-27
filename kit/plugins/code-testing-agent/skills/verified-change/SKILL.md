@@ -38,7 +38,7 @@ this skill's absolute folder when the skill loads, for the installed plugin and
 the project-local copy alike:
 
 ```bash
-bash ${CLAUDE_SKILL_DIR}/assets/install-verify-gate.sh
+bash "${CLAUDE_SKILL_DIR}/assets/install-verify-gate.sh"
 ```
 
 Then run the gate once, before changing anything, and read the output:

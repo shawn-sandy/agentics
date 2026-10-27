@@ -37,7 +37,7 @@ test('the skill carries the plan-mode guard verbatim', () => {
 // which Claude Code substitutes with the skill's absolute folder at load time.
 // Assert the documented spelling in command position, then run the real script.
 test('the documented placeholder command resolves and runs', (t) => {
-  assert.match(readFileSync(SKILL, 'utf8'), /^node \$\{CLAUDE_SKILL_DIR\}\/scripts\/contrast\.mjs /m);
+  assert.match(readFileSync(SKILL, 'utf8'), /^node "\$\{CLAUDE_SKILL_DIR\}\/scripts\/contrast\.mjs" /m);
   const dir = mkdtempSync(join(tmpdir(), 'ds-contrast-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const tokens = join(dir, 'tokens.json');

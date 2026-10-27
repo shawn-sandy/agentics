@@ -17,7 +17,7 @@ implement it as a claude.ai Design System artifact. The artifact holds `tokens.j
 theme, a README brand book, static component previews and a cover.
 
 The contrast checker ships with this skill at `scripts/contrast.mjs`. Run it as
-`node ${CLAUDE_SKILL_DIR}/scripts/contrast.mjs` — `${CLAUDE_SKILL_DIR}` is replaced with this
+`node "${CLAUDE_SKILL_DIR}/scripts/contrast.mjs"` — `${CLAUDE_SKILL_DIR}` is replaced with this
 skill's absolute folder when the skill loads.
 
 Worked examples:
@@ -118,7 +118,7 @@ Do not ship `bundle.js`, and set `libraries: []`.
 For every text-on-ground pair that a usage note or README rule names, run this in every theme:
 
 ```bash
-node ${CLAUDE_SKILL_DIR}/scripts/contrast.mjs <dir>/project/tokens.json ink:paper ink-soft:paper-sunk paper:island
+node "${CLAUDE_SKILL_DIR}/scripts/contrast.mjs" <dir>/project/tokens.json ink:paper ink-soft:paper-sunk paper:island
 ```
 
 `${CLAUDE_SKILL_DIR}` is replaced with this skill's absolute folder when the skill loads.

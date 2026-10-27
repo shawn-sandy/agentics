@@ -29,7 +29,7 @@ vanished the moment a user ran this skill. `build-index.sh` walks the tree and e
 ## Step 1 — Build and write the gallery
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/hooks/build-index.sh "$PWD"
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/build-index.sh" "$PWD"
 ```
 
 `${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path when this

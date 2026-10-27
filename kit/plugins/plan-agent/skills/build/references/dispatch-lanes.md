@@ -14,8 +14,8 @@ approved.
 ## 1. Read the lanes
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" --check
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" --lanes
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" --check
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" --lanes
 ```
 
 `${CLAUDE_PLUGIN_ROOT}` is the plan-agent plugin's install root; this file is

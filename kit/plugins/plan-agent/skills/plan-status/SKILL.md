@@ -33,7 +33,7 @@ Does not stress-test, validate, or critique plan content — use review-plan or 
 
 Otherwise read `references/single-file-flow.md` and follow every step it covers
 exactly as written there. Where it re-renders a spec, the runnable command is
-`node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o <out>`
+`node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o <out>`
 (`${CLAUDE_PLUGIN_ROOT}` is substituted at load time; the reference reuses it).
 
 - **Step 0 — Create progress todos** — `TodoWrite` one todo per step before

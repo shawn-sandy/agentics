@@ -42,8 +42,8 @@ Sibling exists — overwrite it. No sibling is an artifact plan: render to the
 scratchpad and republish to its `artifact-url:`; never create the sibling.
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "<stem>.html"
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
 ```
 
 `${CLAUDE_PLUGIN_ROOT}` is substituted at load time. Run after **every**

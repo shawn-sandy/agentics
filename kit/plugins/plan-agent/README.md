@@ -662,7 +662,7 @@ Command-invocable via `/plan-agent:implementation-plan <objective>` and model-in
 - **`--check` (verify, write nothing)** — the render command with `--check` proves the rendered HTML is current and that a finished spec is internally consistent, without inspecting the rendered markup:
 
   ```bash
-  node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs docs/plans/my-plan.md -o docs/plans/my-plan.html --check
+  node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" docs/plans/my-plan.md -o docs/plans/my-plan.html --check
   ```
 
   | Row | Asserts | Skipped when |
@@ -827,7 +827,7 @@ Auto-activates on "open the gallery", "show the plans page" intent. Opens the ex
 
 Command-invocable via `/plan-agent:publish-hub <plan.md> [--extra <path>]...` and model-invocable on "publish / share a plan hub" intent. Bundles a plan and its related HTML into one self-contained tabbed hub page and publishes it as a single claude.ai artifact at a stable URL.
 
-- **Bundle** — `node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-hub.mjs <spec>.md -o <hub>.html` renders the plan through `build-plan-html.mjs` and embeds it plus the spec's `prototype:` file and each `--extra` page in its own `<iframe srcdoc>` tab panel; a `design:` URL becomes an external-link tab. Everything is inline, so the page satisfies the artifact CSP.
+- **Bundle** — `node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-hub.mjs" <spec>.md -o <hub>.html` renders the plan through `build-plan-html.mjs` and embeds it plus the spec's `prototype:` file and each `--extra` page in its own `<iframe srcdoc>` tab panel; a `design:` URL becomes an external-link tab. Everything is inline, so the page satisfies the artifact CSP.
 - **Size guard** — output is capped (default 15 MB, under the 16 MB artifact limit); on overflow the bundler exits 1 naming the offending file, and the skill retries with `--skip <file>` and reports what was dropped.
 - **Stable URL** — the returned artifact URL is written to the spec as `hub-artifact-url:`; every later publish re-reads it fresh and republishes to the same page. The plan's own `artifact-url:` is never touched.
 - **Verification** — after publishing, the skill fetches the URL and confirms the page contains the plan title; on a failed publish it delivers the hub HTML as a file instead and never reports an unreturned URL.

@@ -10,7 +10,7 @@
   Claude Code now substitutes `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}`
   into skill, command, and agent markdown at load time (verified on 2.1.304),
   so the bare-name wrapper the Bash tool's old expansion guard required is
-  obsolete: verified-change installs the gate with `bash ${CLAUDE_SKILL_DIR}/assets/install-verify-gate.sh`, which works for the installed plugin and the project-local skill copy alike, so the bare-name/fallback fork is gone.
+  obsolete: verified-change installs the gate with `bash "${CLAUDE_SKILL_DIR}/assets/install-verify-gate.sh"`, which works for the installed plugin and the project-local skill copy alike, so the bare-name/fallback fork is gone.
 
 ## v3.6.1 — 2026-10-08 — commit-agent calls are delegated
 

@@ -207,7 +207,7 @@ Render to the scratchpad, then call `Artifact` with that path and
 becoming a second copy:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
 ```
 
 `${CLAUDE_PLUGIN_ROOT}` is the plan-agent plugin's install root. This file is

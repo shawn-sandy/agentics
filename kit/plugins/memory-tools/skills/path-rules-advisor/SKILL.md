@@ -1,7 +1,7 @@
 ---
 name: path-rules-advisor
 description: "Creates path-specific rule files in .claude/rules/. Analyzes project structure and generates scoped rules for file types or directories. Use when the user wants to add path-specific rules."
-allowed-tools: AskUserQuestion, Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/agentic-memory-management/scripts/verify_write.py *), Edit, Glob, Read, Write
+allowed-tools: AskUserQuestion, Bash(python3 "${CLAUDE_PLUGIN_ROOT}/skills/agentic-memory-management/scripts/verify_write.py" *), Edit, Glob, Read, Write
 ---
 
 Analyze the project and CLAUDE.md to recommend and create path-specific rule files in `.claude/rules/`. Follow the mode determined by the user's message.
@@ -50,7 +50,7 @@ Run this after **every** write, without exception, substituting the path just
 written for the placeholder:
 
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/agentic-memory-management/scripts/verify_write.py <absolute-path-to-file-just-written>
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/agentic-memory-management/scripts/verify_write.py" <absolute-path-to-file-just-written>
 ```
 
 `${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path

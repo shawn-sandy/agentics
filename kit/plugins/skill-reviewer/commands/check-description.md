@@ -19,7 +19,7 @@ Measure the `description:` frontmatter length for one or more SKILL.md files by 
 For each resolved file path, run:
 
 ```bash
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh <file>
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh" <file>
 ```
 
 `${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path

@@ -20,7 +20,7 @@ rendering of it.
 The `.md` is the committed record and the thing to edit; the HTML is the render
 that carries the `<title>`. Publishing the `.md` directly is cheaper and wrong —
 it yields a page titled after the filename with the frontmatter visible as body
-text (see `${CLAUDE_PLUGIN_ROOT}/references/titles.md`).
+text (see `"${CLAUDE_PLUGIN_ROOT}/references/titles.md"`).
 
 The extractor is bundled rather than borrowed from `social-media-tools`, so this
 plugin works standalone with no install-order dependency.
@@ -54,7 +54,7 @@ transcript is far larger than the recap and reading it wastes the context the
 recap needs:
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/export_session.py <transcript.jsonl> <output-dir>
+python3 "${CLAUDE_SKILL_DIR}/scripts/export_session.py" <transcript.jsonl> <output-dir>
 ```
 
 `${CLAUDE_SKILL_DIR}` is replaced with this skill's absolute folder when the
@@ -79,7 +79,7 @@ top-down and stops when they have what they need, so the answer goes first:
 
 Keep the frontmatter the script wrote. It contains a fallback `title:` derived
 from the session's first turn — refine it against
-`${CLAUDE_PLUGIN_ROOT}/references/titles.md` (read it first). You have read the
+`"${CLAUDE_PLUGIN_ROOT}/references/titles.md"` (read it first). You have read the
 whole session by this point and the script had only one turn, so the subject you
 can name is better than the one it guessed. Write the result to
 `{plansDirectory}/sessions/` (read `plansDirectory` from `.claude/settings.json`,

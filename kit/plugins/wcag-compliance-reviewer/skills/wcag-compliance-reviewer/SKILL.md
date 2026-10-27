@@ -403,7 +403,7 @@ Use this for rapid reviews:
 For initial scanning of files, use the provided Python script:
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/check_wcag.py path/to/component.tsx
+python3 "${CLAUDE_SKILL_DIR}/scripts/check_wcag.py" path/to/component.tsx
 ```
 
 `${CLAUDE_SKILL_DIR}` is replaced with this skill's absolute folder when the

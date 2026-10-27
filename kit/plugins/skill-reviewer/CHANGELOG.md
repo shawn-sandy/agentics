@@ -10,7 +10,7 @@
   Claude Code now substitutes `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}`
   into skill, command, and agent markdown at load time (verified on 2.1.304),
   so the bare-name wrapper the Bash tool's old expansion guard required is
-  obsolete: `/check-description` now runs `bash ${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh`, and auditing-allowed-tools runs `python3 ${CLAUDE_SKILL_DIR}/scripts/session_tool_scan.py`.
+  obsolete: `/check-description` now runs `bash "${CLAUDE_PLUGIN_ROOT}/scripts/measure-description.sh"`, and auditing-allowed-tools runs `python3 "${CLAUDE_SKILL_DIR}/scripts/session_tool_scan.py"`.
 
 
 

@@ -10,7 +10,7 @@
   Claude Code now substitutes `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}`
   into skill, command, and agent markdown at load time (verified on 2.1.304),
   so the bare-name wrapper the Bash tool's old expansion guard required is
-  obsolete: the write-guard is now `python3 ${CLAUDE_SKILL_DIR}/scripts/verify_write.py` in agentic-memory-management and `python3 ${CLAUDE_PLUGIN_ROOT}/skills/agentic-memory-management/scripts/verify_write.py` in path-rules-advisor, with matching `allowed-tools` Bash rules; `references/write-verification.md` now defers to the skill body for the runnable command, since reference files are not placeholder-substituted.
+  obsolete: the write-guard is now `python3 "${CLAUDE_SKILL_DIR}/scripts/verify_write.py"` in agentic-memory-management and `python3 "${CLAUDE_PLUGIN_ROOT}/skills/agentic-memory-management/scripts/verify_write.py"` in path-rules-advisor, with matching `allowed-tools` Bash rules; `references/write-verification.md` now defers to the skill body for the runnable command, since reference files are not placeholder-substituted.
 
 ## v4.4.0 — 2026-09-26 — implementing-insights publishes a live record per item
 

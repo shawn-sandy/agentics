@@ -177,7 +177,7 @@ echo "11b. plans-library invokes the gallery builder in command position..."
 # single delegated command that could never run. Anchored to command position —
 # prose naming the script opens with a backtick, which is not whitespace, so it
 # cannot satisfy this the way a bare `grep -F` would.
-if grep -qE '^[[:space:]]*bash \$\{CLAUDE_PLUGIN_ROOT\}/hooks/build-index\.sh([[:space:]]|$)' \
+if grep -qE '^[[:space:]]*bash "\$\{CLAUDE_PLUGIN_ROOT\}/hooks/build-index\.sh"([[:space:]]|$)' \
      "$PLUGIN_DIR/skills/plans-library/SKILL.md" 2>/dev/null; then
   pass
 else
@@ -198,7 +198,8 @@ echo "12. No top-level bin/ ships, in the tree or through the dist KEEP list..."
 KEEP_STATUS=0
 node -e '
   const fs = require("fs");
-  const src = fs.readFileSync(process.argv[1], "utf8");
+  let src;
+  try { src = fs.readFileSync(process.argv[1], "utf8"); } catch { process.exit(3); }
   const m = src.match(/const\s+KEEP\s*=\s*new\s+Set\(\s*\[([\s\S]*?)\]\s*\)/);
   if (!m) process.exit(3);
   const items = [...m[1].matchAll(/["'"'"'`]([^"'"'"'`]+)["'"'"'`]/g)].map((x) => x[1]);

@@ -160,7 +160,7 @@ an artifact plan's spec was what was passed in.
 
 - The `PostToolUse` hook auto-rebuilds `docs/designs/index.html` on the artboard
   write. If it did not run (e.g. hook disabled), run
-  `bash ${CLAUDE_PLUGIN_ROOT}/hooks/build-designs-index.sh "$PWD" </dev/null`
+  `bash "${CLAUDE_PLUGIN_ROOT}/hooks/build-designs-index.sh" "$PWD" </dev/null`
   — `${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path
   when this skill loads.
 - Report the **canvas URL**, the **artboard list** (slug plus the step it

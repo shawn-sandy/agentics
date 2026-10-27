@@ -10,7 +10,7 @@
   Claude Code now substitutes `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}`
   into skill, command, and agent markdown at load time (verified on 2.1.304),
   so the bare-name wrapper the Bash tool's old expansion guard required is
-  obsolete: the renderer is now `node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs`, the hub bundler `node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-hub.mjs`, and the gallery rebuilds `bash ${CLAUDE_PLUGIN_ROOT}/hooks/build-{index,prototypes-index,designs-index}.sh`, across every skill and reference that named a wrapper; reference files carry a note that they are not placeholder-substituted, and the renderer’s `--check` remedy line now names its own script path.
+  obsolete: the renderer is now `node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs"`, the hub bundler `node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-hub.mjs"`, and the gallery rebuilds `bash "${CLAUDE_PLUGIN_ROOT}/hooks/build-"{index,prototypes-index,designs-index}.sh`, across every skill and reference that named a wrapper; reference files carry a note that they are not placeholder-substituted, and the renderer’s `--check` remedy line now names its own script path.
 
 ## 9.20.1 — a blocked goal ends instead of looping (2026-10-14)
 

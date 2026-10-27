@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Claude Code now substitutes `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}`
   into skill, command, and agent markdown at load time (verified on 2.1.304),
   so the bare-name wrapper the Bash tool's old expansion guard required is
-  obsolete: session-artifact now runs `python3 ${CLAUDE_SKILL_DIR}/scripts/export_session.py`.
+  obsolete: session-artifact now runs `python3 "${CLAUDE_SKILL_DIR}/scripts/export_session.py"`.
 
 ## [1.12.0] - 2026-08-07
 

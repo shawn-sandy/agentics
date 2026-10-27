@@ -247,7 +247,7 @@ After the last edit, re-render — the same invocation build and finalize-plan u
 **File-published** — overwrite the sibling:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "<stem>.html"
 ```
 
 `${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path when this skill loads.
@@ -255,7 +255,7 @@ node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "<stem>.ht
 **Artifact-published** — render to the scratchpad, then call `Artifact` with that path and `url: <the artifact-url>`, re-read from the frontmatter immediately beforehand so a URL another session recorded is the one you update:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
 ```
 
 **Never write `<stem>.html`** in that case: it resurrects the file the author chose not to publish and flips the plan's gallery card off the artifact onto a local path. A review is also when the shared page most needs to be current — it is the state every other reader sees.

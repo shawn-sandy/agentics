@@ -153,7 +153,7 @@ If there are multiple recent sessions and the user's intent is ambiguous, list t
 The script lives in `scripts/session_tool_scan.py` inside this skill's folder. Run it via the skill-dir placeholder, which Claude Code replaces with this skill's absolute folder when the skill loads:
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/session_tool_scan.py <jsonl-path> [--include-subagents]
+python3 "${CLAUDE_SKILL_DIR}/scripts/session_tool_scan.py" <jsonl-path> [--include-subagents]
 ```
 
 If the path does not resolve (e.g. the skill was loaded ad hoc rather than as an installed plugin), fall back to an absolute path built from the directory containing this SKILL.md (known because you just read it). Pass `--include-subagents` when the user wants subagent transcripts aggregated in, or when running Mode 3.

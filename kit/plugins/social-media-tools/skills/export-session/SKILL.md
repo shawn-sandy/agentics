@@ -25,7 +25,7 @@ Convert a session JSONL transcript into a readable Markdown file under `{plansDi
 3. **Convert.** Run the bundled script — do not read the JSONL into context yourself:
 
    ```bash
-   python3 ${CLAUDE_SKILL_DIR}/scripts/export_session.py <transcript.jsonl> <plansDirectory>/sessions
+   python3 "${CLAUDE_SKILL_DIR}/scripts/export_session.py" <transcript.jsonl> <plansDirectory>/sessions
    ```
 
    `${CLAUDE_SKILL_DIR}` is replaced with this skill's absolute folder when the

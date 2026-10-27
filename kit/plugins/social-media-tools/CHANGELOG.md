@@ -10,7 +10,7 @@
   Claude Code now substitutes `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}`
   into skill, command, and agent markdown at load time (verified on 2.1.304),
   so the bare-name wrapper the Bash tool's old expansion guard required is
-  obsolete: export-session now runs `python3 ${CLAUDE_SKILL_DIR}/scripts/export_session.py`.
+  obsolete: export-session now runs `python3 "${CLAUDE_SKILL_DIR}/scripts/export_session.py"`.
 
 ## v2.23.4 — 2026-08-17 — screenshots verify themselves before delivery
 

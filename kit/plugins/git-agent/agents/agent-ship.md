@@ -192,7 +192,7 @@ Look for plan files on this branch that link to GitHub or GitLab issues.
 
 Run, substituting the base branch name literally:
 ```
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh <base>
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" <base>
 ```
 
 `${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path

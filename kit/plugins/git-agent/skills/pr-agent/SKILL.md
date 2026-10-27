@@ -1,7 +1,7 @@
 ---
 name: pr-agent
 description: "Pushes the branch and creates a pull request. Supports GitHub and GitLab via gh and glab with auto-filled title and body. Use when the user asks to create a PR or open a pull request."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh *), Read, Edit, Grep, Glob, Agent, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" *), Read, Edit, Grep, Glob, Agent, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 model: sonnet
 ---
@@ -120,7 +120,7 @@ Look for completed plans on this branch that link to GitHub or GitLab issues.
 
 Run, substituting the base branch name literally:
 ```
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh <base>
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" <base>
 ```
 
 `${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path

@@ -319,7 +319,7 @@ Why: Screen readers announce "logo.png" without alt text, which is not meaningfu
 Static analysis for HTML/CSS/React/TypeScript files:
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/check_wcag.py path/to/component.tsx
+python3 "${CLAUDE_SKILL_DIR}/scripts/check_wcag.py" path/to/component.tsx
 ```
 
 `${CLAUDE_SKILL_DIR}` is replaced with the skill's absolute install folder when

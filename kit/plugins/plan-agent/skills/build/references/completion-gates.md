@@ -69,7 +69,7 @@ Confirms the *objective* works, not just that criteria are met.
 3. Re-render, then run the check:
 
    ```bash
-   node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "<stem>.html" --check
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "<stem>.html" --check
    ```
 
    `${CLAUDE_PLUGIN_ROOT}` is the plan-agent plugin's install root; this file
@@ -81,7 +81,7 @@ Confirms the *objective* works, not just that criteria are met.
    scratchpad, so point `--check` at that render instead:
 
    ```bash
-   node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "$SCRATCHPAD/<stem>.html" --check
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "$SCRATCHPAD/<stem>.html" --check
    ```
 
    Aiming it at `<stem>.html` there fails the `html` row on a spec that is

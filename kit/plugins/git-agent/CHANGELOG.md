@@ -10,7 +10,7 @@
   Claude Code now substitutes `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}`
   into skill, command, and agent markdown at load time (verified on 2.1.304),
   so the bare-name wrapper the Bash tool's old expansion guard required is
-  obsolete: the plan-issue scan in agent-pr, agent-ship, and pr-agent is now `bash ${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh <base>`, with matching `allowed-tools` rules in pr-agent and ship; ship/SKILL.md states the runnable command for `references/pr-body.md`, which is not placeholder-substituted.
+  obsolete: the plan-issue scan in agent-pr, agent-ship, and pr-agent is now `bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" <base>`, with matching `allowed-tools` rules in pr-agent and ship; ship/SKILL.md states the runnable command for `references/pr-body.md`, which is not placeholder-substituted.
 
 ## v4.23.1 — 2026-10-26 — post-merge-cleanup finishes inside an app worktree
 

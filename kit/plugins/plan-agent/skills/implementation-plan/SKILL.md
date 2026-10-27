@@ -23,7 +23,7 @@ Render command (`${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute
 install path when this skill loads — run the path exactly as it appears):
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs <plan>.md -o <plan>.html
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" <plan>.md -o <plan>.html
 ```
 
 Exit 0 = rendered; exit 1 prints exactly which required section is missing
@@ -454,7 +454,7 @@ EOF
    plan's purpose shifted after creation. A stale filename is a plan defect — do
    not deliver until the name matches the content. Enforced by the
    `validate-plan-filename` `PostToolUse` hook
-   (`${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py`).
+   (`"${CLAUDE_PLUGIN_ROOT}/hooks/validate-plan-filename.py"`).
 
 5. **Align** — After steps are drafted, use `AskUserQuestion` (batched,
    covering each step) to confirm every step aligns with the objective.
@@ -558,7 +558,7 @@ EOF
    repo gets no `.html`:
 
    ```bash
-   node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs <spec>.md -o "$SCRATCHPAD/<stem>.html"
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" <spec>.md -o "$SCRATCHPAD/<stem>.html"
    ```
 
    With `--file`, render to `<stem>.html` beside the spec instead — that file
@@ -590,7 +590,7 @@ EOF
    an `http(s)` `artifact-url:`. Rebuild the gallery so the card appears now:
 
    ```bash
-   bash ${CLAUDE_PLUGIN_ROOT}/hooks/build-index.sh "$PWD"
+   bash "${CLAUDE_PLUGIN_ROOT}/hooks/build-index.sh" "$PWD"
    ```
 
    7e. **Report.** Give the user the artifact URL. With `--file`, also send the
