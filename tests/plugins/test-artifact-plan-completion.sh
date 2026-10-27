@@ -73,7 +73,7 @@ fi
 # ---------------------------------------------------------------------------
 echo "3. single-file-flow Step 8 renders to scratchpad and refuses the sibling..."
 if grep -qF '### Step 8' "$STATUS_SINGLE" \
-   && grep -qF 'plan-agent-render' "$STATUS_SINGLE" \
+   && grep -qF 'build-plan-html.mjs' "$STATUS_SINGLE" \
    && grep -qF '$SCRATCHPAD' "$STATUS_SINGLE" \
    && grep -qF 'Never write `<stem>.html`' "$STATUS_SINGLE"; then
   pass

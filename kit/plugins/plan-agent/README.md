@@ -573,12 +573,13 @@ The hook and skill both read a `planAgent` object from `.claude/settings.json` (
 plan-agent/
   .claude-plugin/
     plugin.json             — Plugin manifest
-  bin/                      — On the Bash tool's PATH; invoke by bare name, never by path
-    plan-agent-render            — Renders a plan spec (wraps scripts/build-plan-html.mjs)
-    plan-agent-prototypes-index  — Rebuilds the prototypes gallery (wraps hooks/build-prototypes-index.sh)
-    plan-agent-designs-index     — Rebuilds the designs gallery (wraps hooks/build-designs-index.sh)
-    plan-agent-plans-index       — Rebuilds the plans gallery (wraps hooks/build-index.sh)
-    plan-agent-hub               — Bundles a plan + related HTML into one hub page (wraps scripts/build-plan-hub.mjs)
+  scripts/                  — Invoked as ${CLAUDE_PLUGIN_ROOT}-anchored commands from the skills
+    build-plan-html.mjs          — Renders a plan spec
+    build-plan-hub.mjs           — Bundles a plan + related HTML into one hub page
+  hooks/                    — Gallery builders (also run by the PostToolUse hook)
+    build-index.sh               — Rebuilds the plans gallery
+    build-prototypes-index.sh    — Rebuilds the prototypes gallery
+    build-designs-index.sh       — Rebuilds the designs gallery
   skills/
     implementation-plan/
       SKILL.md              — Workflow, arguments, spec authoring, render pipeline
@@ -655,13 +656,13 @@ Command-invocable via `/plan-agent:implementation-plan <objective>` and model-in
 - **Invocation & Arguments** — on command invocation, reads `$ARGUMENTS` and parses objective + flags (`--quick`/`--no-clarify`/`--no-align`/`--no-interview`/`--tdd`/`--no-tdd`/`--type`/`--template`/`--dir`/`--priority`); on model invocation, derives the objective from conversation context and runs the full workflow by default
 - **Workflow Steps 1–8** — Clarify, Create, Frontmatter, Rename, Align, Interview (Step 5b), Commit, Status, Open
 - **Implement-now handoff** (Step 8) — `Implement now` delegates to the `build` skill, which owns the implementation loop and its three gates. `implementation-plan` itself never writes source files; its Scope Constraint is never lifted
-- **Markdown-spec pipeline** — the agent authors a compact Markdown plan spec (the committed source of truth) and renders it deterministically with the bundled `plan-agent-render` (a `bin/` wrapper around `scripts/build-plan-html.mjs`); the renderer owns all presentation (CSS, JS, meta tags, derived implement/goal/workflow prompts, effort level, file-tree) *and* all progress state: `- [x]` criteria bullets, `[x]` step markers, and an optional `## Completion Report` section render as checked boxes, completed step cards, the derived completion checklist, and the report list — status/checkbox changes are Markdown edits plus a re-render, never HTML surgery
+- **Markdown-spec pipeline** — the agent authors a compact Markdown plan spec (the committed source of truth) and renders it deterministically with the bundled renderer `scripts/build-plan-html.mjs` (invoked as a `${CLAUDE_PLUGIN_ROOT}`-anchored command); the renderer owns all presentation (CSS, JS, meta tags, derived implement/goal/workflow prompts, effort level, file-tree) *and* all progress state: `- [x]` criteria bullets, `[x]` step markers, and an optional `## Completion Report` section render as checked boxes, completed step cards, the derived completion checklist, and the report list — status/checkbox changes are Markdown edits plus a re-render, never HTML surgery
 - **Guidelines library** — `guidelines/planning-principles.md`, `section-catalog.md`, `right-sizing.md`, `red-green-verify.md`, and `writing-style.md` drive judgment-based structure: the required core (objective, steps, acceptance criteria, verification) is always present, everything else earns its place per plan (`minimal`/`adr`/`spike` ship as right-sizing guidance, not extra templates)
 - **Spec starter** — `reference/SKELETON.md` is the copyable spec skeleton in the exact format the renderer parses
-- **`--check` (verify, write nothing)** — `plan-agent-render "<stem>.md" -o "<stem>.html" --check` proves the rendered HTML is current and that a finished spec is internally consistent, without inspecting the rendered markup:
+- **`--check` (verify, write nothing)** — the render command with `--check` proves the rendered HTML is current and that a finished spec is internally consistent, without inspecting the rendered markup:
 
   ```bash
-  plan-agent-render docs/plans/my-plan.md -o docs/plans/my-plan.html --check
+  node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" docs/plans/my-plan.md -o docs/plans/my-plan.html --check
   ```
 
   | Row | Asserts | Skipped when |
@@ -826,7 +827,7 @@ Auto-activates on "open the gallery", "show the plans page" intent. Opens the ex
 
 Command-invocable via `/plan-agent:publish-hub <plan.md> [--extra <path>]...` and model-invocable on "publish / share a plan hub" intent. Bundles a plan and its related HTML into one self-contained tabbed hub page and publishes it as a single claude.ai artifact at a stable URL.
 
-- **Bundle** — `plan-agent-hub <spec>.md -o <hub>.html` renders the plan through `build-plan-html.mjs` and embeds it plus the spec's `prototype:` file and each `--extra` page in its own `<iframe srcdoc>` tab panel; a `design:` URL becomes an external-link tab. Everything is inline, so the page satisfies the artifact CSP.
+- **Bundle** — `node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-hub.mjs" <spec>.md -o <hub>.html` renders the plan through `build-plan-html.mjs` and embeds it plus the spec's `prototype:` file and each `--extra` page in its own `<iframe srcdoc>` tab panel; a `design:` URL becomes an external-link tab. Everything is inline, so the page satisfies the artifact CSP.
 - **Size guard** — output is capped (default 15 MB, under the 16 MB artifact limit); on overflow the bundler exits 1 naming the offending file, and the skill retries with `--skip <file>` and reports what was dropped.
 - **Stable URL** — the returned artifact URL is written to the spec as `hub-artifact-url:`; every later publish re-reads it fresh and republishes to the same page. The plan's own `artifact-url:` is never touched.
 - **Verification** — after publishing, the skill fetches the URL and confirms the page contains the plan title; on a failed publish it delivers the hub HTML as a file instead and never reports an unreturned URL.

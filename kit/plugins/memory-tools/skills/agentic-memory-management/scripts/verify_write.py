@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Post-write verification for memory-tools file writes.
 
-Invoked through the plugin's bin/memory-verify-write wrapper as:
+Invoked via the skill's documented placeholder command as:
 
-    memory-verify-write <path-to-file-just-written>
+    python3 ${CLAUDE_SKILL_DIR}/scripts/verify_write.py <path-to-file-just-written>
 
 Shows the resulting diff (git diff for tracked files, git diff --no-index
 against /dev/null for untracked ones), then asserts the file still parses
@@ -68,7 +68,7 @@ def check(path):
 
 def main():
     if len(sys.argv) != 2:
-        sys.exit("usage: memory-verify-write <path-to-file-just-written>")
+        sys.exit("usage: verify_write.py <path-to-file-just-written>")
     path = sys.argv[1]
     if not os.path.isfile(path):
         sys.exit(f"MISSING: {path} does not exist — the write never landed")

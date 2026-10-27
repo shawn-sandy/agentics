@@ -1,7 +1,7 @@
 ---
 name: pr-agent
 description: "Pushes the branch and creates a pull request. Supports GitHub and GitLab via gh and glab with auto-filled title and body. Use when the user asks to create a PR or open a pull request."
-allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(git-agent-extract-plan-issues *), Read, Edit, Grep, Glob, Agent, ToolSearch, ExitPlanMode
+allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" *), Read, Edit, Grep, Glob, Agent, ToolSearch, ExitPlanMode
 disable-model-invocation: true
 model: sonnet
 ---
@@ -120,11 +120,11 @@ Look for completed plans on this branch that link to GitHub or GitLab issues.
 
 Run, substituting the base branch name literally:
 ```
-git-agent-extract-plan-issues <base>
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" <base>
 ```
 
-`git-agent-extract-plan-issues` is a bundled `bin/` wrapper on the Bash tool's
-`PATH` — call it by bare name. It reads a spec's `status:`/`issue:` frontmatter
+`${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path
+when this skill loads. The script reads a spec's `status:`/`issue:` frontmatter
 and a rendered plan's `plan-status`/`plan-issue` meta tags, and prints a ticket
 only for a plan marked `completed`. Do not hand-roll a scan of `.html` files
 instead: artifact-delivered plans have no `.html`, so their tickets never close.

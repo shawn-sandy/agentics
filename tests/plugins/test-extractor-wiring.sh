@@ -62,14 +62,11 @@ else
 fi
 
 echo "5. No reviewer brief instructs an extractor invocation the reviewer cannot run..."
-# Reviewers are scoped to `Bash(git *)`, so `node ...` is denied outright. Worse,
-# Claude Code's Bash tool rejects ANY command containing `${...}` expansion
-# ("Contains expansion") before permission rules are consulted — so a
-# plugin-root-anchored invocation is unrunnable by every agent at every
-# permission level, and no `tools:` grant can rescue it. A brief that documents
-# one sends every reviewer down the silent full-HTML fallback on every cycle,
-# which is the exact degradation 8.1.1 set out to fix. Briefs must therefore
-# instruct a plain `Read` of the plan HTML instead.
+# Reviewers are scoped to `Bash(git *)`, so `node ...` is denied outright. A
+# brief that documents an extractor invocation sends every reviewer down the
+# silent full-HTML fallback on every cycle, which is the exact degradation
+# 8.1.1 set out to fix. Briefs must therefore instruct a plain `Read` of the
+# plan HTML instead.
 if ! grep -qF 'extract-plan-spec.mjs' "$ROLE_PROMPTS" \
   && ! grep -qF "$AWK_ONELINER" "$ROLE_PROMPTS"; then
   pass
@@ -117,212 +114,103 @@ else
   fail "kit/plugins/plan-agent/scripts/extract-plan-spec.mjs is missing or does not load — installed users cannot run the extractor"
 fi
 
-# This is a ledger, not a suppression: it fails if a NEW site appears (silent
-# spread) and it fails if one is FIXED without updating the list (silent rot).
-# Either way a human looks. Delete this once the list empties — check 9 needs no
-# edit, since it already excludes exactly what is ledgered here.
-#
-# Tracks `path:count`, not bare filenames. `grep -l` collapses every match in a
-# file to one name, so a second broken invocation added to an already-listed
-# file — or one of two fixed while the other remained — would leave the list
-# identical and the check green. That is the same "asserts the description, not
-# the behaviour" failure this whole change is about. Counts, not lines: line
-# numbers churn on unrelated edits and would fail noisily for no reason.
-#
-# 8.3.0 removed the four renderer-pipeline entries by shipping bin/ wrappers
-# (checks 11-12). What remains is the GALLERY pipeline, a different defect
-# class: these are not bundled-script paths but multi-line snippets whose
-# variables are set in the same shell block — `while IFS= read -r f` feeding
-# `python3 - "$f"`, `python3 - "$PLANS_DIR/index.html" "$SOURCE_COUNT"`, and the
-# `realpath`/`open` fallback chain. Being locally defined does not help: the
-# guard is textual and rejects the command string before any shell sees it.
-# Repairing them means extracting the two inline heredoc scripts into scripts/
-# with real CLIs, which is its own change.
-KNOWN_BROKEN="skills/plans-library/SKILL.md:1
-skills/plans-open/SKILL.md:1"
+# Checks 9-10 (the shell-expansion ledger) were retired with the bin/ wrapper
+# architecture: Claude Code now substitutes ${CLAUDE_PLUGIN_ROOT} and
+# ${CLAUDE_SKILL_DIR} into skill/command/agent markdown at load time, so a
+# placeholder-anchored command is the sanctioned invocation shape, and claude.ai
+# refuses to install any plugin shipping a top-level bin/. The repo-wide guard
+# for the new invariant — no bin/, placeholder paths resolve, reference files
+# carry the substitution note — is tests/plugins/test-plugin-script-invocations.sh.
 
-echo "9. No documented interpreter invocation contains shell expansion..."
-# The generalized invariant, and the one that would have caught 8.1.1's
-# regression at the source. Claude Code's Bash tool refuses any command whose
-# text contains `${VAR}` or `$VAR` — it cannot statically resolve the expansion,
-# so it errors with "Contains expansion" BEFORE consulting permission rules.
-# Verified empirically on 2.1.220: the refusal fires for an agent holding
-# unrestricted `Bash`, and holds even with a matching `--allowedTools` rule.
-#
-# So `node "${CLAUDE_PLUGIN_ROOT}/scripts/foo.mjs"` never runs for anybody. That
-# spelling is correct for a `Read` tool path (no shell involved) and fatal for a
-# Bash command — 8.1.1 "fixed" 15 call sites into it and made the feature dead
-# for every caller, including the lead and `prototype`.
-#
-# Matches a command *invocation* carrying an expansion anywhere in its
-# arguments, not prose that merely names the variable. Scanning only the token
-# straight after the command name would miss
-# `node scripts/extract-plan-spec.mjs "$PLAN_PATH"`, which is just as dead —
-# the guard reads the whole command string, so the position of `$` is
-# irrelevant. Shared with check 10 so the two cannot drift apart.
-# Excluded: CHANGELOG (history, not a call site) and the extractor's own usage
-# text (byte-identical to the repo-root source; see the parity check in
-# test-build-plan-html.mjs).
-# Scope, stated honestly: this matches invocations of the commands named below,
-# not every conceivable Bash snippet. The guard itself rejects expansion in ANY
-# command, so a grep this shape is necessarily a subset — the check name says
-# "interpreter invocation" rather than "Bash invocation" so it does not claim
-# more than it enforces. `git`/`gh` are deliberately absent: prose in this tree
-# says things like "not a git repo — fall back to `docs/prompts` relative to
-# `$PWD`", which a `git` alternative matches as a command. A false positive on
-# prose would train the next author to loosen the check.
-#
-# Scans to end of line rather than stopping at `|`/`;`/`&`: the guard is
-# textual over the whole command string, so `node x.mjs | sed "$VAR"` is just
-# as dead as an expansion in the first argument. Bounding at a pipe would have
-# contradicted the position-independence argument this check rests on.
-# Verified to change no result in the current tree.
-#
-# 8.3.0 widened the scan from the review surface to every MODEL-FACING markdown
-# file in the plugin — skills/, agents/, commands/ — minus the files check 10
-# still ledgers. The ledger is now the single exclusion list, so emptying it
-# needs no edit here: every file that is not ledgered is guarded, including the
-# four 8.3.0 repaired, which are therefore protected against a silent regression
-# back into `${CLAUDE_PLUGIN_ROOT}`.
-#
-# README.md is excluded alongside CHANGELOG.md, and the distinction is the whole
-# point of this check rather than a convenience. The invariant is "no
-# instruction handed to the model names a command the model cannot run". The
-# README documents a `node "$EXTRACTOR" …` snippet that is correct *because* it
-# is prefaced "Run from your own shell, with a literal path" — a human's shell
-# has no expansion guard, and that snippet sets `$EXTRACTOR` itself. Flagging it
-# would be a false positive, and a false positive is the thing most likely to
-# make the next author loosen the pattern. Every real defect this check exists
-# for — all 15 of 8.1.1's, all four of 8.2.1's ledger — was in a model-facing
-# file, never in the README.
-EXPANSION_RE='(^|[[:space:]`"'"'"'(])(node|python3?|bash|sh|realpath)[[:space:]].*\$[{(]?[A-Za-z_]'
-# `.` is escaped before these paths become an alternation: they are literal
-# filenames but are consumed as an ERE, so an unescaped `SKILL.md` would also
-# match `SKILL-md` or `SKILLxmd`. Harmless today, but this list's only job is to
-# say what is NOT guarded — an exclusion that quietly covers more than it names
-# is the same "asserts the description, not the behaviour" failure the rest of
-# this suite exists to catch.
-# Blank lines are dropped before the join, so every way of writing an empty
-# ledger collapses to an empty LEDGERED_RE and trips the guard below. Without
-# this, `KNOWN_BROKEN=""` spanning two lines yields a lone `|` — non-empty, so
-# the guard would pass it through, and `^(|):` has an empty alternative that
-# fails the same way `^():` does.
-LEDGERED_RE="$(printf '%s\n' "$KNOWN_BROKEN" | sed '/^[[:space:]]*$/d; s/:[0-9]*$//; s/\./\\./g' | paste -sd'|' -)"
-# The exclusion filter is applied only when there is something to exclude, and
-# that guard is load-bearing on the exact transition this check is designed to
-# survive: emptying the ledger. With an empty LEDGERED_RE the filter becomes
-# `grep -vE "^():"` — an empty subexpression, which GNU grep reads as `^:`
-# (harmless) but ugrep, the default `grep` on some machines including this one,
-# rejects outright with "empty (sub)expression" and exit 2. Chained after `||
-# true` that error is swallowed, EXPANSION comes back empty, and check 9 passes
-# vacuously no matter how many new call sites exist. Splitting the pipeline so
-# the filter is conditional removes both readings.
-EXPANSION_RAW="$(grep -rnE "$EXPANSION_RE" \
-  "$ROOT/kit/plugins/plan-agent/skills" \
-  "$ROOT/kit/plugins/plan-agent/agents" \
-  "$ROOT/kit/plugins/plan-agent/commands" \
-  --include='*.md' 2>/dev/null \
-  | sed "s|$ROOT/kit/plugins/plan-agent/||" || true)"
-if [ -n "$LEDGERED_RE" ]; then
-  EXPANSION="$(printf '%s\n' "$EXPANSION_RAW" | grep -vE "^($LEDGERED_RE):" || true)"
-else
-  EXPANSION="$EXPANSION_RAW"
-fi
-EXPANSION="$(printf '%s' "$EXPANSION" | sed '/^$/d')"
-if [ -z "$EXPANSION" ]; then
+echo "9. Documented placeholder paths resolve inside the plugin..."
+# A placeholder path that names a missing file is the modern "documented but
+# unrunnable" defect — the 8.1.1 failure shape, one layer up. Every
+# ${CLAUDE_PLUGIN_ROOT}/<path> in the plugin's markdown must resolve against
+# the plugin root, and every ${CLAUDE_SKILL_DIR}/<path> against the skill
+# folder containing the file.
+PLUGIN_DIR="$ROOT/kit/plugins/plan-agent"
+BROKEN_PATHS=""
+while IFS= read -r line; do
+  [ -n "$line" ] || continue
+  file="${line%%:*}"
+  match="${line#*:}"
+  rel="${match#*\}/}"
+  case "$match" in
+    "\${CLAUDE_PLUGIN_ROOT}/"*)
+      [ -e "$PLUGIN_DIR/$rel" ] || BROKEN_PATHS="$BROKEN_PATHS\n    ${file#"$PLUGIN_DIR/"} -> $match" ;;
+    "\${CLAUDE_SKILL_DIR}/"*)
+      skilldir="$(printf '%s' "$file" | sed -n 's|\(.*/skills/[^/]*\)/.*|\1|p')"
+      if [ -z "$skilldir" ] || [ ! -e "$skilldir/$rel" ]; then
+        BROKEN_PATHS="$BROKEN_PATHS\n    ${file#"$PLUGIN_DIR/"} -> $match"
+      fi ;;
+  esac
+done <<EOF
+$(grep -roE '\$\{CLAUDE_(PLUGIN_ROOT|SKILL_DIR)\}/[A-Za-z0-9_./-]+' "$PLUGIN_DIR" --include='*.md' 2>/dev/null | grep -v '/CHANGELOG\.md:' | sort -u)
+EOF
+if [ -z "$BROKEN_PATHS" ]; then
   pass
 else
-  echo "$EXPANSION"
-  fail "Bash invocation(s) above contain shell expansion — they error with 'Contains expansion' and never run. Ship the script in bin/ and invoke it by bare name, or have the caller Read the file instead."
+  printf "%b\n" "$BROKEN_PATHS"
+  fail "placeholder path(s) above do not resolve to a shipped file"
 fi
 
-echo "10. The known unfixed expansion call sites are exactly the documented set..."
-ACTUAL_BROKEN="$(grep -rcE "$EXPANSION_RE" "$ROOT/kit/plugins/plan-agent/skills/" \
-  --include='*.md' 2>/dev/null \
-  | grep -v ':0$' \
-  | sed "s|$ROOT/kit/plugins/plan-agent/||" | sort || true)"
-if [ "$ACTUAL_BROKEN" = "$KNOWN_BROKEN" ]; then
-  pass
-else
-  echo "  expected:"; echo "$KNOWN_BROKEN" | sed 's/^/    /'
-  echo "  actual:";   echo "$ACTUAL_BROKEN" | sed 's/^/    /'
-  fail "the shell-expansion ledger drifted — a site was added or fixed; update this list"
-fi
-
-echo "11. Bundled scripts are reachable by bare name via bin/ on PATH..."
-# The positive half of check 9. Claude Code adds every enabled plugin's bin/ to
-# the Bash tool's PATH, so a bare `plan-agent-render ...` is the ONLY invocation
-# shape a skill can actually run: no ${VAR} for the expansion guard to reject,
-# and no dependence on CLAUDE_PLUGIN_ROOT, which is a config-file substitution
-# (hooks.json, MCP/LSP, monitors) and is not exported into the Bash tool's env.
-#
-# Invoked BY BARE NAME with bin/ prefixed onto PATH, not by explicit file path.
-# Those are different code paths and only the bare-name one is what ships: it
-# exercises the PATH lookup, the exec bit (a non-executable file is skipped by
-# lookup, giving 127), and — the subtle part — what `$0` is under a PATH-resolved
-# `#!` script. Running it as "$BIN_DIR/plan-agent-render" would prove none of
-# that.
-#
-# On `$0`: for a `#!` script the kernel execs the interpreter with the pathname
-# that was passed to execve — the absolute path the PATH lookup resolved — as
-# the script argument, so `$0` is that absolute path, NOT the bare word typed.
-# (argv[0] as typed is what a *builtin* or a `-c` string would see; a shebang
-# script never does.) Verified identical under bash, zsh, and sh. This is why
-# `dirname "$0"` in the wrapper correctly yields the plugin's bin/ rather than
-# `.`, and running the check by bare name is what keeps that true.
-#
-# exit 2 is build-plan-html.mjs's documented no-args usage code, reachable only
-# once the relative hop out of bin/ into scripts/ has landed. The prototypes
-# wrapper shares that hop but rebuilds a gallery as a side effect, so it is
-# proven reachable via `command -v` under the same PATH, plus exec bit, clean
-# syntax, and an existing target.
-#
-# plan-agent-plans-index is proven the same way as the prototypes wrapper: both
-# rebuild a gallery as a side effect, so neither can be run for a return code.
-BIN_DIR="$ROOT/kit/plugins/plan-agent/bin"
+echo "11. The documented renderer and gallery scripts run from the plugin tree..."
+# The positive half of check 9: the files the placeholders point at must
+# actually load. exit 2 is build-plan-html.mjs's documented no-args usage code,
+# reachable only once its ./lib imports have resolved inside the plugin tree.
+# The gallery hooks rebuild galleries as a side effect, so they are proven with
+# a syntax check rather than a run.
 RENDER_RC=0
-PATH="$BIN_DIR:$PATH" plan-agent-render >/dev/null 2>&1 || RENDER_RC=$?
-PROTO_RESOLVED="$(PATH="$BIN_DIR:$PATH" command -v plan-agent-prototypes-index || true)"
-PLANS_RESOLVED="$(PATH="$BIN_DIR:$PATH" command -v plan-agent-plans-index || true)"
+node "$PLUGIN_DIR/scripts/build-plan-html.mjs" >/dev/null 2>&1 || RENDER_RC=$?
 if [ "$RENDER_RC" -eq 2 ] \
-  && [ "$PROTO_RESOLVED" = "$BIN_DIR/plan-agent-prototypes-index" ] \
-  && bash -n "$BIN_DIR/plan-agent-prototypes-index" 2>/dev/null \
-  && [ -f "$ROOT/kit/plugins/plan-agent/hooks/build-prototypes-index.sh" ] \
-  && [ "$PLANS_RESOLVED" = "$BIN_DIR/plan-agent-plans-index" ] \
-  && bash -n "$BIN_DIR/plan-agent-plans-index" 2>/dev/null \
-  && [ -f "$ROOT/kit/plugins/plan-agent/hooks/build-index.sh" ]; then
+  && bash -n "$PLUGIN_DIR/hooks/build-prototypes-index.sh" 2>/dev/null \
+  && bash -n "$PLUGIN_DIR/hooks/build-index.sh" 2>/dev/null \
+  && bash -n "$PLUGIN_DIR/hooks/build-designs-index.sh" 2>/dev/null; then
   pass
 else
-  fail "bin/ wrappers are not reachable by bare name on PATH, or cannot reach their target (plan-agent-render rc=$RENDER_RC, want 2; prototypes resolved to '${PROTO_RESOLVED:-nothing}'; plans resolved to '${PLANS_RESOLVED:-nothing}')"
+  fail "renderer no-args rc=$RENDER_RC (want 2), or a gallery hook script fails bash -n"
 fi
 
-echo "11b. plans-library invokes its bin/ wrapper in command position..."
+echo "11b. plans-library invokes the gallery builder in command position..."
 # The positive half of the plans-library repair, and the one that would have
 # caught PR #524: that branch replaced the skill's hand-rolled scan with a
-# single delegated command spelled through a plugin-root expansion, so the
-# rewritten skill's only action could never run. Anchored to command position —
-# prose naming the wrapper opens with a backtick, which is not whitespace, so it
+# single delegated command that could never run. Anchored to command position —
+# prose naming the script opens with a backtick, which is not whitespace, so it
 # cannot satisfy this the way a bare `grep -F` would.
-if grep -qE '^[[:space:]]*plan-agent-plans-index([[:space:]]|$)' \
-     "$ROOT/kit/plugins/plan-agent/skills/plans-library/SKILL.md" 2>/dev/null; then
+if grep -qE '^[[:space:]]*bash "\$\{CLAUDE_PLUGIN_ROOT\}/hooks/build-index\.sh"([[:space:]]|$)' \
+     "$PLUGIN_DIR/skills/plans-library/SKILL.md" 2>/dev/null; then
   pass
 else
-  fail "plans-library/SKILL.md no longer invokes plan-agent-plans-index in command position — the delegation was removed, renamed, or respelled as a path"
+  fail "plans-library/SKILL.md no longer invokes hooks/build-index.sh via \${CLAUDE_PLUGIN_ROOT} in command position — the delegation was removed, renamed, or respelled"
 fi
 
-echo "12. bin/ survives the dist build..."
-# A wrapper that is not copied into dist/ is a wrapper installed users never
-# get — the same shape of defect as 8.1.1, where the extractor shipped its
-# library but not itself. build-dist.mjs copies only KEEP-listed top-level
-# entries, so bin/ must be on that allowlist.
-# `[[:space:]]`, not `\s`: the latter is a GNU extension, honoured by GNU and
-# Apple grep but not guaranteed in POSIX ERE, so it would degrade to a literal
-# `s` on a stricter grep (busybox) and silently stop matching. Every other
-# pattern in this file is POSIX already.
-if grep -qE "^[[:space:]]*'bin',[[:space:]]*$" "$ROOT/scripts/build-dist.mjs"; then
+echo "12. No top-level bin/ ships, in the tree or through the dist KEEP list..."
+# claude.ai and Cowork refuse to install any plugin carrying a top-level bin/
+# directory, so shipping one makes the whole plugin uninstallable there. The
+# KEEP list half guards the dist build from re-growing one.
+#
+# The KEEP membership is parsed with node, not grepped as a formatted line: a
+# re-added `"bin",`, a quote-style change, or a one-line array would all slip
+# past a `grep "'bin',"` while 'bin' was back in KEEP — the same vacuous-guard
+# shape the retired test-no-shell-expansion.sh check 4 documented. Three
+# outcomes, deliberately distinct: 1 = absent (good), 0 = present (fail),
+# 3 = the KEEP block could not be located, which must not read as success.
+KEEP_STATUS=0
+node -e '
+  const fs = require("fs");
+  let src;
+  try { src = fs.readFileSync(process.argv[1], "utf8"); } catch { process.exit(3); }
+  const m = src.match(/const\s+KEEP\s*=\s*new\s+Set\(\s*\[([\s\S]*?)\]\s*\)/);
+  if (!m) process.exit(3);
+  const items = [...m[1].matchAll(/["'"'"'`]([^"'"'"'`]+)["'"'"'`]/g)].map((x) => x[1]);
+  process.exit(items.includes("bin") ? 0 : 1);
+' "$ROOT/scripts/build-dist.mjs" || KEEP_STATUS=$?
+if [ "$KEEP_STATUS" -eq 3 ]; then
+  fail "could not locate the KEEP allowlist in scripts/build-dist.mjs — this check is no longer measuring anything; update the parser"
+elif [ "$KEEP_STATUS" -eq 1 ] && [ ! -d "$PLUGIN_DIR/bin" ]; then
   pass
 else
-  fail "scripts/build-dist.mjs KEEP allowlist is missing 'bin' — the wrappers would be dropped from dist/"
+  fail "plan-agent ships a top-level bin/ or scripts/build-dist.mjs KEEP lists 'bin' — claude.ai refuses to install plugins with a top-level bin/"
 fi
 
 echo ""

@@ -207,11 +207,12 @@ Render to the scratchpad, then call `Artifact` with that path and
 becoming a second copy:
 
 ```bash
-plan-agent-render "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
 ```
 
-`plan-agent-render` ships in the plugin's `bin/`, which is on the Bash tool's
-`PATH` — invoke it by bare name, never by path. The render carries the whole
+`${CLAUDE_PLUGIN_ROOT}` is the plan-agent plugin's install root. This file is
+not placeholder-substituted — reuse the absolute prefix from the skill's render
+command, or derive it from this file's own path. The render carries the whole
 spec, so the republished page picks up the new `status:` along with every
 `[x]` step marker, `- [x]` criterion, and `## Completion Report` bullet the
 spec already holds.
@@ -220,7 +221,7 @@ spec already holds.
 publish and flips the plan's gallery card off the artifact onto a local path.
 
 Skip this step entirely when a sibling `<stem>.html` exists (the hook re-renders
-it), when the file is not a `# Plan:` spec (`plan-agent-render` reads only
+it), when the file is not a `# Plan:` spec (the renderer reads only
 specs, so an old-style markdown plan has nothing to render), or when the
 `artifact-url:` does not parse as an `http(s)` URL with a host. A `javascript:`
 value, or a truncated `https://` with nothing after it, is not a page to update

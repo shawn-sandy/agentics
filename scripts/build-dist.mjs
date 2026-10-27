@@ -26,7 +26,6 @@ const PLUGINS_DIR = join(ROOT, 'kit', 'plugins');
 
 const KEEP = new Set([
   '.claude-plugin',
-  'bin',
   'commands',
   'skills',
   'agents',

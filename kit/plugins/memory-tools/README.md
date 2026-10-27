@@ -119,8 +119,6 @@ CLAUDE.md files are loaded as system instructions on every Claude Code session. 
 kit/plugins/memory-tools/
 ├── .claude-plugin/
 │   └── plugin.json
-├── bin/
-│   └── memory-verify-write
 ├── skills/
 │   ├── agentic-memory-management/
 │   │   ├── SKILL.md

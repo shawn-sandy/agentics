@@ -319,13 +319,12 @@ Why: Screen readers announce "logo.png" without alt text, which is not meaningfu
 Static analysis for HTML/CSS/React/TypeScript files:
 
 ```bash
-wcag-check path/to/component.tsx
+python3 "${CLAUDE_SKILL_DIR}/scripts/check_wcag.py" path/to/component.tsx
 ```
 
-Invoked through the bundled `bin/wcag-check` wrapper, which the plugin loader
-puts on the Bash tool's `PATH`. A `${CLAUDE_PLUGIN_ROOT}`-anchored command
-cannot be used here: the Bash tool refuses any command text containing a shell
-expansion.
+`${CLAUDE_SKILL_DIR}` is replaced with the skill's absolute install folder when
+Claude Code loads the skill (claude.ai sandboxes copy the skill folder in). In
+your own shell the variable is unset — substitute the skill folder's path.
 
 **Catches ~30% of issues:**
 - Missing alt text

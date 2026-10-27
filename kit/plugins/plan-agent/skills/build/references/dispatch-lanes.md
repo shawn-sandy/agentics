@@ -14,9 +14,13 @@ approved.
 ## 1. Read the lanes
 
 ```bash
-plan-agent-render "<stem>.md" --check
-plan-agent-render "<stem>.md" --lanes
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" --check
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" --lanes
 ```
+
+`${CLAUDE_PLUGIN_ROOT}` is the plan-agent plugin's install root; this file is
+not placeholder-substituted, so reuse the absolute prefix from the skill's
+render command, or derive it from this file's own path.
 
 `--check` exits 1 naming the lane on any ownership rule; fix the **spec** and
 re-run, never dispatch around it. `--lanes` prints every lane as JSON —
@@ -255,9 +259,9 @@ instructions are that, and no further user confirmation is needed.
 ### Dispatch
 
 Otherwise, Read `references/implement-workflow.mjs` and pass its contents as
-the `Workflow` tool's inline `script` input — never by path, for the same
-shell-expansion reason section 1 gives for `plan-agent-render`: a
-plugin-root-anchored invocation is unrunnable at any permission level.
+the `Workflow` tool's inline `script` input — never by path: the tool runs the
+script it is handed, and a plugin-root path here would need the same manual
+anchoring section 1 describes, so the contents are what you pass.
 
 Pass `args` as a real object, never a JSON-encoded string:
 

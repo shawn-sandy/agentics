@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # Copies the verified-change merge gate into the current repo as scripts/verify.sh.
 #
-# Invoked through the bin/install-verify-gate wrapper, which is what puts it on
-# the Bash tool's PATH under a bare name. See that file for why a documented
-# ${CLAUDE_PLUGIN_ROOT} path could never run.
+# Invoked via the skill's documented ${CLAUDE_SKILL_DIR}-anchored command,
+# which Claude Code substitutes with the skill's absolute folder at load time.
 #
 # Usage:
-#   install-verify-gate            # install into ./scripts/verify.sh
-#   install-verify-gate --force    # overwrite an existing one
+#   bash install-verify-gate.sh            # install into ./scripts/verify.sh
+#   bash install-verify-gate.sh --force    # overwrite an existing one
 set -euo pipefail
 
 SRC="$(dirname "$0")/verify.sh"

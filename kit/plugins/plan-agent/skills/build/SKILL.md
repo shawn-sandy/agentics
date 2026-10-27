@@ -42,11 +42,12 @@ Sibling exists — overwrite it. No sibling is an artifact plan: render to the
 scratchpad and republish to its `artifact-url:`; never create the sibling.
 
 ```bash
-plan-agent-render "<stem>.md" -o "<stem>.html"
-plan-agent-render "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
 ```
 
-Bare name; `bin/` is on `PATH`. Run after **every** batch of spec edits.
+`${CLAUDE_PLUGIN_ROOT}` is substituted at load time. Run after **every**
+batch of spec edits.
 Non-zero exit means the spec broke the format: fix the markdown,
 never hand-edit the HTML to compensate.
 

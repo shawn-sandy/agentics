@@ -160,10 +160,9 @@ an artifact plan's spec was what was passed in.
 
 - The `PostToolUse` hook auto-rebuilds `docs/designs/index.html` on the artboard
   write. If it did not run (e.g. hook disabled), run
-  `plan-agent-designs-index` — it ships with this plugin in `bin/`, which Claude
-  Code puts on the Bash tool's `PATH`, and defaults to the current directory.
-  Invoke it by **bare name**: never by path, and never with a `${VAR}`-style
-  path, which the Bash tool rejects outright before permissions are consulted.
+  `bash "${CLAUDE_PLUGIN_ROOT}/hooks/build-designs-index.sh" "$PWD" </dev/null`
+  — `${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path
+  when this skill loads.
 - Report the **canvas URL**, the **artboard list** (slug plus the step it
   covers), and the spec path if Step 5 wrote to one.
 - Report **what to validate**: whether each artboard reads as the step it claims

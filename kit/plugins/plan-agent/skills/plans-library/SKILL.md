@@ -29,13 +29,11 @@ vanished the moment a user ran this skill. `build-index.sh` walks the tree and e
 ## Step 1 — Build and write the gallery
 
 ```bash
-plan-agent-plans-index
+bash "${CLAUDE_PLUGIN_ROOT}/hooks/build-index.sh" "$PWD"
 ```
 
-Invoke it by bare name — the plugin's `bin/` is on the Bash tool's PATH. Do not spell the
-path to `hooks/build-index.sh` through a plugin-root variable instead: the Bash tool
-refuses any command text carrying a shell expansion, before permission rules are even
-consulted, so that shape never runs for anyone.
+`${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path when this
+skill loads — run the path exactly as it appears above.
 
 The script resolves `plansDirectory` (project-local → project → user-global, falling back
 to `docs/plans`), collects every `.html` under it except `index.html` — walking

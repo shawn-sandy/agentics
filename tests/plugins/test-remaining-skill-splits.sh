@@ -242,9 +242,13 @@ else
   # (now == was) — the check then fails until the entry is removed, so the
   # ledger cannot silently outlive the change it documents.
   #
-  #   (No entries. path-rules-advisor carried one for the memory-tools 4.1.1
-  #   allowed-tools narrowing until main caught up and the entry went stale.)
+  #   path-rules-advisor: memory-tools 4.5.0 replaced the retired bare-name
+  #   `Bash(memory-verify-write *)` rule with the placeholder-anchored
+  #   `Bash(python3 ${CLAUDE_PLUGIN_ROOT}/.../verify_write.py *)` after
+  #   claude.ai's top-level-bin/ ban removed the wrapper. Remove the entry
+  #   once main carries it.
   DOCUMENTED_DRIFT="
+path-rules-advisor:60ffe4bc81cf51012413454e71cfc10bc4d893e2458e944daae924c6c596601e
 "
   while IFS='|' read -r skill _; do
     [ -n "$skill" ] || continue

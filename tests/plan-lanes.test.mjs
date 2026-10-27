@@ -86,7 +86,7 @@ Make the plan the dispatch contract.
 ### Lane: renderer (owns: scripts/lib/plan-spec.mjs, scripts/build-plan-html.mjs, tests/plan-lanes.test.mjs)
 
 1. Parse \`### Lane:\` headings into sections.lanes. Why: the parser is the single source. Verify: \`node tests/plan-lanes.test.mjs\` exits 0.
-2. Add the --check rules. Why: a bad split fails at authoring time. Verify: \`plan-agent-render tests/fixtures/overlap.md --check\` exits 1.
+2. Add the --check rules. Why: a bad split fails at authoring time. Verify: \`node build-plan-html.mjs tests/fixtures/overlap.md --check\` exits 1.
 
 ### Lane: build-skill (owns: skills/build/**, commands/fix.md, commands/refactor.md; after: renderer)
 

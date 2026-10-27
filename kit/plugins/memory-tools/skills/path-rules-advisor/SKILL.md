@@ -1,7 +1,7 @@
 ---
 name: path-rules-advisor
 description: "Creates path-specific rule files in .claude/rules/. Analyzes project structure and generates scoped rules for file types or directories. Use when the user wants to add path-specific rules."
-allowed-tools: AskUserQuestion, Bash(memory-verify-write *), Edit, Glob, Read, Write
+allowed-tools: AskUserQuestion, Bash(python3 "${CLAUDE_PLUGIN_ROOT}/skills/agentic-memory-management/scripts/verify_write.py" *), Edit, Glob, Read, Write
 ---
 
 Analyze the project and CLAUDE.md to recommend and create path-specific rule files in `.claude/rules/`. Follow the mode determined by the user's message.
@@ -46,11 +46,17 @@ Each write site ends the same way:
 
 ## Verify the write
 
-Run this after **every** write, without exception:
-`memory-verify-write <absolute-path-to-file-just-written>` — substitute the
-path just written for the placeholder. The executable diff-back and the
-frontmatter parse check live in `references/write-verification.md` — read and
-run it there.
+Run this after **every** write, without exception, substituting the path just
+written for the placeholder:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/agentic-memory-management/scripts/verify_write.py" <absolute-path-to-file-just-written>
+```
+
+`${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path
+when this skill loads. The executable diff-back and the frontmatter parse check
+live in `references/write-verification.md` — read and run it there, using this
+exact command for every "verify" step it names.
 
 The rule it enforces stays here: the check must show the resulting diff and
 confirm the written file still parses with valid frontmatter and a non-empty

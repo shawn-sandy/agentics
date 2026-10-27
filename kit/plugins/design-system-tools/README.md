@@ -21,9 +21,9 @@ and a few firm choices:
 
 - **The stylesheet is truth; DESIGN.md is intent.** Where they disagree, the code's value and unit
   win, and the disagreement is reported.
-- **Contrast is measured, never estimated.** `design-system-contrast`, on the Bash tool's PATH
-  through the plugin's `bin/`, prints the WCAG 2 ratio of each token pair in every theme, floored to
-  two decimals so a near-miss never rounds up to a pass.
+- **Contrast is measured, never estimated.** The bundled `scripts/contrast.mjs` (run as a
+  `${CLAUDE_SKILL_DIR}`-anchored command) prints the WCAG 2 ratio of each token pair in every
+  theme, floored to two decimals so a near-miss never rounds up to a pass.
 - **Components are static.** Each preview is hand-written from the source rule it names, with
   interaction states shown through `data-state` attributes. No component library is built or run.
 - **The publish is checked on the remote.** The file listing, the index and the ratios are read
@@ -67,8 +67,6 @@ design-system-tools/
 │   └── plugin.json
 ├── README.md
 ├── CHANGELOG.md
-├── bin/
-│   └── design-system-contrast   # bare-name wrapper for scripts/contrast.mjs
 └── skills/
     └── from-design-md/
         ├── SKILL.md

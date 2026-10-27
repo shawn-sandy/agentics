@@ -1055,7 +1055,8 @@ ok('--check on a missing HTML file fails with the render command named, not a st
   assert.equal(res.status, 1);
   assert.match(res.stdout, /^ {2}html +FAIL/m);
   assert.match(res.stdout, /does not exist/);
-  assert.ok(res.stdout.includes(`plan-agent-render "${spec}" -o "${out}"`), 'names the command that fixes it');
+  assert.ok(res.stdout.includes('run: node "'), 'names the interpreter and script that fix it');
+  assert.ok(res.stdout.includes(`"${spec}" -o "${out}"`), 'names the command that fixes it');
   assert.ok(!/^\s+at /m.test(res.stderr), `a missing file must not throw: ${res.stderr}`);
   assert.ok(!existsSync(out), '--check must not create the missing file');
 });

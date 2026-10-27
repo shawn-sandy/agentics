@@ -123,7 +123,8 @@ lanes whose patterns **nest** — the wildcard-free prefix of one matches the
 other's glob, so `scripts/**` beside `scripts/lib/**` fails with both lanes
 named even when no listed file sits in the overlap. An `owns:` entry that
 matches no `## Files` path warns without failing; lanes may own paths the
-implementation creates. `plan-agent-render <spec> --lanes` prints every
+implementation creates. The renderer's `--lanes` mode (the skill's render
+command with `--lanes` in place of `-o <out>.html`) prints every
 lane with its owns, after, and steps as JSON — the table `build` dispatches
 from.
 

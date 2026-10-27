@@ -10,7 +10,7 @@ Converts a Claude Code session transcript into a readable Markdown file.
 
 - **Command** — `/social-media-tools:export-session [<transcript.jsonl> | <session-id>]`
 - **Say it instead** — "Export this session to markdown"
-- **What happens** — Defaults to the newest transcript for the current project, then runs the bundled `social-export-session` script, which writes `<date>-<slug>.md` with YAML frontmatter into `<plansDirectory>/sessions/` (default `docs/plans/sessions/`).
+- **What happens** — Defaults to the newest transcript for the current project, then runs the bundled `export_session.py` script, which writes `<date>-<slug>.md` with YAML frontmatter into `<plansDirectory>/sessions/` (default `docs/plans/sessions/`).
 - **Watch out** — From a worktree the project transcript directory may not exist; the skill falls back to matching the main repo path under `~/.claude/projects/`.
 
 ## media-library

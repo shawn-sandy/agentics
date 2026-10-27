@@ -61,7 +61,7 @@ Where it goes depends on how the plan was delivered, and `<stem>.html`'s
 existence is the signal. **Sibling exists** — the plan is a file; overwrite it:
 
 ```bash
-plan-agent-render "<stem>.md" -o "<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "<stem>.html"
 ```
 
 **No sibling** — the plan lives at a claude.ai artifact. Render to the
@@ -71,14 +71,15 @@ copy. Completion is exactly when the shared page most needs to be current — it
 is the state everyone else reads:
 
 ```bash
-plan-agent-render "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
 ```
 
 Never write `<stem>.html` in that case: it resurrects a file the author chose
 not to publish and flips the plan's gallery card off its artifact.
 
-`plan-agent-render` ships with this plugin in `bin/`, which Claude Code puts on
-the Bash tool's `PATH` — invoke it by bare name, never by path.
+`${CLAUDE_PLUGIN_ROOT}` is the plan-agent plugin's install root. This file is
+not placeholder-substituted — reuse the absolute prefix from the skill's render
+command, or derive it from this file's own path.
 
 Exit 1 means the spec edit broke the format — fix the reported problem in the markdown and re-run. Never hand-edit the HTML to compensate. (The plugin's `render-plan-html.py` hook also re-renders on every spec write, but run the script explicitly so a failure surfaces here, not silently.)
 
@@ -86,7 +87,7 @@ Then verify the result with the same gate `build` Step 5.3 runs — the two are
 deliberately kept consistent:
 
 ```bash
-plan-agent-render "<stem>.md" -o "<stem>.html" --check
+node "${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs" "<stem>.md" -o "<stem>.html" --check
 ```
 
 For an artifact-delivered plan point `--check` at the scratchpad render

@@ -42,11 +42,11 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "1b. Spec mode edits the Markdown and re-renders via plan-agent-render..."
+echo "1b. Spec mode edits the Markdown and re-renders via the bundled renderer..."
 if skill_grep '^### Spec mode' \
    && skill_grep '^### Legacy mode' \
    && skill_grep 'status: completed' \
-   && skill_grep 'plan-agent-render' \
+   && skill_grep 'build-plan-html.mjs' \
    && skill_grep '## Completion Report'; then
   echo "  PASS"
 else

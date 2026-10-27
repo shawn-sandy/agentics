@@ -118,10 +118,12 @@ For code that already works, where a test written after the fact can pass for th
 
 Use `tdd-loop` instead for a brand-new feature — red is free there and needs no mutation.
 
-Install the gate into any repo with the bundled wrapper, run from the repo root:
+Install the gate into any repo with the bundled asset, run from the repo root
+(`${CLAUDE_SKILL_DIR}` is replaced with the skill's absolute install folder
+when Claude Code loads the skill; in your own shell, substitute that path):
 
 ```
-install-verify-gate
+bash "${CLAUDE_SKILL_DIR}/assets/install-verify-gate.sh"
 ```
 
 It writes `scripts/verify.sh` and refuses to overwrite an existing one without `--force`. The gate runs typecheck, lint, unit, then e2e, detecting each stage's tooling in the directory it was invoked from and printing either a real result or `SKIP (not configured)`. It stops at the first failure.
@@ -242,8 +244,6 @@ plugins/code-testing-agent/
 │       └── references/
 │           ├── mutation-check.md
 │           └── verification-section.md
-├── bin/
-│   └── install-verify-gate
 ├── README.md
 └── CHANGELOG.md
 ```

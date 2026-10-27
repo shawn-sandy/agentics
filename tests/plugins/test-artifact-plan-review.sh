@@ -147,7 +147,7 @@ fi
 
 # Dropping `-o` does not error: the renderer defaults its output to the
 # sibling <stem>.html, exits 0, and says nothing — silently producing the one
-# file this whole path exists to avoid. Verified against bin/plan-agent-render.
+# file this whole path exists to avoid. Verified against the bundled renderer.
 # The instruction has to say so, because "the example shows -o" is not a rule.
 echo "4a. ...and says -o is mandatory, since omitting it silently writes the sibling..."
 if grep -qF '`-o` is **mandatory** here' "$REVIEW"; then

@@ -17,7 +17,6 @@ import * as planSpec from '../../scripts/lib/plan-spec.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const BUNDLER = join(ROOT, 'kit', 'plugins', 'plan-agent', 'scripts', 'build-plan-hub.mjs');
-const WRAPPER = join(ROOT, 'kit', 'plugins', 'plan-agent', 'bin', 'plan-agent-hub');
 const TMP = mkdtempSync(join(tmpdir(), 'build-plan-hub-'));
 process.on('exit', () => rmSync(TMP, { recursive: true, force: true }));
 
@@ -169,11 +168,6 @@ check('flag-shaped --skip value is misuse (exit 2)', flagAsSkip.status === 2);
 
 const unknownFlag = run(['--bogus', 'spec.md', '-o', 'x3.html']);
 check('unknown flag is misuse (exit 2), not a spec path', unknownFlag.status === 2);
-
-// --- the bin wrapper --------------------------------------------------------
-
-const viaWrapper = spawnSync(WRAPPER, ['spec.md', '-o', 'hub-wrapper.html'], { encoding: 'utf8', cwd: TMP });
-check('bin/plan-agent-hub output is byte-identical to the .mjs', viaWrapper.status === 0 && readFileSync(join(TMP, 'hub-wrapper.html'), 'utf8') === hub);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

@@ -37,7 +37,7 @@ Publishes a reviewer-first recap of a Claude Code session — Summary, Decisions
 
 - **Command** — `/artifact-tools:session-artifact [session-id | transcript.jsonl]`
 - **Say it instead** — "Share a recap of this session"
-- **What happens** — Extracts the newest transcript for the project with the bundled `artifact-export-session` script, writes the recap to `{plansDirectory}/sessions/`, runs the blocking scrub, renders it to HTML, publishes it, and records `artifact-url:` in the `.md` for later republishes.
+- **What happens** — Extracts the newest transcript for the project with the bundled `export_session.py` script, writes the recap to `{plansDirectory}/sessions/`, runs the blocking scrub, renders it to HTML, publishes it, and records `artifact-url:` in the `.md` for later republishes.
 - **Watch out** — From a worktree the transcript directory is keyed to the worktree path, not the main repo, so the newest-transcript lookup can come up empty; point the skill at the main repo's entry under `~/.claude/projects/`.
 
 ## teach-artifact

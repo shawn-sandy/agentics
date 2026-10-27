@@ -75,8 +75,12 @@ check('SKILL.md: lists Workflow in allowed-tools',
 check('SKILL.md: documents the Workflow call inputs (script + args)',
   /Workflow[^\n]*`?script`?|`script`[^\n]*Workflow/.test(skill) && /`args`/.test(skill));
 
+// The render commands legitimately carry ${CLAUDE_PLUGIN_ROOT} (substituted at
+// load time), so the ban is scoped to the workflow script: no line may launch
+// review-workflow.mjs through a plugin-root path instead of passing contents.
 check('SKILL.md: passes the script inline rather than by plugin-root path',
-  skill.includes('review-workflow.mjs') && !skill.includes('${CLAUDE_PLUGIN_ROOT}'));
+  skill.includes('review-workflow.mjs')
+    && !skill.split('\n').some((l) => l.includes('review-workflow.mjs') && l.includes('${CLAUDE_PLUGIN_ROOT}')));
 
 // ── The shipped script exists and parses ───────────────────────────────────
 // A real parse, not a grep: a script with a syntax error throws at workflow
