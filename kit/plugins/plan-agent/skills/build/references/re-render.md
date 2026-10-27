@@ -1,7 +1,10 @@
 # Re-render: where the output goes, and failure modes
 
-Loaded when `plan-agent-render` exits non-zero, or when the plan has no sibling
+Loaded when the plan render exits non-zero, or when the plan has no sibling
 `<stem>.html`. A clean exit on a file-delivered plan needs nothing from here.
+`${CLAUDE_PLUGIN_ROOT}` below is the plan-agent plugin's install root; this
+file is not placeholder-substituted, so reuse the absolute prefix from the
+skill's render command, or derive it from this file's own path.
 
 ## Where the rendered HTML goes
 
@@ -11,7 +14,7 @@ decides the output path.
 **Sibling exists** — the plan was delivered as a file. Overwrite it in place:
 
 ```bash
-plan-agent-render "<stem>.md" -o "<stem>.html"
+node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "<stem>.html"
 ```
 
 **No sibling** — the plan was published to a claude.ai artifact and its URL is
@@ -20,7 +23,7 @@ with that path and `url: <the artifact-url>` so the shared page updates instead
 of becoming a second copy:
 
 ```bash
-plan-agent-render "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
+node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs "<stem>.md" -o "$SCRATCHPAD/<stem>.html"
 ```
 
 Never write `<stem>.html` in this case. Doing so resurrects the file the author

@@ -5,6 +5,18 @@ All notable changes to the `artifact-tools` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2026-10-26
+
+### Changed
+
+- **Removed the top-level `bin/` directory.** claude.ai-hosted marketplaces
+  refuse to install any plugin that ships one ("Plugin contains a top-level
+  bin/ directory"), which left the plugin stuck at its last synced version.
+  Claude Code now substitutes `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}`
+  into skill, command, and agent markdown at load time (verified on 2.1.304),
+  so the bare-name wrapper the Bash tool's old expansion guard required is
+  obsolete: session-artifact now runs `python3 ${CLAUDE_SKILL_DIR}/scripts/export_session.py`.
+
 ## [1.12.0] - 2026-08-07
 
 ### Added

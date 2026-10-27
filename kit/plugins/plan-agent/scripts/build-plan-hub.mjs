@@ -9,7 +9,7 @@
  * panel — uniform isolation, so the plan's CSS/JS never collides with the
  * shell or a prototype, and prototypes keep their inlined JavaScript. The
  * plan itself is rendered through build-plan-html.mjs (spawned as a CLI so
- * its output is exactly what plan-agent-render produces), related documents
+ * its output is exactly what the renderer produces), related documents
  * come from the spec's `prototype:` frontmatter key plus explicit --extra
  * paths, and a `design:` URL becomes an external-link tab — it is already
  * its own artifact, and the CSP blocks framing it anyway.
@@ -271,7 +271,7 @@ function main() {
   const { metadata, sections } = parsed;
 
   // Render the plan through the sibling renderer CLI so the Plan tab is
-  // byte-for-byte what plan-agent-render emits (same defaults, same guards).
+  // byte-for-byte what build-plan-html.mjs emits (same defaults, same guards).
   const tmp = mkdtempSync(join(tmpdir(), 'plan-hub-'));
   let planHtml;
   try {

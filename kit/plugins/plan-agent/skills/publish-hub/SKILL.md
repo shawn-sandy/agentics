@@ -27,8 +27,10 @@ directory scanning.
 ## Step 2 — Bundle
 
 ```bash
-plan-agent-hub <spec>.md -o "$SCRATCHPAD/<stem>-hub.html" [--extra <path>]...
+node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-hub.mjs <spec>.md -o "$SCRATCHPAD/<stem>-hub.html" [--extra <path>]...
 ```
+
+`${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute install path when this skill loads.
 
 The bundler renders the plan, embeds each document in its own tab panel, and
 enforces a size cap (default 15 MB, under the 16 MB artifact limit).

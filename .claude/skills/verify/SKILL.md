@@ -10,10 +10,10 @@ emit. Do not verify by running the test suite — that is CI's job.
 
 ## Handles
 
-- Renderer: `kit/plugins/plan-agent/bin/plan-agent-render <spec>.md -o <out>.html`
-- Hub bundler: `kit/plugins/plan-agent/bin/plan-agent-hub <spec>.md -o <hub>.html [--extra <p>]... [--skip <p>]... [--max-bytes <n>]`
-- Invoke the bin wrappers by absolute path in a plain shell (bare names only
-  resolve when the plugin is enabled in the session).
+- Renderer: `node kit/plugins/plan-agent/scripts/build-plan-html.mjs <spec>.md -o <out>.html`
+- Hub bundler: `node kit/plugins/plan-agent/scripts/build-plan-hub.mjs <spec>.md -o <hub>.html [--extra <p>]... [--skip <p>]... [--max-bytes <n>]`
+- Run the scripts by absolute or repo-relative path in a plain shell (the
+  `${CLAUDE_PLUGIN_ROOT}` placeholder only resolves inside a loaded skill).
 
 ## Minimal fixture
 

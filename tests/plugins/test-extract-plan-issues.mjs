@@ -25,7 +25,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const SCRIPT = join(ROOT, 'kit', 'plugins', 'git-agent', 'bin', 'git-agent-extract-plan-issues');
+const SCRIPT = join(ROOT, 'kit', 'plugins', 'git-agent', 'scripts', 'extract-plan-issues.sh');
 const url = (n) => `https://github.com/acme/widgets/issues/${n}`;
 
 let passed = 0;

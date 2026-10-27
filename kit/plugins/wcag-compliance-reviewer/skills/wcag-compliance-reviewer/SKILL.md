@@ -1,7 +1,7 @@
 ---
 name: wcag-compliance-reviewer
 description: "Reviews HTML/CSS and React code for WCAG 2.2 Level AA violations. Provides targeted fixes for each accessibility issue found. Use when the user asks to check WCAG compliance or audit accessibility."
-allowed-tools: Read, Grep, Glob, WebFetch, Bash(wcag-check *), Bash(python3 *), mcp__Claude_Browser__preview_start, mcp__Claude_Browser__navigate, mcp__Claude_Browser__read_page, mcp__Claude_Browser__javascript_tool, mcp__Claude_Browser__resize_window
+allowed-tools: Read, Grep, Glob, WebFetch, Bash(python3 *), mcp__Claude_Browser__preview_start, mcp__Claude_Browser__navigate, mcp__Claude_Browser__read_page, mcp__Claude_Browser__javascript_tool, mcp__Claude_Browser__resize_window
 license: MIT
 metadata:
   author: shawn-sandy
@@ -141,7 +141,7 @@ wrong for exactly that reason and were caught downstream.
    ratio = (max(lum(fg), lum(bg)) + 0.05) / (min(lum(fg), lum(bg)) + 0.05)
    ```
 
-   **`wcag-check` does not compute this.** Its `_similar_lightness` averages
+   **`check_wcag.py` does not compute this.** Its `_similar_lightness` averages
    RGB and returns a boolean for "both light or both dark", then emits
    *"Potential color contrast issue — verify 4.5:1"*. That is a prompt to go
    measure, not a measurement, and its output must never be pasted as one. Use
@@ -403,14 +403,13 @@ Use this for rapid reviews:
 For initial scanning of files, use the provided Python script:
 
 ```bash
-wcag-check path/to/component.tsx
+python3 ${CLAUDE_SKILL_DIR}/scripts/check_wcag.py path/to/component.tsx
 ```
 
-`wcag-check` is a bundled `bin/` wrapper; a plugin's `bin/` is on the Bash
-tool's `PATH`, so it works from any directory. Do not spell this as a
-plugin-root-anchored path — the Bash tool refuses any command containing
-`${VAR}` or `$VAR` with `error: Contains expansion`, before permission rules
-are consulted.
+`${CLAUDE_SKILL_DIR}` is replaced with this skill's absolute folder when the
+skill loads, so the command works from any directory. In a claude.ai sandbox
+the skill folder is copied in, so `scripts/check_wcag.py` relative to this
+file resolves there too.
 
 This performs static analysis to catch common issues like:
 - Missing alt text

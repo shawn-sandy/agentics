@@ -33,19 +33,19 @@ test('the skill carries the plan-mode guard verbatim', () => {
   assert.ok(readFileSync(SKILL, 'utf8').split('\n').includes(guard));
 });
 
-// The Bash tool refuses `$VAR` in a command, so the skill must reach the
-// script through the plugin's bin/, which Claude Code puts on PATH.
-test('the documented bare command runs from bin/ on PATH', (t) => {
-  assert.match(readFileSync(SKILL, 'utf8'), /^design-system-contrast /m);
+// The skill documents the script through the ${CLAUDE_SKILL_DIR} placeholder,
+// which Claude Code substitutes with the skill's absolute folder at load time.
+// Assert the documented spelling in command position, then run the real script.
+test('the documented placeholder command resolves and runs', (t) => {
+  assert.match(readFileSync(SKILL, 'utf8'), /^node \$\{CLAUDE_SKILL_DIR\}\/scripts\/contrast\.mjs /m);
   const dir = mkdtempSync(join(tmpdir(), 'ds-contrast-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const tokens = join(dir, 'tokens.json');
   writeFileSync(tokens, JSON.stringify({
     color: { themes: [{ id: 'light' }], tokens: [{ name: 'ink', value: '#000' }, { name: 'paper', value: '#fff' }] },
   }));
-  const out = execFileSync('design-system-contrast', [tokens, 'ink:paper'], {
+  const out = execFileSync('node', [join(PLUGIN, 'skills', 'from-design-md', 'scripts', 'contrast.mjs'), tokens, 'ink:paper'], {
     encoding: 'utf8',
-    env: { ...process.env, PATH: `${join(PLUGIN, 'bin')}${delimiter}${process.env.PATH}` },
   });
   assert.match(out, /ink on paper {2}light 21\.00:1/);
 });

@@ -54,12 +54,11 @@ transcript is far larger than the recap and reading it wastes the context the
 recap needs:
 
 ```bash
-artifact-export-session <transcript.jsonl> <output-dir>
+python3 ${CLAUDE_SKILL_DIR}/scripts/export_session.py <transcript.jsonl> <output-dir>
 ```
 
-`artifact-export-session` is a bundled `bin/` wrapper on the Bash tool's
-`PATH`. Substitute both arguments literally — the Bash tool refuses any command
-whose text contains `${VAR}` or `$VAR`.
+`${CLAUDE_SKILL_DIR}` is replaced with this skill's absolute folder when the
+skill loads. Substitute both arguments literally.
 
 It skips tool results, sidechains, and system reminders, writes
 `<date>-<slug>-<id>.md` with frontmatter, and prints the path. Read that file —

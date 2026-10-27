@@ -19,12 +19,11 @@ nav. Progress state travels in the spec too: `- [x]` criteria bullets and
 every status or checkbox change is a Markdown edit plus a re-render. Never
 hand-write or hand-edit plan HTML.
 
-Render command (`plan-agent-render` ships with this plugin, in `bin/`, which
-Claude Code puts on the Bash tool's `PATH` — invoke it by bare name, never by
-path):
+Render command (`${CLAUDE_PLUGIN_ROOT}` is replaced with the plugin's absolute
+install path when this skill loads — run the path exactly as it appears):
 
 ```bash
-plan-agent-render <plan>.md -o <plan>.html
+node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs <plan>.md -o <plan>.html
 ```
 
 Exit 0 = rendered; exit 1 prints exactly which required section is missing
@@ -403,7 +402,7 @@ EOF
       `guidelines/section-catalog.md`; the chain-versus-lanes call in
       `guidelines/right-sizing.md`; every lane's last `Verify:` proves that
       lane on its own (`guidelines/planning-principles.md`). A split that
-      fails `plan-agent-render <spec> --check` is fixed in the spec before
+      fails the render command's `--check` is fixed in the spec before
       Step 5 — the message names the lane.
    2. Read `guidelines/section-catalog.md` and
       `guidelines/writing-style.md`, then draft the spec —
@@ -559,7 +558,7 @@ EOF
    repo gets no `.html`:
 
    ```bash
-   plan-agent-render <spec>.md -o "$SCRATCHPAD/<stem>.html"
+   node ${CLAUDE_PLUGIN_ROOT}/scripts/build-plan-html.mjs <spec>.md -o "$SCRATCHPAD/<stem>.html"
    ```
 
    With `--file`, render to `<stem>.html` beside the spec instead — that file
@@ -591,7 +590,7 @@ EOF
    an `http(s)` `artifact-url:`. Rebuild the gallery so the card appears now:
 
    ```bash
-   plan-agent-plans-index
+   bash ${CLAUDE_PLUGIN_ROOT}/hooks/build-index.sh "$PWD"
    ```
 
    7e. **Report.** Give the user the artifact URL. With `--file`, also send the

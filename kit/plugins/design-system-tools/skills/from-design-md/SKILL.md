@@ -16,8 +16,9 @@ Publishes a repository's `DESIGN.md` (YAML frontmatter plus prose) and the style
 implement it as a claude.ai Design System artifact. The artifact holds `tokens.json` in every
 theme, a README brand book, static component previews and a cover.
 
-The plugin puts `design-system-contrast` on the Bash tool's PATH. Call it by that bare name: a
-command containing `$VAR` is refused before it runs.
+The contrast checker ships with this skill at `scripts/contrast.mjs`. Run it as
+`node ${CLAUDE_SKILL_DIR}/scripts/contrast.mjs` — `${CLAUDE_SKILL_DIR}` is replaced with this
+skill's absolute folder when the skill loads.
 
 Worked examples:
 
@@ -117,8 +118,10 @@ Do not ship `bundle.js`, and set `libraries: []`.
 For every text-on-ground pair that a usage note or README rule names, run this in every theme:
 
 ```bash
-design-system-contrast <dir>/project/tokens.json ink:paper ink-soft:paper-sunk paper:island
+node ${CLAUDE_SKILL_DIR}/scripts/contrast.mjs <dir>/project/tokens.json ink:paper ink-soft:paper-sunk paper:island
 ```
+
+`${CLAUDE_SKILL_DIR}` is replaced with this skill's absolute folder when the skill loads.
 
 Paste the printed ratios into the notes. The script floors to two decimals. If a source pair
 falls below 4.5:1 (3:1 for text at 24px and up, borders, focus rings and icons), keep the
@@ -166,7 +169,7 @@ The publish reply is not proof. Check the remote:
    remote file locally and names that path. Both must parse as JSON, and the index must carry
    your `lastChange.at`.
 3. The remote `tokens.json` must be the one you sent: `cmp <dir>/project/tokens.json <read-back path>`
-   prints nothing. Then run `design-system-contrast` on the read-back path, never on your own copy.
+   prints nothing. Then run the contrast checker on the read-back path, never on your own copy.
    Every ratio in a usage note must match its output.
 4. If you have a browser tool, open the system in light and dark and look at the cover and every
    preview. A block or text that vanishes in one theme gets fixed.

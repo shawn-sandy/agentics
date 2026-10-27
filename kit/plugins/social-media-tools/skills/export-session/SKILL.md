@@ -25,12 +25,11 @@ Convert a session JSONL transcript into a readable Markdown file under `{plansDi
 3. **Convert.** Run the bundled script — do not read the JSONL into context yourself:
 
    ```bash
-   social-export-session <transcript.jsonl> <plansDirectory>/sessions
+   python3 ${CLAUDE_SKILL_DIR}/scripts/export_session.py <transcript.jsonl> <plansDirectory>/sessions
    ```
 
-   `social-export-session` is a bundled `bin/` wrapper on the Bash tool's
-   `PATH`. Substitute both arguments literally — the Bash tool refuses any
-   command whose text contains `${VAR}` or `$VAR`.
+   `${CLAUDE_SKILL_DIR}` is replaced with this skill's absolute folder when the
+   skill loads. Substitute both arguments literally.
 
    The script extracts user/Claude turns (skipping tool results, sidechains, and system reminders), writes `<date>-<slug>.md` with YAML frontmatter, and prints the output path.
 

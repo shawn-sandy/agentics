@@ -26,7 +26,7 @@ PLUGIN_SKILL="$ROOT/kit/plugins/code-testing-agent/skills/verified-change"
 LOCAL_SKILL="$ROOT/.claude/skills/verified-change"
 PLUGIN_GATE="$PLUGIN_SKILL/assets/verify.sh"
 REPO_GATE="$ROOT/scripts/verify.sh"
-INSTALLER="$ROOT/kit/plugins/code-testing-agent/bin/install-verify-gate"
+INSTALLER="$PLUGIN_SKILL/assets/install-verify-gate.sh"
 CLAUDE_MD="$ROOT/CLAUDE.md"
 GUARD_TEST="$ROOT/tests/plugins/test-exitplanmode-guard.sh"
 GUARD='**If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.'
@@ -172,10 +172,10 @@ else
   fail "scripts/verify.sh and the plugin template have forked — every gate change is a two-file edit"
 fi
 
-if [ -x "$INSTALLER" ]; then
-  pass "bin/install-verify-gate is executable"
+if [ -f "$INSTALLER" ]; then
+  pass "assets/install-verify-gate.sh is present"
 else
-  fail "kit/plugins/code-testing-agent/bin/install-verify-gate is not executable"
+  fail "kit/plugins/code-testing-agent/skills/verified-change/assets/install-verify-gate.sh is missing"
 fi
 
 # --- Check 7: the merge-gate rule is binding in CLAUDE.md --------------------

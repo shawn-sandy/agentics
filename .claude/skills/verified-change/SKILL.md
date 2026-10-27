@@ -33,17 +33,12 @@ on repos you already trust.
 **If in plan mode**, call `ExitPlanMode` first — this workflow mutates state.
 
 Confirm the gate exists at `scripts/verify.sh`. If it does not, install it from
-the repo root. Installed as a plugin, the wrapper is already on `PATH`:
+the repo root with the bundled asset — `${CLAUDE_SKILL_DIR}` is replaced with
+this skill's absolute folder when the skill loads, for the installed plugin and
+the project-local copy alike:
 
 ```bash
-install-verify-gate
-```
-
-If that reports `command not found`, this is the project-local copy of the
-skill, which ships no `bin/`. Call the bundled asset directly instead:
-
-```bash
-bash .claude/skills/verified-change/assets/install-verify-gate.sh
+bash ${CLAUDE_SKILL_DIR}/assets/install-verify-gate.sh
 ```
 
 Then run the gate once, before changing anything, and read the output:

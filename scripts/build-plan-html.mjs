@@ -822,7 +822,7 @@ function checkHtmlFreshness(specPath, outPath, rendered) {
     // a reader back to inspecting markup by hand.
     return {
       state: 'FAIL',
-      detail: `${outPath} does not exist — run: plan-agent-render "${specPath}" -o "${outPath}"`,
+      detail: `${outPath} does not exist — run: node "${process.argv[1]}" "${specPath}" -o "${outPath}"`,
     };
   }
   const d = firstDiff(onDisk, rendered);
@@ -842,7 +842,7 @@ function checkHtmlFreshness(specPath, outPath, rendered) {
  */
 export function runCheck({ specPath, outPath, parsed, rendered, log = console.log }) {
   const rows = { html: checkHtmlFreshness(specPath, outPath, rendered), ...checkSpecConsistency(parsed) };
-  log(`plan-agent-render --check ${specPath}`);
+  log(`build-plan-html.mjs --check ${specPath}`);
   for (const name of CHECK_ROWS) {
     const row = rows[name];
     log(`  ${name.padEnd(8)} ${row.state}  ${row.detail}`);

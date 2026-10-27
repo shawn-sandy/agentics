@@ -18,7 +18,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/memory-tools"
       },
-      "version": "4.4.0",
+      "version": "4.5.0",
       "description": "Audit and optimize Claude Code configuration — CLAUDE.md memory files, scoped rules, and usage-insights follow-through",
       "category": "development",
       "tags": [
@@ -56,7 +56,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/wcag-compliance-reviewer"
       },
-      "version": "1.5.2",
+      "version": "1.6.0",
       "description": "Review HTML/CSS and React/TypeScript code for WCAG 2.2 Level AA accessibility compliance",
       "category": "security",
       "tags": [
@@ -78,7 +78,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/skill-reviewer"
       },
-      "version": "2.5.2",
+      "version": "2.6.0",
       "description": "Review and optimize Claude Code skill files — score SKILL.md quality, plan and scaffold new skills, audit allowed-tools permissions, optimize frontmatter (descriptions + disable-model-invocation), and enforce the three-part 200-char description format",
       "category": "development",
       "tags": [
@@ -100,7 +100,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/code-testing-agent"
       },
-      "version": "3.6.1",
+      "version": "3.7.0",
       "description": "Analyze code and suggest specific, purpose-driven tests tied to actual behavior and intent — not arbitrary coverage",
       "category": "testing",
       "tags": [
@@ -121,7 +121,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/git-agent"
       },
-      "version": "4.23.1",
+      "version": "4.24.0",
       "description": "Automated git workflow — create branches, commit with conventional messages, create PRs, and open GitHub/GitLab issues from any context (selection, session, bug, feature) with host auto-detection and confirmation gate; ships background subagents and slash commands for fire-and-forget commit/PR/ship/CI-watch plus auto-linking plan issue references in PR descriptions",
       "category": "development",
       "tags": [
@@ -173,7 +173,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.23.4",
+      "version": "2.24.0",
       "description": "Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack, plus a write-guide skill that writes long-form internal developer explainer guides to docs/",
       "category": "productivity",
       "tags": [
@@ -218,7 +218,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "9.20.1",
+      "version": "9.21.0",
       "description": "Plan creation, review, follow-through, and maintenance. Author a Markdown plan spec rendered as self-contained interactive HTML (implementation-plan), implement it end-to-end through the acceptance and completion gates (build), which authors a plan first when the command names none, and review it with a ten-reviewer Workflow (review-plan) before marking it done (finalize-plan). Ship a whole backlog in parallel with one worktree agent per plan (build-fleet). Also ships build-proposal, build-feature, deep-grill, prompt, prototype, design, publish-hub, documenting-plans, markdown-to-html, plan-status, plan-maintenance, setup-sites, plans-library, and plans-open. Accepts issue URLs and .md plans as input; hooks enforce filenames and rebuild the plan gallery. Full detail in the plugin README.",
       "category": "productivity",
       "tags": [
@@ -251,7 +251,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/artifact-tools"
       },
-      "version": "1.12.0",
+      "version": "1.13.0",
       "description": "Publish diffs, sessions, plans, prompts, and teaching pages as live claude.ai artifact pages — an annotated diff walkthrough with per-hunk reviewer notes, a reviewer-first session recap, plan HTML republished to a stable URL, saved prompts published singly or as a filterable library with verbatim copy buttons, and a teach-artifact explainer that answers how a system works rather than what changed — plus three audience framings over the session recap: product-doc for stakeholders, team-recap for the whole team, and eng-recap for engineers, with architecture, code paths, tradeoffs, learnings, tests, and review follow-ups drawn from a capped read of the PR diff — with a blocking secret-scrub gate and a local-HTML fallback",
       "category": "development",
       "tags": [
@@ -293,7 +293,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/design-system-tools"
       },
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Turn a repository's DESIGN.md and the stylesheets behind it into a claude.ai Design System artifact — the from-design-md skill maps tokens into every theme, condenses the prose into a brand book of usage rules that name tokens, hand-writes static component previews and a cover, measures every contrast ratio with a bundled script, and checks the publish against the remote file listing before reporting",
       "category": "development",
       "tags": [
