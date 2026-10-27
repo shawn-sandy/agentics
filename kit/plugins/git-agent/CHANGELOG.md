@@ -1,5 +1,14 @@
 # Changelog — git-agent
 
+## v4.24.1 — 2026-10-26 — remove angle brackets from the branch-agent skill description
+
+### Changed
+
+- **branch-agent `description` no longer contains `origin/<default>`.** claude.ai
+  rejects XML-tag-like text in skill descriptions and strips the angle brackets
+  from what it stores; the description now says "the latest origin default
+  branch" instead. Behavior is unchanged.
+
 ## v4.24.0 — 2026-10-26 — drop the bin/ wrapper for claude.ai compatibility
 
 ### Changed

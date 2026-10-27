@@ -1,5 +1,13 @@
 # Changelog
 
+## 9.21.1 — shorten the marketplace description to 500 chars (2026-10-26)
+
+### Changed
+
+- **Marketplace description trimmed from 798 to 486 characters.** claude.ai
+  caps plugin descriptions at 500; the full skill roster now lives only in the
+  plugin README. No functional change.
+
 ## 9.21.0 — drop the bin/ wrapper for claude.ai compatibility (2026-10-26)
 
 ### Changed
