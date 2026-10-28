@@ -9,8 +9,9 @@ argument-hint: "[repo-path-or-url]"
 
 Restore Claude Code user settings from a dedicated backup git repository.
 Accepts a local repo path or a clone URL — the URL form bootstraps a **new
-machine**, where no local copy exists yet. Pulls latest changes, shows a diff
-summary, and copies files back to `~/.claude/` after user confirmation.
+machine**, where no local copy exists yet. Asks which machine's branch to
+restore, pulls it, shows a diff summary, and copies files back to `~/.claude/`
+after user confirmation — keeping this machine's own permission rules.
 
 ## When not to use
 
@@ -97,20 +98,64 @@ or logging it.
 > will be cloned to `~/.claude-settings-backup`."
 
 Then **STOP**. Do **not** suggest running `settings-backup` — on a machine with
-no settings yet that would overwrite the backup with an empty config.
+no settings yet it would only back up an empty config to a new branch.
 
 **Path safety:** always quote the resolved repo path in all shell commands
 (git, rsync, cp, rm) to handle spaces and special characters.
 
-### Step 2 — Pull latest from remote
+### Step 2 — Choose the machine and pull latest
 
-Check if a remote exists: `git -C "<repo-path>" remote get-url origin 2>/dev/null`.
+Since 1.3.0, `settings-backup` writes each machine to its own
+`machines/<name>` branch. A 1.2 repo has only the branch it always had.
 
-If a remote exists, run `git -C "<repo-path>" pull --ff-only`.
+**List machine branches.** Fetches `origin` when there is one — an offline
+fetch only warns — then prints every machine with a branch, local or on
+`origin`, newest backup first, one name per line. Branch names come from the
+remote and the chosen one becomes shell text, so names outside the machine
+pattern are never listed:
+
+```bash
+if git -C "<repo-path>" remote get-url origin >/dev/null 2>&1; then
+  git -C "<repo-path>" fetch --quiet origin || echo "Could not fetch origin — listing local refs only." >&2
+fi
+git -C "<repo-path>" for-each-ref --sort=-committerdate --format='%(refname)' \
+  refs/remotes/origin/machines refs/heads/machines |
+  sed 's#^refs/remotes/origin/machines/##; s#^refs/heads/machines/##' |
+  LC_ALL=C grep -E '^[a-z0-9][a-z0-9-]{0,62}$' | awk '!seen[$0]++'
+```
+
+**If it prints nothing**, this is a 1.2 repo — pull the checked-out branch as
+before. If a remote exists, run `git -C "<repo-path>" pull --ff-only`.
 
 - If pull fails, warn: "Could not pull latest — remote may have diverged.
   Restoring from local copy. Run `git -C "<repo-path>" pull` manually to sync."
   Continue with the local state.
+
+**If it prints names**, ask with `AskUserQuestion` which machine to restore
+from. Recommend this machine's own `"machine"` from
+`~/.claude/settings-sync.json` when it is set and listed, otherwise the first
+(newest) name. Offer up to four names; Other covers the rest. Never offer the
+legacy `master` branch — it holds whichever machine last pushed under 1.2,
+the overwritten state per-machine branches exist to escape.
+
+**Check out the chosen machine.** Substitute the answer for `<machine-name>`
+(an answer containing `'` is never a valid name — reject it without running
+the block). The block rejects any name outside `^[a-z0-9][a-z0-9-]{0,62}$`
+before git runs, switches to `machines/<name>` — creating a tracking branch
+when only `origin` has it — and pulls:
+
+```bash
+name='<machine-name>'
+[[ "$name" =~ ^[a-z0-9][a-z0-9-]{0,62}$ ]] || { echo "Invalid machine name: '$name'" >&2; exit 1; }
+git -C "<repo-path>" switch "machines/$name" || exit 1
+if git -C "<repo-path>" remote get-url origin >/dev/null 2>&1; then
+  git -C "<repo-path>" pull --ff-only ||
+    echo "Could not pull latest — restoring from the local copy of machines/$name." >&2
+fi
+```
+
+A non-zero exit (an invalid name, or a switch git refused — a dirty working
+tree, say) means **STOP** and show the block's message.
 
 ### Step 3 — Build the file list from the repo
 
@@ -159,6 +204,20 @@ For each file/directory that exists in the repo, compare against the local
 - **Unchanged**: exists in both, content matches → label as `= unchanged`
 - **Deleted**: exists locally but **not** in backup → label as `- deleted`
 
+`settings.json` is compared against the output of Step 6's **Keep this
+machine's permissions.** block, not the repo copy — that output is what gets
+written, so a backup differing only in those kept keys shows `= unchanged`.
+Run the block here only to compare (`diff -q <(…block…) ~/.claude/settings.json`);
+write nothing under `~/.claude/` until Step 6, so a Cancel leaves no file. If
+the block exits non-zero, show `! settings.json (<its error> — will not be
+restored)`; Step 6 then records it as FAILED and leaves the local file alone.
+When the backup's `permissions` or `autoMode` differ from what is kept, say so
+on that line — `(keeps this machine's permissions: 12 allow, 2 deny; the
+backup's 40 allow, 5 deny are not applied)` — so the user sees, before
+confirming, that the source machine's rules (deny rules included) will not
+arrive. This matters most on a new machine where installing this plugin
+already created a `settings.json` without any `permissions`.
+
 **Directories** — list local and repo files, then classify each:
 - Use `find` on both the repo subdir and the local `~/.claude/` subdir to get
   complete file lists, then compare to derive added/modified/unchanged/deleted
@@ -169,6 +228,7 @@ Present the summary:
 
 ```
 Restore preview:
+  Machine: beta (branch machines/beta)
   + settings.json (new)
   ~ CLAUDE.md (modified)
   = keybindings.json (unchanged)
@@ -176,6 +236,9 @@ Restore preview:
   + commands/ — 2 files (2 new)
   skills/ — not in backup (skipped)
 ```
+
+Here and in the Step 9 report, a 1.2 repo names the checked-out branch
+instead: `Machine: none (1.2 repo, branch master)`.
 
 **Important:** the `--delete` flag (rsync) and `rm -rf` (cp fallback) mean that
 for **every directory in the Step 3 list**, local files not present in the
@@ -211,7 +274,7 @@ command -v rsync >/dev/null 2>&1
 ```
 
 Work through the list built in Step 3, treating each entry as a file or a
-directory.
+directory — except `settings.json`, which is never copied whole (below).
 
 **If rsync is available:**
 
@@ -242,6 +305,41 @@ re-run restore to recover from the backup repo.
 
 Skip any source that does not exist in the repo — do not error.
 
+**`settings.json` keeps this machine's `permissions` and `autoMode`.** Only
+those two keys carry machine-specific home paths — another machine's allow
+rules name its own `/Users/<name>/...`; every other key, hooks included, is
+portable. The cost is deliberate: once a machine has its own `settings.json`,
+permission rules (deny rules included) never travel by restore.
+
+**Keep this machine's permissions.** Prints the backup's `settings.json` with
+`permissions` and `autoMode` taken from this machine's file, and dropped where
+this machine has none. With no local `settings.json` (a new machine) it prints
+the backup file unchanged. Invalid JSON in either file, or no `jq`, exits
+non-zero:
+
+```bash
+mine="$HOME/.claude/settings.json"
+if [ ! -e "$mine" ]; then
+  cat "<repo-path>/settings.json"
+elif ! command -v jq >/dev/null 2>&1; then
+  echo "jq not found — install it to restore settings.json." >&2
+  false
+else
+  jq -e --slurpfile here "$mine" '
+    reduce ("permissions", "autoMode") as $k (.;
+      if ($here[0] | has($k)) then .[$k] = $here[0][$k] else del(.[$k]) end)
+  ' "<repo-path>/settings.json"
+fi
+```
+
+Write its output to `"$HOME/.claude/.settings.json.restore"` and, on exit 0,
+copy that file to `"$HOME/.claude/settings.json.new"` and `mv` the copy onto
+`"$HOME/.claude/settings.json"` — one atomic replace, so a crash never leaves a
+half-written file — keeping `.settings.json.restore` for Step 7. On a non-zero exit, delete the temp file, leave the local file
+untouched, and record `FAILED: settings.json (<the block's error>)` — never
+fall back to copying the backup file, which would silently drop this machine's
+rules.
+
 If `includeLocalSettings` is true and `settings.local.json` exists in the repo,
 copy it as well.
 
@@ -259,6 +357,13 @@ entries the user excluded in Step 5):
 
 - **Files** — compare against the repo copy with `diff -q`. Anything other
   than identical → `FAILED: <entry>`.
+- **`settings.json`** — `diff -q` the restored file against
+  `"$HOME/.claude/.settings.json.restore"`, then delete that temp file. It was
+  computed from this machine's file *before* the write, so a wholesale copy of
+  the backup that lost this machine's rules compares different. Never re-run
+  the block for this: run over the restored file, it reads back whatever rules
+  that file now holds and would verify the very loss it should catch. The repo
+  copy is no reference either — it still holds the source machine's rules.
 - **Directories** — repeat the same `find`-based comparison from Step 4.
   Every file must now classify as `unchanged` — any added, modified, or
   deleted remainder → `FAILED: <entry>`, listing the differing paths.
@@ -304,6 +409,11 @@ it:
 
 Preserve any existing keys.
 
+Never add a `"machine"` key — an existing one is this machine's own and is
+preserved like any other key. That name picks the branch `settings-backup`
+pushes to; a new machine that inherited the source machine's name would push
+to that machine's branch.
+
 ### Step 9 — Report
 
 This step is reached only through Step 7 — every count and list below comes
@@ -314,6 +424,7 @@ incomplete:
 
 ```
 Restore INCOMPLETE — verification failed for <n> of <total> entries.
+  Machine: <name> (branch machines/<name>)
   FAILED: <entry> (<reason>)
   Verified: <count> files (<list>)
   Skipped (not in backup): <list or "none">
@@ -326,6 +437,7 @@ Otherwise output:
 
 ```
 Settings restored and verified from <repo-path>.
+  Machine: <name> (branch machines/<name>)
   Verified: <count> files (<list>)
   Skipped (not in backup): <list or "none">
   Skipped (unchanged): <list or "none">

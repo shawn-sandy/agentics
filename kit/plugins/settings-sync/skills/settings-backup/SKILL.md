@@ -62,6 +62,41 @@ After resolving, persist the path to `~/.claude/settings-sync.json`:
 
 If the file already exists, update `repoPath` only — preserve other keys.
 
+**Resolve the machine name.** Each machine backs up to its own branch,
+`machines/<machine-name>`, so no two machines ever write the same branch. The
+name is the `"machine"` key in `~/.claude/settings-sync.json`; with no key it
+is derived once from `hostname -s` — lowercased, each run of other characters
+turned into one `-`, outer `-` trimmed. The live hostname is not stable: macOS
+renames a Mac over a name clash (`Shawn's MacBook Pro (2)`), so a derived name
+is frozen in the file. The name ends up in a git ref and in shell commands and
+the file is hand-editable, so the block rejects anything outside
+`^[a-z0-9][a-z0-9-]{0,62}$` before any git command runs.
+
+```bash
+cfg="$HOME/.claude/settings-sync.json"
+if grep -q '"machine"[[:space:]]*:' "$cfg" 2>/dev/null; then
+  name="$(sed -n 's/.*"machine"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$cfg" | head -n 1)"
+else
+  name="$(hostname -s | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz' \
+    | sed 's/[^abcdefghijklmnopqrstuvwxyz0123456789-][^abcdefghijklmnopqrstuvwxyz0123456789-]*/-/g; s/^--*//; s/--*$//')"
+fi
+case "$name" in
+  ''|-*|*[!abcdefghijklmnopqrstuvwxyz0123456789-]*) ok=no ;;
+  *) ok=yes ;;
+esac
+if [ "$ok" = no ] || [ "${#name}" -gt 63 ]; then
+  echo "Invalid machine name '$name'. Set \"machine\" in $cfg to lowercase letters, digits, and hyphens (at most 63, not starting with -)." >&2
+  exit 1
+fi
+echo "$name"
+```
+
+A non-zero exit is a **STOP**. Otherwise the printed name is `<machine-name>`
+for every later block. When `settings-sync.json` had no `"machine"` key, add
+the printed name beside `repoPath` under the same preserve-other-keys rule —
+silently, never as a question, so routines and interactive runs behave the
+same. Renaming a machine is an edit to that file.
+
 ### Step 2 — Validate and initialize the repo
 
 Run `git -C <repo-path> rev-parse --is-inside-work-tree`.
@@ -69,6 +104,50 @@ Run `git -C <repo-path> rev-parse --is-inside-work-tree`.
 - If it fails, ask the user if they want to initialize a new repo with
   `git init <repo-path>`. On confirmation, run `git init`.
 - If the directory is already a git repo, continue.
+
+**Switch to the machine branch.** Every later block writes to whatever is
+checked out, so this runs first. It never pulls, fast-forwards, or rebases
+`machines/<machine-name>`: the branch has one writer, so a remote that is ahead
+means a second writer, and merging it would hide the collision. That one
+writer is the clone that created the branch, recorded in the clone's own
+`git config settings-sync.branch`. A branch that already exists — on `origin`,
+or locally because a restore checked it out — but was not created by this
+clone belongs to another machine with the same name, so the block stops before
+anything is committed. A new branch starts from the current `HEAD`, which
+carries any commits a rejected 1.2 push left behind and, on a restored
+machine, the source machine's history. An offline fetch is not an error.
+
+```bash
+repo="<repo-path>"
+branch="machines/<machine-name>"
+if git -C "$repo" remote get-url origin >/dev/null 2>&1; then
+  git -C "$repo" fetch -q origin || echo "fetch failed — continuing with local refs" >&2
+fi
+if [ "$(git -C "$repo" config --get settings-sync.branch)" != "$branch" ]; then
+  if git -C "$repo" rev-parse -q --verify "refs/heads/$branch" >/dev/null \
+    || git -C "$repo" rev-parse -q --verify "refs/remotes/origin/$branch" >/dev/null; then
+    echo "$branch already exists, but this clone did not create it — another machine may back up as '<machine-name>'. Set a distinct \"machine\" in ~/.claude/settings-sync.json. Only if this clone belongs to that machine (a re-cloned or reinstalled backup repo, or a name changed back), claim the branch with: git -C \"$repo\" config settings-sync.branch $branch" >&2
+    exit 1
+  fi
+fi
+if [ "$(git -C "$repo" symbolic-ref -q --short HEAD)" != "$branch" ]; then
+  if git -C "$repo" rev-parse -q --verify "refs/heads/$branch" >/dev/null; then
+    git -C "$repo" switch -q "$branch"
+  elif git -C "$repo" rev-parse -q --verify "refs/remotes/origin/$branch" >/dev/null; then
+    git -C "$repo" switch -q -c "$branch" --track "origin/$branch"
+  else
+    git -C "$repo" switch -q -c "$branch"
+  fi || exit 1
+fi
+git -C "$repo" config settings-sync.branch "$branch"
+```
+
+A non-zero exit is a **STOP** with the block's or git's message: a name
+another machine already uses, or a switch git refused (a working tree left
+dirty by an interrupted run, with files the target branch would overwrite) —
+never discard files someone may have added by hand. A clone that claimed its
+branch can still be checked out elsewhere by a restore; the next backup
+switches back to it.
 
 **Ignore rules and already-tracked files.** The block below makes sure the
 repo root `.gitignore` carries every rule in its list — creating the file if
@@ -157,34 +236,36 @@ the routine.
 **Copy the targets.** One block copies every Step 3 source that exists. With
 rsync, `-aL` follows symlinks and `--delete` is scoped to each target
 subdirectory, never the repo root; without it, `cp` runs after an `rm -rf` of
-the target subdirectory so deleted source files do not linger. A single-file
-target that no longer exists locally is removed from the repo so the backup
-reflects the current local state. Every path is quoted.
+the target subdirectory so deleted source files do not linger. A target —
+file or folder — that does not exist locally is removed from the repo so the
+backup reflects the current local state; a machine branch starts from another
+branch's tree, and without this it would keep that branch's folders.
+`settings.local.json` counts as missing unless `includeLocalSettings` is on.
+Every path is quoted, and the loops run over literal word lists: the Bash tool
+is zsh on macOS, where `for f in $files` does not split a string and the whole
+block would silently copy nothing.
 
 ```bash
 repo="<repo-path>"
-files="settings.json CLAUDE.md keybindings.json"
 if grep -q '"includeLocalSettings"[[:space:]]*:[[:space:]]*true' "$HOME/.claude/settings-sync.json" 2>/dev/null; then
-  files="$files settings.local.json"
-fi
-dirs="rules commands skills hooks agents output-styles scripts reference"
-if command -v rsync >/dev/null 2>&1; then
-  for f in $files; do
-    if [ -f "$HOME/.claude/$f" ]; then rsync -aL "$HOME/.claude/$f" "$repo/$f"; fi
-  done
-  for d in $dirs; do
-    if [ -d "$HOME/.claude/$d" ]; then rsync -aL --delete "$HOME/.claude/$d/" "$repo/$d/"; fi
-  done
+  local_settings=yes
 else
-  for f in $files; do
-    if [ -f "$HOME/.claude/$f" ]; then cp -fL "$HOME/.claude/$f" "$repo/$f"; fi
-  done
-  for d in $dirs; do
-    if [ -d "$HOME/.claude/$d" ]; then rm -rf "$repo/$d" && cp -aL "$HOME/.claude/$d" "$repo/$d"; fi
-  done
+  local_settings=no
 fi
-for f in $files; do
-  if [ ! -f "$HOME/.claude/$f" ] && [ -f "$repo/$f" ]; then rm "$repo/$f"; fi
+if command -v rsync >/dev/null 2>&1; then has_rsync=yes; else has_rsync=no; fi
+for f in settings.json CLAUDE.md keybindings.json settings.local.json; do
+  if [ -f "$HOME/.claude/$f" ] && { [ "$f" != settings.local.json ] || [ "$local_settings" = yes ]; }; then
+    if [ "$has_rsync" = yes ]; then rsync -aL "$HOME/.claude/$f" "$repo/$f"; else cp -fL "$HOME/.claude/$f" "$repo/$f"; fi
+  elif [ -f "$repo/$f" ]; then
+    rm "$repo/$f"
+  fi
+done
+for d in rules commands skills hooks agents output-styles scripts reference; do
+  if [ -d "$HOME/.claude/$d" ]; then
+    if [ "$has_rsync" = yes ]; then rsync -aL --delete "$HOME/.claude/$d/" "$repo/$d/"; else rm -rf "$repo/$d" && cp -aL "$HOME/.claude/$d" "$repo/$d"; fi
+  elif [ -e "$repo/$d" ]; then
+    rm -rf "$repo/$d"
+  fi
 done
 ```
 
@@ -247,18 +328,41 @@ else
 fi
 ```
 
-**After `committed`:** check for a remote with
-`git -C <repo-path> remote get-url origin 2>/dev/null`. If one exists, run
-`git -C <repo-path> push`.
+After `no-change`, output: "No settings changes since last backup. Logged
+locally to .sync-log (not committed)." — and push anyway.
 
-- If push succeeds, report success.
-- If push fails (conflict), output: "Push failed — another machine may have
-  pushed since your last sync. Pull and resolve manually:
-  `git -C <repo-path> pull --rebase && git push`" and **STOP**. Do not
-  auto-resolve.
+**Push the machine branch.** This runs after both `committed` and
+`no-change`. A machine's first 1.3.0 run is often a no-change run, and its
+branch — carrying any commits a rejected 1.2 push stranded — still has to reach
+`origin`; when nothing is ahead, the push is a no-op. A rejection on a branch
+only this machine writes means another clone or machine uses the same name, so
+the block names that collision instead of offering a pull.
 
-**After `no-change`:** there is nothing to push. Output: "No settings changes
-since last backup. Logged locally to .sync-log (not committed)."
+```bash
+repo="<repo-path>"
+branch="machines/<machine-name>"
+if ! git -C "$repo" remote get-url origin >/dev/null 2>&1; then
+  echo no-remote
+elif git -C "$repo" push -q -u origin "$branch"; then
+  echo pushed
+elif git -C "$repo" fetch -q origin "$branch" 2>/dev/null \
+  && ! git -C "$repo" merge-base --is-ancestor FETCH_HEAD "$branch"; then
+  echo "Push rejected: origin's $branch has commits this clone never made. Either another clone or machine backs up as '<machine-name>' — set a distinct \"machine\" in ~/.claude/settings-sync.json on one of them — or the branch was edited elsewhere (on github.com, or from another clone). Only in that second case, and only if no other machine uses this name, realign this clone once: git -C \"$repo\" fetch origin && git -C \"$repo\" reset --hard origin/$branch" >&2
+  exit 1
+else
+  echo "Push of $branch failed — see git's message above." >&2
+  exit 1
+fi
+```
+
+A non-zero exit is a **STOP** with the block's message. Never pull, rebase,
+force-push, or rename the machine to get past it: merging would restart the
+overwrite this branch layout exists to prevent, and a silent rename would
+leave the other machine's restore pointing at a branch that stopped updating.
+The realign command in the message is the user's to run, after they confirm
+the branch was edited on purpose: it drops this clone's unpushed backup
+commits, and the next backup copies this machine's settings again on top of
+the edited branch.
 
 ### Step 7 — Report
 
@@ -267,11 +371,13 @@ Output a summary:
 ```
 Settings backup complete.
   Repo: <repo-path>
+  Machine: <machine-name>
+  Branch: machines/<machine-name>
   Files backed up: <count> (<list of names>)
   Skipped (not found): <list or "none">
   Not a backup target (left in repo): <list or "none">
   Commit: <short hash> — <commit message>, or "none — no changes"
-  Pushed: yes/no/failed/not needed
+  Pushed: yes/no remote/failed
 ```
 
 **STOP after this step.**
