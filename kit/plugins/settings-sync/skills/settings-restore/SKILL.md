@@ -414,6 +414,27 @@ preserved like any other key. That name picks the branch `settings-backup`
 pushes to; a new machine that inherited the source machine's name would push
 to that machine's branch.
 
+**Switch back to this machine's branch.** Step 2 checked out the chosen
+machine's branch, and the clone must not stay there: anything that commits to
+whatever is checked out — a scheduled 1.2 backup, a hand-written session-end
+script — would push this machine's settings over the other machine's backup.
+One real restore did exactly that. Return the clone to the branch it claimed
+(`git config settings-sync.branch`, set by this machine's first 1.3.0 backup).
+A clone that claims nothing has never backed up and stays put, so its first
+backup still starts from the restored machine's history.
+
+```bash
+own="$(git -C "<repo-path>" config --get settings-sync.branch)"
+if [ -n "$own" ] && [ "$(git -C "<repo-path>" symbolic-ref -q --short HEAD)" != "$own" ]; then
+  git -C "<repo-path>" switch -q "$own" || exit 1
+fi
+```
+
+A non-zero exit leaves the clone on the restored machine's branch: say so in
+the Step 9 report, with the command to run before the next backup —
+`git -C "<repo-path>" switch <own branch>`. The files in `~/.claude/` are
+already restored either way.
+
 ### Step 9 — Report
 
 This step is reached only through Step 7 — every count and list below comes

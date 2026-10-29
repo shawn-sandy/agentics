@@ -32,6 +32,11 @@ if [ -z "$CHECKOUT" ]; then
   echo "FAIL: no bash block after '**Check out the chosen machine.**' in $SKILL"
   exit 1
 fi
+SWITCHBACK="$(extract "**Switch back to this machine's branch.**")"
+if [ -z "$SWITCHBACK" ]; then
+  echo "FAIL: no bash block after '**Switch back to this machine's branch.**' in $SKILL"
+  exit 1
+fi
 
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 export GIT_AUTHOR_NAME=test GIT_AUTHOR_EMAIL=test@example.com
@@ -143,6 +148,34 @@ before="$(state)"
 run_block "$CHECKOUT" "$CLONE" nosuch
 check "checkout 'nosuch' (no branch): exits non-zero"    test "$RC" -ne 0
 check "checkout 'nosuch' (no branch): HEAD unchanged"    test "$(state)" = "$before"
+
+# --- switching back after the restore ----------------------------------------
+# A real restore left the secondary Mac's clone on the primary's branch, and
+# that Mac's session-end backup script then committed its own settings onto
+# it and pushed them over the primary's backup. Restore's last git step puts
+# the clone back on the branch this clone claimed, so nothing branch-unaware
+# is ever left writing another machine's branch.
+git -C "$CLONE" switch -q machines/beta
+git -C "$CLONE" config settings-sync.branch machines/alpha
+run_block "$SWITCHBACK" "$CLONE"
+check "switch back: exits 0"                                test "$RC" -eq 0
+check "switch back: HEAD is this clone's claimed branch"    test "$(head_ref)" = refs/heads/machines/alpha
+check "switch back: the restored machine's branch is left"  test "$(git -C "$CLONE" rev-parse --abbrev-ref HEAD)" != machines/beta
+
+# A clone that never backed up claims nothing: stay put, so this machine's first
+# backup still starts its branch from the restored machine's history.
+git -C "$CLONE" switch -q machines/beta
+git -C "$CLONE" config --unset settings-sync.branch
+before="$(state)"
+run_block "$SWITCHBACK" "$CLONE"
+check "switch back, unclaimed: exits 0"                     test "$RC" -eq 0
+check "switch back, unclaimed: HEAD and branches unchanged" test "$(state)" = "$before"
+
+# A claimed branch the switch cannot reach (deleted locally and on origin) is reported.
+git -C "$CLONE" config settings-sync.branch machines/nowhere
+run_block "$SWITCHBACK" "$CLONE"
+check "switch back, unreachable: exits non-zero"            test "$RC" -ne 0
+git -C "$CLONE" config --unset settings-sync.branch
 
 # --- a 1.2 repo --------------------------------------------------------------
 OLD_SEED="$TMP/old-seed"

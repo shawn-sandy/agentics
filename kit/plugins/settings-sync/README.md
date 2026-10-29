@@ -125,7 +125,10 @@ One backup repo holds every machine, one branch each:
 - **Restore** lists the machines that have backed up (newest first) and asks
   which one to restore, recommending this machine's own name. A repo with no
   `machines/*` branch restores the checked-out branch, as 1.2 did, apart from
-  the `settings.json` merge below.
+  the `settings.json` merge below. After copying, restore switches the clone
+  back to this machine's own branch, so a backup that commits to whatever is
+  checked out — a hand-written session-end script, say — never writes the
+  machine you restored from.
 - **Restore keeps this machine's `permissions` and `autoMode`.** In the two
   machines' backups this was designed from, those were the only `settings.json`
   keys holding machine-specific home paths (yours may also have them in keys

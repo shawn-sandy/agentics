@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.3.1 — 2026-10-28 — Restore returns to this machine's branch
+
+### Fixed
+
+- **Restore no longer leaves the clone on another machine's branch.** Step 2
+  checks out the chosen machine's branch, and restore stopped there. The
+  first real cross-Mac restore then had that Mac's session-end backup
+  script — which commits to whatever is checked out — push its own settings
+  over the source Mac's branch as a fast-forward, so nothing rejected it. The
+  new `**Switch back to this machine's branch.**` block returns the clone to
+  the branch it claimed (`git config settings-sync.branch`) once Step 7 has
+  verified the copy; a clone that has never backed up claims nothing and
+  stays put. Pinned by `tests/plugins/test-settings-restore-machine-branch.sh`.
+
 ## v1.3.0 — 2026-10-28 — One branch per machine
 
 ### Upgrade note
