@@ -1,5 +1,100 @@
 # Changelog
 
+## v1.3.1 — 2026-10-28 — Restore returns to this machine's branch
+
+### Fixed
+
+- **Restore no longer leaves the clone on another machine's branch.** Step 2
+  checks out the chosen machine's branch, and restore stopped there. The
+  first real cross-Mac restore then had that Mac's session-end backup
+  script — which commits to whatever is checked out — push its own settings
+  over the source Mac's branch as a fast-forward, so nothing rejected it. The
+  new `**Switch back to this machine's branch.**` block returns the clone to
+  the branch it claimed (`git config settings-sync.branch`) once Step 7 has
+  verified the copy; a clone that has never backed up claims nothing and
+  stays put. Pinned by `tests/plugins/test-settings-restore-machine-branch.sh`.
+
+## v1.3.0 — 2026-10-28 — One branch per machine
+
+### Upgrade note
+
+Update the plugin on **every** machine that backs up to the repo. Each
+machine's first 1.3.0 run creates and pushes its own `machines/<name>` branch
+— even a run with nothing new to commit, so commits a rejected 1.2 push left
+stranded reach `origin` too. `master` stays as frozen 1.2 history: nothing
+deletes or rewrites it, and plain git still reaches it. A machine still on 1.2
+keeps writing `master`; nothing is lost, but its backups land on a machine
+branch only after it updates.
+
+### Fixed
+
+- **Two machines no longer overwrite each other.** Step 5 mirrors `~/.claude/`
+  into the repo, so with one shared branch the repo only ever held the last
+  machine to run — one real handoff commit swapped every
+  `/Users/<one-user>/...` permission rule for the other machine's. Backups now
+  go to `machines/<machine>`, one writer per branch.
+- **The second machine no longer stalls for good.** The backup never pulled,
+  so a machine whose clone fell behind committed on a stale base, had its push
+  rejected as non-fast-forward, and then committed locally on every scheduled
+  run without pushing again. With one writer per branch a push cannot conflict,
+  and the new `**Push the machine branch.**` block runs on every run, not only
+  after a commit. A rejection there can only mean two clones share a name, so
+  the run stops with a message naming the `"machine"` key instead of offering
+  a pull; it never merges, rebases, or renames.
+- **A second machine with the same name cannot take a branch over.** The
+  clone that creates `machines/<machine>` records it in its own
+  `git config settings-sync.branch`. A branch that already exists but was not
+  created by this clone — a fresh clone on a Mac with the same default
+  hostname, or a restore of another machine's branch followed by a backup
+  under the same name — stops the run before anything is committed, instead
+  of fast-forwarding onto the other machine's history. A re-cloned repo on the
+  same machine claims its branch once with the command the message prints.
+- **A machine branch drops folders the machine does not have.** The copy
+  block removed a single-file target missing locally but left a missing
+  folder in place, so a branch created from `master` or from a restored
+  machine's branch kept that branch's `commands/` or `agents/`. Missing
+  folders are now removed too, and so is `settings.local.json` when this
+  machine has not opted in.
+- **The copy block works under zsh.** It looped over `for f in $files`, and
+  zsh — the Bash tool's shell on macOS — does not split an unquoted string,
+  so the block copied nothing and reported success. It now loops over literal
+  word lists; `test-settings-backup-two-machines.sh` runs the blocks under zsh
+  wherever zsh exists.
+- **A hand-edited machine branch has a way back.** Editing a machine's branch
+  on github.com or from another clone made that machine's every push fail.
+  The rejection message now names that case and the one realign command the
+  user runs to recover, which the two-machine test exercises.
+
+### Added
+
+- **`"machine"` in `~/.claude/settings-sync.json`.** The new
+  `**Resolve the machine name.**` block reads it, or derives it once from
+  `hostname -s` and saves it — macOS renames a Mac over a name clash, so the
+  live hostname is not stable. Anything outside `^[a-z0-9][a-z0-9-]{0,62}$`
+  stops the backup before a git command runs. `settings-sync.json` is now
+  listed as excluded in `references/file-manifest.md`.
+- **Restore asks which machine to restore.** It lists the `machines/*`
+  branches newest first (never the frozen `master`), recommends this machine's
+  own name, and checks out the choice. A repo with no machine branch restores
+  its checked-out branch as 1.2 did, except that `settings.json` is merged
+  (below). Restore never writes `"machine"`.
+- **Restore keeps this machine's `permissions` and `autoMode`.** Of the 24
+  `settings.json` keys in two real machines' backups, only these held
+  machine-specific home paths, so restore merges `settings.json` through `jq`
+  instead of copying it: every other key comes from the backup, these two from
+  the local file, and a key this machine lacks stays absent. A machine with no
+  `settings.json` gets the backup's file unchanged; a missing `jq`, invalid
+  JSON, or an empty backup file skips the entry and leaves the local file
+  untouched. The preview compares against the merged file and says when the
+  backup's rules are not applied; the verify step compares the restored file
+  with the merge computed before the write. Restore only lists branch names
+  that match the machine pattern.
+- Tests: `test-settings-backup-two-machines.sh` (two fake machines alternate
+  against one bare remote using the skill's own blocks),
+  `test-settings-backup-machine-name.sh`,
+  `test-settings-restore-machine-branch.sh`, and
+  `test-settings-restore-keep-permissions.sh`.
+
 ## v1.2.0 — 2026-09-04 — Back up what a restore needs, commit only real changes
 
 ### Added

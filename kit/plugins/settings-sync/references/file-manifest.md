@@ -42,11 +42,12 @@ These are auto-generated, machine-specific, or reinstallable:
 - `.claude/launch.json` (per project) — Browser-pane dev-server config, project-scoped, lives in each repo
 - `~/.claude/ide/`, `debug/`, `backups/`, `downloads/` — system directories
 - `~/.claude/security_warnings_state_*.json` — per-session security state
+- `~/.claude/settings-sync.json` — this plugin's own config; it holds the `"machine"` name that picks the backup branch, so a machine restored from a backed-up copy would inherit another machine's name and push to that machine's branch
 
 ## Copy behavior
 
 - **Symlinks**: follow and copy resolved content (`cp -aL` / `rsync -aL`)
 - **Symlinked skill folders**: a skill the skills CLI installed elsewhere and linked into `~/.claude/skills/` is copied as a real folder; it works after restore, but the CLI no longer tracks it, so re-link it on a new machine
-- **Missing sources**: skip silently — not every user has all targets
+- **Missing sources**: skip silently when copying — not every user has all targets — but remove that target from the backup repo, so a machine branch started from another branch's tree mirrors this machine (`settings.local.json` counts as missing unless `includeLocalSettings` is on)
 - **Permissions**: preserve source permissions (`-a` flag on both cp and rsync)
 - **Path safety**: always quote paths in shell commands
