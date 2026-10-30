@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.3.0 — 2026-10-30 — one plugin for the whole DESIGN.md workflow
+
+### Added
+
+- **`customize-design`** — the rebrand skill generalized from oncue-app's repo-only
+  `.claude/skills/customize-design`. Step 0 discovers the token file, its dark scopes, the
+  build command and the Markdown mirrors by grep and confirms them once; Path A rebrands every
+  scope, Path B lays a brand sheet over a few sections. `scripts/contrast.mjs` reads SCSS
+  `direction-*` mixins, plain CSS `:root` / dark scopes, or a DESIGN.md `colors:` map, and
+  prints the same eight ratios the repo script printed (fixtures for both, under `fixtures/`).
+  `scripts/scaffold.mjs` writes the seven-token direction in three scopes plus a starter
+  `DESIGN.md` for a project with no tokens, darkening a too-light brand colour until it
+  measures. Both scripts are dependency-free and tested with `node --test`.
+- **`align-design-md`** — compares `DESIGN.md`'s frontmatter and prose with each component's
+  style block, prints a drift table (including a control under a stated size floor, which it
+  reports and never changes), and on confirmation rewrites the record and every mirror.
+  `references/drift-checklist.md` fixes what counts as drift so two runs agree.
+
+### Changed
+
+- **`from-design-md`** carries the lessons of the 2026-10-30 OnCue publish: the static route
+  always ships a one-line `components/bundle.js` namespace stub (the page renders no preview
+  without it); `type.families` values are capped at 200 characters; heading ceilings are read
+  from the rendered page's computed `font-size`, never from a regex over vendor CSS; the index
+  is re-read before every publish after the first; `meta.note` records uncommitted sources;
+  and the cover and previews are checked in both themes through colour-scheme emulation. Its
+  `scripts/contrast.test.mjs` is ported from the user-level copy of the skill.
+- The three skills run in the order align, customize, publish; `customize-design` hands off
+  to `/design-system-tools:from-design-md` by name.
+
 ## v0.2.0 — 2026-10-26 — drop the bin/ wrapper for claude.ai compatibility
 
 ### Changed

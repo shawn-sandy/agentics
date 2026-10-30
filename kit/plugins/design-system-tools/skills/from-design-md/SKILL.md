@@ -20,14 +20,14 @@ The contrast checker ships with this skill at `scripts/contrast.mjs`. Run it as
 `node "${CLAUDE_SKILL_DIR}/scripts/contrast.mjs"` — `${CLAUDE_SKILL_DIR}` is replaced with this
 skill's absolute folder when the skill loads.
 
-Worked examples:
+Worked examples: `artifact-type/demo.json`, served by every Design System, is a small complete
+system, and OnCue, <https://claude.ai/artifact/HZkvaPFwEVEbpuv6udpWiT>, was built this way from
+`shawn-sandy/oncue-app` `DESIGN.md`. Copy their structure, never their values.
 
-- `artifact-type/demo.json`, served by every Design System, is a small complete system.
-- Astro Kit, <https://claude.ai/artifact/HKxyaqURmUX9WE4G8TiiW4>, was built this way from
-  `shawn-sandy/astro-basics` `DESIGN.md`. It opens only for its owner. If a `read` is refused,
-  use `demo.json` alone.
-
-Copy their structure, never their values.
+> **Astro Kit example.** The first system built with this skill, Astro Kit
+> (<https://claude.ai/artifact/HKxyaqURmUX9WE4G8TiiW4>, from `shawn-sandy/astro-basics`), was
+> published without `components/bundle.js`, and every one of its component rows rendered blank
+> as a result. It opens only for its owner; if a `read` is refused, use `demo.json` alone.
 
 ## What outranks this file
 
@@ -95,8 +95,25 @@ Every token gets a `usage` note that says where it is used. Record where things 
 `tokens.json` `meta`: `source`, `repo`, `ref` (`branch@sha`), `paths`, `components`
 (`{Comp: path}`) and `synced` (today's date).
 
+**Type families and heading sizes.** Every `type.families` value is capped at 200 characters:
+the page drops a longer stack silently. Cut from the end, emoji fallback families first, and
+list each cut in the final report. A heading style's `fontSize` is its ceiling. With a dev
+server reachable, take it from the rendered page: the computed `font-size` of `h1`, `h2` and
+`h3` at a 1280px viewport, read through the browser tools, and cite the stylesheet rule that
+sets it in `usage`. Never derive it with a regex over vendor CSS: a shared header band can set
+`h1` from a different variable than the one the record names. Without a server, record the
+stylesheet's own declaration and write "unmeasured" into that style's `usage` note.
+
 **Components are static and hand-written.** This is the read-only route in `from-code.md` step 7.
-Do not ship `bundle.js`, and set `libraries: []`.
+Keep `libraries: []`, but always write `components/bundle.js`, even though nothing in it runs:
+
+```js
+/* @ds-bundle: {"format":4,"namespace":"<Namespace>","components":[]} */
+window.<Namespace> = {};
+```
+
+The Design System page renders no preview, static or not, without that file: a system
+published without it shows every component row blank.
 
 - `components/bundle.css` holds one class family per component, prefixed with the namespace's
   initials (`ak-button`). Every value comes from `var(--<token>)` or from the source rule. Put a
@@ -120,8 +137,6 @@ For every text-on-ground pair that a usage note or README rule names, run this i
 ```bash
 node "${CLAUDE_SKILL_DIR}/scripts/contrast.mjs" <dir>/project/tokens.json ink:paper ink-soft:paper-sunk paper:island
 ```
-
-`${CLAUDE_SKILL_DIR}` is replaced with this skill's absolute folder when the skill loads.
 
 Paste the printed ratios into the notes. The script floors to two decimals. If a source pair
 falls below 4.5:1 (3:1 for text at 24px and up, borders, focus rings and icons), keep the
@@ -148,8 +163,12 @@ Write `project/design-system.json` last. For a new system:
 
 With no GitHub remote, set `via` to `git · <repo folder name>@<sha>`.
 
-For a re-sync, `read` the index again right before you publish. Keep every key and change only
-`lastChange` and the keys your change touches. Then make ONE publish:
+Before any publish after the first, `read` `project/design-system.json` again, every time: the
+page publishes a new version with generated files right after a publish, and an index copied
+from before that is refused as stale. Keep every key and change only `lastChange` and the keys
+your change touches. Record `meta.ref` as `branch@sha`; when `DESIGN.md` or a stylesheet had
+uncommitted changes at sync time (`git status --short`), add `meta.note` saying which, so the
+provenance never claims a commit that does not hold those values. Then make ONE publish:
 
 ```text
 Artifact { url: <target>, root: "<dir>", file_path: "<dir>/project/design-system.json",
@@ -171,8 +190,11 @@ The publish reply is not proof. Check the remote:
 3. The remote `tokens.json` must be the one you sent: `cmp <dir>/project/tokens.json <read-back path>`
    prints nothing. Then run the contrast checker on the read-back path, never on your own copy.
    Every ratio in a usage note must match its output.
-4. If you have a browser tool, open the system in light and dark and look at the cover and every
-   preview. A block or text that vanishes in one theme gets fixed.
+4. With a browser tool, open the system and look at the cover and every preview in both
+   themes, switching with the browser's colour-scheme emulation (`resize_window` with
+   `colorScheme` light, then dark). Two failures must be fixed before reporting: **blank rows**
+   in the Components view (the bundle stub is missing) and **a block that vanishes in one
+   theme** (a colour that does not flip).
 
 A failed check gets one fix and one republish of the affected files only. If it fails again,
 stop and report exactly which check failed. Never report the system as done while a check fails.
@@ -182,16 +204,17 @@ stop and report exactly which check failed. Never report the system as done whil
 End with a short report in this shape:
 
 ```markdown
-Published **Astro Kit**: https://claude.ai/artifact/HKxyaqURmUX9WE4G8TiiW4
+Published **OnCue**: https://claude.ai/artifact/HZkvaPFwEVEbpuv6udpWiT
 
-Built from `shawn-sandy/astro-basics` at `primary@3641a47`: 11 colours in two themes, 8 text
-styles, 9 spacing steps, 5 radii, 3 shadows, 6 components with static previews, and a cover.
-Verified: all 18 files listed on the artifact, index and tokens parse, 33 contrast ratios in the
-notes re-measured.
+Built from `shawn-sandy/oncue-app` at `primary@2f0b5d2`: 11 colours in two themes, 10 text
+styles, 9 spacing steps, 6 radii, 10 components with static previews, and a cover.
+Verified: all 38 files listed on the artifact, index and tokens parse, 16 contrast ratios in the
+notes re-measured, every preview checked in both themes.
 
 Did not come across:
-- `--color-primary-*` and `--color-neutral-*` ramps in `_design-tokens.scss`: legacy, left out on purpose.
+- `--color-primary-*` and `--color-neutral-*` ramps in the token stylesheet: legacy, left out on purpose.
 - DESIGN.md gives `spacing.4` as `16px`; the SCSS uses `1rem`. Took `1rem`.
+- `type.families.sans` lost its three emoji fallbacks to the 200-character cap.
 ```
 
 Then offer further work once.
