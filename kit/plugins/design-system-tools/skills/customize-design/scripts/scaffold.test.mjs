@@ -109,6 +109,17 @@ test('an existing DESIGN.md is never overwritten, and tokens.css is not written 
   assert.equal(existsSync(join(dir, 'tokens.css')), false);
 });
 
+test('a dangling symlink at a target path is refused too, and nothing else is written', (t) => {
+  // existsSync() says false for a dangling link; an exclusive create must still refuse it.
+  const dir = mkdtempSync(join(tmpdir(), 'ds-scaffold-'));
+  symlinkSync(join(dir, 'nowhere'), join(dir, 'tokens.css'));
+  const r = scaffold(t, ['--accent', '#185c53'], { dir });
+  assert.equal(r.status, 2, r.stdout);
+  assert.match(r.stderr, /tokens\.css/);
+  assert.equal(existsSync(join(dir, 'nowhere')), false, 'nothing was written through the link');
+  assert.equal(existsSync(join(dir, 'DESIGN.md')), false);
+});
+
 test('a --design-md path in a folder that does not exist yet is created, and both files land', (t) => {
   const { dir, status, stderr } = scaffold(t, ['--accent', '#185c53', '--design-md', 'docs/DESIGN.md']);
   assert.equal(status, 0, stderr);

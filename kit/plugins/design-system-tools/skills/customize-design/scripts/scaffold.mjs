@@ -16,9 +16,11 @@
  * for text still shows as itself behind hover fills. The neutrals are the OnCue values.
  *
  * Never overwrites: an existing tokens.css or DESIGN.md stops the run before anything is
- * written. Exits 2 on a bad option or an existing file. Only `node:` modules.
+ * written, and each file is created exclusively (`wx`), so a path that appears between the
+ * check and the write, or a dangling symlink `existsSync` cannot see, is refused too. Exits 2
+ * on a bad option or an existing file. Only `node:` modules.
  */
-import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FLOOR, PAIRS, ratio, report } from './contrast.mjs';
@@ -113,8 +115,13 @@ export function main(argv, cwd = process.cwd()) {
     const md = fill(readFileSync(join(TEMPLATES, 'DESIGN.md'), 'utf8'), values);
     mkdirSync(outDir, { recursive: true });
     mkdirSync(dirname(designPath), { recursive: true });
-    writeFileSync(tokensPath, css);
-    writeFileSync(designPath, md);
+    writeFileSync(tokensPath, css, { flag: 'wx' });
+    try {
+      writeFileSync(designPath, md, { flag: 'wx' });
+    } catch (error) {
+      unlinkSync(tokensPath); // keep the promise: a refused run leaves nothing behind
+      throw error;
+    }
 
     const moved = (theme, verb) =>
       tokens.steps[theme]
