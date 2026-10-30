@@ -867,7 +867,7 @@ Total: 68 skills across 14 plugins.
 | [plan-agent](./kit/plugins/plan-agent/README.md) | 9.21.1 | productivity | 9 commands, 18 skills, 12 agents, 2 hooks |
 | [artifact-tools](./kit/plugins/artifact-tools/README.md) | 1.13.1 | development | 3 commands, 5 skills |
 | [content-tools](./kit/plugins/content-tools/README.md) | 1.1.1 | documentation | 1 skill |
-| [design-system-tools](./kit/plugins/design-system-tools/README.md) | 0.2.0 | development | 1 skill |
+| [design-system-tools](./kit/plugins/design-system-tools/README.md) | 0.3.0 | development | 3 skills |
 | [git-agent-launcher](./kit/plugins/git-agent-launcher/README.md) | 0.1.0 | development | 1 mod |
 | [mcp-tools](./kit/plugins/mcp-tools/README.md) | 0.1.0 | development | 1 skill |
 

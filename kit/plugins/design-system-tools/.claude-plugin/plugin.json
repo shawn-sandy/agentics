@@ -1,6 +1,6 @@
 {
   "name": "design-system-tools",
-  "description": "Turn a repository's DESIGN.md and the stylesheets behind it into a claude.ai Design System artifact — tokens in every theme, a brand book of usage rules, static component previews and a cover — with every contrast ratio measured, not estimated",
+  "description": "Turn a repository's DESIGN.md and the stylesheets behind it into a claude.ai Design System, and keep the two in step: align-design-md finds where the record drifted from the component code and rewrites it, customize-design rebrands the direction tokens in every theme scope (scaffolding them first when a project has none) with every contrast ratio measured, and from-design-md publishes the result as a Design System artifact with tokens in every theme, a brand book, static previews and a cover",
   "author": {
     "name": "Agentics Project"
   },
@@ -11,6 +11,8 @@
     "design-md",
     "brand-guidelines",
     "wcag-contrast",
+    "rebrand",
+    "design-drift",
     "claude-ai"
   ],
   "homepage": "https://github.com/shawn-sandy/agentics/tree/main/kit/plugins/design-system-tools",

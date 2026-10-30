@@ -1,0 +1,27 @@
+/* The OnCue direction as plain CSS: the same seven tokens the SCSS fixture declares
+   through its mixins, declared directly under `:root` and `[data-theme="dark"]`. No Sass,
+   no mixins, no build step. A commented-out declaration must never be read:
+   --ink: #123456; */
+:root {
+  --ink: #000;
+  --ink-soft: #606060;
+  --island: #c7342b;
+  --island-bg: #fcebe9;
+  --paper: #fff;
+  --paper-sunk: #f0f0f0;
+  --rule: #dedede;
+  --logo-url: url(https://example.test/logo.svg);
+  --font-family-display: georgia, cambria, "Times New Roman", times, serif;
+  --font-family-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-family-mono: "DM Mono", ui-monospace, menlo, monospace;
+}
+
+[data-theme="dark"] {
+  --ink: #f2f2f2;
+  --ink-soft: #a3a3a3;
+  --island: #ef827b;
+  --island-bg: #3a1714;
+  --paper: #111;
+  --paper-sunk: #1c1c1c;
+  --rule: #2e2e2e;
+}

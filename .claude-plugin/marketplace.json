@@ -293,8 +293,8 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/design-system-tools"
       },
-      "version": "0.2.0",
-      "description": "Turn a repository's DESIGN.md and the stylesheets behind it into a claude.ai Design System artifact — the from-design-md skill maps tokens into every theme, condenses the prose into a brand book of usage rules that name tokens, hand-writes static component previews and a cover, measures every contrast ratio with a bundled script, and checks the publish against the remote file listing before reporting",
+      "version": "0.3.0",
+      "description": "Turn a repository's DESIGN.md and the stylesheets behind it into a claude.ai Design System, and keep the two in step: align-design-md finds where the record drifted from the component code and rewrites it, customize-design rebrands the direction tokens in every theme scope (scaffolding them first when a project has none) with every contrast ratio measured, and from-design-md publishes the result as a Design System artifact with tokens in every theme, a brand book, static previews and a cover",
       "category": "development",
       "tags": [
         "design-system",

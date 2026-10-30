@@ -1,0 +1,72 @@
+/* {{name}} design tokens.
+   Scaffolded by design-system-tools on {{date}} from the brand colour {{brand}}.
+
+   The direction: seven colour tokens and three font roles. `--island` is the one accent, and
+   it is for things a visitor can operate: links, buttons, focus rings. Never a heading, a
+   hairline or a card surface. Text sits in `--ink` on `--paper`; `--paper-sunk` is the header
+   band, cards and code blocks; `--island-bg` is the accent wash behind hover fills and
+   `::selection`; `--rule` draws hairlines and is never text.
+
+   Contrast, measured not estimated (node contrast.mjs --tokens <this file>):
+   light: {{ratios-light}}
+   dark:  {{ratios-dark}}
+
+   Edit a token in every scope below. A colour set only in the first block stays stale under
+   the OS dark preference and under the theme toggle. */
+:root {
+  --ink: {{ink-light}};
+  --ink-soft: {{ink-soft-light}};
+  --island: {{island-light}};
+  --island-bg: {{island-bg-light}};
+  --paper: {{paper-light}};
+  --paper-sunk: {{paper-sunk-light}};
+  --rule: {{rule-light}};
+
+  /* Three roles and only three: display for headings, sans for reading, mono for labels. */
+  --font-family-display: georgia, cambria, "Times New Roman", times, serif;
+  --font-family-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif;
+  --font-family-mono: ui-monospace, sfmono-regular, "SF Mono", menlo, consolas, "Liberation Mono", monospace;
+
+  /* Lets the UA paint native controls, scrollbars and form widgets to match. */
+  color-scheme: light;
+}
+
+/* The OS prefers dark and no theme was chosen by hand. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: {{ink-dark}};
+    --ink-soft: {{ink-soft-dark}};
+    --island: {{island-dark}};
+    --island-bg: {{island-bg-dark}};
+    --paper: {{paper-dark}};
+    --paper-sunk: {{paper-sunk-dark}};
+    --rule: {{rule-dark}};
+
+    color-scheme: dark;
+  }
+}
+
+/* A theme chosen by hand beats the OS preference: (0,2,0) outranks (0,1,0) whatever the order. */
+:root[data-theme="dark"] {
+  --ink: {{ink-dark}};
+  --ink-soft: {{ink-soft-dark}};
+  --island: {{island-dark}};
+  --island-bg: {{island-bg-dark}};
+  --paper: {{paper-dark}};
+  --paper-sunk: {{paper-sunk-dark}};
+  --rule: {{rule-dark}};
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --ink: {{ink-light}};
+  --ink-soft: {{ink-soft-light}};
+  --island: {{island-light}};
+  --island-bg: {{island-bg-light}};
+  --paper: {{paper-light}};
+  --paper-sunk: {{paper-sunk-light}};
+  --rule: {{rule-light}};
+
+  color-scheme: light;
+}
