@@ -3,7 +3,6 @@ name: commit-agent
 description: "Stages all changes and creates a conventional commit message. Analyzes the diff, writes a scope-correct commit, then pushes it. Use when the user asks to commit or save work to git."
 allowed-tools: Bash(git *), Read, Edit, AskUserQuestion, ToolSearch, ExitPlanMode
 disable-model-invocation: true
-model: haiku
 ---
 
 Stage all changes, create a conventional commit message, then push. Follow these steps in strict order. **STOP immediately after step 5.**

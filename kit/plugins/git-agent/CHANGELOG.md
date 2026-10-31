@@ -1,5 +1,28 @@
 # Changelog — git-agent
 
+## v4.25.0 — 2026-10-31 — stop skills switching the model mid-conversation
+
+### Changed
+
+- **Removed the `model:` pin from six skills.** `merge`, `commit-agent`,
+  `pr-agent`, `branch-agent`, `create-issue` and `post-merge-cleanup` now run on
+  the session's model. A skill runs inside the calling conversation and a prompt
+  cache belongs to one model, so each pin saved the whole conversation again for
+  that turn, and switching back could do it a second time. On Oct 30 2026, five
+  `/merge` runs on conversations of 193K to 595K tokens cost $8.42 at API prices
+  against about $4.08 had they stayed on the session model. One switch back then
+  made a 30-token reply cost $4.62. The pins saved money only on short
+  conversations.
+- **Agents keep their pins.** `agent-commit`, `agent-merge`, `agent-pr`,
+  `agent-ship` and `agent-ship-ci` run in their own small context, so a pin there
+  causes no rewrite. `/git-agent:merge-bg` remains the way to merge on a cheaper
+  model.
+
+### Added
+
+- **`tests/plugins/test-git-agent-model-pins.sh`** fails if a git-agent skill
+  gains a `model:` pin or an agent loses one.
+
 ## v4.24.1 — 2026-10-26 — remove angle brackets from the branch-agent skill description
 
 ### Changed
