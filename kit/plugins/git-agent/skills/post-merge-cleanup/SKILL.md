@@ -2,7 +2,6 @@
 name: post-merge-cleanup
 description: "Removes merged branches and worktrees after checking for uncommitted work. Detects squash-merged branches and stale directories. Use when clearing up after a merge."
 allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(du *), Bash(ls *), Bash(rm *), Read, Grep, Glob, AskUserQuestion, ToolSearch, ExitPlanMode, mcp__ccd_session_mgmt__get_session
-model: sonnet
 ---
 
 Clear away a branch and its worktree once the work has landed — but only after

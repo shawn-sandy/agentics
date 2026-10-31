@@ -2,7 +2,6 @@
 name: merge
 description: "Checks whether the branch's PR is ready and merges it when green. Runs the readiness gate and an approval prompt. Use when the user asks \"merge?\" or if a PR is ready to merge."
 allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Read, Grep, Glob, AskUserQuestion, ToolSearch, ExitPlanMode
-model: sonnet
 ---
 
 Check the current branch's pull request for merge readiness and merge it only

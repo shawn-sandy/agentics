@@ -3,7 +3,6 @@ name: pr-agent
 description: "Pushes the branch and creates a pull request. Supports GitHub and GitLab via gh and glab with auto-filled title and body. Use when the user asks to create a PR or open a pull request."
 allowed-tools: Bash(git *), Bash(gh *), Bash(glab *), Bash(bash "${CLAUDE_PLUGIN_ROOT}/scripts/extract-plan-issues.sh" *), Read, Edit, Grep, Glob, Agent, ToolSearch, ExitPlanMode
 disable-model-invocation: true
-model: sonnet
 ---
 
 Push the current branch if needed and create a GitHub pull request. This skill does not commit your working-tree changes or run tests (the only commits it makes are Step 3.5's sync with the base branch and Step 4.7's review-fix commit). Follow these steps in strict order. **STOP immediately after step 5.**

@@ -861,7 +861,7 @@ Total: 68 skills across 14 plugins.
 | [wcag-compliance-reviewer](./kit/plugins/wcag-compliance-reviewer/README.md) | 1.6.0 | security | 1 skill |
 | [skill-reviewer](./kit/plugins/skill-reviewer/README.md) | 2.6.0 | development | 1 command, 4 skills, 1 hook |
 | [code-testing-agent](./kit/plugins/code-testing-agent/README.md) | 3.7.0 | testing | 6 skills |
-| [git-agent](./kit/plugins/git-agent/README.md) | 4.24.1 | development | 5 commands, 8 skills, 5 agents, 3 hooks |
+| [git-agent](./kit/plugins/git-agent/README.md) | 4.25.0 | development | 5 commands, 8 skills, 5 agents, 3 hooks |
 | [settings-sync](./kit/plugins/settings-sync/README.md) | 1.3.1 | productivity | 2 skills |
 | [social-media-tools](./kit/plugins/social-media-tools/README.md) | 2.24.0 | productivity | 1 command, 17 skills |
 | [plan-agent](./kit/plugins/plan-agent/README.md) | 9.21.1 | productivity | 9 commands, 18 skills, 12 agents, 2 hooks |
