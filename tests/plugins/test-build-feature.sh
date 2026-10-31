@@ -18,14 +18,13 @@ FAILURES=0
 
 echo "=== build-feature Skill Smoke Test ==="
 
-echo "1. SKILL.md exists with frontmatter contract (name, model, model-invocable)..."
+echo "1. SKILL.md exists with frontmatter contract (name, model-invocable)..."
 if [ -f "$SKILL" ] \
   && grep -q "^name: build-feature$" "$SKILL" \
-  && grep -q "^model: claude-fable-5$" "$SKILL" \
   && ! grep -q "disable-model-invocation" "$SKILL"; then
   echo "  PASS"
 else
-  echo "  FAIL: missing SKILL.md, name/model line, or carries disable-model-invocation"
+  echo "  FAIL: missing SKILL.md, name line, or carries disable-model-invocation"
   FAILURES=$((FAILURES + 1))
 fi
 

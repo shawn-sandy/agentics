@@ -1,6 +1,5 @@
 ---
 name: prototype
-model: opus
 description: "Generates a runnable static-HTML prototype from a plan, idea, or design. Produces one self-contained, framework-free clickable file under docs/prototypes/. Use when asked to prototype a mockup."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, SendUserFile, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__read_console_messages, mcp__claude-in-chrome__read_page
 argument-hint: "<plan.html|plan.md | image | figma-url | one-line idea> [--from-prompt <path>]"

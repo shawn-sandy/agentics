@@ -3,7 +3,6 @@ name: build
 description: "Implements a plan file that already exists. Walks its steps, ticks the spec, re-renders, and runs the completion gates. Use when asked to implement an existing plan."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Skill, ToolSearch, ExitPlanMode, Artifact, Agent
 argument-hint: "[<plan.md|plan.html>] [<objective>] [--type feature|fix|refactor|docs|chore] [--dir <path>] [--sequential] [--workflow] [--max <n>] [--worker-model <alias>]"
-model: opus
 ---
 
 # Plan Agent — Build

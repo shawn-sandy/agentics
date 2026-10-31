@@ -1,5 +1,14 @@
 # Changelog — social-media-tools
 
+## v2.25.0 — 2026-10-31 — stop share-explanation switching the model mid-conversation
+
+### Changed
+
+- **Removed the `model: opus` pin from `share-explanation`.** It now runs on the
+  session's model. A skill runs inside the calling conversation and a prompt
+  cache belongs to one model, so the pin saved the whole conversation again for
+  that turn. This is the same change git-agent made in 4.25.0.
+
 ## v2.24.0 — 2026-10-26 — drop the bin/ wrapper for claude.ai compatibility
 
 ### Changed

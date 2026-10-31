@@ -1,6 +1,5 @@
 ---
 name: prompt
-model: opus
 description: "Builds structured AI prompts using Anthropic techniques. Interviews users, classifies prompt type, and delivers a copy-pasteable prompt. Use when the user asks to write, refine, or build a prompt."
 disable-model-invocation: true
 argument-hint: "[system|task|creative|analytical] <intent or topic description>"
