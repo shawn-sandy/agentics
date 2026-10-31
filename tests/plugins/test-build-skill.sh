@@ -345,12 +345,12 @@ else
   FAILURES=$((FAILURES + 1))
 fi
 
-echo "14. build pins its model so a chained run does not inherit a planning skill's override..."
-MODEL_PINS="$(grep -c '^model: opus$' "$SKILL" || true)"
-if [ "$MODEL_PINS" -eq 1 ]; then
+echo "14. build runs on the session model..."
+MODEL_PINS="$(grep -c '^model:' "$SKILL" || true)"
+if [ "$MODEL_PINS" -eq 0 ]; then
   echo "  PASS"
 else
-  echo "  FAIL: build/SKILL.md must carry exactly one 'model: opus' line"
+  echo "  FAIL: build/SKILL.md must not carry a 'model:' line"
   FAILURES=$((FAILURES + 1))
 fi
 

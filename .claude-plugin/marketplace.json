@@ -173,7 +173,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/social-media-tools"
       },
-      "version": "2.24.0",
+      "version": "2.25.0",
       "description": "Discover teachable code, blog posts, videos, GitHub snippets, and selected/pasted code — scrub for secrets, draft instructional platform-aware copy with concrete takeaways, and generate styled dark-mode social cards for LinkedIn, Twitter/X, Bluesky, and Substack, plus a write-guide skill that writes long-form internal developer explainer guides to docs/",
       "category": "productivity",
       "tags": [
@@ -218,7 +218,7 @@
         "url": "https://github.com/shawn-sandy/agentics.git",
         "path": "kit/plugins/plan-agent"
       },
-      "version": "9.21.1",
+      "version": "9.22.0",
       "description": "Plan creation, review, follow-through, and maintenance. Author an interactive HTML plan (implementation-plan), implement it through the acceptance and completion gates (build), review it (review-plan, finalize-plan), and ship a backlog in parallel (build-fleet). Also ships build-proposal, build-feature, deep-grill, prompt, prototype, design, publish-hub, documenting-plans, markdown-to-html, plan-status, plans-library, plans-open, and setup-sites. Full detail in the plugin README.",
       "category": "productivity",
       "tags": [

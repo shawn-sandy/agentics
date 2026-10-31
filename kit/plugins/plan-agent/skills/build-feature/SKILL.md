@@ -1,6 +1,5 @@
 ---
 name: build-feature
-model: claude-fable-5
 description: "Turns a feature idea into a product feature doc for the team. Adds stories, acceptance criteria, metrics, rollout, and a sized sub-feature breakdown. Use when scoping a feature to build."
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode, WebSearch, WebFetch, Skill, Agent, Artifact
 argument-hint: "<feature idea> [--dir <path>] [--tier 0|1|2] [--publish|--no-publish]"

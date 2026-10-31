@@ -1,5 +1,31 @@
 # Changelog
 
+## 9.22.0 — stop skills switching the model mid-conversation (2026-10-31)
+
+### Changed
+
+- **Removed the `model:` pin from nine skills.** `build`, `build-feature`,
+  `build-proposal`, `design`, `finalize-plan`, `implementation-plan`, `prompt`,
+  `prototype` and `review-plan` now run on the session's model. A skill runs
+  inside the calling conversation and a prompt cache belongs to one model, so
+  each pin saved the whole conversation again for that turn. This is the same
+  change git-agent made in 4.25.0.
+- **A chained `build` no longer needs its own pin.** `build` pinned `opus` because
+  a skill's override does not unwind when the skill ends, so a chain would
+  otherwise have stayed on whatever `implementation-plan` or `review-plan` set.
+  With no pins left, nothing changes the model partway through a chain. The whole
+  chain now runs on the session model, so choose it before you start.
+- **Agents keep their pins.** The plan reviewers, `agent-review-plan` and
+  `plan-documenter` run in their own small context, and `--worker-model` still
+  sets the lane workers' model.
+
+### Tests
+
+- **`test-build-skill.sh` check 14 is inverted**, and `test-build-feature.sh` and
+  `test-build-proposal.sh` no longer require a pin.
+  `tests/plugins/test-skill-model-pins.sh` (renamed from
+  `test-git-agent-model-pins.sh`) now fails if a skill in any plugin pins a model.
+
 ## 9.21.1 — shorten the marketplace description to 500 chars (2026-10-26)
 
 ### Changed

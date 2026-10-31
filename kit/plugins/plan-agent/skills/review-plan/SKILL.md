@@ -1,6 +1,5 @@
 ---
 name: review-plan
-model: opus
 description: Plan review reviewer panel. Reviews implementation plans in parallel, refutes weak findings, and applies improvements in place. Use when the user asks to review or improve an implementation plan.
 allowed-tools: Read, Glob, Grep, Bash, Edit, AskUserQuestion, TodoWrite, ToolSearch, ExitPlanMode, Artifact, Workflow
 ---

@@ -1,6 +1,5 @@
 ---
 name: design
-model: opus
 description: "Generates a design canvas from a plan. Derives one artboard per user-facing step and links the published canvas back into the plan spec. Use when asked to design or mock up a plan."
 allowed-tools: Skill, Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ToolSearch, ExitPlanMode
 ---
