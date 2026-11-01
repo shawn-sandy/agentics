@@ -789,12 +789,14 @@ claude --plugin-dir ./kit/plugins/content-tools
 
 #### `design-system-tools`
 
-Publish a repository's `DESIGN.md` and the stylesheets behind it as a claude.ai Design System artifact that later agents can build on. The stylesheet wins where the two disagree, and every contrast ratio is measured by a bundled script.
+Keep a repository's `DESIGN.md` true to its stylesheets, rebrand its tokens, and publish both as a claude.ai Design System artifact that later agents can build on. The stylesheet wins where the two disagree, and every contrast ratio is measured by a bundled script. The skills run in the order align, customize, publish.
 
 **Skills:**
 
 | Skill | Activates when you ask to... |
 |-------|------------------------------|
+| `align-design-md` | Find where `DESIGN.md` drifted from the component code — prints a drift table and, on confirmation, rewrites the record and its mirrors; never edits a source file |
+| `customize-design` | Rebrand a project's tokens in every theme scope — discovers the token file and dark scopes, measures contrast, and keeps `DESIGN.md` and its mirrors in step |
 | `from-design-md` | Turn a `DESIGN.md` into a design system — tokens in every theme, a brand book of usage rules that name tokens, static component previews and a cover — or re-sync an existing system from it. The publish is checked against the remote file listing before it is reported |
 
 ```bash
@@ -835,7 +837,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | code-review | [How do I... code-review](./docs/guides/how-to/code-review.md) | 1 |
 | code-testing-agent | [How do I... code-testing-agent](./docs/guides/how-to/code-testing-agent.md) | 6 |
 | content-tools | [How do I... content-tools](./docs/guides/how-to/content-tools.md) | 1 |
-| design-system-tools | [How do I... design-system-tools](./docs/guides/how-to/design-system-tools.md) | 1 |
+| design-system-tools | [How do I... design-system-tools](./docs/guides/how-to/design-system-tools.md) | 3 |
 | git-agent | [How do I... git-agent](./docs/guides/how-to/git-agent.md) | 8 |
 | git-agent-launcher | [How do I... git-agent-launcher](./docs/guides/how-to/git-agent-launcher.md) | 0 |
 | mcp-tools | [How do I... mcp-tools](./docs/guides/how-to/mcp-tools.md) | 1 |
@@ -846,7 +848,7 @@ One brief "How do I" entry per skill: the slash command to type, the plain-Engli
 | social-media-tools | [How do I... social-media-tools](./docs/guides/how-to/social-media-tools.md) | 17 |
 | wcag-compliance-reviewer | [How do I... wcag-compliance-reviewer](./docs/guides/how-to/wcag-compliance-reviewer.md) | 1 |
 
-Total: 68 skills across 14 plugins.
+Total: 70 skills across 14 plugins.
 
 ---
 

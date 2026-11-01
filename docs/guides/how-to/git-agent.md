@@ -47,7 +47,7 @@ Removes a landed branch and its worktree after checking for uncommitted work.
 - **Command** — `/git-agent:post-merge-cleanup [<branch>|<worktree-path>] [--all] [--dirs]`
 - **Say it instead** — "clean up the branch and worktree now that it's merged"
 - **What happens** — Qualifies the branch by commit ancestry *or* a confirmed merged PR, inspects `git status --porcelain` inside the worktree, asks for an explicit yes, then runs `git worktree remove` followed by `git branch -d` (or `-D` when a merged PR was the qualifying signal).
-- **Watch out** — Never `git worktree remove --force`, never removes a worktree with any uncommitted or untracked file, and refuses to run from inside the target worktree (it prints a resume command instead); it is local-only, and without `gh` the detection degrades to ancestry alone and is reported as known-incomplete.
+- **Watch out** — Never `git worktree remove --force`, never removes a worktree with any uncommitted or untracked file, and refuses to run from inside the target worktree (it prints a runnable `/git-agent:post-merge-cleanup <branch>` resume line instead) — except in a Claude desktop app session standing in its own worktree, where it detaches the worktree onto `origin/<default>`, deletes the branch, reports, and archives the session (a sweep skips that worktree); it is local-only, and without `gh` the detection degrades to ancestry alone and is reported as known-incomplete.
 
 ## pr-agent
 
