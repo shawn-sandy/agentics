@@ -33,7 +33,7 @@
 
 ## How it works
 
-The plugin centralizes artifact publishing for the three content types teams share most. Each skill runs `social-media-tools:security-scrub` as a blocking gate before any publish — the scrub returns a structured `GATE RESULT` and the skill stops on anything other than `APPROVED`.
+The plugin centralizes artifact publishing for the three content types teams share most. `diff-artifact` and `session-artifact` each run `social-media-tools:security-scrub` as a blocking gate before any publish — the scrub returns a structured `GATE RESULT` and the skill stops on anything other than `APPROVED`. `plan-artifact` does not run this gate: plan HTML is authored in-session and published directly, relying on the `plan-agent` authoring flow rather than a post-hoc scrub.
 
 `diff-artifact` is the only genuinely new generator: it resolves a diff from the current branch, a commit range, or a PR number (`gh pr diff <n>`), annotates each hunk with severity-coded margin notes, and emits a single self-contained HTML page within the 16 MiB artifact cap via a cap-and-summarize policy for large files.
 
@@ -58,7 +58,7 @@ The `artifact-url:` frontmatter key is the cross-session persistence mechanism f
 | --- | ---- | ------- |
 | `174d0efc` | 2026-10-27 | fix(marketplace): resolve claude.ai plugin validation issues (#660) |
 | `02136c1d` | 2026-10-26 | fix(marketplace): drop bin/ wrappers so claude.ai installs all plugins (#658) |
-| `6d6bfeb3` | 2026-08-26 | fix(plan-agent): carry completion state to artifact-published plans (9.9.0) (#604) |
+| `6d6bfeb3` | 2026-08-26 | feat(artifact-tools): add diff-artifact, session-artifact, plan-artifact skills (1.0.0) — bulk commit |
 
 <!-- generated:end -->
 

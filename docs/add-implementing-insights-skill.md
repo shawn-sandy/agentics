@@ -46,6 +46,7 @@ The `tests/run-all.sh` auto-discovery covers the new skill automatically — `te
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
+| `7a4214ff` | 2026-09-26 | feat(memory-tools): implementing-insights publishes a live record per item (4.4.0) (#638) |
 | `6d6bfeb3` | 2026-08-26 | fix(plan-agent): carry completion state to artifact-published plans (9.9.0) (#604) |
 
 <!-- generated:end -->

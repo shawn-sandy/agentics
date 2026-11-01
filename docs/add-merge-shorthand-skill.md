@@ -9,7 +9,7 @@
 
 ## What shipped
 
-- Created `kit/plugins/git-agent/skills/merge/SKILL.md` — checks PR readiness via `gh pr view --json state,mergeable,statusCheckRollup`, runs the project's non-`fix`/non-`watch` lint script before merging, requires explicit `AskUserQuestion` approval even on green checks, and merges with `gh pr merge --squash --match-head-commit <headRefOid>` to pin to the verified commit. Never uses `--delete-branch`.
+- Created `kit/plugins/git-agent/skills/merge/SKILL.md` — checks PR readiness via `gh pr checks` (all required checks must be `SUCCESS` or `SKIPPED`), reads `mergeable` and `mergeStateStatus` from `gh pr view`, requires explicit `AskUserQuestion` approval even on green checks, and merges with `gh pr merge --squash --match-head-commit <headRefOid>` to pin to the verified commit. Never uses `--delete-branch`.
 - Created `kit/plugins/git-agent/hooks/merge-shorthand.py` — reads hook JSON from stdin, matches `^\s*merge\?\s*$` (case-insensitive), and emits `additionalContext` routing to `git-agent:merge`; exits 0 silently on every other prompt.
 - Created `kit/plugins/git-agent/hooks.json` — wires the `UserPromptSubmit` hook via `${CLAUDE_PLUGIN_ROOT}`, following the `plan-agent/hooks.json` precedent.
 - Created `tests/plugins/test-merge-shorthand.sh` — asserts the hook fires on `merge?`, ` merge? ` (whitespace), and `MERGE?`; stays silent on `merge`, `please merge?`, `merge? now`, and prose containing "merge?" mid-sentence; validates hooks.json JSON and SKILL.md contract.
@@ -34,7 +34,7 @@ The previous behavior depended on the model recalling a private memory note (`fe
 
 The hook (`merge-shorthand.py`) runs on every prompt submission before the model sees the message. Its anchored regex `^\s*merge\?\s*$` (case-insensitive) fires only on the exact shorthand with optional surrounding whitespace — not on prose containing "merge?" mid-sentence, not on "please merge?", not on "merge? now". When it matches, it injects `additionalContext` routing the session to run `git-agent:merge`. This routing is deterministic and does not depend on model recall.
 
-The skill itself is the single reviewable home for the merge logic. It checks `mergeable` and `statusCheckRollup` from `gh pr view`, runs the project's first non-`fix`/non-`watch` lint script (the `ship-autonomous` Step 2.5 precedent — detects whatever lint the project declares), and requires an explicit yes before merging. Merge is pinned to `--match-head-commit <headRefOid>` so commits that arrive after verification don't land silently. `--delete-branch` is explicitly absent — branch deletion is a separate concern and a separate yes.
+The skill itself is the single reviewable home for the merge logic. It reads `mergeable` and `mergeStateStatus` from `gh pr view` and runs `gh pr checks --required` to confirm all required checks are `SUCCESS` or `SKIPPED`. It requires an explicit yes before merging. Merge is pinned to `--match-head-commit <headRefOid>` so commits that arrive after verification don't land silently. `--delete-branch` is explicitly absent — branch deletion is a separate concern and a separate yes.
 
 The over-broad-hook risk was mitigated by the anchored regex and asserted by the smoke test's negative cases, which confirm that typing "merge" without a question mark, prepending words, or appending words all produce no hook output.
 
@@ -49,6 +49,8 @@ merge?                        # type exactly this at the prompt — hook routes 
 
 | SHA | Date | Subject |
 | --- | ---- | ------- |
+| `8a8a392f` | 2026-10-31 | fix(git-agent): remove model pins from skills (4.25.0) (#667) |
+| `da54ec10` | 2026-08-27 | fix(git-agent): stop a zero-byte CI log reporting as "never dispatched" (4.19.5) (#607) |
 | `6d6bfeb3` | 2026-08-26 | fix(plan-agent): carry completion state to artifact-published plans (9.9.0) (#604) |
 
 <!-- generated:end -->
