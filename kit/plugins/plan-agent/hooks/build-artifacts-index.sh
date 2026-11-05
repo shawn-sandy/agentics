@@ -213,6 +213,13 @@ def apply_shell(text, output_dir, active):
         ('SOCIAL',     os.path.join(docs, 'media', 'social', 'index.html'), os.path.join(docs, 'media', 'social')),
     )
     for key, target, collection in collections:
+        if key != active and not os.path.isfile(target):
+            # This project never built that collection (a repo with only
+            # docs/plans/), so drop its tab rather than link a 404. The page's
+            # own tab always stays: its index.html is the file being written.
+            text = re.sub(r'[ \t]*<a href="\{\{HREF_%s\}\}"[^\n]*</a>\n' % key, '', text)
+            # The brand mark also links Home; with no Home it renders unlinked.
+            text = text.replace(' href="{{HREF_%s}}"' % key, '')
         text = text.replace('{{HREF_%s}}' % key, os.path.relpath(target, output_dir))
         if collection is not None:
             count = plans_count(collection) if key == 'PLANS' else docs_count(collection)
