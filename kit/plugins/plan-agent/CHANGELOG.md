@@ -1,5 +1,29 @@
 # Changelog
 
+## 9.22.1 — gallery tabs never link to a missing page (2026-11-05)
+
+### Fixed
+
+- **The topbar drops a tab whose page does not exist.** The plans, prototypes,
+  designs and artifacts galleries linked all five tabs whether or not their
+  `index.html` existed. In a repo with only `docs/plans/`, Home, Prototypes,
+  Artifacts and Social went to 404s. Now each generator leaves a tab out when
+  its target is missing. The page's own tab always stays, and with no Home the
+  brand mark renders as plain text instead of a link. The fix is in `apply_shell()`
+  in all four generators, and in the `scripts/` and `docs/plans/` copies of
+  `build-index.sh`.
+- **A tab appears once its collection is built.** Generators run in any order,
+  so a gallery built before a sibling collection's index exists leaves that tab
+  out until it is next rebuilt.
+
+### Tests
+
+- **New `test-gallery-topbar-links.mjs`.** It builds each gallery in a temp
+  project that holds only its own collection, then checks that every relative
+  link resolves to a file and that the page's own tab is still marked as the
+  current page. A second project checks that collections which exist keep
+  their tabs.
+
 ## 9.22.0 — stop skills switching the model mid-conversation (2026-10-31)
 
 ### Changed

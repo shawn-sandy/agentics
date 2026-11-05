@@ -105,6 +105,9 @@ for (const [rel, n] of Object.entries(SIBLINGS)) {
   for (let i = 0; i < n; i++) writeFileSync(join(d, `item-${i}.html`), '<html></html>');
   writeFileSync(join(d, 'index.html'), '<html></html>');
 }
+// Home too: a tab whose index.html is missing is dropped, and this suite checks
+// every tab's href depth, so all five targets must exist.
+writeFileSync(join(TMP, 'docs', 'index.html'), '<html></html>');
 
 const build = spawnSync('bash', [join(ROOT, 'docs/plans/build-index.sh'), TMP], {
   encoding: 'utf8',
